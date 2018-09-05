@@ -1,0 +1,20 @@
+# Author: Haobin Ni, 2018
+# A simple wallet example
+
+owner : IFL(address, this)
+
+@public
+@IFL_this
+def __init__(_owner : IFL(address, this)):
+    self.owner = _owner
+
+@public
+@IFL_this
+def withdraw(addr : IFL(address, sender)):
+	assert addr == self.owner
+	send(endorse(addr, this), self.balance)
+
+@public
+@payable
+def deposit():
+    pass

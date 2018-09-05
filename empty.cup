@@ -1,0 +1,34 @@
+import java.io.*;
+import java_cup.runtime.*;
+import java.util.*;
+
+parser code {:
+:};
+
+terminal ERROR;
+terminal ELLIPSIS, NAME;
+terminal FALSE, TRUE, NONE;
+terminal AND, AS, ASSERT, ASYNC, AWAIT;
+terminal BREAK, CLASS, CONTINUE, DEF, DEL;
+terminal ELIF, ELSE, EXCEPT, FINALLY, FOR, FROM;
+terminal GLOBAL, IF, IMPORT, IN, IS, LAMBDA, NONLOCAL, NOT;
+terminal OR, PASS, RAISE, RETURN, TRY;
+terminal WHILE, WITH, YIELD;
+terminal LPAR, RPAR, LSQB, RSQB, COLON, COMMA, SEMI;
+terminal PLUS, MINUS, STAR, SLASH, VBAR, AMPER;
+terminal LESS, GREATER, EQUAL, DOT, PERCENT, LBRACE, RBRACE;
+terminal CIRCUMFLEX, TILDE, AT;
+terminal EQEQUAL, NOTEQUAL, LESSEQUAL, LEFTSHIFT, GREATEREQUAL, RIGHTSHIFT;
+terminal PLUSEQUAL, MINEQUAL, RARROW, DOUBLESTAR, STAREQUAL, DOUBLESLASH, SLASHEQUAL, VBAREQUAL;
+terminal PERCENTEQUAL, AMPEREQUAL, CIRCUMFLEXEQUAL, ATEQUAL;
+terminal INT, NEWLINE;
+terminal INDENT, DEDENT;
+
+nonterminal file_input;
+
+start with file_input;
+
+//single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE
+//file_input: (NEWLINE | stmt)* ENDMARKER
+file_input ::= NEWLINE;
+

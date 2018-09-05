@@ -1,0 +1,540 @@
+import java.io.*;
+import java_cup.runtime.*;
+import java.util.*;
+
+parser code {:
+    public boolean DEBUG = false;
+    public void syntax_error(Symbol cur_token) {
+        System.err.println("Syntax error at " + cur_token);
+        report_error("Syntax error", cur_token);
+    }
+
+    public void Debuglog(String s) {
+        if (DEBUG)
+            System.out.println(s);
+    }
+
+    public static void main(String args[]) {
+        try {
+            Lexer lexer = new Lexer(new FileReader(args[0]));
+            
+            Parser p = new Parser(lexer);
+            System.out.println("Parser init\n");
+
+            p.parse();
+//            p.debug_parse();
+
+            System.out.println("Finish\n");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+:};
+
+terminal ERROR;
+terminal NUMBER, STRING;
+terminal FALSE, TRUE, NONE, NAME, ELLIPSIS;
+terminal AND, AS, ASSERT, ASYNC, AWAIT;
+terminal BREAK, CLASS, CONTINUE, DEF, DEL;
+terminal ELIF, ELSE, EXCEPT, FINALLY, FOR, FROM;
+terminal GLOBAL, IF, IMPORT, IN, IS, LAMBDA, NONLOCAL, NOT;
+terminal OR, PASS, RAISE, RETURN, TRY;
+terminal WHILE, WITH, YIELD;
+terminal LPAR, RPAR, LSQB, RSQB, COLON, COMMA, SEMI;
+terminal PLUS, MINUS, STAR, SLASH, VBAR, AMPER;
+terminal LESS, GREATER, EQUAL, DOT, PERCENT, LBRACE, RBRACE;
+terminal CIRCUMFLEX, TILDE, AT;
+terminal EQEQUAL, NOTEQUAL, LESSEQUAL, LEFTSHIFT, GREATEREQUAL, RIGHTSHIFT;
+terminal PLUSEQUAL, MINEQUAL, RARROW, DOUBLESTAR, STAREQUAL, DOUBLESLASH, SLASHEQUAL, VBAREQUAL;
+terminal PERCENTEQUAL, AMPEREQUAL, CIRCUMFLEXEQUAL, ATEQUAL;
+terminal LEFTSHIFTEQUAL, RIGHTSHIFTEQUAL, DOUBLESTAREQUAL, DOUBLESLASHEQUAL;
+terminal INT, NEWLINE;
+terminal INDENT, DEDENT;
+
+nonterminal file_input, file_input_unit;
+nonterminal decorator, decorators, decorated;
+nonterminal async_funcdef, funcdef;
+nonterminal parameters, typedargslist, nonstartypedargslist, startypedargslist, doublestartypedargslist, probinittfpdef, tfpdef;
+nonterminal varargslist, nonstarvarargslist, starvarargslist, doublestarvarargslist, probinitvfpdef, vfpdef;
+nonterminal stmt, simple_stmt, small_stmts, small_stmt, expr_stmt, expr_rest_stmt, expr_equal_rest_stmt;
+nonterminal annassign, testlist_star_expr, testlist_star_expr_sub, augassign;
+nonterminal del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, yield_stmt, raise_stmt, import_stmt;
+nonterminal import_name, import_from, import_from_name, import_from_name_dots;
+nonterminal import_as_name, dotted_as_name, import_as_names, import_as_names_sub, dotted_as_names, dotted_name;
+nonterminal global_stmt, nonlocal_stmt, assert_stmt, compound_stmt, async_stmt;
+nonterminal if_stmt, elif_stmts, while_stmt, for_stmt, try_stmt, except_stmts;
+nonterminal with_stmt, with_item_stmts, with_item, except_clause, suite, stmts;
+nonterminal test, test_nocond, lambdef, lambdef_nocond, or_test, and_test, not_test, comparison;
+nonterminal comp_op, star_expr, expr, xor_expr, and_expr, shift_expr, arith_expr, term, factor, power;
+nonterminal atom_expr, atom, strings;
+nonterminal testlist_comp, testlist_comp_sub, trailer, subscriptlist, subscriptlist_sub, subscript, sliceop;
+nonterminal exprlist, exprlist_sub, testlist, testlist_sub;
+nonterminal dictorsetmaker, dictorsetmaker1, dictorsetmaker1_sub, dictorsetmaker2, dictorsetmaker2_sub;
+nonterminal classdef, arglist, arglist_sub, argument;
+nonterminal comp_iter, sync_comp_for, comp_for, comp_if, encoding_decl, yield_expr, yield_arg;
+
+start with file_input;
+
+//single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE
+//file_input: (NEWLINE | stmt)* ENDMARKER
+file_input ::= file_input file_input_unit {: Debuglog("Debug: 1"); :}
+    | file_input_unit {: Debuglog("Debug: 2"); :};
+file_input_unit ::= NEWLINE | stmt;
+
+//eval_input: testlist NEWLINE* ENDMARKER
+
+//decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
+//decorators: decorator+
+//decorated: decorators (classdef | funcdef | async_funcdef)
+decorator ::= 
+    AT dotted_name LPAR arglist RPAR NEWLINE
+    | AT dotted_name LPAR  RPAR NEWLINE
+    | AT dotted_name NEWLINE;
+decorators ::= 
+    decorator 
+    | decorators decorator;
+decorated ::= 
+    decorators classdef 
+    | decorators funcdef 
+    | decorators async_funcdef;
+
+//async_funcdef: 'async' funcdef
+//funcdef: 'def' NAME parameters ['->' test] ':' suite
+async_funcdef ::= ASYNC funcdef;
+funcdef ::= 
+    DEF NAME parameters RARROW test COLON suite
+    | DEF NAME parameters COLON suite;
+
+
+//parameters: '(' [typedargslist] ')'
+//typedargslist: (tfpdef ['=' test] (',' tfpdef ['=' test])* [',' [
+//        '*' [tfpdef] (',' tfpdef ['=' test])* [',' ['**' tfpdef [',']]]
+//      | '**' tfpdef [',']]]
+//  | '*' [tfpdef] (',' tfpdef ['=' test])* [',' ['**' tfpdef [',']]]
+//  | '**' tfpdef [','])
+//tfpdef: NAME [':' test]
+parameters ::= 
+    LPAR typedargslist RPAR
+    | LPAR RPAR;
+typedargslist ::= 
+    nonstartypedargslist
+    | nonstartypedargslist COMMA startypedargslist
+    | nonstartypedargslist COMMA startypedargslist COMMA doublestartypedargslist
+    | startypedargslist 
+    | startypedargslist COMMA doublestartypedargslist
+    | doublestartypedargslist;
+nonstartypedargslist ::=
+    probinittfpdef
+    | nonstartypedargslist COMMA probinittfpdef;
+startypedargslist ::=
+    STAR 
+    | STAR tfpdef 
+    | startypedargslist COMMA probinittfpdef;
+doublestartypedargslist ::=
+    DOUBLESTAR tfpdef
+    | DOUBLESTAR tfpdef COMMA;
+probinittfpdef ::=
+    tfpdef 
+    | tfpdef EQUAL test;
+tfpdef ::= 
+    NAME COLON test
+    | NAME;
+
+
+//varargslist: (vfpdef ['=' test] (',' vfpdef ['=' test])* [',' [
+//        '*' [vfpdef] (',' vfpdef ['=' test])* [',' ['**' vfpdef [',']]]
+//      | '**' vfpdef [',']]]
+//  | '*' [vfpdef] (',' vfpdef ['=' test])* [',' ['**' vfpdef [',']]]
+//  | '**' vfpdef [',']
+//)
+//vfpdef: NAME
+varargslist ::= 
+    nonstarvarargslist
+    | nonstarvarargslist COMMA starvarargslist
+    | nonstarvarargslist COMMA starvarargslist COMMA doublestarvarargslist
+    | starvarargslist COMMA doublestarvarargslist
+    | doublestarvarargslist;
+nonstarvarargslist ::=
+    probinitvfpdef 
+    | nonstarvarargslist COMMA probinitvfpdef;
+starvarargslist ::=
+    STAR
+    | STAR vfpdef
+    | starvarargslist COMMA probinitvfpdef;
+doublestarvarargslist ::=
+    DOUBLESTAR vfpdef
+    | DOUBLESTAR vfpdef COMMA;
+probinitvfpdef ::=
+    vfpdef
+    | vfpdef EQUAL test;
+vfpdef ::= NAME;
+
+//stmt: simple_stmt | compound_stmt
+//simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
+//small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
+//             import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
+//expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
+//                     ('=' (yield_expr|testlist_star_expr))*)
+stmt ::= simple_stmt | compound_stmt;
+simple_stmt ::= small_stmts SEMI NEWLINE | small_stmts NEWLINE;
+small_stmts ::=
+    small_stmt
+    | small_stmts SEMI small_stmt;
+small_stmt ::= expr_stmt | del_stmt | pass_stmt | flow_stmt | import_stmt | global_stmt | nonlocal_stmt | assert_stmt;
+expr_stmt ::= testlist_star_expr | 
+    testlist_star_expr expr_rest_stmt;
+expr_rest_stmt ::=
+    annassign
+    | augassign yield_expr
+    | augassign testlist
+    | expr_equal_rest_stmt;
+expr_equal_rest_stmt ::=
+    EQUAL yield_expr
+    | EQUAL testlist_star_expr
+    | expr_equal_rest_stmt EQUAL yield_expr
+    | expr_equal_rest_stmt EQUAL testlist_star_expr;
+
+//annassign: ':' test ['=' test]
+//testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
+//augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+//            '<<=' | '>>=' | '**=' | '//=')
+annassign ::= 
+    COLON test EQUAL test
+    | COLON test;
+testlist_star_expr ::=
+    testlist_star_expr_sub
+    | testlist_star_expr_sub COMMA;
+testlist_star_expr_sub::= 
+    test
+    | star_expr
+    | testlist_star_expr_sub COMMA test
+    | testlist_star_expr_sub COMMA star_expr;
+augassign ::= PLUSEQUAL | MINEQUAL | STAREQUAL | ATEQUAL | SLASHEQUAL | PERCENTEQUAL | AMPEREQUAL | VBAREQUAL | CIRCUMFLEXEQUAL
+    | LEFTSHIFTEQUAL | RIGHTSHIFTEQUAL | DOUBLESTAREQUAL | DOUBLESLASHEQUAL;
+
+//# For normal and annotated assignments, additional restrictions enforced by the interpreter
+// del_stmt: 'del' exprlist
+// pass_stmt: 'pass'
+// flow_stmt: break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt
+// break_stmt: 'break'
+// continue_stmt: 'continue'
+// return_stmt: 'return' [testlist]
+// yield_stmt: yield_expr
+// raise_stmt: 'raise' [test ['from' test]]
+// import_stmt: import_name | import_from
+// import_name: 'import' dotted_as_names
+del_stmt ::= DEL exprlist;
+pass_stmt ::= PASS;
+flow_stmt ::= break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt;
+break_stmt ::= BREAK;
+continue_stmt ::= CONTINUE;
+return_stmt ::= RETURN | RETURN testlist;
+yield_stmt ::= yield_expr;
+raise_stmt ::= RAISE | RAISE test | RAISE test FROM test;
+import_stmt ::= import_name | import_from;
+import_name ::= IMPORT dotted_as_names;
+
+
+// # note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
+// import_from: ('from' (('.' | '...')* dotted_name | ('.' | '...')+)
+//               'import' ('*' | '(' import_as_names ')' | import_as_names))
+// import_as_name: NAME ['as' NAME]
+// dotted_as_name: dotted_name ['as' NAME]
+// import_as_names: import_as_name (',' import_as_name)* [',']
+// dotted_as_names: dotted_as_name (',' dotted_as_name)*
+// dotted_name: NAME ('.' NAME)*
+// global_stmt: 'global' NAME (',' NAME)*
+// nonlocal_stmt: 'nonlocal' NAME (',' NAME)*
+// assert_stmt: 'assert' test [',' test]
+import_from ::= 
+    FROM import_from_name IMPORT STAR
+    | FROM import_from_name IMPORT LPAR import_as_names RPAR
+    | FROM import_from_name IMPORT import_as_names;
+import_from_name ::=
+    dotted_name
+    | import_from_name_dots
+    | import_from_name_dots dotted_name;
+import_from_name_dots ::=
+    DOT
+    | ELLIPSIS
+    | import_from_name_dots DOT
+    | import_from_name_dots ELLIPSIS;
+import_as_name ::= NAME | NAME AS NAME;
+dotted_as_name ::= dotted_name | dotted_name AS NAME;
+import_as_names ::= 
+    import_as_names_sub
+    | import_as_names_sub COMMA;
+import_as_names_sub ::=
+    import_as_name 
+    | import_as_names COMMA import_as_name;
+dotted_as_names ::= 
+    dotted_as_name
+    | dotted_as_names COMMA dotted_as_name;
+dotted_name ::= NAME | dotted_name DOT NAME;
+global_stmt ::= GLOBAL NAME | global_stmt COMMA NAME;
+nonlocal_stmt ::= NONLOCAL NAME | nonlocal_stmt COMMA NAME;
+assert_stmt ::= ASSERT test COMMA test | ASSERT test;
+
+
+// compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt
+// async_stmt: 'async' (funcdef | with_stmt | for_stmt)
+// if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
+// while_stmt: 'while' test ':' suite ['else' ':' suite]
+// for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
+// try_stmt: ('try' ':' suite
+//            ((except_clause ':' suite)+
+//             ['else' ':' suite]
+//             ['finally' ':' suite] |
+//            'finally' ':' suite))
+compound_stmt ::= if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt;
+async_stmt ::= ASYNC funcdef | ASYNC with_stmt | ASYNC for_stmt;
+if_stmt ::= 
+    IF test COLON suite 
+    | IF test COLON suite elif_stmts 
+    | IF test COLON suite elif_stmts ELSE COLON suite;
+elif_stmts ::=
+    ELIF test COLON suite
+    | elif_stmts ELIF test COLON suite;
+while_stmt ::= WHILE test COLON suite | WHILE test COLON suite ELSE COLON suite;
+for_stmt ::= 
+    FOR exprlist IN testlist COLON suite ELSE COLON suite
+    | FOR exprlist IN testlist COLON suite;
+try_stmt ::= 
+    TRY COLON suite except_stmts 
+    | TRY COLON suite except_stmts ELSE COLON suite FINALLY COLON suite
+    | TRY COLON suite except_stmts ELSE COLON suite
+    | TRY COLON suite except_stmts FINALLY COLON suite
+    | TRY COLON suite FINALLY COLON suite;
+except_stmts ::=
+    except_clause COLON suite 
+    | except_stmts except_clause COLON suite;
+
+// with_stmt: 'with' with_item (',' with_item)*  ':' suite
+// with_item: test ['as' expr]
+// # NB compile.c makes sure that the default except clause is last
+// except_clause: 'except' [test ['as' NAME]]
+// suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
+with_stmt ::= with_item_stmts  COLON suite;
+with_item_stmts ::=
+    WITH with_item 
+    | with_item_stmts COMMA with_item;
+with_item ::= test | test AS expr;
+except_clause ::= EXCEPT | EXCEPT test | EXCEPT test AS NAME;
+suite ::= simple_stmt | NEWLINE INDENT stmts DEDENT;
+stmts ::=
+    stmt |
+    stmts stmt;
+
+
+// test: or_test ['if' or_test 'else' test] | lambdef
+// test_nocond: or_test | lambdef_nocond
+// lambdef: 'lambda' [varargslist] ':' test
+// lambdef_nocond: 'lambda' [varargslist] ':' test_nocond
+// or_test: and_test ('or' and_test)*
+// and_test: not_test ('and' not_test)*
+// not_test: 'not' not_test | comparison
+// comparison: expr (comp_op expr)*
+test ::= or_test | or_test IF or_test ELSE test | lambdef;
+test_nocond ::= or_test | lambdef_nocond;
+lambdef ::= 
+    LAMBDA COLON test
+    | LAMBDA varargslist COLON test;
+lambdef_nocond ::= 
+    LAMBDA COLON test_nocond
+    | LAMBDA varargslist COLON test_nocond;
+or_test ::= 
+    and_test 
+    | or_test OR and_test;
+and_test ::= 
+    not_test 
+    | and_test AND not_test;
+not_test ::= NOT not_test | comparison;
+comparison ::= 
+    expr 
+    | comparison comp_op expr;
+
+// # <> isn't actually a valid comparison operator in Python. It's here for the
+// # sake of a __future__ import described in PEP 401 (which really works :-)
+// comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+// star_expr: '*' expr
+// expr: xor_expr ('|' xor_expr)*
+// xor_expr: and_expr ('^' and_expr)*
+// and_expr: shift_expr ('&' shift_expr)*
+// shift_expr: arith_expr (('<<'|'>>') arith_expr)*
+// arith_expr: term (('+'|'-') term)*
+// term: factor (('*'|'@'|'/'|'%'|'//') factor)*
+// factor: ('+'|'-'|'~') factor | power
+// power: atom_expr ['**' factor]
+comp_op ::= LESS | GREATER | EQEQUAL | GREATEREQUAL | LESSEQUAL | NOTEQUAL | IN | NOT IN | IS | IS NOT;
+star_expr ::= STAR expr;
+expr ::= xor_expr 
+    | expr VBAR xor_expr;
+xor_expr ::= and_expr 
+    | xor_expr CIRCUMFLEX and_expr;
+and_expr ::= shift_expr 
+    | and_expr AMPER shift_expr;
+shift_expr ::= 
+    arith_expr 
+    | shift_expr LEFTSHIFT arith_expr
+    | shift_expr RIGHTSHIFT arith_expr;
+arith_expr ::= 
+    term 
+    | arith_expr PLUS term
+    | arith_expr MINUS term;
+term ::= 
+    factor 
+    | term STAR factor
+    | term AT factor
+    | term SLASH factor
+    | term PERCENT factor
+    | term DOUBLESLASH factor;
+factor ::= 
+    PLUS factor 
+    | MINUS factor 
+    | TILDE factor 
+    | power;
+power ::= atom_expr {: Debuglog("power --> atom_expr"); :}
+    | atom_expr DOUBLESTAR factor;
+
+
+atom_expr ::= 
+    atom {: Debuglog("atom_expr --> atom"); :}
+    | AWAIT atom
+    | atom_expr trailer {: Debuglog("atom_expr --> atom_expr trailer"); :};
+atom ::= 
+    LPAR RPAR 
+    | LPAR yield_expr RPAR 
+    | LPAR testlist_comp RPAR 
+    | LSQB RSQB 
+    | LSQB testlist_comp RSQB 
+    | LBRACE RBRACE |
+    | LBRACE dictorsetmaker RBRACE 
+    | NAME | NUMBER | strings | ELLIPSIS | NONE | TRUE | FALSE;
+strings ::=
+    STRING
+    | strings STRING;
+
+// testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
+// trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
+// subscriptlist: subscript (',' subscript)* [',']
+// subscript: test | [test] ':' [test] [sliceop]
+// sliceop: ':' [test]
+// exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
+// testlist: test (',' test)* [',']
+// dictorsetmaker: ( ((test ':' test | '**' expr)
+//                    (comp_for | (',' (test ':' test | '**' expr))* [','])) |
+//                   ((test | star_expr)
+//                    (comp_for | (',' (test | star_expr))* [','])) )
+testlist_comp ::= 
+    test comp_for
+    | star_expr comp_for
+    | testlist_comp_sub 
+    | testlist_comp_sub COMMA;
+testlist_comp_sub ::=
+    test
+    | star_expr
+    | testlist_comp_sub COMMA test
+    | testlist_comp_sub COMMA star_expr;
+trailer ::= 
+    LPAR RPAR 
+    | LPAR arglist RPAR 
+    | LSQB subscriptlist RSQB | DOT NAME;
+subscriptlist ::=
+    subscriptlist_sub
+    | subscriptlist_sub COMMA;
+subscriptlist_sub ::= 
+    subscript 
+    | subscriptlist_sub COMMA subscript;
+subscript ::= test | 
+    | test COLON test sliceop
+    | COLON test sliceop
+    | test COLON sliceop
+    | test COLON test
+    | test COLON 
+    | COLON sliceop
+    | COLON test
+    | COLON ;
+sliceop ::= COLON | COLON test;
+exprlist ::= 
+    exprlist_sub 
+    | exprlist_sub COMMA;
+exprlist_sub ::=
+    expr
+    | star_expr
+    | exprlist_sub COMMA expr
+    | exprlist_sub COMMA star_expr;
+testlist ::= 
+    testlist_sub
+    | testlist_sub COMMA;
+testlist_sub ::=
+    test
+    | testlist_sub COMMA test;
+dictorsetmaker ::= 
+    dictorsetmaker1 
+    | dictorsetmaker2;
+dictorsetmaker1 ::= 
+    test COLON test comp_for
+    | DOUBLESTAR expr comp_for
+    | dictorsetmaker1_sub COMMA
+    | dictorsetmaker1_sub;
+dictorsetmaker1_sub ::=
+    test COLON test
+    | DOUBLESTAR expr
+    | dictorsetmaker1_sub COMMA test COLON test
+    | dictorsetmaker1_sub COMMA DOUBLESTAR expr;
+dictorsetmaker2 ::=
+    test comp_for
+    | star_expr comp_for
+    | dictorsetmaker2_sub 
+    | dictorsetmaker2_sub COMMA;
+dictorsetmaker2_sub ::=
+    test 
+    | star_expr
+    | dictorsetmaker2_sub COMMA test 
+    | dictorsetmaker2_sub COMMA star_expr;
+
+
+//classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
+//arglist: argument (',' argument)*  [',']
+classdef ::= 
+    CLASS NAME LPAR arglist RPAR COLON suite
+    | CLASS NAME COLON suite
+    | CLASS NAME LPAR RPAR COLON suite;
+arglist ::= 
+    arglist_sub
+    | arglist_sub COMMA;
+arglist_sub ::=
+    argument 
+    | arglist_sub COMMA argument;
+
+
+// # The reason that keywords are test nodes instead of NAME is that using NAME
+// # results in an ambiguity. ast.c makes sure it's a NAME.
+// # "test '=' test" is really "keyword '=' test", but we have no such token.
+// # These need to be in a single rule to avoid grammar that is ambiguous
+// # to our LL(1) parser. Even though 'test' includes '*expr' in star_expr,
+// # we explicitly match '*' here, too, to give it proper precedence.
+// # Illegal combinations and orderings are blocked in ast.c:
+// # multiple (test comp_for) arguments are blocked; keyword unpackings
+// # that precede iterable unpackings are blocked; etc.
+argument ::= test | test comp_for | test EQUAL test | DOUBLESTAR test | STAR test;
+
+// comp_iter: comp_for | comp_if
+// sync_comp_for: 'for' exprlist 'in' or_test [comp_iter]
+// comp_for: ['async'] sync_comp_for
+// comp_if: 'if' test_nocond [comp_iter]
+comp_iter ::= comp_for | comp_if;
+sync_comp_for ::= 
+    FOR exprlist IN or_test comp_iter
+    | FOR exprlist IN or_test;
+comp_for ::= ASYNC sync_comp_for;
+comp_if ::= 
+    IF test_nocond 
+    | IF test_nocond comp_iter;
+
+//# not used in grammar, but may appear in "node" passed from Parser to Compiler
+encoding_decl ::= NAME;
+
+yield_expr ::= YIELD | YIELD yield_arg;
+yield_arg ::= FROM test | testlist;
+

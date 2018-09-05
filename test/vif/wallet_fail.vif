@@ -1,0 +1,19 @@
+# Author: Haobin Ni, 2018
+# A simple wallet example, failed
+
+owner : IFL(address, this)
+
+@public
+@IFL_this
+def __init__(_owner : IFL(address, this)):
+    self.owner = _owner
+
+@public
+@IFL_this
+def withdraw(addr : IFL(address, sender)):
+	send(addr, self.balance) # Here goes your all your coins
+
+@public
+@payable
+def deposit():
+    pass
