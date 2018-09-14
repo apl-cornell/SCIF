@@ -19,6 +19,5 @@ def add_to_balance():
 @IFL_this
 def with_draw_balance():
     amount: wei_value = self.user_balance[msg.sender]
-    send(msg.sender, amount) # this line doesn't compile since the msg.sender and amout don't have "this" integrity
+    send(msg.sender, amount) 
     self.user_balance[msg.sender] = 0
-

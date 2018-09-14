@@ -80,7 +80,9 @@ import java.util.HashMap;
     HashMap<String, Integer> keywords;
     Stack<Integer> indentStack = new Stack<Integer>();
     int tabn;
-
+    int inbrace;
+    int inpar;
+    int insqb;
 
     Symbol op(int tokenId) {
         return new Symbol(tokenId, yyline, yycolumn); 
@@ -206,10 +208,22 @@ invalid = "$" | "?" | "`"
             else return key(i.intValue());
         }
 
-    "("     { return op(sym.LPAR); }
-    ")"     { return op(sym.RPAR); }
-    "["     { return op(sym.LSQB); }
-    "]"     { return op(sym.RSQB); }
+    "("     { 
+            ++inpar;
+            return op(sym.LPAR); 
+        }
+    ")"     { 
+            --inpar;
+            return op(sym.RPAR); 
+        }
+    "["     { 
+            ++insqb;
+            return op(sym.LSQB); 
+        }
+    "]"     { 
+            --insqb;
+            return op(sym.RSQB); 
+    }
     ":"     { return op(sym.COLON); }
     ","     { return op(sym.COMMA); }
     ";"     { return op(sym.SEMI); }
@@ -224,8 +238,14 @@ invalid = "$" | "?" | "`"
     "="     { return op(sym.EQUAL); }
     "."     { return op(sym.DOT); }
     "%"     { return op(sym.PERCENT); }
-    "{"     { return op(sym.LBRACE); }
-    "}"     { return op(sym.RBRACE); }
+    "{"     { 
+            ++inbrace;
+            return op(sym.LBRACE); 
+    }
+    "}"     { 
+            --inbrace;
+            return op(sym.RBRACE); 
+        }
     "^"     { return op(sym.CIRCUMFLEX); }
     "~"     { return op(sym.TILDE); }
     "@"     { return op(sym.AT); }
@@ -258,9 +278,11 @@ invalid = "$" | "?" | "`"
     }
 
     {NEWLINE} {
-        yybegin(INDENTATION);
-        tabn = 0;
-        return op(sym.NEWLINE);
+        if (inbrace <= 0 && inpar <= 0 && insqb <= 0) {
+            yybegin(INDENTATION);
+            tabn = 0;
+            return op(sym.NEWLINE);
+        }
     }
     {indent}  {}
 
@@ -269,13 +291,17 @@ invalid = "$" | "?" | "`"
     .       { return op(sym.ERROR, yytext()); }
 
     <<EOF>> {
-        if (indentStack.isEmpty()) {
-
+        if (indentStack.empty()) {
+            return op(sym.EOF);
         }
         else {
             indentStack.pop();
-            yypushback(1);
-            return op(sym.DEDENT);
+            if (indentStack.empty()) {
+                return op(sym.EOF);
+            }
+            else {
+                return op(sym.DEDENT);
+            }
         }
     }
 }
@@ -300,6 +326,9 @@ invalid = "$" | "?" | "`"
         else {
             yybegin(YYINITIAL);
         }
+    }
+    <<EOF>> {
+        yybegin(YYINITIAL);
     }
 }
 

@@ -21,7 +21,6 @@ def directly_voted(addr: address) -> bool:
 
 @public
 @IFL_this
-# only support voting between two proposals
 def __init__(_names: bytes32[2]):
     self.chairperson = msg.sender
     self.voter_count = 0
@@ -35,7 +34,7 @@ def __init__(_names: bytes32[2]):
 @public
 @IFL_chairperson
 def give_right_to_vote(voter: address):
-    #assert msg.sender == self.chairperson
+    assert msg.sender == self.chairperson
     assert not self.voters[voter].voted
     assert self.voters[voter].weight == 0
     self.voters[voter].weight = 1
@@ -61,9 +60,6 @@ def forward_weight(delegater: address):
     self.voters[target].weight += weight_to_forward
 
     if(self.voters[target].voted):
-#if(endorse(self.voters[target].voted, chairperson, this)):
-#if (endorse(self.voters[target].voted, voters, this)):
-#if(not endorse(self.voters[target].delegate, chairperson, this)):
         if(not self.voters[target].delegate):
             self.proposals[self.voters[target].vote].vote_count += weight_to_forward
             self.voters[target].weight = 0
@@ -92,7 +88,6 @@ def delegate(to: address):
     #Range only accepts literal values
     for i in range(endorse(4, bot, this)): # Change 4 to a bigger one
         if(not not self.voters[target].delegate):
-        #if (endorse(not not self.voters[target].delegate, chairperson, this)):
             target = self.voters[target].delegate
             assert target != msg.sender
         else:
@@ -103,9 +98,6 @@ def delegate(to: address):
     self.voters[target].weight += weight_to_forward
 
     if(self.voters[target].voted):
-    #if(endorse(self.voters[target].voted, chairperson, this)):
-    #if (endorse(self.voters[target].voted, voters, this)):
-    #if(not endorse(self.voters[target].delegate, chairperson, this)):
         if(not self.voters[target].delegate):
             self.proposals[self.voters[target].vote].vote_count += weight_to_forward
             self.voters[target].weight = 0
