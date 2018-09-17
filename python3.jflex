@@ -77,6 +77,7 @@ import java.util.HashMap;
 %column
 
 %{
+    StringBuffer sb = new StringBuffer();
     HashMap<String, Integer> keywords;
     Stack<Integer> indentStack = new Stack<Integer>();
     int tabn;
@@ -148,6 +149,7 @@ import java.util.HashMap;
 %init}
 
 %state INDENTATION, DEDENTATION
+//, STRING
 
 NEWLINE = \n | \r
 digit = [0-9]
@@ -207,6 +209,10 @@ invalid = "$" | "?" | "`"
             if (i == null) return id();
             else return key(i.intValue());
         }
+//    "\""    {
+//            yybegin(STRING);
+//            sb.setlength(0);
+//        }
 
     "("     { 
             ++inpar;
@@ -352,3 +358,7 @@ invalid = "$" | "?" | "`"
 [^]         {
     return op(sym.ERROR, "Unrecognizable char: " + yytext());
 }
+
+//<STRING> {
+//
+//}

@@ -50,6 +50,7 @@ terminal PERCENTEQUAL, AMPEREQUAL, CIRCUMFLEXEQUAL, ATEQUAL;
 terminal LEFTSHIFTEQUAL, RIGHTSHIFTEQUAL, DOUBLESTAREQUAL, DOUBLESLASHEQUAL;
 terminal INT, NEWLINE;
 terminal INDENT, DEDENT;
+terminal UPLUS, UMINUS, UTILDE;
 
 nonterminal file_input, file_input_unit;
 nonterminal decorator, decorators, decorated;
@@ -73,14 +74,38 @@ nonterminal dictorsetmaker, dictorsetmaker1, dictorsetmaker1_sub, dictorsetmaker
 nonterminal classdef, arglist, arglist_sub, argument;
 nonterminal comp_iter, sync_comp_for, comp_for, comp_if, encoding_decl, yield_expr, yield_arg;
 
+precedence left VBAR;
+precedence left CIRCUMFLEX;
+precedence left AMPER;
+precedence left LEFTSHIFT, RIGHTSHIFT;
+precedence left PLUS, MINUS;
+precedence left STAR, AT, SLASH, PERCENT, DOUBLESLASH;
+precedence left UPLUS, UMINUS, UTILDE;
+
+
 start with file_input;
 
 //single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE
 //file_input: (NEWLINE | stmt)* ENDMARKER
 file_input ::= 
-    | file_input file_input_unit {: Debuglog("Debug: 1"); :}
-    | file_input_unit {: Debuglog("Debug: 2"); :};
-file_input_unit ::= NEWLINE | stmt;
+    | file_input:fi file_input_unit:fiu {: 
+        Debuglog("Debug: 1");
+        Node<String> List = fi;
+
+        if (fiu != null) {
+            List.appendChild(fiu);
+        }
+        RESULT = List;
+    :}
+    | file_input_unit:a {: 
+        Debuglog("Debug: 2"); 
+        Node<String> List = new Node<String>("file_input");
+        List.appendChild(a);
+        RESULT = List;
+    :};
+
+file_input_unit ::= NEWLINE {: RESULT = null; :}
+    | stmt:a {: RESULT = a; :};
 
 //eval_input: testlist NEWLINE* ENDMARKER
 
@@ -176,42 +201,147 @@ vfpdef ::= NAME;
 //             import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
 //expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
 //                     ('=' (yield_expr|testlist_star_expr))*)
-stmt ::= simple_stmt | compound_stmt;
-simple_stmt ::= small_stmts SEMI NEWLINE | small_stmts NEWLINE;
+stmt ::= simple_stmt:a {: RESULT = a; :}
+    | compound_stmt {: RESULT = a; :};
+simple_stmt ::= small_stmts:a SEMI NEWLINE {: RESULT = a; :}
+    | small_stmts NEWLINE {: RESULT = a; :};
 small_stmts ::=
-    small_stmt
-    | small_stmts SEMI small_stmt;
-small_stmt ::= expr_stmt | del_stmt | pass_stmt | flow_stmt | import_stmt | global_stmt | nonlocal_stmt | assert_stmt;
-expr_stmt ::= testlist_star_expr | 
-    testlist_star_expr expr_rest_stmt;
+    small_stmt:a {: 
+        Node<String> List = new Node<String>("small_stmts"); 
+        if (a != null)
+            List.appendChild(a);
+        RESULT = List;
+    :}
+    | small_stmts:list SEMI small_stmt:a {:
+        Node<String> List = list;
+        if (a != null)
+            List.appendChild(a);
+        RESULT = List;
+    :};
+small_stmt ::= expr_stmt:a {: RESULT = a; :}
+    | del_stmt:a {: RESULT = a; :}
+    | pass_stmt:a {: RESULT = a; :}  
+    | flow_stmt:a {: RESULT = a; :}  
+    | import_stmt:a {: RESULT = a; :}  
+    | global_stmt:a {: RESULT = a; :}  
+    | nonlocal_stmt:a {: RESULT = a; :}  
+    | assert_stmt:a {: RESULT = a; :} ;
+expr_stmt ::= testlist_star_expr:a {:
+        Node<String> List = new Node<String>("expr_stmt");
+        List.appendChild(a);
+        RESULT = a;
+    :}
+    | testlist_star_expr:a expr_rest_stmt:b {:
+        Node<String> List = new Node(String>("expr_stmt");
+        List.appendChild(a);
+        List.appendChild(b);
+        RESULT = List;
+    :};
 expr_rest_stmt ::=
-    annassign
-    | augassign yield_expr
-    | augassign testlist
-    | expr_equal_rest_stmt;
+    annassign:a {:
+        Node<String> List = new Node<String>("expr_rest_stmt");
+        List.appendChild(a);
+        RESULT = List;
+    :}
+    | augassign:a yield_expr:b {:
+        Node<String> List = new Node<String>("expr_rest_stmt");
+        List.appendChild(a);
+        List.appendChild(b);
+        RESULT = List;
+    :}
+    | augassign:a testlist:b {:
+        Node<String> List = new Node<String>("expr_rest_stmt");
+        List.appendChild(a);
+        List.appendChild(b);
+        RESULT = List;
+    :}
+    | expr_equal_rest_stmt:a {:
+        Node<String> List = new Node<String>("expr_rest_stmt");
+        List.appendChild(a);
+        RESULT = List;
+    :};
 expr_equal_rest_stmt ::=
-    EQUAL yield_expr
-    | EQUAL testlist_star_expr
-    | expr_equal_rest_stmt EQUAL yield_expr
-    | expr_equal_rest_stmt EQUAL testlist_star_expr;
+    EQUAL yield_expr:a {:
+        Node<String> List = new Node<String>("expr_equal_rest_stmt");
+        List.appendChild(a);
+        RESULT = List;
+    :}
+    | EQUAL testlist_star_expr:a {:
+        Node<String> List = new Node<String>("expr_equal_rest_stmt");
+        List.appendChild(a);
+        RESULT = List;
+    :}
+    | expr_equal_rest_stmt:list EQUAL yield_expr:a {:
+        Node<String> List = list;
+        List.appendChild(a);
+        RESULT = List;
+    :}
+    | expr_equal_rest_stmt:list EQUAL testlist_star_expr:a {:
+        Node<String> List = list;
+        List.appendChild(a);
+        RESULT = List;
+    :};
 
 //annassign: ':' test ['=' test]
 //testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
 //augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
 //            '<<=' | '>>=' | '**=' | '//=')
 annassign ::= 
-    COLON test EQUAL test
-    | COLON test;
+    COLON test:a EQUAL test:b {:
+        Node<String> List = new Node<String>("annassign");
+        List.appendChild(a);
+        List.appendChild(b);
+        RESULT = List;
+    :}
+    | COLON test:a {:
+        Node<String> List = new Node<String>("annassign");
+        List.appendChild(a);
+        RESULT = List;
+    :};
 testlist_star_expr ::=
-    testlist_star_expr_sub
-    | testlist_star_expr_sub COMMA;
+    testlist_star_expr_sub:list {:
+        Node<String> List = new Node<String>("testlist_star_expr");
+        parser.copyChild(List, list);
+        RESULT = List;
+    :}
+    | testlist_star_expr_sub:list COMMA {:
+        Node<String> List = new Node<String>("testlist_star_expr");
+        parser.copyChild(List, list);
+        RESULT = List;
+    :};
 testlist_star_expr_sub::= 
-    test
-    | star_expr
-    | testlist_star_expr_sub COMMA test
-    | testlist_star_expr_sub COMMA star_expr;
-augassign ::= PLUSEQUAL | MINEQUAL | STAREQUAL | ATEQUAL | SLASHEQUAL | PERCENTEQUAL | AMPEREQUAL | VBAREQUAL | CIRCUMFLEXEQUAL
-    | LEFTSHIFTEQUAL | RIGHTSHIFTEQUAL | DOUBLESTAREQUAL | DOUBLESLASHEQUAL;
+    test:a {:
+        Node<String> List = new Node(String>("testlist_star_expr_sub");
+        List.appendChild(a);
+        RESULT = List;
+    :}
+    | star_expr:a {:
+        Node<String> List = new Node(String>("testlist_star_expr_sub");
+        List.appendChild(a);
+        RESULT = List;
+    :}
+    | testlist_star_expr_sub:List COMMA test:a {:
+        List.appendChild(a);
+        RESULT = List;
+    :}
+    | testlist_star_expr_sub:List COMMA star_expr:a {:
+        List.appendChild(a);
+        RESULT = List;
+    :};
+augassign ::= 
+    PLUSEQUAL 
+    | MINEQUAL 
+    | STAREQUAL 
+    | ATEQUAL 
+    | SLASHEQUAL 
+    | PERCENTEQUAL 
+    | AMPEREQUAL 
+    | VBAREQUAL 
+    | CIRCUMFLEXEQUAL
+    | LEFTSHIFTEQUAL 
+    | RIGHTSHIFTEQUAL 
+    | DOUBLESTAREQUAL 
+    | DOUBLESLASHEQUAL;
 
 //# For normal and annotated assignments, additional restrictions enforced by the interpreter
 // del_stmt: 'del' exprlist
@@ -369,36 +499,25 @@ comparison ::=
 // power: atom_expr ['**' factor]
 comp_op ::= LESS | GREATER | EQEQUAL | GREATEREQUAL | LESSEQUAL | NOTEQUAL | IN | NOT IN | IS | IS NOT;
 star_expr ::= STAR expr;
-expr ::= xor_expr 
-    | expr VBAR xor_expr;
-xor_expr ::= and_expr 
-    | xor_expr CIRCUMFLEX and_expr;
-and_expr ::= shift_expr 
-    | and_expr AMPER shift_expr;
-shift_expr ::= 
-    arith_expr 
-    | shift_expr LEFTSHIFT arith_expr
-    | shift_expr RIGHTSHIFT arith_expr;
-arith_expr ::= 
-    term 
-    | arith_expr PLUS term
-    | arith_expr MINUS term;
-term ::= 
-    factor 
-    | term STAR factor
-    | term AT factor
-    | term SLASH factor
-    | term PERCENT factor
-    | term DOUBLESLASH factor;
-factor ::= 
-    PLUS factor 
-    | MINUS factor 
-    | TILDE factor 
+
+expr ::= expr VBAR expr
+    | expr CIRCUMFLEX expr
+    | expr AMPER expr
+    | expr LEFTSHIFT expr
+    | expr RIGHTSHIFT expr
+    | expr PLUS expr
+    | expr MINUS expr
+    | expr STAR expr
+    | expr AT expr
+    | expr PERCENT expr
+    | expr SLASH expr
+    | expr DOUBLESLASH expr
+    | PLUS expr %prec UPLUS
+    | MINUS expr %prec UMINUS
     | power;
+
 power ::= atom_expr {: Debuglog("power --> atom_expr"); :}
     | atom_expr DOUBLESTAR factor;
-
-
 atom_expr ::= 
     atom {: Debuglog("atom_expr --> atom"); :}
     | AWAIT atom
