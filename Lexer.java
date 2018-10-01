@@ -359,10 +359,13 @@ class Lexer implements sym, java_cup.runtime.Scanner {
   private int zzFinalHighSurrogate = 0;
 
   /* user code: */
+    StringBuffer sb = new StringBuffer();
     HashMap<String, Integer> keywords;
     Stack<Integer> indentStack = new Stack<Integer>();
     int tabn;
-
+    int inbrace;
+    int inpar;
+    int insqb;
 
     Symbol op(int tokenId) {
         return new Symbol(tokenId, yyline, yycolumn); 
@@ -805,16 +808,24 @@ class Lexer implements sym, java_cup.runtime.Scanner {
             zzDoEOF();
             switch (zzLexicalState) {
             case YYINITIAL: {
-              if (indentStack.isEmpty()) {
-
+              if (indentStack.empty()) {
+            return op(sym.EOF);
         }
         else {
             indentStack.pop();
-            yypushback(1);
-            return op(sym.DEDENT);
+            if (indentStack.empty()) {
+                return op(sym.EOF);
+            }
+            else {
+                return op(sym.DEDENT);
+            }
         }
             }
             case 96: break;
+            case INDENTATION: {
+              yybegin(YYINITIAL);
+            }
+            case 97: break;
             default:
           { return new java_cup.runtime.Symbol(sym.EOF); }
         }
@@ -826,9 +837,11 @@ class Lexer implements sym, java_cup.runtime.Scanner {
             }
           case 56: break;
           case 2: 
-            { yybegin(INDENTATION);
-        tabn = 0;
-        return op(sym.NEWLINE);
+            { if (inbrace <= 0 && inpar <= 0 && insqb <= 0) {
+            yybegin(INDENTATION);
+            tabn = 0;
+            return op(sym.NEWLINE);
+        }
             }
           case 57: break;
           case 3: 
@@ -866,19 +879,23 @@ class Lexer implements sym, java_cup.runtime.Scanner {
             }
           case 65: break;
           case 11: 
-            { return op(sym.LPAR);
+            { ++inpar;
+            return op(sym.LPAR);
             }
           case 66: break;
           case 12: 
-            { return op(sym.RPAR);
+            { --inpar;
+            return op(sym.RPAR);
             }
           case 67: break;
           case 13: 
-            { return op(sym.LSQB);
+            { ++insqb;
+            return op(sym.LSQB);
             }
           case 68: break;
           case 14: 
-            { return op(sym.RSQB);
+            { --insqb;
+            return op(sym.RSQB);
             }
           case 69: break;
           case 15: 
@@ -922,11 +939,13 @@ class Lexer implements sym, java_cup.runtime.Scanner {
             }
           case 79: break;
           case 25: 
-            { return op(sym.LBRACE);
+            { ++inbrace;
+            return op(sym.LBRACE);
             }
           case 80: break;
           case 26: 
-            { return op(sym.RBRACE);
+            { --inbrace;
+            return op(sym.RBRACE);
             }
           case 81: break;
           case 27: 

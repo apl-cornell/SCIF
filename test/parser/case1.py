@@ -1,1 +1,4 @@
-print(1)
+def a(b) :
+    a = 1
+    #aaa
+

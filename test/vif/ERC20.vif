@@ -27,12 +27,12 @@ def __init__(_name: bytes32, _symbol: bytes32, _decimals: uint256, _initialSuppl
     self.symbol = _symbol
     self.decimals = _decimals
     #self.totalSupply =_initialSupply * convert(10, 'uint256') ** _decimals
-    self.totalSupply =_initialSupply * convert(10) ** _decimals
+    self.totalSupply = convert(10) ** _decimals
     #self.balances[msg.sender] = convert(self.totalSupply, 'int128')
     self.balances[msg.sender] = convert(self.totalSupply)
 
 
-# What is the balance of a particular account?
+# # What is the balance of a particular account?
 @public
 @constant
 @IFL_this

@@ -23,7 +23,6 @@ def bid():
     if not self.highest_bid == 0:
         send(self.highest_bidder, self.highest_bid)
     self.highest_bidder = msg.sender
-    #some comments
     self.highest_bid = msg.value
 
 

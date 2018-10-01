@@ -40,6 +40,7 @@ public interface sym {
   public static final int CLASS = 16;
   public static final int EXCEPT = 22;
   public static final int NUMBER = 3;
+  public static final int UPLUS = 91;
   public static final int SLASH = 52;
   public static final int TRUE = 6;
   public static final int LESSEQUAL = 67;
@@ -50,6 +51,7 @@ public interface sym {
   public static final int GREATEREQUAL = 69;
   public static final int EQUAL = 57;
   public static final int DOUBLESLASHEQUAL = 86;
+  public static final int UTILDE = 93;
   public static final int NONE = 7;
   public static final int CIRCUMFLEX = 62;
   public static final int LEFTSHIFT = 68;
@@ -94,6 +96,7 @@ public interface sym {
   public static final int DOUBLESLASH = 76;
   public static final int LESS = 55;
   public static final int AND = 10;
+  public static final int UMINUS = 92;
   public static final int ELLIPSIS = 9;
   public static final int ATEQUAL = 82;
   public static final int WITH = 40;
@@ -188,7 +191,10 @@ public interface sym {
   "INT",
   "NEWLINE",
   "INDENT",
-  "DEDENT"
+  "DEDENT",
+  "UPLUS",
+  "UMINUS",
+  "UTILDE"
   };
 }
 
