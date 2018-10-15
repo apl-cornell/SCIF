@@ -5,12 +5,12 @@ import java.util.*;
 parser code {:
     public boolean DEBUG = false;
 
-    public void printTree(Node<String> node, int depth) {
+    public static void printTree(Node<String> node, int depth) {
         for (int i = 0; i < depth; ++i)
             if (i == depth - 1)
                 System.out.print("|-");//\u22A2');
             else
-                System.out.print(' ');
+                System.out.print("  ");
         System.out.println(node.getData());
         List<Node<String>> kids = node.getChilds();
         for (Node<String> kid : kids) {
@@ -125,7 +125,7 @@ terminal INT, NEWLINE;
 terminal INDENT, DEDENT;
 terminal UPLUS, UMINUS, UTILDE;
 
-nonterminal program;
+nonterminal Node<String> program;
 nonterminal Node<String> file_input;
 nonterminal Node<String> file_input_unit;
 nonterminal Node<String> decorator, decorators, decorated;
@@ -148,6 +148,7 @@ nonterminal Node<String> exprlist, exprlist_sub, testlist, testlist_sub;
 nonterminal Node<String> dictorsetmaker, dictorsetmaker1, dictorsetmaker1_sub, dictorsetmaker2, dictorsetmaker2_sub;
 nonterminal Node<String> classdef, arglist, arglist_sub, argument;
 nonterminal Node<String> comp_iter, sync_comp_for, comp_for, comp_if, encoding_decl, yield_expr, yield_arg;
+nonterminal Node<String> labeledType, ifLabel, unitIfLabel, maybeLabeledName;
 
 precedence left VBAR;
 precedence left CIRCUMFLEX;
@@ -155,14 +156,31 @@ precedence left AMPER;
 precedence left LEFTSHIFT, RIGHTSHIFT;
 precedence left PLUS, MINUS;
 precedence left STAR, AT, SLASH, PERCENT, DOUBLESLASH;
+precedence left OR;
+precedence left AND;
 precedence left UPLUS, UMINUS, UTILDE;
 
 
 start with program;
 
 program ::= file_input:list {:
-        printTree(list, 0);
+        //printTree(list, 0);
+        RESULT = list;
     :};
+
+//Information flow specific modification
+labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
+        RESULT = makeNode("labeledType", makeName(a), b);
+    :};
+ifLabel ::= unitIfLabel:a {:
+        RESULT = makeNode("ifLabel", a);
+    :} 
+    | ifLabel:a AND ifLabel:b {:
+        RESULT = makeNode("ifLabel", a, makeOp("AND"), b);
+    :}
+    | ifLabel:a OR ifLabel:b {: RESULT = makeNode("ifLabel", a, makeOp("OR"), b); :};
+unitIfLabel ::= NAME:a {: RESULT = makeName(a);:} 
+    | LPAR ifLabel:a RPAR {:RESULT = a; :};
 
 //single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE
 //file_input: (NEWLINE | stmt)* ENDMARKER
@@ -210,8 +228,13 @@ decorated ::=
 //funcdef: 'def' NAME parameters ['->' test] ':' suite
 async_funcdef ::= ASYNC funcdef:a {:RESULT = makeNode("async_funcdef", a);:};
 funcdef ::= 
-    DEF NAME:a parameters:b RARROW test:c COLON suite:d {:RESULT = makeNode("funcdef", makeName(a), b, c, d);:}
-    | DEF NAME:a parameters:b COLON suite:c {:RESULT = makeNode("funcdef", makeName(a), b, c);:};
+    DEF maybeLabeledName:a parameters:b RARROW test:c COLON suite:d {:RESULT = makeNode("funcdef", a, b, c, d);:}
+    | DEF maybeLabeledName:a parameters:b COLON suite:c {:RESULT = makeNode("funcdef", a, b, c);:};
+maybeLabeledName ::=
+    NAME:a {:RESULT = makeName(a);:}
+    | NAME:a LBRACE ifLabel:b RBRACE {:
+        RESULT = makeNode("LabeledName", makeName(a), b);
+    :};
 
 
 //parameters: '(' [typedargslist] ')'
@@ -777,6 +800,7 @@ atom ::=
     | LBRACE RBRACE {:RESULT = makeNode("atom_{}");:}
     | LBRACE dictorsetmaker:a RBRACE {:RESULT = makeNode("atom_{}", a);:}
     | NAME:a {:RESULT = makeName(a);:} 
+    | labeledType:a {: RESULT = a; :}
     | NUMBER:a {: RESULT = makeNumber(a);:} 
     | strings:a {:RESULT = makeNode("atom", a);:} 
     | ELLIPSIS:o {:RESULT = makeNode("atom", makeOp(o));:}

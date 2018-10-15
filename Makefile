@@ -2,8 +2,8 @@ CUPRUNTIME=java-cup-11b-runtime.jar
 CUP=java-cup-11b.jar
 
 
-all: Lexer.java Parser.java sym.java LexerTest.java
-	javac -cp $(CUPRUNTIME):. Lexer.java Parser.java sym.java LexerTest.java
+all: Lexer.java Parser.java sym.java LexerTest.java TypeChecker.java
+	javac -cp $(CUPRUNTIME):. Lexer.java Parser.java sym.java LexerTest.java TypeChecker.java
 
 Lexer.java: python3.jflex
 	jflex python3.jflex
