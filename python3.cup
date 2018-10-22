@@ -29,56 +29,62 @@ parser code {:
     }
 
     public Node<String> makeNode(String s, Object... arr) {
-        Node<String> List = new Node<String>(s);
+        Node<String> List = new Node<String>(s, -1, -1);
+        boolean exist = false;
         for (Object a: arr) {
             Node<String> tmp = (Node<String>) a;
             List.appendChild(tmp);
+            if (!exist) {
+                exist = true;
+                List.left = tmp.left;
+                List.right = tmp.right;
+            }
         }
         return List;
     }
 
     public Node<String> makeName(Object name) {
         if (name instanceof String)
-            return new Node<String>((String)name);
+            return new Node<String>("%" + (String)name, -1, -1);
         Symbol tmp = (Symbol) name;
-        return new Node<String>(tmp.toString());
+        return new Node<String>(tmp.toString(), tmp.left, tmp.right);
     }
 
     public Node<String> makeOp(String s) {
         if (s instanceof String)
-            return new Node<String>((String)s);
-        return new Node<String>("#" + s);
+            return new Node<String>((String)s, -1, -1);
+        return new Node<String>("#" + s, -1, -1);
     }
 
     public Node<String> makeOp(Object op) {
         if (op == null) {
-            return new Node<String>("#null at makeOp(Object op)");
+            return new Node<String>("#null at makeOp(Object op)", -1, -1);
         }
         if (DEBUG)
             System.err.println("makeOp: " + op.getClass());
         Symbol tmp = (Symbol) op;
-        return new Node<String>("#" + tmp.toString());
+        return new Node<String>("#" + tmp.toString(), tmp.left, tmp.right);
     }
 
     public Node<String> makeNumber(Object nb) {
         if (nb instanceof String)
-            return new Node<String>((String)nb);
+            return new Node<String>((String)nb, -1, -1);
         Symbol tmp = (Symbol) nb;
-        return new Node<String>(tmp.toString());
+        return new Node<String>(tmp.toString(), tmp.left, tmp.right);
     }
 
     public Node<String> makeKeyword(Object kw) {
         if (kw instanceof String)
-            return new Node<String>((String)kw);
+            return new Node<String>((String)kw, -1, -1);
         Symbol tmp = (Symbol) kw;
-        return new Node<String>(tmp.toString());
+        return new Node<String>(tmp.toString(), tmp.left, tmp.right);
     }
 
     public Node<String> makeString(Object s) {
         if (s instanceof String)
-            return new Node<String>((String)s);
+            return new Node<String>((String)s, -1, -1);
         //TODO: string
-        return new Node<String>("stirng_td");
+        return new Node<String>("stirng_td", -1, -1);
     }
 
     public static void main(String args[]) {

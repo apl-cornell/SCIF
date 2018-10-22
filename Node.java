@@ -6,17 +6,20 @@ public class Node<T> {
 
     private Node<T> parent;
     private ArrayList<Node<T>> children;
+    public Integer c, r;
 
-    public Node(T data){
+    public Node(T data, int c, int r){
         this.data = data;
         this.children = new ArrayList<Node<T>>();
+        this.c = c;
+        this.r = r;
     }
 
-    public Node(T data,Node<T> parent){
+/*    public Node(T data,Node<T> parent){
         this.parent = parent;
         this.data = data;
         this.children = new ArrayList<Node<T>>();
-    }
+    }*/
 
     public Node<T> getParent(){
         return this.parent;
@@ -28,6 +31,10 @@ public class Node<T> {
 
     public List<Node<T>> getChilds(){
         return this.children;
+    }
+
+    public int childSize() {
+        return children.size();
     }
 
     public void appendChild(Node<T> child){
@@ -53,5 +60,8 @@ public class Node<T> {
         System.out.print(this.data + " ");
     }
 
+    public String getPos() {
+        return "(" + c.toString() + ", " + r.toString() + ")";
+    }
 
 }
