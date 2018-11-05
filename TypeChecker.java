@@ -14,6 +14,7 @@ public class TypeChecker {
             System.out.println("Finish\n");
         } catch(Exception e) {
             e.printStackTrace();
+            return;
         }
         HashMap<String, varInfo> varMap = new HashMap<String, varInfo>();
         HashMap<String, funcInfo> funcMap = new HashMap<String, funcInfo>();
@@ -70,6 +71,8 @@ public class TypeChecker {
         } else if (xd.equals("comparison") || xd.equals("expr")) {
             return new IFLabel(kids.get(1).getData(), evaIFLabel(kids.get(0)), evaIFLabel(kids.get(1)));
         }
+        //TODO: err rep
+        return null;
     }
 
     public static boolean genIfVarDef(String ctxt, Node<String> x, ArrayList<varInfo> varArr) {
@@ -151,7 +154,11 @@ public class TypeChecker {
     public static void collectGlobalDec(String ctxt, Node<String> x, HashMap<String, varInfo> varMap, HashMap<String, funcInfo> funcMap) {
         if (x == null) return;
         String nctxt = new String(ctxt);
-        if (genIfVarDef(ctxt, x, varMap)) {
+        ArrayList<varInfo> tmp = new ArrayList<>();
+        if (genIfVarDef(ctxt, x, tmp)) {
+            for (varInfo v : tmp) {
+                varMap.put(v.name, v);
+            }
             return;
         }
         if (genIfFuncDef(nctxt, x, varMap, funcMap)) {
@@ -178,7 +185,7 @@ public class TypeChecker {
                     }
                     break;
                 case "elif_stmts":
-                    List<Node<String>> kids = x.getChilds();
+                    kids = x.getChilds();
                     for (int i = 0; i < kids.size(); i += 2) {
                         nctxt = ctxt + ".elif." + kids.get(i).getPos();
                         collectGlobalDec(ctxt, kids.get(i), varMap, funcMap);
@@ -242,7 +249,7 @@ public class TypeChecker {
                     ArrayList<varInfo> pmArr = funcMap.get(name).prmters;
                     ArrayList<IFLabel> augArr = new ArrayList<>();
                     for (Node<String> aug: rc.getChilds().get(0).getChilds()) {
-                        ArrayList.add(getExpIFLabel(ctxt, aug, varMap, funcMap, cons, varNameMap, pc));
+                        augArr.add(getExpIFLabel(ctxt, aug, varMap, funcMap, cons, varNameMap, pc));
                     }
                     if (augArr.size() != pmArr.size()) {
                         //TODO: err rep
@@ -262,6 +269,8 @@ public class TypeChecker {
                 return IFLabel.bottom;
             return getExpIFLabel(ctxt, kids.get(0), varMap, funcMap, cons, varNameMap, pc);
         }
+        //TODO: err rep
+        return null;
     }
 
     public static void generateConstraints(String ctxt, Node<String> x, HashMap<String, varInfo> varMap, HashMap<String, funcInfo> funcMap, ArrayList<IFConstraint> cons, LookupMaps varNameMap, IFLabel pc) {
