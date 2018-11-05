@@ -36,8 +36,8 @@ parser code {:
             List.appendChild(tmp);
             if (!exist) {
                 exist = true;
-                List.left = tmp.left;
-                List.right = tmp.right;
+                List.r = tmp.r;
+                List.c = tmp.c;
             }
         }
         return List;
@@ -140,7 +140,7 @@ nonterminal Node<String> parameters, typedargslist, nonstartypedargslist, starty
 nonterminal Node<String> varargslist, nonstarvarargslist, starvarargslist, doublestarvarargslist, probinitvfpdef, vfpdef;
 nonterminal Node<String> stmt, simple_stmt, small_stmts, small_stmt, expr_stmt, expr_rest_stmt, expr_equal_rest_stmt;
 nonterminal Node<String> annassign, testlist_star_expr, testlist_star_expr_sub, augassign;
-nonterminal Node<String> del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, yield_stmt, raise_stmt, import_stmt;
+nonterminal Node<String> del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, /*yield_stmt,*/ raise_stmt, import_stmt;
 nonterminal Node<String> import_name, import_from, import_from_name, import_from_name_dots;
 nonterminal Node<String> import_as_name, dotted_as_name, import_as_names, import_as_names_sub, dotted_as_names, dotted_name;
 nonterminal Node<String> global_stmt, nonlocal_stmt, assert_stmt, compound_stmt, async_stmt;
@@ -153,7 +153,7 @@ nonterminal Node<String> testlist_comp, testlist_comp_sub, trailer, subscriptlis
 nonterminal Node<String> exprlist, exprlist_sub, testlist, testlist_sub;
 nonterminal Node<String> dictorsetmaker, dictorsetmaker1, dictorsetmaker1_sub, dictorsetmaker2, dictorsetmaker2_sub;
 nonterminal Node<String> classdef, arglist, arglist_sub, argument;
-nonterminal Node<String> comp_iter, sync_comp_for, comp_for, comp_if, encoding_decl, yield_expr, yield_arg;
+nonterminal Node<String> comp_iter, sync_comp_for, comp_for, comp_if, encoding_decl;//, yield_expr, yield_arg;
 nonterminal Node<String> labeledType, ifLabel, unitIfLabel, maybeLabeledName;
 
 precedence left VBAR;
@@ -202,7 +202,7 @@ file_input ::=
     :}
     | file_input_unit:a {: 
         Debuglog("Debug: 2"); 
-        Node<String> List = new Node<String>("file_input");
+        Node<String> List = new Node<String>("file_input", -1, -1);
         List.appendChild(a);
         RESULT = List;
     :};
@@ -336,7 +336,7 @@ simple_stmt ::= small_stmts:a SEMI NEWLINE {: RESULT = a; :}
     | NEWLINE {:RESULT = makeNode("NEWLINE");:};
 small_stmts ::=
     small_stmt:a {: 
-        Node<String> List = new Node<String>("small_stmts"); 
+        Node<String> List = makeNode("small_stmts"); 
         if (a != null)
             List.appendChild(a);
         RESULT = List;
@@ -355,47 +355,43 @@ small_stmt ::= expr_stmt:a {: RESULT = a; :}
     | global_stmt:a {: RESULT = a; :}  
     | nonlocal_stmt:a {: RESULT = a; :}  
     | assert_stmt:a {: RESULT = a; :} ;
-expr_stmt ::= testlist_star_expr:a {:
-        Node<String> List = new Node<String>("expr_stmt");
-        List.appendChild(a);
+expr_stmt ::= //testlist_star_expr:a 
+    test:a
+    {:
+        Node<String> List = makeNode("expr_stmt", a);
         RESULT = a;
     :}
-    | testlist_star_expr:a expr_rest_stmt:b {:
-        Node<String> List = new Node<String>("expr_stmt");
-        List.appendChild(a);
-        List.appendChild(b);
+    | test:a expr_rest_stmt:b {://testlist_star_expr:a expr_rest_stmt:b {:
+        Node<String> List = makeNode("expr_stmt", a, b);
         RESULT = List;
     :};
 expr_rest_stmt ::=
     annassign:a {:
-        Node<String> List = new Node<String>("expr_rest_stmt");
-        List.appendChild(a);
+        Node<String> List = makeNode("expr_rest_stmt", a);
         RESULT = List;
     :}
-    | augassign:a yield_expr:b {:
+/*    | augassign:a yield_expr:b {:
         Node<String> List = new Node<String>("expr_rest_stmt");
         List.appendChild(a);
         List.appendChild(b);
         RESULT = List;
-    :}
-    | augassign:a testlist:b {:
-        Node<String> List = new Node<String>("expr_rest_stmt");
-        List.appendChild(a);
-        List.appendChild(b);
+    :}*/
+    | augassign:a test:b {:
+        Node<String> List = makeNode("expr_rest_stmt", a, b);
         RESULT = List;
     :}
-    | expr_equal_rest_stmt:a {:
-        Node<String> List = new Node<String>("expr_rest_stmt");
-        List.appendChild(a);
+//    | expr_equal_rest_stmt:a {:
+    | EQUAL test:a {:
+        Node<String> List = makeNode("expr_rest_stmt", a);
         RESULT = List;
     :};
-expr_equal_rest_stmt ::=
+/*expr_equal_rest_stmt ::=
     EQUAL yield_expr:a {:
         Node<String> List = new Node<String>("expr_equal_rest_stmt");
         List.appendChild(a);
         RESULT = List;
     :}
-    | EQUAL testlist_star_expr:a {:
+    | EQUAL test:a {:
         Node<String> List = new Node<String>("expr_equal_rest_stmt");
         List.appendChild(a);
         RESULT = List;
@@ -405,11 +401,11 @@ expr_equal_rest_stmt ::=
         List.appendChild(a);
         RESULT = List;
     :}
-    | expr_equal_rest_stmt:list EQUAL testlist_star_expr:a {:
+    | expr_equal_rest_stmt:list EQUAL test:a {:
         Node<String> List = list;
         List.appendChild(a);
         RESULT = List;
-    :};
+    :};*/
 
 //annassign: ':' test ['=' test]
 //testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
@@ -417,17 +413,14 @@ expr_equal_rest_stmt ::=
 //            '<<=' | '>>=' | '**=' | '//=')
 annassign ::= 
     COLON test:a EQUAL test:b {:
-        Node<String> List = new Node<String>("annassign");
-        List.appendChild(a);
-        List.appendChild(b);
+        Node<String> List = makeNode("annassign", a, b);
         RESULT = List;
     :}
     | COLON test:a {:
-        Node<String> List = new Node<String>("annassign");
-        List.appendChild(a);
+        Node<String> List = makeNode("annassign", a);
         RESULT = List;
     :};
-testlist_star_expr ::=
+/*testlist_star_expr ::=
     testlist_star_expr_sub:list {:
         Node<String> List = new Node<String>("testlist_star_expr");
         parser.copyChild(List, list);
@@ -456,21 +449,21 @@ testlist_star_expr_sub::=
     | testlist_star_expr_sub:List COMMA star_expr:a {:
         List.appendChild(a);
         RESULT = List;
-    :};
-augassign ::= 
-    PLUSEQUAL {: RESULT = new Node<String>("PLUSEQUAL"); :}
-    | MINEQUAL {: RESULT = new Node<String>("MINEQUAL"); :} 
-    | STAREQUAL {: RESULT = new Node<String>("STAREQUAL"); :}
-    | ATEQUAL {: RESULT = new Node<String>("ATEQUAL"); :}
-    | SLASHEQUAL {: RESULT = new Node<String>("SLASHEQUAL"); :}
-    | PERCENTEQUAL {: RESULT = new Node<String>("PERCENTEQUAL"); :}
-    | AMPEREQUAL {: RESULT = new Node<String>("AMPEREQUAL"); :}
-    | VBAREQUAL {: RESULT = new Node<String>("VBAREQUAL"); :}
-    | CIRCUMFLEXEQUAL {: RESULT = new Node<String>("CIRCUMFLEXEQUAL"); :}
-    | LEFTSHIFTEQUAL {: RESULT = new Node<String>("LEFTSHIFTEQUAL"); :}
-    | RIGHTSHIFTEQUAL {: RESULT = new Node<String>("RIGHTSHIFTEQUAL"); :}
+    :};*/
+/*augassign ::= 
+    PLUSEQUAL {: RESULT = ("PLUSEQUAL"); :}
+    | MINEQUAL {: RESULT = ("MINEQUAL"); :} 
+    | STAREQUAL {: RESULT = ("STAREQUAL"); :}
+    | ATEQUAL {: RESULT = ("ATEQUAL"); :}
+    | SLASHEQUAL {: RESULT = ("SLASHEQUAL"); :}
+    | PERCENTEQUAL {: RESULT = ("PERCENTEQUAL"); :}
+    | AMPEREQUAL {: RESULT = ("AMPEREQUAL"); :}
+    | VBAREQUAL {: RESULT = ("VBAREQUAL"); :}
+    | CIRCUMFLEXEQUAL {: RESULT = ("CIRCUMFLEXEQUAL"); :}
+    | LEFTSHIFTEQUAL {: RESULT = ("LEFTSHIFTEQUAL"); :}
+    | RIGHTSHIFTEQUAL {: RESULT = ("RIGHTSHIFTEQUAL"); :}
     | DOUBLESTAREQUAL {: RESULT = new Node<String>("DOUBLESTAREQUAL"); :}
-    | DOUBLESLASHEQUAL{: RESULT = new Node<String>("DOUBLESLASHEQUAL"); :};
+    | DOUBLESLASHEQUAL{: RESULT = new Node<String>("DOUBLESLASHEQUAL"); :};*/
 
 //# For normal and annotated assignments, additional restrictions enforced by the interpreter
 // del_stmt: 'del' exprlist
@@ -484,28 +477,26 @@ augassign ::=
 // import_stmt: import_name | import_from
 // import_name: 'import' dotted_as_names
 del_stmt ::= DEL exprlist:a {:
-            Node<String> List = new Node<String>("del_stmt");
-            List.appendChild(a);
+            Node<String> List = makeNode("del_stmt", a);
             RESULT = List;
         :};
-pass_stmt ::= PASS {: RESULT = new Node<String>("PASS"); :};
+pass_stmt ::= PASS {: RESULT = makeNode("PASS"); :};
 flow_stmt ::= break_stmt:a {: RESULT = a;:}
         | continue_stmt:a {: RESULT = a;:}  
-        | return_stmt:a {: RESULT = a;:}  
-        | raise_stmt:a {: RESULT = a;:}  
-        | yield_stmt:a {: RESULT = a;:} ;
-break_stmt ::= BREAK {: RESULT = new Node<String>("BREAK"); :};
-continue_stmt ::= CONTINUE {: RESULT = new Node<String>("CONTINUE"); :};
-return_stmt ::= RETURN {: RESULT = new Node<String>("RETURN"); :}
+        | return_stmt:a {: RESULT = a;:};
+//        | raise_stmt:a {: RESULT = a;:};
+//        | yield_stmt:a {: RESULT = a;:} ;
+break_stmt ::= BREAK {: RESULT = makeNode("BREAK"); :};
+continue_stmt ::= CONTINUE {: RESULT = makeNode("CONTINUE"); :};
+return_stmt ::= RETURN {: RESULT = makeNode("RETURN"); :}
     | RETURN testlist:a {: 
-        Node<String> List = new Node<String>("return_stmt");
-        List.appendChild(a);
+        Node<String> List = makeNode("return_stmt", a);
         RESULT = List;
     :};
-yield_stmt ::= yield_expr:a {: RESULT = a; :};
-raise_stmt ::= RAISE {: RESULT = new Node<String>("RAISE"); :}
+//yield_stmt ::= yield_expr:a {: RESULT = a; :};
+/*raise_stmt ::= RAISE {: RESULT = makeNode("RAISE"); :}
     | RAISE test:a {:
-        Node<String> List = new Node<String>("raise_stmt");
+        Node<String> List = makeNode("raise_stmt");
         List.appendChild(a);
         RESULT = a;
     :}
@@ -514,14 +505,13 @@ raise_stmt ::= RAISE {: RESULT = new Node<String>("RAISE"); :}
         List.appendChild(a);
         List.appendChild(b);
         RESULT = a;
-    :};
-import_stmt ::= import_name:a {: RESULT = a; :}
+    :};*/
+/*import_stmt ::= import_name:a {: RESULT = a; :}
     | import_from:a {: RESULT = a; :};
 import_name ::= IMPORT dotted_as_names:a {:
-        Node<String> List = new Node<String>("import_name");
-        List.appendChild(a);
+        Node<String> List = makeNode("import_name", a);
         RESULT = List;
-    :};
+    :};*/
 
 
 // # note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
@@ -535,7 +525,7 @@ import_name ::= IMPORT dotted_as_names:a {:
 // global_stmt: 'global' NAME (',' NAME)*
 // nonlocal_stmt: 'nonlocal' NAME (',' NAME)*
 // assert_stmt: 'assert' test [',' test]
-import_from ::= 
+/*import_from ::= 
     FROM import_from_name:a IMPORT STAR {:
         Node<String> List = new Node<String>("import_from_star");
         List.appendChild(a);
@@ -562,14 +552,14 @@ import_from_name_dots ::=
     | ELLIPSIS {: RESULT = makeNode("import_from_name_dots", makeNode("ELLIPSIS")); :}
     | import_from_name_dots:a DOT {: a.appendChild(makeNode("DOT")); :}
     | import_from_name_dots:a ELLIPSIS {: a.appendChild(makeNode("ELLIPSIS")); :};
-import_as_name ::= NAME | NAME AS NAME;
+import_as_name ::= NAME | NAME AS NAME;*/
 dotted_as_name ::= dotted_name | dotted_name AS NAME;
-import_as_names ::= 
+/*import_as_names ::= 
     import_as_names_sub
     | import_as_names_sub COMMA;
 import_as_names_sub ::=
     import_as_name 
-    | import_as_names COMMA import_as_name;
+    | import_as_names COMMA import_as_name;*/
 dotted_as_names ::= 
     dotted_as_name
     | dotted_as_names COMMA dotted_as_name;
@@ -622,14 +612,14 @@ elif_stmts ::=
     :};
 while_stmt ::= 
     WHILE test:a COLON suite:b {:RESULT = makeNode("while_stmt", a, b); :}
-    | WHILE test:a COLON suite:b ELSE COLON suite:c {:
+    /*| WHILE test:a COLON suite:b ELSE COLON suite:c {:
         RESULT = makeNode("while_stmt", a, b, c);
-    :};
+    :}*/;
 for_stmt ::= 
-    FOR exprlist:a IN testlist:b COLON suite:c ELSE COLON suite:d {:
+    /*FOR exprlist:a IN testlist:b COLON suite:c ELSE COLON suite:d {:
         RESULT = makeNode("for_stmt", a, b, c, d);
     :}
-    | FOR exprlist:a IN testlist:b COLON suite:c {:RESULT = makeNode("for_stmt", a, b, c); :};
+    | */FOR exprlist:a IN testlist:b COLON suite:c {:RESULT = makeNode("for_stmt", a, b, c); :};
 try_stmt ::= 
     TRY COLON suite:a except_stmts:b {:
         RESULT = makeNode("try_stmt", a, b);
@@ -686,9 +676,9 @@ stmts ::=
 // not_test: 'not' not_test | comparison
 // comparison: expr (comp_op expr)*
 test ::= or_test:a {:RESULT = makeNode("test", a);:}
-    | or_test:a IF or_test:b ELSE test:c {:
+    /*| or_test:a IF or_test:b ELSE test:c {:
         RESULT = makeNode("test", a, b, c);
-    :};// | lambdef;
+    :}*/;// | lambdef;
 test_nocond ::= or_test:a {:RESULT = a;:};// | lambdef_nocond;
 // lambdef ::= 
 //     LAMBDA COLON test
@@ -729,6 +719,7 @@ comparison ::=
         else
             List = makeNode("comparison", a);
         List.appendChild(b);
+        List.appendChild(c);
         RESULT = List;
     :};
 
@@ -799,16 +790,16 @@ atom_expr ::=
     :};
 atom ::= 
     LPAR RPAR {:RESULT = makeNode("atom_()");:}
-    | LPAR yield_expr:a RPAR {:RESULT = makeNode("atom_()", a);:}
+//    | LPAR yield_expr:a RPAR {:RESULT = makeNode("atom_()", a);:}
     | LPAR testlist_comp:a RPAR {:RESULT = makeNode("atom_()", a);:}
     | LSQB RSQB {:RESULT = makeNode("atom_[]");:}
     | LSQB testlist_comp:a RSQB {:RESULT = makeNode("atom_[]", a);:}
     | LBRACE RBRACE {:RESULT = makeNode("atom_{}");:}
     | LBRACE dictorsetmaker:a RBRACE {:RESULT = makeNode("atom_{}", a);:}
-    | NAME:a {:RESULT = makeName(a);:} 
-    | labeledType:a {: RESULT = a; :}
-    | NUMBER:a {: RESULT = makeNumber(a);:} 
-    | strings:a {:RESULT = makeNode("atom", a);:} 
+    | NAME:a {:RESULT = makeNode("atom_name", makeName(a));:} 
+    | labeledType:a {: RESULT = makeNode("atom_labeledType", a); :}
+    | NUMBER:a {: RESULT = makeNode("atom_num", makeNumber(a));:} 
+    | strings:a {:RESULT = makeNode("atom_string", a);:} 
     | ELLIPSIS:o {:RESULT = makeNode("atom", makeOp(o));:}
     | NONE:k {:RESULT = makeNode("atom", makeKeyword(k));:}
     | TRUE:k {:RESULT = makeNode("atom", makeKeyword(k));:} 
@@ -876,15 +867,15 @@ exprlist ::=
     | exprlist_sub:a COMMA {:RESULT = a;:};
 exprlist_sub ::=
     expr:a {:RESULT = makeNode("exprlist_sub", a);:}
-    | star_expr:a {:RESULT = makeNode("exprlist_sub", a);:}
+    //| star_expr:a {:RESULT = makeNode("exprlist_sub", a);:}
     | exprlist_sub:list COMMA expr:a {:
         list.appendChild(a);
         RESULT = a;
     :}
-    | exprlist_sub:list COMMA star_expr:a {:
+    /*| exprlist_sub:list COMMA star_expr:a {:
         list.appendChild(a);
         RESULT = list;
-    :};
+    :}*/;
 testlist ::= 
     testlist_sub:a {:RESULT = a;:}
     | testlist_sub:a COMMA {:RESULT = a;:};
@@ -985,6 +976,6 @@ comp_if ::=
 //# not used in grammar, but may appear in "node" passed from Parser to Compiler
 encoding_decl ::= NAME:a {:RESULT = makeName(a);:};
 
-yield_expr ::= YIELD {:RESULT = makeNode("yield_expr");:}| YIELD yield_arg:a {:RESULT = makeNode("yield_expr", a);:};
-yield_arg ::= FROM test:a {:RESULT = makeNode("yield_arg_from", a);:}| testlist:b {:RESULT = makeNode("yield_arg", b);:};
+//yield_expr ::= YIELD {:RESULT = makeNode("yield_expr");:}| YIELD yield_arg:a {:RESULT = makeNode("yield_expr", a);:};
+//yield_arg ::= FROM test:a {:RESULT = makeNode("yield_arg_from", a);:}| testlist:b {:RESULT = makeNode("yield_arg", b);:};
 
