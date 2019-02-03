@@ -1,4 +1,3 @@
-def a(b) :
+def a(b:int) :
     a = 1
-    #aaa
 

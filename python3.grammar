@@ -1,0 +1,90 @@
+file_input: (NEWLINE | stmt)* ENDMARKER
+
+
+decorator: '@' NAME NEWLINE
+decorators: decorator+
+decorated: decorators (classdef | funcdef)
+
+funcdef: 'def' NAME parameters ['->' test] ':' suite
+
+parameters: '(' [typedargslist] ')'
+typedargslist: tfpdef ['=' test] (',' tfpdef ['=' test])* 
+tfpdef: NAME ':' test
+
+stmt: simple_stmt | compound_stmt
+simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
+small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
+             import_stmt | assert_stmt)
+expr_stmt: test annassign 
+annassign: ':' test ['=' test]
+# For normal and annotated assignments, additional restrictions enforced by the interpreter
+del_stmt: 'del' expr
+pass_stmt: 'pass'
+flow_stmt: break_stmt | continue_stmt | return_stmt | raise_stmt
+break_stmt: 'break'
+continue_stmt: 'continue'
+return_stmt: 'return' [test]
+raise_stmt: 'raise' [test ['from' test]]
+import_stmt: import_name
+import_name: 'import' import_as_name
+# note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
+import_as_name: NAME ['as' NAME]
+assert_stmt: 'assert' test [',' test]
+
+compound_stmt: if_stmt | while_stmt | try_stmt | funcdef | classdef
+if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
+while_stmt: 'while' test ':' suite ['else' ':' suite]
+try_stmt: ('try' ':' suite
+           ((except_clause ':' suite)+
+            ['else' ':' suite]
+            ['finally' ':' suite] |
+           'finally' ':' suite))
+# NB compile.c makes sure that the default except clause is last
+except_clause: 'except' [test ['as' NAME]]
+suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
+
+expr: 
+    expr ('or' | 'and') expr |
+    'not' expr |
+    expr comp_op expr |
+    expr ('|' | '^' | '&' | '<<' | '>>') expr |
+    expr ('+' | '-') expr |
+    expr ('*' | '@' | '/' | '%' | '//') expr |
+    ('+' | '-' | '~') expr |
+    expr '**' expr |
+    atom trailer*
+
+//-----------------removed--------
+test: or_test ['if' or_test 'else' test]
+test_nocond: or_test | lambdef_nocond
+or_test: and_test ('or' and_test)*
+and_test: not_test ('and' not_test)*
+not_test: 'not' not_test | comparison
+comparison: expr (comp_op expr)*
+# <> isn't actually a valid comparison operator in Python. It's here for the
+# sake of a __future__ import described in PEP 401 (which really works :-)
+comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+expr: xor_expr ('|' xor_expr)*
+xor_expr: and_expr ('^' and_expr)*
+and_expr: shift_expr ('&' shift_expr)*
+shift_expr: arith_expr (('<<'|'>>') arith_expr)*
+arith_expr: term (('+'|'-') term)*
+term: factor (('*'|'@'|'/'|'%'|'//') factor)*
+factor: ('+'|'-'|'~') factor | power
+power: atom_expr ['**' factor]
+atom_expr: atom trailer*
+//--------------------
+
+atom: ('(' [test] ')' |
+       '{' [dictmaker] '}' |
+       '{' [setmaker] '}' |
+       NAME | NUMBER | STRING+  | 'None' | 'True' | 'False')
+trailer: '(' [testlist] ')' | '[' test ']' | '.' NAME
+dictmaker: test ':' test (',' test ':' test)* [',']
+testlist: test (',' test)* [',']
+
+classdef: 'class' NAME ['(' [testlist] ')'] ':' suite
+
+testlist: test (',' test)*  [',']
+
+

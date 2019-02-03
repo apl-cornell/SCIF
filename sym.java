@@ -8,6 +8,7 @@ public interface sym {
   /* terminals */
   public static final int AT = 64;
   public static final int AS = 11;
+  public static final int ADDISH = 94;
   public static final int FROM = 25;
   public static final int DOUBLESTAREQUAL = 85;
   public static final int PERCENTEQUAL = 79;
@@ -26,6 +27,7 @@ public interface sym {
   public static final int DEDENT = 90;
   public static final int RBRACE = 61;
   public static final int VBAR = 53;
+  public static final int UNARY = 91;
   public static final int ELIF = 20;
   public static final int LBRACE = 60;
   public static final int PLUSEQUAL = 71;
@@ -37,10 +39,10 @@ public interface sym {
   public static final int DEF = 18;
   public static final int DOUBLESTAR = 74;
   public static final int ERROR = 2;
+  public static final int COMP = 92;
   public static final int CLASS = 16;
   public static final int EXCEPT = 22;
   public static final int NUMBER = 3;
-  public static final int UPLUS = 91;
   public static final int SLASH = 52;
   public static final int TRUE = 6;
   public static final int LESSEQUAL = 67;
@@ -51,7 +53,6 @@ public interface sym {
   public static final int GREATEREQUAL = 69;
   public static final int EQUAL = 57;
   public static final int DOUBLESLASHEQUAL = 86;
-  public static final int UTILDE = 93;
   public static final int NONE = 7;
   public static final int CIRCUMFLEX = 62;
   public static final int LEFTSHIFT = 68;
@@ -67,6 +68,7 @@ public interface sym {
   public static final int INT = 87;
   public static final int MINEQUAL = 72;
   public static final int AMPER = 54;
+  public static final int BIT = 93;
   public static final int EOF = 0;
   public static final int RPAR = 43;
   public static final int AWAIT = 14;
@@ -83,6 +85,7 @@ public interface sym {
   public static final int SLASHEQUAL = 77;
   public static final int STAREQUAL = 75;
   public static final int IF = 27;
+  public static final int MULISH = 95;
   public static final int RARROW = 73;
   public static final int COLON = 46;
   public static final int ASSERT = 12;
@@ -96,7 +99,6 @@ public interface sym {
   public static final int DOUBLESLASH = 76;
   public static final int LESS = 55;
   public static final int AND = 10;
-  public static final int UMINUS = 92;
   public static final int ELLIPSIS = 9;
   public static final int ATEQUAL = 82;
   public static final int WITH = 40;
@@ -192,9 +194,11 @@ public interface sym {
   "NEWLINE",
   "INDENT",
   "DEDENT",
-  "UPLUS",
-  "UMINUS",
-  "UTILDE"
+  "UNARY",
+  "COMP",
+  "BIT",
+  "ADDISH",
+  "MULISH"
   };
 }
 

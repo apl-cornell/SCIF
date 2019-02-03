@@ -10,6 +10,7 @@ timelimit: timedelta
 # Setup global variables
 @public
 def __init__(_beneficiary: address, _goal: wei_value, _timelimit: timedelta):
+    a = b
     self.beneficiary = _beneficiary
     self.deadline = block.timestamp + _timelimit
     self.timelimit = _timelimit
@@ -26,20 +27,20 @@ def participate():
 # Enough money was raised! Send funds to the beneficiary
 @public
 def finalize():
-    assert block.timestamp >= self.deadline and self.balance >= self.goal
+#    assert block.timestamp >= self.deadline and self.balance >= self.goal
+    a = b
     selfdestruct(self.beneficiary)
 # Not enough money was raised! Refund everyone (max 30 people at a time
 # to avoid gas limit issues)
-@public
-def refund():
-     assert block.timestamp >= self.deadline and self.balance < self.goal
-     ind: int128 = self.refundIndex
-     while i in range(ind, ind + 30):
-         if i >= self.nextFunderIndex:
-             self.refundIndex = self.nextFunderIndex
-             return
-         send(self.funders[i].sender, self.funders[i].value)
-         self.funders[i] = None
-
-         self.refundIndex = ind + 30
+#@public
+#def refund():
+#     assert block.timestamp >= self.deadline and self.balance < self.goal
+#     ind: int128 = self.refundIndex
+#     for i in range(ind, ind + 30):
+#         if i >= self.nextFunderIndex:
+#             self.refundIndex = self.nextFunderIndex
+#             return
+#         send(self.funders[i].sender, self.funders[i].value)
+#         self.funders[i] = None
+# self.refundIndex = ind + 30
 
