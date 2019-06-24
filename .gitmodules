@@ -1,0 +1,3 @@
+[submodule "modules/sherrloc"]
+	path = modules/sherrloc
+	url = https://github.com/andrewcmyers/sherrloc

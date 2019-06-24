@@ -12,7 +12,7 @@ public class LookupMaps {
         maps.add(initMap);
     }
     public String get(String k) {
-        for (int i = maps.size() - 1; i > 0; --i) {
+        for (int i = maps.size() - 1; i >= 0; --i) {
             if (maps.get(i).containsKey(k))
                 return maps.get(i).get(k);
         }

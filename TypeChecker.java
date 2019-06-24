@@ -48,6 +48,17 @@ public class TypeChecker {
         LookupMaps varNameMap = new LookupMaps(varMap);
 
         generateConstraints("", root, varMap, funcMap, cons, varNameMap, pc);
+        try {
+            BufferedWriter consFile = new BufferedWriter(new FileWriter(args[1]));
+            System.out.println("Writing the constraints of size " + Integer.toString(cons.size()));
+            for (IFConstraint con : cons) {
+                consFile.write(con.toSherrlocFmt() + "\n");
+            }
+            consFile.close();
+        } catch(Exception e) {
+            e.printStackTrace();
+            return;
+        }
     }
 
     public static Node<String> strip(Node<String> x) {
@@ -56,20 +67,31 @@ public class TypeChecker {
         return strip(x.getChilds().get(0));
     }
 
-    public static IFLabel evaIFLabel(Node<String> x) { //x should be "test" node
-        if (x.getData() != "test") {
-            System.err.println("meet non-test node when evaIFLabel");
-            return null;
-        }
-
+    public static IFLabel evaIFLabel(Node<String> x) { //x should be "expr" node
         List<Node<String>> kids = x.getChilds();
         String xd = x.getData();
+        if (!xd.equals("ifLabel")) {
+            IFLabel rnt = null, tmp;
+            for (Node<String> kid : kids) {
+                tmp = evaIFLabel(kid);
+                if (tmp != null) {
+                    rnt = tmp;
+                    return rnt;
+                }
+            }
+            return rnt;
+        }
+        /*if (x.getData() != "expr") {
+            System.err.println("meet non-expr node when evaIFLabel");
+            return null;
+        }*/
+
         if (x.getChilds().size() == 0) {
             return new IFLabel(x.getData());
         } else if (x.getChilds().size() == 1) {
             return evaIFLabel(kids.get(0));
         } else if (xd.equals("comparison") || xd.equals("expr")) {
-            return new IFLabel(kids.get(1).getData(), evaIFLabel(kids.get(0)), evaIFLabel(kids.get(1)));
+            return new IFLabel(kids.get(1).getData(), evaIFLabel(kids.get(0)), evaIFLabel(kids.get(2)));
         }
         //TODO: err rep
         return null;
@@ -98,7 +120,7 @@ public class TypeChecker {
                     return false;
                 }
                 Node<String> name = kids.get(0).getChilds().get(0);
-                if (name.getData() != "test") return false;
+                if (name.getData() != "expr") return false;
                 name = strip(name);
                 int px = name.c, py = name.r;
                 if (name != null && name.getData().charAt(0) == '%') {
@@ -220,7 +242,15 @@ public class TypeChecker {
         }
         if (kids.size() == 1) {
             return getExpIFLabel(ctxt, kids.get(0), varMap, funcMap, cons, varNameMap, pc);
-        } else if (x.getData().equals("or_test") || x.getData().equals("and_test") || x.getData().equals("power")) {
+        } else {
+            IFLabel result = getExpIFLabel(ctxt, kids.get(0), varMap, funcMap, cons, varNameMap, pc);
+            for (int i = 1; i < kids.size(); ++i) {
+                result = new IFLabel("meet", result, getExpIFLabel(ctxt, kids.get(i), varMap, funcMap, cons, varNameMap, pc));
+            }
+            return result;
+        }
+    /*
+        }(kids.get(1).equals("#||") || x.getData().equals("&") || x.getData().equals("power")) {
             IFLabel result = getExpIFLabel(ctxt, kids.get(0), varMap, funcMap, cons, varNameMap, pc);
             for (int i = 1; i < kids.size(); ++i) {
                 result = new IFLabel("meet", result, getExpIFLabel(ctxt, kids.get(i), varMap, funcMap, cons, varNameMap, pc));
@@ -268,9 +298,9 @@ public class TypeChecker {
             if (kids.size() == 0)
                 return IFLabel.bottom;
             return getExpIFLabel(ctxt, kids.get(0), varMap, funcMap, cons, varNameMap, pc);
-        }
+        }*/
         //TODO: err rep
-        return null;
+        //return null;
     }
 
     public static void generateConstraints(String ctxt, Node<String> x, HashMap<String, varInfo> varMap, HashMap<String, funcInfo> funcMap, ArrayList<IFConstraint> cons, LookupMaps varNameMap, IFLabel pc) {
@@ -284,18 +314,19 @@ public class TypeChecker {
                 String name = kids.get(0).getData();
                 String fullName;
                 List<Node<String>> kkids = kids.get(1).getChilds();
-                if (kkids.get(1).getData() == "annassign") {
+                if (kids.get(1).getData() == "annassign") {
                     fullName = ctxt + '.' + name;
                     if (varNameMap.exists_curlevel(name)) {
                         //TODO: error rep
                         return;
                     }
+                    System.out.println("add to varNameMap: " + name + " -> " + fullName);
                     varNameMap.add(name, fullName);
                     if (kkids.size() > 1) {
                         IFLabel result = new IFLabel("meet", getExpIFLabel(ctxt, kkids.get(1), varMap, funcMap, cons, varNameMap, pc), pc);
                         cons.add(Utils.genCons(varMap.get(fullName).lbl, result, x.c, x.r));
                     }
-                } else if (kkids.get(1).getData() == "augassign") {
+                } else if (kids.get(1).getData() == "augassign") {
                     //TODO: augassign support
                 } else {
                     if (!varNameMap.exists(name)) {
@@ -304,6 +335,8 @@ public class TypeChecker {
                     }
                     fullName = varNameMap.get(name);
                     IFLabel result = new IFLabel("meet", getExpIFLabel(ctxt, kkids.get(0), varMap, funcMap, cons, varNameMap, pc), pc);
+                    System.out.println("full name of " + name + ": " + fullName);
+                    System.out.println("result: " + result.toString());
                     cons.add(Utils.genCons(varMap.get(fullName).lbl, result, x.c, x.r));
                 }
             }
@@ -355,8 +388,3 @@ public class TypeChecker {
         }
     }
 }
-
-
-
-
-

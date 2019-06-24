@@ -1,0 +1,5 @@
+a : int{alice}
+b : int{bob}
+
+a = 1
+b = a
