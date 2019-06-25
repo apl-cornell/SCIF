@@ -1,7 +1,9 @@
 CUPRUNTIME=java-cup-11b-runtime.jar
 CUP=java-cup-11b.jar
 
-default: wyvern sherrloc-build
+default: wyvern 
+	
+all: wyvern sherrloc-build
 
 wyvern: Lexer.java Parser.java sym.java LexerTest.java TypeChecker.java
 	javac -cp $(CUPRUNTIME):. Lexer.java Parser.java sym.java LexerTest.java TypeChecker.java

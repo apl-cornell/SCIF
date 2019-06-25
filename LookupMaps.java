@@ -3,7 +3,7 @@ import java.util.HashMap;
 
 public class LookupMaps {
     ArrayList<HashMap<String, String>> maps;
-    public LookupMaps(HashMap<String, varInfo> varMap) {
+    public LookupMaps(HashMap<String, VarInfo> varMap) {
         maps = new ArrayList<>();
         HashMap<String, String> initMap = new HashMap<>();
         for (String s : varMap.keySet()) {

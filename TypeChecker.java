@@ -16,29 +16,34 @@ public class TypeChecker {
             e.printStackTrace();
             return;
         }
-        HashMap<String, varInfo> varMap = new HashMap<String, varInfo>();
-        HashMap<String, funcInfo> funcMap = new HashMap<String, funcInfo>();
+        HashMap<String, VarInfo> varMap = new HashMap<String, VarInfo>();
+        HashMap<String, FuncInfo> funcMap = new HashMap<String, FuncInfo>();
         ArrayList<IFConstraint> cons = new ArrayList<>();
         collectGlobalDec("", root, varMap, funcMap);
 
+        System.out.println("Display varMap:\n");
+        for (HashMap.Entry<String, VarInfo>  var : varMap.entrySet()) {
+            System.out.println(var.getKey());
+            System.out.println(": " + var.getValue().toString() + "\n");
+        }
         //generate constraint from gloabl dec
 /*        Iterator it = varMap.entrySet().iterator();
         while (it.hasNext()) {
-            HashMap.Entry<String, varInfo> pair = (HashMap.Entry<String, varInfo>) it.next();
-            varInfo v = (varInfo) pair.getValue();
+            HashMap.Entry<String, VarInfo> pair = (HashMap.Entry<String, VarInfo>) it.next();
+            VarInfo v = (VarInfo) pair.getValue();
             cons.add(Utils.genCons(v.name, v.lbl, v.x, v.y));
             cons.add(Utils.genCons(v.lbl, v.name, v.x, v.y));
         }*/
 /*        it = funcMap.entrySet().iterator();
         while (it.hasNext()) {
-            HashMap<String, funcInfo>.Entry pair = (HashMap<String, funcInfo>.Entry) it.next();
-            funcInfo f = (funcInfo) pair.getValue();
+            HashMap<String, FuncInfo>.Entry pair = (HashMap<String, FuncInfo>.Entry) it.next();
+            FuncInfo f = (FuncInfo) pair.getValue();
             //cons.add(Utils.genCons(f.name + "..call", f.callLbl, f.x, f.y));
             //cons.add(Utils.genCons(f.name + "..return", f.rtLbl, f.x, f.y));
             Iterator iit = f.prmters.entrySet().iterator();
             while (iit.hasNext()) {
-                HashMap<String. varInfo>.Entry pair = (HashMap<String, varInfo>.Entry) it.next();
-                varInfo v = (varInfo) pair.getValue();
+                HashMap<String. VarInfo>.Entry pair = (HashMap<String, VarInfo>.Entry) it.next();
+                VarInfo v = (VarInfo) pair.getValue();
                 cons.add(Utils.genCons(f.name + "." + v.name, v.lbl, v.x, v.y));
                 cons.add(Utils.genCons(v.lbl, f.name + "." + v.name, v.x, v.y));
             }
@@ -97,16 +102,16 @@ public class TypeChecker {
         return null;
     }
 
-    public static boolean genIfVarDef(String ctxt, Node<String> x, ArrayList<varInfo> varArr) {
+    public static boolean genIfVarDef(String ctxt, Node<String> x, ArrayList<VarInfo> varArr) {
         if (x.getData() == "tfpdef") {
             List<Node<String>> kids = x.getChilds();
             String name = ctxt + ":" + kids.get(0).getData();
             int px = x.c, py = x.r;
             if (kids.size() == 1) {
-                varArr.add(new varInfo(name, null, px, py));
+                varArr.add(new VarInfo(name, null, px, py));
             }
             else {
-                varArr.add(new varInfo(name, evaIFLabel(kids.get(1)), px, py));
+                varArr.add(new VarInfo(name, evaIFLabel(kids.get(1)), px, py));
             }
             return true;
         }
@@ -124,7 +129,7 @@ public class TypeChecker {
                 name = strip(name);
                 int px = name.c, py = name.r;
                 if (name != null && name.getData().charAt(0) == '%') {
-                    varArr.add(new varInfo(name.getData(), evaIFLabel(ann.getChilds().get(0)), px, py));
+                    varArr.add(new VarInfo(name.getData(), evaIFLabel(ann.getChilds().get(0)), px, py));
                     return true;
                 }
                 return false;
@@ -137,7 +142,7 @@ public class TypeChecker {
         return false;
     }
 
-    public static boolean genIfFuncDef(String ctxt, Node<String> x, HashMap<String, varInfo> varMap, HashMap<String, funcInfo> funcMap) {
+    public static boolean genIfFuncDef(String ctxt, Node<String> x, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap) {
         if (x.getData() != "funcdef") return false;
         String fname;
         IFLabel callLabel, returnLabel;
@@ -154,7 +159,7 @@ public class TypeChecker {
             callLabel = null;
         }
         ctxt = ctxt + "." + fname;
-        ArrayList<varInfo> pmArr = new ArrayList<>();
+        ArrayList<VarInfo> pmArr = new ArrayList<>();
         if (y.size() == 4) {
             List<Node<String>> pms = y.get(1).getChilds();
             if (pms.get(0).getData() == "nonstartypedargslist") {
@@ -168,17 +173,17 @@ public class TypeChecker {
         else {
             returnLabel = null;
         }
-        funcInfo f = new funcInfo(fname, callLabel, pmArr, returnLabel, px, py);
+        FuncInfo f = new FuncInfo(fname, callLabel, pmArr, returnLabel, px, py);
         funcMap.put(fname, f);
         return true;
     }
 
-    public static void collectGlobalDec(String ctxt, Node<String> x, HashMap<String, varInfo> varMap, HashMap<String, funcInfo> funcMap) {
+    public static void collectGlobalDec(String ctxt, Node<String> x, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap) {
         if (x == null) return;
         String nctxt = new String(ctxt);
-        ArrayList<varInfo> tmp = new ArrayList<>();
+        ArrayList<VarInfo> tmp = new ArrayList<>();
         if (genIfVarDef(ctxt, x, tmp)) {
-            for (varInfo v : tmp) {
+            for (VarInfo v : tmp) {
                 varMap.put(v.name, v);
             }
             return;
@@ -227,11 +232,11 @@ public class TypeChecker {
             collectGlobalDec(nctxt, y, varMap, funcMap);
     }
 
-    public static IFLabel getExpIFLabel(String ctxt, Node<String> x, HashMap<String, varInfo> varMap, HashMap<String, funcInfo> funcMap, ArrayList<IFConstraint> cons, LookupMaps varNameMap, IFLabel pc) {
+    public static IFLabel getExpIFLabel(String ctxt, Node<String> x, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap, ArrayList<IFConstraint> cons, LookupMaps varNameMap, IFLabel pc) {
         List<Node<String>> kids = x.getChilds();
         if (kids.size() == 0) {
             if (x.getData().startsWith("%")) {
-                String name = x.getData();
+                String name = ctxt + "." + x.getData();
                 if (varNameMap.exists(name)) {
                     if (varMap.containsKey(name))
                         return varMap.get(name).lbl;
@@ -275,8 +280,8 @@ public class TypeChecker {
                         //TODO: report error
                         return null;
                     }
-                    funcInfo f = funcMap.get(name);
-                    ArrayList<varInfo> pmArr = funcMap.get(name).prmters;
+                    FuncInfo f = funcMap.get(name);
+                    ArrayList<VarInfo> pmArr = funcMap.get(name).prmters;
                     ArrayList<IFLabel> augArr = new ArrayList<>();
                     for (Node<String> aug: rc.getChilds().get(0).getChilds()) {
                         augArr.add(getExpIFLabel(ctxt, aug, varMap, funcMap, cons, varNameMap, pc));
@@ -303,7 +308,7 @@ public class TypeChecker {
         //return null;
     }
 
-    public static void generateConstraints(String ctxt, Node<String> x, HashMap<String, varInfo> varMap, HashMap<String, funcInfo> funcMap, ArrayList<IFConstraint> cons, LookupMaps varNameMap, IFLabel pc) {
+    public static void generateConstraints(String ctxt, Node<String> x, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap, ArrayList<IFConstraint> cons, LookupMaps varNameMap, IFLabel pc) {
         if (x == null) return;
         List<Node<String>> kids = x.getChilds();
         if (x.getData() == "expr_stmt") {
@@ -342,7 +347,7 @@ public class TypeChecker {
             }
             return;
         } else if (x.getData() == "if_stmt") {
-            String nctxt = ctxt + ".if" + x.getPos();
+            String nctxt = ctxt + ".if." + x.getPos();
             IFLabel npc = new IFLabel("meet", pc, getExpIFLabel(ctxt, kids.get(0), varMap, funcMap, cons, varNameMap, pc));
             varNameMap.incLayer();
             generateConstraints(nctxt, kids.get(1), varMap, funcMap, cons, varNameMap, npc);
