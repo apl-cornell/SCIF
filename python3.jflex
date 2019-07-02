@@ -86,19 +86,19 @@ import java.util.HashMap;
     int insqb;
 
     Symbol op(int tokenId) {
-        return new Symbol(tokenId, yyline, yycolumn); 
+        return new Symbol(tokenId, yyline + 1, yycolumn + 1);
     }
 
     Symbol op(int tokenId, Object value) {
-        return new Symbol(tokenId, yyline, yycolumn, value);
+        return new Symbol(tokenId, yyline + 1, yycolumn + 1, value);
     }
 
     Symbol id() {
-        return new Symbol(sym.NAME, yyline, yycolumn, yytext());
+        return new Symbol(sym.NAME, yyline + 1, yycolumn + 1, yytext());
     }
    
     Symbol key(int symbolId) {
-        return new Symbol(keywords.get(yytext()), yyline, yycolumn, yytext());
+        return new Symbol(keywords.get(yytext()), yyline + 1, yycolumn + 1, yytext());
     }
 
     protected void init_keywords() {

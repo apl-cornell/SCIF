@@ -1,22 +1,13 @@
 import java.io.*;
 import java_cup.runtime.*;
 import java.util.*;
+import ast.*;
+import com.owlike.genson.Genson;
+import com.owlike.genson.GensonBuilder;
+import utils.CodeLocation;
 
 parser code {:
     public boolean DEBUG = true;
-
-    public static void printTree(Node<String> node, int depth) {
-        for (int i = 0; i < depth; ++i)
-            if (i == depth - 1)
-                System.out.print("|-");//\u22A2');
-            else
-                System.out.print("  ");
-        System.out.println(node.getData());
-        List<Node<String>> kids = node.getChilds();
-        for (Node<String> kid : kids) {
-            printTree(kid, depth + 1);
-        }
-    }
 
     public void syntax_error(Symbol cur_token) {
         System.err.println("Syntax error at " + cur_token);
@@ -28,66 +19,12 @@ parser code {:
             System.out.println(s);
     }
 
-    public Node<String> makeNode(String s, Object... arr) {
-        Node<String> List = new Node<String>(s, -1, -1);
-        boolean exist = false;
-        for (Object a: arr) {
-            Node<String> tmp = (Node<String>) a;
-            List.appendChild(tmp);
-            if (!exist) {
-                exist = true;
-                List.r = tmp.r;
-                List.c = tmp.c;
-            }
-        }
-        return List;
-    }
-
-    public Node<String> makeName(Object name) {
-        if (name instanceof String)
-            return new Node<String>("%" + (String)name, -1, -1);
-        Symbol tmp = (Symbol) name;
-        return new Node<String>(tmp.toString(), tmp.left, tmp.right);
-    }
-
-    public Node<String> makeOp(String s) {
-        if (s instanceof String)
-            return new Node<String>((String)s, -1, -1);
-        return new Node<String>("#" + s, -1, -1);
-    }
-
-    public Node<String> makeOp(Object op) {
-        if (op == null) {
-            return new Node<String>("#null at makeOp(Object op)", -1, -1);
-        }
-        if (DEBUG)
-            System.err.println("makeOp: " + op.getClass());
-        if (op instanceof String)
-            return makeOp((String) op);
-        Symbol tmp = (Symbol) op;
-        return new Node<String>("#" + tmp.toString(), tmp.left, tmp.right);
-    }
-
-    public Node<String> makeNumber(Object nb) {
-        if (nb instanceof String)
-            return new Node<String>((String)nb, -1, -1);
-        Symbol tmp = (Symbol) nb;
-        return new Node<String>(tmp.toString(), tmp.left, tmp.right);
-    }
-
-    public Node<String> makeKeyword(Object kw) {
+    /*public Node<String> makeKeyword(Object kw) {
         if (kw instanceof String)
             return new Node<String>((String)kw, -1, -1);
         Symbol tmp = (Symbol) kw;
         return new Node<String>(tmp.toString(), tmp.left, tmp.right);
-    }
-
-    public Node<String> makeString(Object s) {
-        if (s instanceof String)
-            return new Node<String>((String)s, -1, -1);
-        //TODO: string
-        return new Node<String>("stirng_td", -1, -1);
-    }
+    }*/
 
     public static void main(String args[]) {
         try {
@@ -102,12 +39,6 @@ parser code {:
             System.out.println("Finish\n");
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-    public void copyChild(Node<String> a, Node<String> b) {
-        List<Node<String>> kids = b.getChilds();
-        for (int i = 0; i < kids.size(); ++i) {
-            a.appendChild(kids.get(i));
         }
     }
 :};
@@ -133,28 +64,44 @@ terminal INT, NEWLINE;
 terminal INDENT, DEDENT;
 terminal UNARY, COMP, BIT, ADDISH, MULISH;
 
-nonterminal Node<String> program;
-nonterminal Node<String> file_input;
+nonterminal Program program;
+nonterminal ArrayList<Statement> file_input;
 //nonterminal Node<String> file_input_unit;
-nonterminal Node<String> decorator, decorators, decorated;
-nonterminal Node<String> funcdef;
-nonterminal Node<String> parameters, arglist, probinittfpdef, tfpdef;
-nonterminal Node<String> stmt, simple_stmt, small_stmts, small_stmt, expr_stmt;
-nonterminal Node<String> annassign;
-nonterminal Node<String> del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt, ipt_stmt;
-nonterminal Node<String> ipt_name;
-nonterminal Node<String> ipt_as_names;
-nonterminal Node<String> assert_stmt, compound_stmt;
-nonterminal Node<String> if_stmt, elif_stmts, while_stmt, try_stmt, except_stmts;
-nonterminal Node<String> except_clause, suite, stmts;
-nonterminal Node<String> expr;
-nonterminal Node<String> comp_op, bit_op, addish_op, mulish_op, unary_op, trailers;
-nonterminal Node<String> atom, strings;
-nonterminal Node<String> trailer;
-nonterminal Node<String> exprlist, exprlist_sub;
-nonterminal Node<String> dictmaker, setmaker, dictmaker_sub, setmaker_sub;
-nonterminal Node<String> classdef;
-nonterminal Node<String> labeledType, ifLabel, unitIfLabel, maybeLabeledName;
+nonterminal Expression decorator;
+nonterminal ArrayList<Expression> decorators;
+nonterminal FunctionDef decorated, funcdef;
+nonterminal Arguments parameters, typedarglist, probinittfpdef;
+nonterminal Arg tfpdef;
+nonterminal ArrayList<Statement> stmt, simple_stmt, small_stmts;
+nonterminal Statement small_stmt, expr_stmt;
+nonterminal AnnAssign annassign;
+nonterminal Statement del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt, ipt_stmt;
+nonterminal Import ipt_name;
+nonterminal Name ipt_as_names;
+nonterminal Statement assert_stmt, compound_stmt;
+nonterminal Statement if_stmt, while_stmt, try_stmt;
+nonterminal ArrayList<Statement> elif_stmts;
+nonterminal ArrayList<ExceptHandler> except_stmts;
+nonterminal ExceptHandler except_clause;
+nonterminal ArrayList<Statement> suite, stmts;
+nonterminal Expression expr;
+nonterminal CompareOperator comp_op;
+nonterminal BinaryOperator bit_op, addish_op, mulish_op;
+nonterminal UnaryOperator unary_op;
+//nonterminal ArrayList<Expression> trailers;
+nonterminal TrailerExpr trailer_expr;
+nonterminal Expression atom;
+nonterminal Str strings;
+nonterminal TrailerExpr trailer;
+nonterminal ArrayList<Expression> exprlist, exprlist_sub;
+nonterminal Dictmaker dictmaker, dictmaker_sub;
+nonterminal Setmaker setmaker, setmaker_sub;
+nonterminal ClassDef classdef;
+nonterminal Call arglist;
+nonterminal Keyword keyword;
+nonterminal Expression labeledType;
+nonterminal IfLabel ifLabel, unitIfLabel;
+nonterminal Expression maybeLabeledName;
 
 precedence left OR;
 precedence left AND;
@@ -164,59 +111,81 @@ precedence left BIT, VBAR, CIRCUMFLEX, AMPER, LEFTSHIFT, RIGHTSHIFT;
 precedence left ADDISH, PLUS, MINUS;
 precedence left MULISH, STAR, AT, PERCENT, SLASH, DOUBLESLASH;
 precedence left UNARY;
+precedence left LPAR, RPAR, LSQB, RSQB, LBRACE, RBRACE;
 precedence right DOUBLESTAR;
 
 
 start with program;
 
 program ::= file_input:list {:
-        printTree(list, 0);
-        RESULT = list;
+        RESULT = new Program(list);
+        RESULT.setLoc(new CodeLocation(listleft, listright));
+        System.err.println(RESULT);
     :};
 
 //Information flow specific modification
 labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
-        RESULT = makeNode("labeledType", makeName(a), b);
+        //System.out.println("parsed labeledType with label: \n" + b.toString());
+        Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new LabeledType(name, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
 ifLabel ::= unitIfLabel:a {:
-        RESULT = makeNode("ifLabel", a);
+        RESULT = a;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
     :} 
     | ifLabel:a AND ifLabel:b {:
-        RESULT = makeNode("ifLabel", a, makeOp("AND"), b);
+        RESULT = new ComplexIfLabel(a, IfOperator.MEET, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | ifLabel:a OR ifLabel:b {: RESULT = makeNode("ifLabel", a, makeOp("OR"), b); :};
-unitIfLabel ::= NAME:a {: RESULT = makeName(a);:} 
-    | LPAR ifLabel:a RPAR {:RESULT = a; :};
+    | ifLabel:a OR ifLabel:b {:
+        RESULT = new ComplexIfLabel(a, IfOperator.JOIN, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+unitIfLabel ::= NAME:a {:
+        Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new PrimitiveIfLabel(name);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | LPAR ifLabel:a RPAR {:
+        RESULT = a;
+    :};
 
-decorator ::= AT NAME:a NEWLINE {:RESULT = makeNode("decorator", makeName(a));:};
+decorator ::= AT:x NAME:a NEWLINE {:
+        RESULT = new Name((String)a);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
 decorators ::= 
-    decorator:a {:RESULT = makeNode("decorators", a);:}
+    decorator:a {:
+        ArrayList<Expression> rnt = new ArrayList<Expression>();
+        rnt.add(a);
+        RESULT = rnt;
+    :}
     | decorators:list decorator:a {:
-        list.appendChild(a);
+        list.add(a);
         RESULT = list;
     :};
 decorated ::= 
-    decorators:a classdef:b {:RESULT = makeNode("decorated", a, b);:}
+    decorators:a classdef:b {:RESULT = null; :}
     | decorators:a funcdef:b {:
-        RESULT = makeNode("decorated", a, b);
+        b.setDecoratorList(a);
+        RESULT = b;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
 
 //file_input: (NEWLINE | stmt)* ENDMARKER
 file_input ::= 
     file_input:fi stmt:fiu {: 
         Debuglog("Debug: 1");
-        Node<String> List = fi;
-
-        if (fiu != null) {
-            List.appendChild(fiu);
-        }
-        RESULT = List;
+        ArrayList<Statement> list = fi;
+        list.addAll(fiu);
+        RESULT = list;
     :}
-    | stmt:a {: 
-        Debuglog("Debug: 2"); 
-        Node<String> List = new Node<String>("file_input", -1, -1);
-        List.appendChild(a);
-        RESULT = List;
+    | stmt:a {:
+        Debuglog("Debug: 2");
+        RESULT = a;
     :};
 
 //file_input_unit ::= NEWLINE {: RESULT = makeNode("NEWLINE"); :}
@@ -227,12 +196,26 @@ file_input ::=
 
 //funcdef: 'def' NAME parameters ['->' test] ':' suite
 funcdef ::= 
-    DEF maybeLabeledName:a parameters:b RARROW expr:c COLON suite:d {:RESULT = makeNode("funcdef", a, b, c, d);:}
-    | DEF maybeLabeledName:a parameters:b COLON suite:c {:RESULT = makeNode("funcdef", a, b, c);:};
+    DEF:x maybeLabeledName:a parameters:b RARROW expr:c COLON suite:d {:
+        RESULT = new FunctionDef(a, b, d, null, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+        //makeNode("funcdef", a, b, c, d);
+    :}
+    | DEF:x maybeLabeledName:a parameters:b COLON suite:c {:
+        System.out.println("parsing function");
+        RESULT = new FunctionDef(a, b, c, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
 maybeLabeledName ::=
-    NAME:a {:RESULT = makeName(a);:}
+    NAME:a {:
+        RESULT = new Name((String)a);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
     | NAME:a LBRACE ifLabel:b RBRACE {:
-        RESULT = makeNode("LabeledName", makeName(a), b);
+        Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new LabeledType(name, b); //TODO
+        RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
 
 
@@ -244,19 +227,41 @@ maybeLabeledName ::=
 //  | '**' tfpdef [','])
 //tfpdef: NAME [':' test]
 parameters ::= 
-    LPAR arglist:a RPAR {:RESULT = makeNode("parameters", a);:}
-    | LPAR RPAR {:RESULT = makeNode("parameters");:};
-arglist ::= 
-    probinittfpdef:a {:RESULT = makeNode("arglist", a);:}
-    | arglist:list COMMA probinittfpdef:a {:
-        list.appendChild(a);
+    LPAR typedarglist:a RPAR {:
+        RESULT = a;
+    :}
+    | LPAR:a RPAR {:
+        RESULT = new Arguments();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+typedarglist ::=
+    probinittfpdef:a {:RESULT = a; :}
+    | typedarglist:list COMMA probinittfpdef:a {:
+        list.merge(a);
         RESULT = list;
     :}; 
 probinittfpdef ::=
-    tfpdef:a  {:RESULT = makeNode("probinittfpdef", a);:}
-    | tfpdef:a EQUAL expr:b {:RESULT = makeNode("probinittfpdef_=", a, b);:};
+    tfpdef:a  {:
+        ArrayList<Arg> args = new ArrayList<Arg>();
+        args.add(a);
+        RESULT = new Arguments(args, null);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | tfpdef:a EQUAL expr:b {:
+        ArrayList<Arg> args = new ArrayList<Arg>();
+        ArrayList<Expression> defaults = new ArrayList<Expression>();
+        args.add(a);
+        defaults.add(b);
+        RESULT = new Arguments(args, defaults);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
 tfpdef ::= 
-    NAME:a COLON expr:b {:RESULT = makeNode("tfpdef", makeName(a), b);:};
+    NAME:a COLON expr:b {:
+        Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new Arg(name, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
 
 //stmt: simple_stmt | compound_stmt
 //simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
@@ -265,22 +270,25 @@ tfpdef ::=
 //expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
 //                     ('=' (yield_expr|testlist_star_expr))*)
 stmt ::= simple_stmt:a {: RESULT = a; :}
-    | compound_stmt:a {: RESULT = a; :};
+    | compound_stmt:a {:
+        ArrayList<Statement> rnt = new ArrayList<Statement>();
+        rnt.add(a);
+        RESULT = rnt;
+    :};
 simple_stmt ::= small_stmts:a SEMI NEWLINE {: RESULT = a; :}
     | small_stmts:a NEWLINE {: RESULT = a; :}
-    | NEWLINE {:RESULT = makeNode("NEWLINE");:};
+    | NEWLINE:x {:
+        RESULT = new ArrayList<Statement>();
+    :};
 small_stmts ::=
-    small_stmt:a {: 
-        Node<String> List = makeNode("small_stmts"); 
-        if (a != null)
-            List.appendChild(a);
-        RESULT = List;
+    small_stmt:a {:
+        ArrayList<Statement> list = new ArrayList<Statement>();
+        list.add(a);
+        RESULT = list;
     :}
     | small_stmts:list SEMI small_stmt:a {:
-        Node<String> List = list;
-        if (a != null)
-            List.appendChild(a);
-        RESULT = List;
+        list.add(a);
+        RESULT = list;
     :};
 small_stmt ::= expr_stmt:a {: RESULT = a; :}
     | del_stmt:a {: RESULT = a; :}
@@ -291,12 +299,18 @@ small_stmt ::= expr_stmt:a {: RESULT = a; :}
 expr_stmt ::= 
     expr:a {:RESULT = a;:}
     | expr:a annassign:b {://testlist_star_expr:a expr_rest_stmt:b {:
-        Node<String> List = makeNode("expr_stmt", a, b);
-        RESULT = List;
+        b.setTarget(a);
+        if (a instanceof Name) {
+            b.setSimple(true);
+        }
+        RESULT = b;
     :}
     | expr:a EQUAL expr:b {:
-        Node<String> List = makeNode("expr_stmt", a, b);
-        RESULT = List;
+        ArrayList<Expression> list = new ArrayList<Expression>();
+        list.add(a);
+        Assign rnt = new Assign(list, b);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
 
 //annassign: ':' test ['=' test]
@@ -305,12 +319,16 @@ expr_stmt ::=
 //            '<<=' | '>>=' | '**=' | '//=')
 annassign ::= 
     COLON expr:a EQUAL expr:b {:
-        Node<String> List = makeNode("annassign", a, b);
-        RESULT = List;
+        //System.out.println("Annassign case 1 parsing");
+        AnnAssign rnt = new AnnAssign(null, a, b, false);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
     | COLON expr:a {:
-        Node<String> List = makeNode("annassign", a);
-        RESULT = List;
+        //System.out.println("Annassign case 2 parsing");
+        AnnAssign rnt = new AnnAssign(null, a, null, false);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
 
 //# For normal and annotated assignments, additional restrictions enforced by the interpreter
@@ -324,38 +342,50 @@ annassign ::=
 // raise_stmt: 'raise' [test ['from' test]]
 // import_stmt: import_name | import_from
 // import_name: 'import' dotted_as_names
-del_stmt ::= DEL exprlist:a {:
-            Node<String> List = makeNode("del_stmt", a);
-            RESULT = List;
+del_stmt ::= DEL:x exprlist:a {:
+            RESULT = new Delete(a);
+            RESULT.setLoc(new CodeLocation(xleft, xright));
         :};
-pass_stmt ::= PASS {: RESULT = makeNode("PASS"); :};
+pass_stmt ::= PASS:a {:
+        RESULT = new Pass();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
 flow_stmt ::= break_stmt:a {: RESULT = a;:}
         | continue_stmt:a {: RESULT = a;:}  
         | return_stmt:a {: RESULT = a;:}
         | raise_stmt:a {: RESULT = a;:};
-break_stmt ::= BREAK {: RESULT = makeNode("BREAK"); :};
-continue_stmt ::= CONTINUE {: RESULT = makeNode("CONTINUE"); :};
-return_stmt ::= RETURN {: RESULT = makeNode("RETURN"); :}
-    | RETURN expr:a {: 
-        Node<String> List = makeNode("return_stmt", a);
-        RESULT = List;
+break_stmt ::= BREAK:a {:
+        RESULT = new Break();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
-raise_stmt ::= RAISE {: RESULT = makeNode("RAISE"); :}
-    | RAISE expr:a {:
-        Node<String> List = makeNode("raise_stmt");
-        List.appendChild(a);
-        RESULT = a;
+continue_stmt ::= CONTINUE:a {:
+        RESULT = new Continue();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+return_stmt ::= RETURN:a {:
+        RESULT = new Return();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | RAISE expr:a FROM expr:b {:
-        Node<String> List = makeNode("raise_stmt");
-        List.appendChild(a);
-        List.appendChild(b);
-        RESULT = a;
+    | RETURN:x expr:a {:
+        RESULT = new Return(a);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+raise_stmt ::= RAISE:a {:
+        RESULT = new Raise();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | RAISE:x expr:a {:
+        RESULT = new Raise(a);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | RAISE:x expr:a FROM expr:b {:
+        RESULT = new Raise(a, b);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
 ipt_stmt ::= ipt_name:a {: RESULT = a; :};
-ipt_name ::= IMPORT ipt_as_names:a {:
-        Node<String> List = makeNode("import_name", a);
-        RESULT = List;
+ipt_name ::= IMPORT:x ipt_as_names:a {:
+        RESULT = new Import();
+        RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
 
 
@@ -363,14 +393,22 @@ ipt_name ::= IMPORT ipt_as_names:a {:
 // import_as_name: NAME ['as' NAME]
 // assert_stmt: 'assert' expr [',' expr]
 ipt_as_names ::= 
-    NAME:a {:RESULT = makeNode("import_as_name", makeName(a));:}
-    | NAME:a AS NAME:b {:
-        RESULT = makeNode("import_as_name", makeName(a), makeName(b));
-    :};
-assert_stmt ::= ASSERT expr:a COMMA expr:b {:
-        RESULT = makeNode("assert_stmt", a, b);
+    NAME:a {:
+        RESULT = new Name((String)a);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | ASSERT expr:a {:RESULT = makeNode("assert_stmt", a);:};
+    | NAME:a AS NAME:b {:
+        RESULT = new Name((String)a); //TODO
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+assert_stmt ::= ASSERT:x expr:a COMMA expr:b {:
+        RESULT = new Assert(a, b);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | ASSERT:x expr:a {:
+        RESULT = new Assert(a, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
 
 
 // compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt
@@ -388,68 +426,142 @@ compound_stmt ::= if_stmt:a {:RESULT = a;:}
     | classdef:a {:RESULT = a;:}
     | decorated:a {:RESULT = a;:}; 
 if_stmt ::= 
-    IF expr:a COLON suite:b {:RESULT = makeNode("if_stmt", a, b);:}
-    | IF expr:a COLON suite:b ELSE COLON suite:c {: RESULT = makeNode("if_stmt", a, b, c); :}
-    | IF expr:a COLON suite:b elif_stmts:c {: RESULT = makeNode("if_stmt", a, b, c); :}
-    | IF expr:a COLON suite:b elif_stmts:c ELSE COLON suite:d {: RESULT = makeNode("if_stmt", a, b, c, d); :};
+    IF:x expr:a COLON suite:b {:
+        RESULT = new If(a, b);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | IF:x expr:a COLON suite:b ELSE COLON suite:c {:
+        RESULT = new If(a, b, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | IF:x expr:a COLON suite:b elif_stmts:c {:
+        RESULT = new If(a, b, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | IF:x expr:a COLON suite:b elif_stmts:c ELSE COLON suite:d {:
+        RESULT = null; //TODO
+    :};
 elif_stmts ::=
-    ELIF expr:a COLON suite:b {: RESULT = makeNode("elif_stmts", a, b);:}
+    ELIF:x expr:a COLON suite:b {:
+        ArrayList<Statement> rnt = new ArrayList<Statement>();
+        If elif = new If(a, b);
+        elif.setLoc(new CodeLocation(xleft, xright));
+        rnt.add(elif);
+        RESULT = rnt;
+    :}
     | elif_stmts:list ELIF expr:a COLON suite:b {:
-        list.appendChild(a);
-        list.appendChild(b);
-        RESULT = list;
+        RESULT = null; //TODO
     :};
 while_stmt ::= 
-    WHILE expr:a COLON suite:b {:RESULT = makeNode("while_stmt", a, b); :}
+    WHILE:x expr:a COLON suite:b {:
+        //System.out.println("while stmt parsed");
+        RESULT = new While(a, b, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
     /*| WHILE test:a COLON suite:b ELSE COLON suite:c {:
         RESULT = makeNode("while_stmt", a, b, c);
     :}*/;
 try_stmt ::= 
-    TRY COLON suite:a except_stmts:b {:
-        RESULT = makeNode("try_stmt", a, b);
+    TRY:x COLON suite:a except_stmts:b {:
+        RESULT = new Try(a, b, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
-    | TRY COLON suite:a except_stmts:b ELSE COLON suite:c FINALLY COLON suite:d {:
-        RESULT = makeNode("try_stmt_else_finally", a, b, c, d);
+    | TRY:x COLON suite:a except_stmts:b ELSE COLON suite:c FINALLY COLON suite:d {:
+        RESULT = new Try(a, b, c, d);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
-    | TRY COLON suite:a except_stmts:b ELSE COLON suite:c {:
-        RESULT = makeNode("try_stmt_else", a, b, c); :}
-    | TRY COLON suite:a except_stmts:b FINALLY COLON suite:c {:
-        RESULT = makeNode("try_stmt_finally", a, b, c);:}
-    | TRY COLON suite:a FINALLY COLON suite:b {:
-        RESULT = makeNode("try_stmt_only_finally", a, b); :};
+    | TRY:x COLON suite:a except_stmts:b ELSE COLON suite:c {:
+        RESULT = new Try(a, b, c, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | TRY:x COLON suite:a except_stmts:b FINALLY COLON suite:c {:
+        RESULT = new Try(a, b, null, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | TRY:x COLON suite:a FINALLY COLON suite:b {:
+        RESULT = new Try(a, null, null, b);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
 except_stmts ::=
-    except_clause:a COLON suite:b {: RESULT = makeNode("except_stmts", a, b); :}
-    | except_stmts:list except_clause:a COLON suite:b {:
-        list.appendChild(a);
-        list.appendChild(b);
-        RESULT = list;
+    except_clause:a COLON suite:b {:
+        ArrayList<ExceptHandler> rnt = new ArrayList<ExceptHandler>();
+        a.setBody(b);
+        rnt.add(a);
+        RESULT = rnt;
+    :}
+    | except_stmts:rnt except_clause:a COLON suite:b {:
+        a.setBody(b);
+        rnt.add(a);
+        RESULT = rnt;
     :};
 
 // except_clause: 'except' [test ['as' NAME]]
 // suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
-except_clause ::= EXCEPT {:RESULT = makeNode("except_clause");:}
-    | EXCEPT expr:a {: RESULT = makeNode("except_clause", a);:}
-    | EXCEPT expr:a AS NAME:b {:RESULT = makeNode("except_clause", a, makeName(b));:};
+except_clause ::= EXCEPT:x {:
+        RESULT = new ExceptHandler(null, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | EXCEPT:x expr:a {:
+        RESULT = new ExceptHandler(a, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | EXCEPT:x expr:a AS NAME:b {:
+        RESULT = new ExceptHandler(a, new Str((String)b), null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
 suite ::= simple_stmt:a {:RESULT = a;:} | NEWLINE INDENT stmts:a DEDENT {:RESULT = a;:};
 stmts ::=
-    stmt:a {:RESULT = makeNode("stmts", a);:}
+    stmt:a {:
+        RESULT = a;
+    :}
     | stmts:list stmt:b {:
-        list.appendChild(b);
+        list.addAll(b);
         RESULT = list;
     :};
 
 expr ::=
-    expr:a OR:o expr:b {:RESULT = makeNode("expr", a, makeOp(o), b);:}
-    | expr:a AND:o expr:b {:RESULT = makeNode("expr", a, makeOp(o), b);:} 
-    | NOT:o expr:a {:RESULT = makeNode("expr", makeOp(o), a);:}
-    | expr:a comp_op:o expr:b {:RESULT = makeNode("expr", a, o, b);:} %prec COMP
-    | expr:a bit_op:o expr:b {:RESULT = makeNode("expr", a, o, b);:} %prec BIT
-    | expr:a addish_op:o expr:b {:RESULT = makeNode("expr", a, o, b);:} %prec ADDISH
-    | expr:a mulish_op:o expr:b {:RESULT = makeNode("expr", a, o, b);:} %prec MULISH
-    | unary_op:o expr:a {:RESULT = makeNode("expr", o, a);:} %prec UNARY
-    | expr:a DOUBLESTAR:o expr:b {:RESULT = makeNode("expr", a, makeOp(o), b);:}
-    | atom:a trailers:b {:RESULT = makeNode("expr", a, b);:}
-    | atom:a {:RESULT = makeNode("expr", a);:};
+    expr:a OR:o expr:b {:
+        RESULT = new BoolOp(a, BoolOperator.Or, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | expr:a AND:o expr:b {:
+        RESULT = new BoolOp(a, BoolOperator.And, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | NOT:o expr:a {:
+        RESULT = new UnaryOp(UnaryOperator.Not, a);
+        RESULT.setLoc(new CodeLocation(oleft, oright));
+    :}
+    | expr:a comp_op:o expr:b {:
+        //System.out.println("compare expr parsed");
+        RESULT = new Compare(a, o, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :} %prec COMP
+    | expr:a bit_op:o expr:b {:
+        RESULT = new BinOp(a, o, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :} %prec BIT
+    | expr:a addish_op:o expr:b {:
+        RESULT = new BinOp(a, o, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :} %prec ADDISH
+    | expr:a mulish_op:o expr:b {:
+        RESULT = new BinOp(a, o, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :} %prec MULISH
+    | unary_op:o expr:a {:
+        RESULT = new UnaryOp(o, a);
+        RESULT.setLoc(new CodeLocation(oleft, oright));
+    :} %prec UNARY
+    | expr:a DOUBLESTAR:o expr:b {:
+        RESULT = new BinOp(a, BinaryOperator.Pow, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | trailer_expr:a {:RESULT = a; :}
+    | atom:a {:
+        //System.out.println("atom expr parsed");
+        RESULT = a;
+    :};
 
 // # <> isn't actually a valid comparison operator in Python. It's here for the
 // # sake of a __future__ import described in PEP 401 (which really works :-)
@@ -463,64 +575,106 @@ expr ::=
 // term: factor (('*'|'@'|'/'|'%'|'//') factor)*
 // factor: ('+'|'-'|'~') factor | power
 // power: atom_expr ['**' factor]
-comp_op ::= LESS {:RESULT = makeOp("LESS");:}
-    | GREATER  {:RESULT = makeOp("GREATER");:}
-    | EQEQUAL {:RESULT = makeOp("EQEQUAL");:}
-    | GREATEREQUAL {:RESULT = makeOp("GREATEREQUAL");:}
-    | LESSEQUAL {:RESULT = makeOp("LESSEQUAL");:}
-    | NOTEQUAL {:RESULT = makeOp("NOTEQUAL");:}
-    | IN {:RESULT = makeOp("IN");:}
-    | NOT IN {:RESULT = makeOp("NOTIN");:}
-    | IS {:RESULT = makeOp("IS");:}
-    | IS NOT{:RESULT = makeOp("ISNOT");:} ;
+comp_op ::= LESS {:RESULT = CompareOperator.Lt; :}
+    | GREATER  {:RESULT = CompareOperator.Gt;:}
+    | EQEQUAL {:RESULT = CompareOperator.Eq;:}
+    | GREATEREQUAL {:RESULT = CompareOperator.GtE;:}
+    | LESSEQUAL {:RESULT = CompareOperator.LtE;:}
+    | NOTEQUAL {:RESULT = CompareOperator.NotEq;:}
+    | IN {:
+        //System.out.println("IN comp op parsed");
+        RESULT = CompareOperator.In;
+    :}
+    | NOT IN {:RESULT = CompareOperator.NotIn;:}
+    | IS {:RESULT = CompareOperator.Is;:}
+    | IS NOT{:RESULT = CompareOperator.IsNot;:} ;
 
 bit_op ::= 
-    VBAR:o {:RESULT = makeOp(o);:}
-    | CIRCUMFLEX:o {:RESULT = makeOp(o);:}
-    | AMPER:o {:RESULT = makeOp(o);:}
-    | LEFTSHIFT:o {:RESULT = makeOp(o);:}
-    | RIGHTSHIFT:o {:RESULT = makeOp(o);:};
+    VBAR:o {:RESULT = BinaryOperator.BitOr;:}
+    | CIRCUMFLEX:o {:RESULT = BinaryOperator.BitXor;:}
+    | AMPER:o {:RESULT = BinaryOperator.BitAnd;:}
+    | LEFTSHIFT:o {:RESULT = BinaryOperator.Lshift;:}
+    | RIGHTSHIFT:o {:RESULT = BinaryOperator.Rshift;:};
 
 addish_op ::=
-    PLUS:o {:RESULT = makeOp(o);:}
-    | MINUS:o {:RESULT = makeOp(o);:};
+    PLUS:o {:RESULT = BinaryOperator.Add;:}
+    | MINUS:o {:RESULT = BinaryOperator.Sub;:};
 
 mulish_op ::=
-    STAR:o {:RESULT = makeOp(o);:}
-    | AT:o {:RESULT = makeOp(o);:}
-    | PERCENT:o {:RESULT = makeOp(o);:}
-    | SLASH:o {:RESULT = makeOp(o);:}
-    | DOUBLESLASH:o {:RESULT = makeOp(o);:};
+    STAR:o {:RESULT = BinaryOperator.Mult;:}
+    | AT:o {:RESULT = BinaryOperator.MatMult;:}
+    | PERCENT:o {:RESULT = BinaryOperator.Mod;:}
+    | SLASH:o {:RESULT = BinaryOperator.Div;:}
+    | DOUBLESLASH:o {:RESULT = BinaryOperator.FloorDiv;:};
 
 unary_op ::=
-    PLUS:o {:RESULT = makeOp(o);:} 
-    | MINUS:o {:RESULT = makeOp(o);:} 
-    | TILDE:o {:RESULT = makeOp(o);:};
+    PLUS:o {:RESULT = UnaryOperator.UAdd;:}
+    | MINUS:o {:RESULT = UnaryOperator.USub;:}
+    | TILDE:o {:RESULT = UnaryOperator.Invert;:};
 
-trailers ::=
-    trailer:a {:RESULT = makeNode("trailers", a);:}
-    | trailers:a trailer:b {:RESULT = makeNode("trailers", a, b);:};
+trailer_expr ::=
+    atom:a trailer:b {:
+        b.setValue(a);
+        RESULT = b;
+    :}
+    | trailer_expr:a trailer:b {:
+        b.setValue(a);
+        RESULT = b;
+    :};
+/*trailers ::=
+    trailer:a {:
+        ArrayList<Expression> rnt = new ArrayList<Expression>();
+        rnt.add(a);
+        RESULT = rnt;
+    :}
+    | trailers:a trailer:b {:
+        a.add(b);
+        RESULT = a;
+    :};*/
 
 atom ::= 
-    LPAR RPAR {:RESULT = makeNode("atom_()");:}
-    | LPAR expr:a RPAR {:RESULT = makeNode("atom_()", a);:}
-    | LBRACE RBRACE {:RESULT = makeNode("atom_{}");:}
-    | LBRACE dictmaker:a RBRACE {:RESULT = makeNode("atom_{}", a);:}
-    | LBRACE setmaker:a RBRACE {:RESULT = makeNode("atom_{}", a);:}
-    | NAME:a {:RESULT = makeNode("atom_name", makeName(a));:} 
-    | labeledType:a {: RESULT = makeNode("atom_labeledType", a); :}
-    | NUMBER:a {: RESULT = makeNode("atom_num", makeNumber(a));:} 
-    | strings:a {:RESULT = makeNode("atom_string", a);:} 
-    | ELLIPSIS:o {:RESULT = makeNode("atom", makeOp(o));:}
-    | NONE:k {:RESULT = makeNode("atom", makeKeyword(k));:}
-    | TRUE:k {:RESULT = makeNode("atom", makeKeyword(k));:} 
-    | FALSE:k {:RESULT = makeNode("atom", makeKeyword(k));:};
-strings ::=
-    STRING:a {:RESULT = makeNode("strings", makeString(a));:}
-    | strings:a STRING:b {:
-        a.appendChild(makeString(b));
-        RESULT = a;
+    LPAR:a RPAR {:
+        RESULT = new Expression();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | LPAR expr:a RPAR {:RESULT = a; :}
+    | LBRACE:a RBRACE {:
+        RESULT = new Expression();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | LBRACE dictmaker:a RBRACE {:RESULT = a;:}
+    | LBRACE setmaker:a RBRACE {:RESULT = a;:}
+    | NAME:a {:
+        RESULT = new Name((String)a);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | labeledType:a {: RESULT = a; :}
+    | NUMBER:a {:
+        RESULT = new Num<Integer>(Integer.valueOf((String)a));
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | strings:a {:RESULT = a;:}
+    | ELLIPSIS:o {:RESULT = null;:}
+    | NONE:k {:
+        RESULT = new ConstantExpr(Constant.NONE);
+        RESULT.setLoc(new CodeLocation(kleft, kright));
+    :}
+    | TRUE:k {:
+        RESULT = new ConstantExpr(Constant.TRUE);
+        RESULT.setLoc(new CodeLocation(kleft, kright));
+    :}
+    | FALSE:k {:
+        RESULT = new ConstantExpr(Constant.FALSE);
+        RESULT.setLoc(new CodeLocation(kleft, kright));
     :};
+strings ::=
+    STRING:a {:
+        RESULT = new Str((String)a);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    /*| strings:a STRING:b {:
+        RESULT = null; //TODO
+    :}*/;
 
 // trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
 // subscript: test | [test] ':' [test] [sliceop]
@@ -530,19 +684,36 @@ strings ::=
 //                   ((test | star_expr)
 //                    (comp_for | (',' (test | star_expr))* [','])) )
 trailer ::= 
-    LPAR RPAR {:RESULT = makeNode("trailer_()");:}
-    | LPAR exprlist:a RPAR {:RESULT = makeNode("trailer_()", a);:}
-    | LSQB expr:a RSQB {:RESULT = makeNode("trailer_[]", a);:}
-    | DOT NAME:a {:RESULT = makeNode("trailer_.", makeName(a));:};
+    LPAR:a RPAR {:
+        RESULT = new Call();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | LPAR arglist:a RPAR {:
+        RESULT = a;
+    :}
+    | LSQB expr:a RSQB {:
+        RESULT = new Subscript(null, a, null);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | DOT NAME:a {:
+        Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new Attribute(null, name, null);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
 exprlist ::= 
     exprlist_sub:a {:RESULT = a;:} 
     | exprlist_sub:a COMMA {:RESULT = a;:};
 exprlist_sub ::=
-    expr:a {:RESULT = makeNode("exprlist_sub", a);:}
+    expr:a {:
+        ArrayList<Expression> rnt = new ArrayList<Expression>();
+        rnt.add(a);
+        RESULT = rnt;
+    :}
     //| star_expr:a {:RESULT = makeNode("exprlist_sub", a);:}
     | exprlist_sub:list COMMA expr:a {:
-        list.appendChild(a);
-        RESULT = a;
+        list.add(a);
+        RESULT = list;
     :}
     /*| exprlist_sub:list COMMA star_expr:a {:
         list.appendChild(a);
@@ -552,19 +723,28 @@ dictmaker ::=
     dictmaker_sub:a COMMA {:RESULT = a;:}
     | dictmaker_sub:a {:RESULT = a;:};
 dictmaker_sub ::=
-    expr:a COLON expr:b {:RESULT = makeNode("dictmaker_sub", a, b);:}
+    expr:a COLON expr:b {:
+        Dictmaker rnt = new Dictmaker();
+        rnt.addPair(a, b);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
     | dictmaker_sub:list COMMA expr:a COLON expr:b {:
-        list.appendChild(a);
-        list.appendChild(b);
+        list.addPair(a, b);
         RESULT = list;
     :};
 setmaker ::=
     setmaker_sub:a {:RESULT = a;:}
     | setmaker_sub:a COMMA {:RESULT = a;:};
 setmaker_sub ::=
-    expr:a {:RESULT = makeNode("setmaker_sub", a);:}
+    expr:a {:
+        Setmaker rnt = new Setmaker();
+        rnt.addElement(a);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
     | setmaker_sub:list COMMA expr:a {:
-        list.appendChild(a);
+        list.addElement(a);
         RESULT = list;
     :};
 
@@ -572,8 +752,47 @@ setmaker_sub ::=
 //classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
 //arglist: argument (',' argument)*  [',']
 classdef ::= 
-    CLASS NAME LPAR exprlist:a RPAR COLON suite:b {:RESULT = makeNode("classdef", a, b);:}
-    | CLASS NAME COLON suite:a {:RESULT = makeNode("classdef", a);:}
-    | CLASS NAME LPAR RPAR COLON suite:a {:RESULT=  makeNode("classdef", a);:};
+    CLASS:x NAME:name LPAR arglist:a RPAR COLON suite:b {:
+        RESULT = new ClassDef();
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | CLASS:x NAME:name COLON suite:a {:
+        RESULT = new ClassDef();
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | CLASS:x NAME:name LPAR RPAR COLON suite:a {:
+        RESULT = new ClassDef();
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+arglist ::=
+    keyword:a {:
+        Call rnt = new Call();
+        rnt.addKeyword(a);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | expr:a {:
+        //System.out.println("parsing first arg for arglist");
+        Call rnt = new Call();
+        rnt.addArg(a);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | arglist:list COMMA keyword:a {:
+        list.addKeyword(a);
+        RESULT = list;
+    :}
+    | arglist:list COMMA expr:a {:
+        //System.out.println("parsing one more arg for arglist");
+        list.addArg(a);
+        RESULT = list;
+    :};
+
+keyword ::=
+    NAME:a EQUAL expr:b {:
+        RESULT = new Keyword((String)a, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+
 
 

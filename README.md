@@ -1,20 +1,35 @@
 # Wyvern
 
 ## Usage
+```make all``` to compile all files including sherrloc
+
 Lexer:
 
-```
-java -cp java-cup-11b-runtime.jar:. LexerTest test/parser/case1.py
+```bash
+java -cp "lib/*":. LexerTest test/parser/case1.py
 ```
 
 Parser:
 
+```bash
+java -cp "lib/*":. Parser test/parser/case1.py  2>| ast.err
 ```
-java -cp java-cup-11b-runtime.jar:. Parser test/parser/case1.py
-```
+```ast.err``` stores a json type ast
 
 TypeChecker:
 
+```bash
+java -cp "lib/*":. TypeChecker test/Wyvern/case2.wy ./tmp.cons
+sherrloc/sherrloc -c tmp.cons 
 ```
-java -cp java-cup-11b-runtime.jar:. TypeChecker test/Wyvern/case0.wy ./tmp.cons
-```
+```tmp.cons``` stores the constrains generated
+
+## Known Issues
+
+* same name functions
+* for
+* with
+* augassign
+* exception related
+* only support top-level functions
+* compact if

@@ -1,3 +1,8 @@
+package utils;
+
+import com.owlike.genson.Genson;
+import com.owlike.genson.GensonBuilder;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -37,5 +42,11 @@ public class LookupMaps {
     }
     public void add(String k, String v) {
         maps.get(maps.size() - 1).put(k, v);
+    }
+
+    static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();
+    @Override
+    public String toString() {
+        return genson.serialize(this);
     }
 }
