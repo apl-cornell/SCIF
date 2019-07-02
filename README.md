@@ -33,3 +33,4 @@ sherrloc/sherrloc -c tmp.cons
 * exception related
 * only support top-level functions
 * compact if
+* endorse and autoendorse
