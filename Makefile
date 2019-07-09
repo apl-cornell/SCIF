@@ -14,13 +14,13 @@ TypeChecker.class: Lexer.class Parser.class TypeChecker.java ${wildcard ast/*.ja
 LexerTest.class: Lexer.java LexerTest.java
 	javac -cp .:${LIBPATH}/* LexerTest.java 
 
-Lexer.class: Lexer.java sym.java
+Lexer.class: Lexer.java 
 	javac -cp .:${LIBPATH}/* Lexer.java
 
 Lexer.java: Wyvern.jflex 
 	jflex Wyvern.jflex
 
-Parser.class: Parser.java sym.java ${wildcard ast/*.java} ${wildcard utils/*.java} 
+Parser.class: Parser.java ${wildcard ast/*.java} ${wildcard utils/*.java} 
 	javac -cp .:${LIBPATH}/* Parser.java sym.java ast/*.java utils/*.java
 
 Parser.java: Wyvern.cup
