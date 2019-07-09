@@ -4,7 +4,7 @@
 ```make all``` to compile all files including sherrloc
 
 ```console
-~/G/Wyvern ❯❯❯ ./wyvern                                                                                                          ✘ 130 
+~/G/Wyvern ❯❯❯ ./wyvern
 Missing required parameter: <inputFile>
 Usage: wyvern (-t | -p | -l) [-hV] <inputFile> [<outputFileNames>...]
 A set of tools for a new smart contract language with information flow control,
