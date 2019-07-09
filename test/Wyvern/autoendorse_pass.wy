@@ -1,0 +1,5 @@
+def foo{autoendorse(Alice, Bob)}() -> int{Bob}:
+    return 5
+
+def bar{Alice}(x:int{Alice}) -> int{Alice} :
+    return endorse(foo(), Bob, Alice)

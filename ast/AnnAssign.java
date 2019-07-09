@@ -2,7 +2,6 @@ package ast;
 
 import utils.*;
 
-import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,7 +48,7 @@ public class AnnAssign extends Statement {
         }
         String ifNameTgt;
         if (!ctxt.isEmpty()) {
-            ifNameTgt = ctxt + "." + ((Name) target).id;
+            ifNameTgt = (ctxt.equals("") ? "" : ctxt + ".") + ((Name) target).id;
             varNameMap.add(((Name) target).id, ifNameTgt);
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
@@ -59,7 +58,7 @@ public class AnnAssign extends Statement {
         } else {
             ifNameTgt = ((Name) target).id;
         }
-        String ifNamePc = Utils.getIfNamePc(ctxt);
+        String ifNamePc = Utils.getLabelNamePc(ctxt);
         cons.add(Utils.genCons(ifNameTgt, ifNamePc, location));
         if (value != null) {
             String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);

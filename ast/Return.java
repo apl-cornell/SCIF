@@ -20,12 +20,12 @@ public class Return extends Statement {
     @Override
     public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
         if (value == null) return null;
-        String ifNamePc = Utils.getIfNamePc(ctxt);
+        String ifNamePc = Utils.getLabelNamePc(ctxt);
         String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
 
         int occur = ctxt.indexOf(".");
         FuncInfo funcInfo = funcMap.get(occur >= 0 ? ctxt.substring(0, occur) : ctxt);
-        String ifNameReturn = funcInfo.getIfNameReturnLabel();
+        String ifNameReturn = funcInfo.getLabelNameReturn();
         cons.add(Utils.genCons(ifNameReturn, ifNameValue, location));
         cons.add(Utils.genCons(ifNameReturn, ifNamePc, location));
         return null;

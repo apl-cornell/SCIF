@@ -1,18 +1,30 @@
 LIBPATH=lib
 CUP=java-cup-11b.jar
 
-default: wyvern 
+default: Wyvern
 	
-all: wyvern sherrloc-build
+all: Wyvern sherrloc-build
 
-wyvern: Lexer.java Parser.java sym.java LexerTest.java TypeChecker.java ${wildcard ${LIBPATH}/*.java}
-	javac -cp .:${LIBPATH}/* Lexer.java Parser.java sym.java LexerTest.java TypeChecker.java
+Wyvern: TypeChecker.class LexerTest.class Parser.class Wyvern.java
+	javac -cp .:${LIBPATH}/* Wyvern.java
 
-Lexer.java: python3.jflex
-	jflex python3.jflex
+TypeChecker.class: Lexer.class Parser.class TypeChecker.java ${wildcard ast/*.java} ${wildcard utils/*.java}
+	javac -cp .:${LIBPATH}/* TypeChecker.java ast/*.java utils/*.java
 
-Parser.java: python3.cup
-	java -jar ${LIBPATH}/${CUP} -expect 1000 -interface -parser Parser python3.cup
+LexerTest.class: Lexer.java LexerTest.java
+	javac -cp .:${LIBPATH}/* LexerTest.java 
+
+Lexer.class: Lexer.java sym.java
+	javac -cp .:${LIBPATH}/* Lexer.java
+
+Lexer.java: Wyvern.jflex 
+	jflex Wyvern.jflex
+
+Parser.class: Parser.java sym.java ${wildcard ast/*.java} ${wildcard utils/*.java} 
+	javac -cp .:${LIBPATH}/* Parser.java sym.java ast/*.java utils/*.java
+
+Parser.java: Wyvern.cup
+	java -jar ${LIBPATH}/${CUP} -expect 1000 -interface -parser Parser Wyvern.cup
 
 sherrloc-build:
 	cd sherrloc; ant

@@ -64,6 +64,10 @@ import java.util.HashMap;
     "NL",
     "ENCODING",
     "<N_TOKENS>"
+
+    Wyvern-specific
+    "ENDORSE"
+    "AUTOENDORSE"
  */
 
 
@@ -137,6 +141,8 @@ import java.util.HashMap;
         keywords.put("while",   new Integer(sym.WHILE));
         keywords.put("with",    new Integer(sym.WITH));
         keywords.put("yield",   new Integer(sym.YIELD));
+        keywords.put("endorse", new Integer(sym.ENDORSE));
+        keywords.put("autoendorse", new Integer(sym.AUTOENDORSE));
     }
 
 

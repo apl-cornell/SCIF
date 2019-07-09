@@ -27,9 +27,19 @@ parser code {:
     }*/
 
     public static void main(String args[]) {
+        File inputFile = new File(args[0]);
+        parse(inputFile, null);
+    }
+
+    public static void parse(File inputFile, File astFile) {
         try {
-            Lexer lexer = new Lexer(new FileReader(args[0]));
-            
+            Lexer lexer = new Lexer(new FileReader(inputFile));
+
+            if (astFile != null) {
+                PrintStream ps = new PrintStream(new FileOutputStream(astFile));
+                System.setErr(ps);
+            }
+
             Parser p = new Parser(lexer);
             System.out.println("Parser init\n");
 
@@ -37,6 +47,10 @@ parser code {:
             //p.debug_parse();
 
             System.out.println("Finish\n");
+
+            if (astFile != null) {
+                System.setErr(System.err);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -63,6 +77,7 @@ terminal LEFTSHIFTEQUAL, RIGHTSHIFTEQUAL, DOUBLESTAREQUAL, DOUBLESLASHEQUAL;
 terminal INT, NEWLINE;
 terminal INDENT, DEDENT;
 terminal UNARY, COMP, BIT, ADDISH, MULISH;
+terminal ENDORSE, AUTOENDORSE;
 
 nonterminal Program program;
 nonterminal ArrayList<Statement> file_input;
@@ -102,6 +117,9 @@ nonterminal Keyword keyword;
 nonterminal Expression labeledType;
 nonterminal IfLabel ifLabel, unitIfLabel;
 nonterminal Expression maybeLabeledName;
+nonterminal Autoendorse autoendorse;
+nonterminal IfLabel maybeAutoendorseIfLabel;
+nonterminal Endorse endorseExpression;
 
 precedence left OR;
 precedence left AND;
@@ -124,6 +142,11 @@ program ::= file_input:list {:
     :};
 
 //Information flow specific modification
+endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from COMMA ifLabel:to RPAR {:
+        RESULT = new Endorse(a, from, to);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+
 labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
         //System.out.println("parsed labeledType with label: \n" + b.toString());
         Name name = new Name((String)a);
@@ -131,6 +154,18 @@ labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
         RESULT = new LabeledType(name, b);
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
+maybeAutoendorseIfLabel ::= autoendorse:a {:
+        RESULT = a;
+    :}
+    | ifLabel:a {:
+        RESULT = a;
+    :};
+
+autoendorse ::= AUTOENDORSE:x LPAR ifLabel:from COMMA ifLabel:to RPAR {:
+        RESULT = new Autoendorse(from, to);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+
 ifLabel ::= unitIfLabel:a {:
         RESULT = a;
         RESULT.setLoc(new CodeLocation(aleft, aright));
@@ -211,7 +246,7 @@ maybeLabeledName ::=
         RESULT = new Name((String)a);
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | NAME:a LBRACE ifLabel:b RBRACE {:
+    | NAME:a LBRACE maybeAutoendorseIfLabel:b RBRACE {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright));
         RESULT = new LabeledType(name, b); //TODO
@@ -666,6 +701,9 @@ atom ::=
     | FALSE:k {:
         RESULT = new ConstantExpr(Constant.FALSE);
         RESULT.setLoc(new CodeLocation(kleft, kright));
+    :}
+    | endorseExpression:a {:
+        RESULT = a;
     :};
 strings ::=
     STRING:a {:

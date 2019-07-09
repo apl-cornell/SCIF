@@ -16,7 +16,7 @@ public class Arguments extends Node {
         this.defaults = defaults;
     }
     public Arguments() {
-        this.args = null;
+        this.args = new ArrayList<>();
         this.defaults = null;
     }
     public void merge(Arguments y) {

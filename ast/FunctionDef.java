@@ -53,10 +53,11 @@ public class FunctionDef extends Statement {
         }
         ctxt += funcName;// + location.toString();
 
-        String ifNamePc = Utils.getIfNamePc(ctxt);
+        String ifNamePc = Utils.getLabelNamePc(ctxt);
         FuncInfo funcInfo = funcMap.get(funcName);
-        String ifNameCall = funcInfo.getIfNameCallLabel();
+
         if (name instanceof LabeledType) {
+            String ifNameCall = funcInfo.getLabelNameCallAfter();
             cons.add(Utils.genCons(ifNamePc, ifNameCall, location));
             cons.add(Utils.genCons(ifNameCall, ifNamePc, location));
         }

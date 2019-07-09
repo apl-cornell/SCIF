@@ -1,9 +1,10 @@
 package utils;
 
+import ast.Autoendorse;
 import ast.IfLabel;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
-import utils.CodeLocation;
+
 import java.util.ArrayList;
 
 public class FuncInfo {
@@ -21,21 +22,43 @@ public class FuncInfo {
         this.location = location;
     }
 
-    public String getIfNameCallLabel() {
-        return Utils.getIfNameFuncCall(funcName);
-    }
-    public String getIfNameReturnLabel() {
-        return Utils.getIfNameFuncReturn(funcName);
+    public String getLabelNameCallBefore() {
+        return Utils.getLabelNameFuncCallBefore(funcName);
     }
 
-    public String getIfNameArgLabel(int index) {
-        return Utils.getIfNameArgLabel(funcName, parameters.get(index));
+    public String getLabelNameCallAfter() {
+        return Utils.getLabelNameFuncCallAfter(funcName);
+    }
+
+    public String getLabelNameReturn() {
+        return Utils.getLabelNameFuncReturn(funcName);
+    }
+
+    public String getLabelNameArg(int index) {
+        return Utils.getLabelNameArgLabel(funcName, parameters.get(index));
     }
 
 
-    public String getCallLabel() {
+    public String getCallBeforeLabel() {
         if (callLabel != null) {
-            return callLabel.toSherrlocFmt();
+            if (callLabel instanceof Autoendorse) {
+                return ((Autoendorse) callLabel).from.toSherrlocFmt();
+            } else {
+                return callLabel.toSherrlocFmt();
+            }
+        }
+        else {
+            return null;
+        }
+    }
+
+    public String getCallAfterLabel() {
+        if (callLabel != null) {
+            if (callLabel instanceof Autoendorse) {
+                return ((Autoendorse) callLabel).to.toSherrlocFmt();
+            } else {
+                return callLabel.toSherrlocFmt();
+            }
         }
         else {
             return null;

@@ -8,13 +8,18 @@ import java.util.*;
 
 public class TypeChecker {
     public static void main(String[] args) {
+        File inputFile = new File(args[0]);
+        File outputFile = new File(args[1]);
+        typecheck(inputFile, outputFile);
+    }
+
+    public static void typecheck(File inputFile, File outputFile) {
         Program root;
         try {
-            Lexer lexer = new Lexer(new FileReader(args[0]));
+            Lexer lexer = new Lexer(new FileReader(inputFile));
             Parser p = new Parser(lexer);
             Symbol result = p.parse();
             root = (Program) result.value;
-            //Parser.printTree(root, 0);
             System.out.println("Finish\n");
         } catch(Exception e) {
             e.printStackTrace();
@@ -30,8 +35,6 @@ public class TypeChecker {
         root.globalInfoVisit(varMap, funcMap);
         root.findPrincipal(principalSet);
 
-        //collectGlobalDec("", root, varMap, funcMap);
-
         System.out.println("Display varMap:\n");
         for (HashMap.Entry<String, VarInfo>  varPair : varMap.entrySet()) {
             String varName = varPair.getKey();
@@ -45,16 +48,22 @@ public class TypeChecker {
             System.out.println(": " + var + "\n");
         }
         for (HashMap.Entry<String, FuncInfo> funcPair : funcMap.entrySet()) {
-            String funcName = funcPair.getKey();
+            //String funcName = funcPair.getKey();
             FuncInfo func = funcPair.getValue();
-            String ifNameCallLabel = func.getIfNameCallLabel();
-            String ifCallLabel = func.getCallLabel();
-            if (ifCallLabel != null) {
-                cons.add(Utils.genCons(ifCallLabel, ifNameCallLabel, func.location));
-                cons.add(Utils.genCons(ifNameCallLabel, ifCallLabel, func.location));
+            String ifNameCallBeforeLabel = func.getLabelNameCallBefore();
+            String ifNameCallAfterLabel = func.getLabelNameCallAfter();
+            String ifCallBeforeLabel = func.getCallBeforeLabel();
+            String ifCallAfterLabel = func.getCallAfterLabel();
+            if (ifNameCallBeforeLabel != null) {
+                cons.add(Utils.genCons(ifCallBeforeLabel, ifNameCallBeforeLabel, func.location));
+                cons.add(Utils.genCons(ifNameCallBeforeLabel, ifCallBeforeLabel, func.location));
+            }
+            if (ifNameCallAfterLabel != null) {
+                cons.add(Utils.genCons(ifCallAfterLabel, ifNameCallAfterLabel, func.location));
+                cons.add(Utils.genCons(ifNameCallAfterLabel, ifCallAfterLabel, func.location));
             }
 
-            String ifNameReturnLabel = func.getIfNameReturnLabel();
+            String ifNameReturnLabel = func.getLabelNameReturn();
             String ifReturnLabel = func.getReturnLabel();
             if (ifReturnLabel != null) {
                 cons.add(Utils.genCons(ifReturnLabel, ifNameReturnLabel, func.location));
@@ -63,7 +72,7 @@ public class TypeChecker {
 
             for (int i = 0; i < func.parameters.size(); ++i) {
                 VarInfo arg = func.parameters.get(i);
-                String ifNameArgLabel = func.getIfNameArgLabel(i);
+                String ifNameArgLabel = func.getLabelNameArg(i);
                 String ifArgLabel = arg.getLabel();
                 if (ifArgLabel != null) {
                     cons.add(Utils.genCons(ifNameArgLabel, ifArgLabel, arg.location));
@@ -73,36 +82,13 @@ public class TypeChecker {
 
         }
         cons.add(Utils.genNewlineCons());
-        //generate constraint from gloabl dec
-/*        Iterator it = varMap.entrySet().iterator();
-        while (it.hasNext()) {
-            HashMap.Entry<String, utils.VarInfo> pair = (HashMap.Entry<String, utils.VarInfo>) it.next();
-            utils.VarInfo v = (utils.VarInfo) pair.getValue();
-            cons.add(utils.genCons(v.name, v.lbl, v.x, v.y));
-            cons.add(utils.genCons(v.lbl, v.name, v.x, v.y));
-        }*/
-/*        it = funcMap.entrySet().iterator();
-        while (it.hasNext()) {
-            HashMap<String, utils.FuncInfo>.Entry pair = (HashMap<String, utils.FuncInfo>.Entry) it.next();
-            utils.FuncInfo f = (utils.FuncInfo) pair.getValue();
-            //cons.add(utils.genCons(f.name + "..call", f.callLbl, f.x, f.y));
-            //cons.add(utils.genCons(f.name + "..return", f.rtLbl, f.x, f.y));
-            Iterator iit = f.prmters.entrySet().iterator();
-            while (iit.hasNext()) {
-                HashMap<String. utils.VarInfo>.Entry pair = (HashMap<String, utils.VarInfo>.Entry) it.next();
-                utils.VarInfo v = (utils.VarInfo) pair.getValue();
-                cons.add(utils.genCons(f.name + "." + v.name, v.lbl, v.x, v.y));
-                cons.add(utils.genCons(v.lbl, f.name + "." + v.name, v.x, v.y));
-            }
-        }*/
 
         LookupMaps varNameMap = new LookupMaps(varMap);
 
         root.genConsVisit("", funcMap, cons, varNameMap);
 
-        //generateConstraints("", root, varMap, funcMap, cons, varNameMap);
         try {
-            BufferedWriter consFile = new BufferedWriter(new FileWriter(args[1]));
+            BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
             System.out.println("Writing the constraints of size " + cons.size());
             for (String principal : principalSet) {
                 consFile.write("CONSTRUCTOR " + principal + " 0\n");

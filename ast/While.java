@@ -24,9 +24,9 @@ public class While extends Statement {
     @Override
     public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
         String IfNameTest = test.genConsVisit(ctxt, funcMap, cons, varNameMap);
-        String IfNamePcBefore = Utils.getIfNamePc(ctxt);
+        String IfNamePcBefore = Utils.getLabelNamePc(ctxt);
         ctxt += ".While" + location.toString();
-        String IfNamePcAfter = Utils.getIfNamePc(ctxt);
+        String IfNamePcAfter = Utils.getLabelNamePc(ctxt);
         cons.add(Utils.genCons(IfNamePcAfter, IfNamePcBefore, location));
         cons.add(Utils.genCons(IfNamePcAfter, IfNameTest, test.location));
 

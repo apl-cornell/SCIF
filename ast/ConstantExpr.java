@@ -17,7 +17,7 @@ public class ConstantExpr extends Expression {
     @Override
     public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
 
-        String ifNameRnt = Utils.getIfNamePc(ctxt);
+        String ifNameRnt = Utils.getLabelNamePc(ctxt);
         return ifNameRnt;
     }
 }

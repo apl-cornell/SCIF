@@ -1,4 +1,7 @@
 a:int{Alice}
+FROM:int{Bob}
+TO:int{Alice}
+
 
 def foo{Alice}(a:int{Alice}) -> int{Alice}:
     if a == 1 :
@@ -11,6 +14,6 @@ def foo{Alice}(a:int{Alice}) -> int{Alice}:
             rnt = rnt + i
         return rnt
 
-def bar{Alice}(a:int{Alice}) -> int{Bob} :
+def bar{Alice}(a:int{Alice}) -> int{Alice} :
     x : int{Bob} = 1
     return x

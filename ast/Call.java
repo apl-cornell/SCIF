@@ -37,8 +37,8 @@ public class Call extends TrailerExpr {
     public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
         //TODO: Assuming value is a Name for now
         String funcName = ((Name) value).id;
-        String ifNamePc = Utils.getIfNamePc(ctxt);
-        if (funcName.equals(Utils.ENDORCEFUNCNAME)) {
+        String ifNamePc = Utils.getLabelNamePc(ctxt);
+        /*if (funcName.equals(Utils.ENDORCEFUNCNAME)) {
             //TODO: didn't add explicit ifLabel expression parsing at this point
             String ifNameExp = args.get(0).genConsVisit(ctxt, funcMap, cons, varNameMap);
             String ifNameFrom = args.get(1).genConsVisit(ctxt, funcMap, cons, varNameMap);
@@ -50,20 +50,20 @@ public class Call extends TrailerExpr {
             cons.add(Utils.genCons(ifNameTo, ifNameRnt, location));
             return ifNameRnt;
         }
-        else {
+        else*/ {
             FuncInfo funcInfo = funcMap.get(funcName);
-            String ifNameFuncCall = funcInfo.getIfNameCallLabel();
+            String ifNameFuncCall = funcInfo.getLabelNameCallBefore();
             cons.add(Utils.genCons(ifNameFuncCall, ifNamePc, location));
 
             //TODO: keywords style arg assign
             for (int i = 0; i < args.size(); ++i) {
                 Expression arg = args.get(i);
                 String ifNameArgValue = arg.genConsVisit(ctxt, funcMap, cons, varNameMap);
-                String ifNameArgLabel = funcInfo.getIfNameArgLabel(i);
+                String ifNameArgLabel = funcInfo.getLabelNameArg(i);
                 cons.add(Utils.genCons(ifNameArgLabel, ifNameArgValue, arg.location));
                 cons.add(Utils.genCons(ifNameArgLabel, ifNamePc, arg.location));
             }
-            String ifNameFuncReturn = funcInfo.getIfNameReturnLabel();
+            String ifNameFuncReturn = funcInfo.getLabelNameReturn();
             return ifNameFuncReturn;
         }
     }

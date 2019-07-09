@@ -19,7 +19,7 @@ public class Assign extends Statement {
 
     @Override
     public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
-        String ifNamePc = Utils.getIfNamePc(ctxt);
+        String ifNamePc = Utils.getLabelNamePc(ctxt);
         String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
 
         for (Expression target : targets) {
