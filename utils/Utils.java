@@ -8,7 +8,7 @@ public class Utils {
     public static final String SHERRLOC_BOTTOM = "BOT";
     public static IfConstraint genCons(String to, String from, CodeLocation location) {
         // right flows to left
-        return new IfConstraint("<=", to, from, location);
+        return new IfConstraint("<=", from, to, location);
     }
     public static IfConstraint genNewlineCons() {
         return new IfConstraint();
