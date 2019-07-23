@@ -5,6 +5,7 @@ import picocli.CommandLine.*;
 import utils.Utils;
 
 import java.io.File;
+import java.io.UTFDataFormatException;
 import java.util.concurrent.Callable;
 
 @Command(name = "wyvern", version = "wyvern 0.1.0", mixinStandardHelpOptions = true,
@@ -48,7 +49,19 @@ public class Wyvern implements Callable<Integer> {
             }
             TypeChecker.typecheck(inputFile, outputFile);
             String classDirectoryPath = new File(Wyvern.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
-            Utils.runSherrloc(classDirectoryPath, outputFileName);
+            String[] sherrlocResult = Utils.runSherrloc(classDirectoryPath, outputFileName);
+            if (sherrlocResult[sherrlocResult.length - 1].contains(Utils.SHERRLOC_PASS_INDICATOR)) {
+                System.out.println(Utils.TYPECHECK_PASS_MSG);
+            } else {
+                System.out.println(Utils.TYPECHECK_ERROR_MSG);
+                for (int i = 0; i < sherrlocResult.length; ++i)
+                    if (sherrlocResult[i].contains(Utils.SHERRLOC_ERROR_INDICATOR)) {
+                        for (int j = i; j < sherrlocResult.length; ++j) {
+                            System.out.println(sherrlocResult[j]);
+                        }
+                        break;
+                    }
+            }
         } else if (funcRequest.parse) {
             File astOutputFile = outputFileNames == null ? null : new File(outputFileNames[0]);
             Parser.parse(inputFile, astOutputFile);

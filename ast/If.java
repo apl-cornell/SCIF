@@ -1,9 +1,6 @@
 package ast;
 
-import utils.FuncInfo;
-import utils.IfConstraint;
-import utils.LookupMaps;
-import utils.Utils;
+import utils.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,8 +26,8 @@ public class If extends Statement {
         String IfNamePcBefore = Utils.getLabelNamePc(ctxt);
         ctxt += ".If" + location.toString();
         String IfNamePcAfter = Utils.getLabelNamePc(ctxt);
-        cons.add(Utils.genCons(IfNamePcAfter, IfNamePcBefore, location));
-        cons.add(Utils.genCons(IfNamePcAfter, IfNameTest, test.location));
+        cons.add(Utils.genCons(IfNamePcBefore, IfNamePcAfter, location));
+        cons.add(Utils.genCons(IfNameTest, IfNamePcAfter, test.location));
 
         varNameMap.incLayer();
         for (Statement stmt : body) {

@@ -58,8 +58,8 @@ public class FunctionDef extends Statement {
 
         if (name instanceof LabeledType) {
             String ifNameCall = funcInfo.getLabelNameCallAfter();
-            cons.add(Utils.genCons(ifNamePc, ifNameCall, location));
             cons.add(Utils.genCons(ifNameCall, ifNamePc, location));
+            cons.add(Utils.genCons(ifNamePc, ifNameCall, location));
         }
 
         varNameMap.incLayer();

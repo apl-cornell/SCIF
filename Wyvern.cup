@@ -16,7 +16,7 @@ parser code {:
 
     public void Debuglog(String s) {
         if (DEBUG)
-            System.out.println(s);
+            System.err.println(s);
     }
 
     /*public Node<String> makeKeyword(Object kw) {
@@ -41,12 +41,12 @@ parser code {:
             }
 
             Parser p = new Parser(lexer);
-            System.out.println("Parser init\n");
+            System.err.println("Parser init\n");
 
             p.parse();
             //p.debug_parse();
 
-            System.out.println("Finish\n");
+            System.err.println("Finish\n");
 
             if (astFile != null) {
                 System.setErr(System.err);
@@ -78,6 +78,7 @@ terminal INT, NEWLINE;
 terminal INDENT, DEDENT;
 terminal UNARY, COMP, BIT, ADDISH, MULISH;
 terminal ENDORSE, AUTOENDORSE;
+terminal DEPMAP;
 
 nonterminal Program program;
 nonterminal ArrayList<Statement> file_input;
@@ -153,6 +154,10 @@ labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
         name.setLoc(new CodeLocation(aleft, aright));
         RESULT = new LabeledType(name, b);
         RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | DEPMAP:x LPAR ifLabel:a RPAR {:
+        RESULT = new DepMap(a);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
 maybeAutoendorseIfLabel ::= autoendorse:a {:
         RESULT = a;

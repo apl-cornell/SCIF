@@ -13,7 +13,7 @@ public class Literal extends Expression {
     public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
         String ifNameRnt = "LITERAL..." + location.toString();
         String ifNamePc = Utils.getLabelNamePc(ctxt);
-        cons.add(Utils.genCons(ifNameRnt, ifNamePc, location));
+        cons.add(Utils.genCons(ifNamePc, ifNameRnt, location));
         return ifNameRnt;
     }
 }

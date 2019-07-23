@@ -1,5 +1,7 @@
 package ast;
 
+import utils.CodeLocation;
+
 public class LabeledType extends Expression {
     Name x;
     IfLabel ifl;

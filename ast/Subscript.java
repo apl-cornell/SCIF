@@ -1,9 +1,6 @@
 package ast;
 
-import utils.FuncInfo;
-import utils.IfConstraint;
-import utils.LookupMaps;
-import utils.Utils;
+import utils.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,8 +18,8 @@ public class Subscript extends TrailerExpr {
         String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
         String ifNameIndex = index.genConsVisit(ctxt, funcMap, cons, varNameMap);
         String ifNameRnt = ctxt + "." + "Subscript" + location.toString();
-        cons.add(Utils.genCons(ifNameRnt, ifNameValue, location));
-        cons.add(Utils.genCons(ifNameRnt, ifNameIndex, location));
+        cons.add(Utils.genCons(ifNameValue, ifNameRnt, location));
+        cons.add(Utils.genCons(ifNameIndex, ifNameRnt, location));
         return ifNameRnt;
     }
 }

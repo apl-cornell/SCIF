@@ -1,9 +1,6 @@
 package ast;
 
-import utils.FuncInfo;
-import utils.IfConstraint;
-import utils.LookupMaps;
-import utils.Utils;
+import utils.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +24,7 @@ public class Dictmaker extends Expression {
         String ifNameRnt = ctxt + "." + "dictmaker" + location.toString();
         for (Expression value: values) {
             String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
-            cons.add(Utils.genCons(ifNameRnt, ifNameValue, location));
+            cons.add(Utils.genCons(ifNameValue, ifNameRnt, location));
         }
         return ifNameRnt;
     }

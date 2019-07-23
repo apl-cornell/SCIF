@@ -1,9 +1,6 @@
 package ast;
 
-import utils.FuncInfo;
-import utils.IfConstraint;
-import utils.LookupMaps;
-import utils.Utils;
+import utils.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,8 +19,8 @@ public class BoolOp extends Expression {
         String ifNameLeft = left.genConsVisit(ctxt, funcMap, cons, varNameMap);
         String ifNameRight = right.genConsVisit(ctxt, funcMap, cons, varNameMap);
         String ifNameRnt = ctxt + "." + "bool" + location.toString();
-        cons.add(Utils.genCons(ifNameRnt, ifNameLeft, location));
-        cons.add(Utils.genCons(ifNameRnt, ifNameRight, location));
+        cons.add(Utils.genCons(ifNameLeft, ifNameRnt, location));
+        cons.add(Utils.genCons(ifNameRight, ifNameRnt, location));
         return ifNameRnt;
     }
 }

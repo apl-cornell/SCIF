@@ -1,9 +1,6 @@
 package ast;
 
-import utils.FuncInfo;
-import utils.IfConstraint;
-import utils.LookupMaps;
-import utils.Utils;
+import utils.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +21,7 @@ public class Setmaker extends Expression {
         String ifNameRnt = ctxt + "." + "setmaker" + location.toString();
         for (Expression value: elements) {
             String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
-            cons.add(Utils.genCons(ifNameRnt, ifNameValue, location));
+            cons.add(Utils.genCons(ifNameValue, ifNameRnt, location));
         }
         return ifNameRnt;
     }

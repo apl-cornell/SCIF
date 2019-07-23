@@ -1,9 +1,6 @@
 package ast;
 
-import utils.FuncInfo;
-import utils.IfConstraint;
-import utils.LookupMaps;
-import utils.Utils;
+import utils.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,8 +22,8 @@ public class Assign extends Statement {
         for (Expression target : targets) {
             //Assuming target is Name
             String ifNameTgt = varNameMap.get(((Name) target).id);
-            cons.add(Utils.genCons(ifNameTgt, ifNameValue, location));
-            cons.add(Utils.genCons(ifNameTgt, ifNamePc, location));
+            cons.add(Utils.genCons(ifNameValue, ifNameTgt, location));
+            cons.add(Utils.genCons(ifNamePc, ifNameTgt, location));
         }
         return "";
     }

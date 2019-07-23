@@ -1,5 +1,7 @@
 package ast;
 
+import utils.CodeLocation;
+
 import java.util.HashSet;
 
 public class ComplexIfLabel extends IfLabel {

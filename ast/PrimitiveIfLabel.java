@@ -1,5 +1,6 @@
 package ast;
 
+import utils.CodeLocation;
 import utils.Utils;
 
 import java.util.HashSet;

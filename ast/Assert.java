@@ -1,5 +1,6 @@
 package ast;
 
+import utils.CodeLocation;
 import utils.FuncInfo;
 import utils.IfConstraint;
 import utils.LookupMaps;

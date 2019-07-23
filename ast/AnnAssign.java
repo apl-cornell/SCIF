@@ -59,10 +59,10 @@ public class AnnAssign extends Statement {
             ifNameTgt = ((Name) target).id;
         }
         String ifNamePc = Utils.getLabelNamePc(ctxt);
-        cons.add(Utils.genCons(ifNameTgt, ifNamePc, location));
+        cons.add(Utils.genCons(ifNamePc, ifNameTgt, location));
         if (value != null) {
             String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
-            cons.add(Utils.genCons(ifNameTgt, ifNameValue, value.location));
+            cons.add(Utils.genCons(ifNameValue, ifNameTgt, value.location));
         }
         return null;
     }

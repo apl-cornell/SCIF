@@ -1,12 +1,24 @@
 package utils;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
 public class Utils {
-    public static final String ENDORCE_FUNC_NAME = "endorce";
+    //public static final String ENDORCE_FUNC_NAME = "endorce";
     public static final String TOP = "TOP";
     public static final String BOTTOM = "BOT";
     public static final String SHERRLOC_TOP = "TOP";
     public static final String SHERRLOC_BOTTOM = "BOT";
-    public static IfConstraint genCons(String to, String from, CodeLocation location) {
+
+    public static final String SHERRLOC_PASS_INDICATOR = "No errors";
+    public static final String SHERRLOC_ERROR_INDICATOR = "wrong";
+    public static final String TYPECHECK_PASS_MSG = "The program typechecks.";
+    public static final String TYPECHECK_ERROR_MSG = "The program doesn't typecheck.";
+
+
+
+    public static IfConstraint genCons(String from, String to, CodeLocation location) {
         // right flows to left
         return new IfConstraint("<=", from, to, location);
     }
@@ -33,11 +45,21 @@ public class Utils {
     public static String getLabelNameArgLabel(String funcName, VarInfo arg) {
         return funcName + "." + arg.varName;
     }
-    public static void runSherrloc(String path, String consFilePath) throws Exception {
+    public static String[] runSherrloc(String path, String consFilePath) throws Exception {
         String[] command = new String[] {"bash", "-c", path + "/sherrloc/sherrloc -c " + consFilePath};
         ProcessBuilder pb = new ProcessBuilder(command);
-        pb.inheritIO();
+        //pb.inheritIO();
         Process p = pb.start();
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
         p.waitFor();
+
+        ArrayList<String> list = new ArrayList<>();
+        String tmp;
+        while ((tmp = br.readLine()) != null) {
+            list.add(tmp);
+            //System.err.println(tmp);
+        }
+        return list.toArray(new String[0]);
     }
 }
+

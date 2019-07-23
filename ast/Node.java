@@ -10,6 +10,8 @@ import java.util.HashSet;
 
 public class Node {
     CodeLocation location;
+    public Node() {
+    }
     public void setLoc(CodeLocation location) {
         this.location = location;
     }

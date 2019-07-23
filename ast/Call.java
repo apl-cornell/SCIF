@@ -1,9 +1,6 @@
 package ast;
 
-import utils.FuncInfo;
-import utils.IfConstraint;
-import utils.LookupMaps;
-import utils.Utils;
+import utils.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,15 +50,15 @@ public class Call extends TrailerExpr {
         else*/ {
             FuncInfo funcInfo = funcMap.get(funcName);
             String ifNameFuncCall = funcInfo.getLabelNameCallBefore();
-            cons.add(Utils.genCons(ifNameFuncCall, ifNamePc, location));
+            cons.add(Utils.genCons(ifNamePc, ifNameFuncCall, location));
 
             //TODO: keywords style arg assign
             for (int i = 0; i < args.size(); ++i) {
                 Expression arg = args.get(i);
                 String ifNameArgValue = arg.genConsVisit(ctxt, funcMap, cons, varNameMap);
                 String ifNameArgLabel = funcInfo.getLabelNameArg(i);
-                cons.add(Utils.genCons(ifNameArgLabel, ifNameArgValue, arg.location));
-                cons.add(Utils.genCons(ifNameArgLabel, ifNamePc, arg.location));
+                cons.add(Utils.genCons(ifNameArgValue, ifNameArgLabel, arg.location));
+                cons.add(Utils.genCons(ifNamePc, ifNameArgLabel, arg.location));
             }
             String ifNameFuncReturn = funcInfo.getLabelNameReturn();
             return ifNameFuncReturn;

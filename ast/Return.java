@@ -1,9 +1,6 @@
 package ast;
 
-import utils.FuncInfo;
-import utils.IfConstraint;
-import utils.LookupMaps;
-import utils.Utils;
+import utils.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,8 +23,8 @@ public class Return extends Statement {
         int occur = ctxt.indexOf(".");
         FuncInfo funcInfo = funcMap.get(occur >= 0 ? ctxt.substring(0, occur) : ctxt);
         String ifNameReturn = funcInfo.getLabelNameReturn();
-        cons.add(Utils.genCons(ifNameReturn, ifNameValue, location));
-        cons.add(Utils.genCons(ifNameReturn, ifNamePc, location));
+        cons.add(Utils.genCons(ifNameValue, ifNameReturn, location));
+        cons.add(Utils.genCons(ifNamePc, ifNameReturn, location));
         return null;
     }
 }

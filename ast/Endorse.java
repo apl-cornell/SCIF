@@ -1,9 +1,6 @@
 package ast;
 
-import utils.FuncInfo;
-import utils.IfConstraint;
-import utils.LookupMaps;
-import utils.Utils;
+import utils.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,8 +23,8 @@ public class Endorse extends Expression {
         String fromLabel = from.toSherrlocFmt();
         String toLabel = to.toSherrlocFmt();
 
-        cons.add(Utils.genCons(fromLabel, ifNameValue, location));
-        cons.add(Utils.genCons(toLabel, ifNameRnt, location));
+        cons.add(Utils.genCons(ifNameValue, fromLabel, location));
+        cons.add(Utils.genCons(ifNameRnt, toLabel, location));
         return ifNameRnt;
     }
 }

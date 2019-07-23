@@ -1,5 +1,7 @@
 package ast;
 
+import utils.CodeLocation;
+
 public class IfExp extends Expression {
     Expression test, body, orelse; //TODO
     public IfExp(Expression t, Expression b, Expression o) {

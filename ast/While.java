@@ -27,8 +27,8 @@ public class While extends Statement {
         String IfNamePcBefore = Utils.getLabelNamePc(ctxt);
         ctxt += ".While" + location.toString();
         String IfNamePcAfter = Utils.getLabelNamePc(ctxt);
-        cons.add(Utils.genCons(IfNamePcAfter, IfNamePcBefore, location));
-        cons.add(Utils.genCons(IfNamePcAfter, IfNameTest, test.location));
+        cons.add(Utils.genCons(IfNamePcBefore, IfNamePcAfter, location));
+        cons.add(Utils.genCons(IfNameTest, IfNamePcAfter, test.location));
 
         varNameMap.incLayer();
         for (Statement stmt : body) {

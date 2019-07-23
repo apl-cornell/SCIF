@@ -1,5 +1,7 @@
 package ast;
 
+import utils.CodeLocation;
+
 public class AugAssign extends Statement {
     Expression target;
     BinaryOperator op;

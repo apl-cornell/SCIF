@@ -1,5 +1,7 @@
 package ast;
 
+import utils.CodeLocation;
+
 import java.util.ArrayList;
 
 public class Try extends Statement {

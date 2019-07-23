@@ -20,7 +20,7 @@ public class TypeChecker {
             Parser p = new Parser(lexer);
             Symbol result = p.parse();
             root = (Program) result.value;
-            System.out.println("Finish\n");
+            System.err.println("Finish\n");
         } catch(Exception e) {
             e.printStackTrace();
             return;
@@ -35,7 +35,7 @@ public class TypeChecker {
         root.globalInfoVisit(varMap, funcMap);
         root.findPrincipal(principalSet);
 
-        System.out.println("Display varMap:\n");
+        System.err.println("Display varMap:\n");
         for (HashMap.Entry<String, VarInfo>  varPair : varMap.entrySet()) {
             String varName = varPair.getKey();
             VarInfo var = varPair.getValue();
@@ -89,7 +89,7 @@ public class TypeChecker {
 
         try {
             BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
-            System.out.println("Writing the constraints of size " + cons.size());
+            System.err.println("Writing the constraints of size " + cons.size());
             for (String principal : principalSet) {
                 consFile.write("CONSTRUCTOR " + principal + " 0\n");
             }
