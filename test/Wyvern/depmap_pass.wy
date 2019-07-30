@@ -1,0 +1,6 @@
+ALICE : const address = 0
+m : map(x:address{x}, int{x and BOB}){ALICE}
+
+def f{ALICE}(y:address{ALICE}) -> int{ALICE} :
+    if y == ALICE :
+        return m[y]

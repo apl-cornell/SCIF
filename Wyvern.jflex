@@ -143,7 +143,9 @@ import java.util.HashMap;
         keywords.put("yield",   new Integer(sym.YIELD));
         keywords.put("endorse", new Integer(sym.ENDORSE));
         keywords.put("autoendorse", new Integer(sym.AUTOENDORSE));
-        keywords.put("depmap", new Integer(sym.DEPMAP));
+        keywords.put("const", new Integer(sym.CONST));
+        keywords.put("map", new Integer(sym.MAP));
+        keywords.put("key", new Integer(sym.KEY));
     }
 
 

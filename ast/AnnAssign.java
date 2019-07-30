@@ -10,12 +10,15 @@ public class AnnAssign extends Statement {
     public Expression target;
     public Expression annotation;
     public Expression value;
+    public boolean isConst;
     public boolean simple; //if the target is a pure name or an expression
-    public AnnAssign(Expression target, Expression annotation, Expression value, boolean simple) {
+
+    public AnnAssign(Expression target, Expression annotation, Expression value, boolean simple, boolean isConst) {
         this.target = target;
         this.annotation = annotation;
         this.value = value;
         this.simple = simple;
+        this.isConst = isConst;
     }
 
     public void setTarget(Expression target) {
@@ -30,11 +33,7 @@ public class AnnAssign extends Statement {
         if (simple) {
             String id = ((Name) target).id;
             CodeLocation loc = location;
-            if (annotation instanceof LabeledType) {
-                varMap.put(id, new VarInfo(id, ((LabeledType) annotation).ifl, loc));
-            } else {
-                varMap.put(id, new VarInfo(id, null, loc));
-            }
+            varMap.put(id, Utils.toVarInfo(target, annotation, isConst, loc));
         } else {
             //TODO
         }
@@ -49,7 +48,9 @@ public class AnnAssign extends Statement {
         String ifNameTgt;
         if (!ctxt.isEmpty()) {
             ifNameTgt = (ctxt.equals("") ? "" : ctxt + ".") + ((Name) target).id;
-            varNameMap.add(((Name) target).id, ifNameTgt);
+            String id = ((Name) target).id;
+            CodeLocation loc = location;
+            varNameMap.add(((Name) target).id, ifNameTgt, Utils.toVarInfo(target, annotation, isConst, loc));
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
                 cons.add(Utils.genCons(ifLabel, ifNameTgt, location));

@@ -8,7 +8,7 @@ all: Wyvern sherrloc-build
 Wyvern: TypeChecker.class LexerTest.class Parser.class Wyvern.java
 	javac -cp .:${LIBPATH}/* Wyvern.java
 
-TypeChecker.class: Lexer.class Parser.class TypeChecker.java ${wildcard ast/*.java} ${wildcard utils/*.java}
+TypeChecker.class: Parser.class Lexer.class TypeChecker.java ${wildcard ast/*.java} ${wildcard utils/*.java}
 	javac -cp .:${LIBPATH}/* TypeChecker.java ast/*.java utils/*.java
 
 LexerTest.class: Lexer.java LexerTest.java

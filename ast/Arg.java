@@ -15,16 +15,13 @@ public class Arg extends Node {
     }
 
     public VarInfo globalInfoVisit() {
-        if (annotation instanceof LabeledType)
-            return new VarInfo(name.id, ((LabeledType) annotation).ifl, location);
-        else
-            return new VarInfo(name.id, null, location);
+        return Utils.toVarInfo(name, annotation, false, location);
     }
 
     @Override
     public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
         String ifName = ctxt + "." + name.id;
-        varNameMap.add(name.id, ifName);
+        varNameMap.add(name.id, ifName, Utils.toVarInfo(name, annotation, false, location));
         return null;
     }
     public void findPrincipal(HashSet<String> principalSet) {

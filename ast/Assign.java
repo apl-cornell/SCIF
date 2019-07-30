@@ -20,8 +20,20 @@ public class Assign extends Statement {
         String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
 
         for (Expression target : targets) {
-            //Assuming target is Name
-            String ifNameTgt = varNameMap.get(((Name) target).id);
+            String ifNameTgt = "";
+            if (target instanceof Name) {
+                //Assuming target is Name
+                ifNameTgt = varNameMap.getName(((Name) target).id);
+                VarInfo varInfo = varNameMap.getInfo(((Name) target).id);
+                if (varInfo instanceof TestableVarInfo) {
+                    ((TestableVarInfo) varInfo).tested = false;
+                    ((TestableVarInfo) varInfo).testedLabel = Utils.DEAD;
+                }
+            } else if (target instanceof Subscript) {
+                ifNameTgt = target.genConsVisit(ctxt, funcMap, cons, varNameMap);
+            } else {
+                //TODO: error handling
+            }
             cons.add(Utils.genCons(ifNameValue, ifNameTgt, location));
             cons.add(Utils.genCons(ifNamePc, ifNameTgt, location));
         }

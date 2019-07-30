@@ -78,7 +78,8 @@ terminal INT, NEWLINE;
 terminal INDENT, DEDENT;
 terminal UNARY, COMP, BIT, ADDISH, MULISH;
 terminal ENDORSE, AUTOENDORSE;
-terminal DEPMAP;
+terminal MAP;
+terminal CONST, KEY;
 
 nonterminal Program program;
 nonterminal ArrayList<Statement> file_input;
@@ -115,12 +116,13 @@ nonterminal Setmaker setmaker, setmaker_sub;
 nonterminal ClassDef classdef;
 nonterminal Call arglist;
 nonterminal Keyword keyword;
-nonterminal Expression labeledType;
+nonterminal LabeledType labeledType;
 nonterminal IfLabel ifLabel, unitIfLabel;
 nonterminal Expression maybeLabeledName;
 nonterminal Autoendorse autoendorse;
 nonterminal IfLabel maybeAutoendorseIfLabel;
 nonterminal Endorse endorseExpression;
+nonterminal DepMap depMap;
 
 precedence left OR;
 precedence left AND;
@@ -155,10 +157,22 @@ labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
         RESULT = new LabeledType(name, b);
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | DEPMAP:x LPAR ifLabel:a RPAR {:
-        RESULT = new DepMap(a);
+    | MAP:x LPAR labeledType:keyType COMMA labeledType:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
+        RESULT = new ast.Map(keyType, valueType, mapLabel);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | depMap:a {:
+        RESULT = a;
+    :};
+
+depMap ::=
+    MAP:x LPAR NAME:keyName COLON labeledType:keyType COMMA labeledType:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
+        Name name = new Name((String)keyName);
+        name.setLoc(new CodeLocation(keyNameleft, keyNameright));
+        RESULT = new DepMap(name, keyType, valueType, mapLabel);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
+
 maybeAutoendorseIfLabel ::= autoendorse:a {:
         RESULT = a;
     :}
@@ -357,16 +371,22 @@ expr_stmt ::=
 //testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
 //augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
 //            '<<=' | '>>=' | '**=' | '//=')
-annassign ::= 
-    COLON expr:a EQUAL expr:b {:
+annassign ::=
+    COLON CONST expr:a EQUAL expr:b {:
         //System.out.println("Annassign case 1 parsing");
-        AnnAssign rnt = new AnnAssign(null, a, b, false);
+        AnnAssign rnt = new AnnAssign(null, a, b, false, true);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | COLON expr:a EQUAL expr:b {:
+        //System.out.println("Annassign case 1 parsing");
+        AnnAssign rnt = new AnnAssign(null, a, b, false, false);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
     | COLON expr:a {:
         //System.out.println("Annassign case 2 parsing");
-        AnnAssign rnt = new AnnAssign(null, a, null, false);
+        AnnAssign rnt = new AnnAssign(null, a, null, false, false);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
