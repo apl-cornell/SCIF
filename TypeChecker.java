@@ -48,8 +48,8 @@ public class TypeChecker {
                 env.cons.add(new Constraint(new Inequality(ifLabel, varName), var.location));
 
             }
-            System.out.println(varName);
-            System.out.println(": " + var + "\n");
+            System.err.println(varName);
+            System.err.println(": " + var + "\n");
         }
         for (HashMap.Entry<String, FuncInfo> funcPair : env.funcMap.entrySet()) {
             //String funcName = funcPair.getKey();

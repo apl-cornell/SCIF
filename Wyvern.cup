@@ -256,7 +256,7 @@ funcdef ::=
         //makeNode("funcdef", a, b, c, d);
     :}
     | DEF:x maybeLabeledName:a parameters:b COLON suite:c {:
-        System.out.println("parsing function");
+        System.err.println("parsing function");
         RESULT = new FunctionDef(a, b, c, null, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
