@@ -1,6 +1,6 @@
 package ast;
 
-import utils.*;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +14,7 @@ public class UnaryOp extends Expression {
     }
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
-        return operand.genConsVisit(ctxt, funcMap, cons, varNameMap);
+    public String genConsVisit(VisitEnv env) {
+        return operand.genConsVisit(env);
     }
 }

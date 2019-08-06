@@ -1,6 +1,8 @@
 package ast;
 
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,27 +17,29 @@ public class Assign extends Statement {
 
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
-        String ifNamePc = Utils.getLabelNamePc(ctxt);
-        String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
+    public String genConsVisit(VisitEnv env) {
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
+        String ifNameValue = value.genConsVisit(env);
 
         for (Expression target : targets) {
             String ifNameTgt = "";
             if (target instanceof Name) {
                 //Assuming target is Name
-                ifNameTgt = varNameMap.getName(((Name) target).id);
-                VarInfo varInfo = varNameMap.getInfo(((Name) target).id);
+                ifNameTgt = env.varNameMap.getName(((Name) target).id);
+                /*VarInfo varInfo = env.varNameMap.getInfo(((Name) target).id);
                 if (varInfo instanceof TestableVarInfo) {
                     ((TestableVarInfo) varInfo).tested = false;
                     ((TestableVarInfo) varInfo).testedLabel = Utils.DEAD;
-                }
+                }*/
             } else if (target instanceof Subscript) {
-                ifNameTgt = target.genConsVisit(ctxt, funcMap, cons, varNameMap);
+                ifNameTgt = target.genConsVisit(env);
             } else {
                 //TODO: error handling
             }
-            cons.add(Utils.genCons(ifNameValue, ifNameTgt, location));
-            cons.add(Utils.genCons(ifNamePc, ifNameTgt, location));
+            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis, location));
+
+            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, location));
+
         }
         return "";
     }

@@ -1,6 +1,8 @@
 package ast;
 
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,20 +24,25 @@ public class While extends Statement {
     }
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
-        String IfNameTest = test.genConsVisit(ctxt, funcMap, cons, varNameMap);
-        String IfNamePcBefore = Utils.getLabelNamePc(ctxt);
-        ctxt += ".While" + location.toString();
-        String IfNamePcAfter = Utils.getLabelNamePc(ctxt);
-        cons.add(Utils.genCons(IfNamePcBefore, IfNamePcAfter, location));
-        cons.add(Utils.genCons(IfNameTest, IfNamePcAfter, test.location));
+    public String genConsVisit(VisitEnv env) {
+        String originalCtxt = env.ctxt;
 
-        varNameMap.incLayer();
+        String IfNameTest = test.genConsVisit(env);
+        String IfNamePcBefore = Utils.getLabelNamePc(env.ctxt);
+        env.ctxt += ".While" + location.toString();
+        String IfNamePcAfter = Utils.getLabelNamePc(env.ctxt);
+        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location));
+
+        env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location));
+
+
+        env.varNameMap.incLayer();
         for (Statement stmt : body) {
-            stmt.genConsVisit(ctxt, funcMap, cons, varNameMap);
+            stmt.genConsVisit(env);
         }
-        varNameMap.decLayer();
+        env.varNameMap.decLayer();
 
+        env.ctxt = originalCtxt;
         return null;
     }
     public void findPrincipal(HashSet<String> principalSet) {

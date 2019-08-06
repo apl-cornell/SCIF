@@ -1,7 +1,5 @@
 package ast;
 
-import utils.CodeLocation;
-
 import java.util.ArrayList;
 
 public class ExceptHandler extends Statement {

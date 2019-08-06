@@ -1,4 +1,4 @@
-package utils;
+package typecheck;
 
 import ast.IfLabel;
 

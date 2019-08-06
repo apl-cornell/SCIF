@@ -1,7 +1,5 @@
 package ast;
 
-import utils.CodeLocation;
-
 public class TrailerExpr extends Expression {
     Expression value;
 

@@ -1,4 +1,4 @@
-package utils;
+package typecheck;
 
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
@@ -9,6 +9,10 @@ import java.util.HashMap;
 public class LookupMaps {
     ArrayList<HashMap<String, String>> maps;
     HashMap<String, VarInfo> varMap;
+    public LookupMaps() {
+        maps = new ArrayList<>();
+        varMap = new HashMap<>();
+    }
     public LookupMaps(HashMap<String, VarInfo> varMap) {
         maps = new ArrayList<>();
         HashMap<String, String> initMap = new HashMap<>();

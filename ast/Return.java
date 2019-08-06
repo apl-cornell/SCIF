@@ -1,6 +1,8 @@
 package ast;
 
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,16 +17,18 @@ public class Return extends Statement {
     }
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
+    public String genConsVisit(VisitEnv env) {
         if (value == null) return null;
-        String ifNamePc = Utils.getLabelNamePc(ctxt);
-        String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
+        String ifNameValue = value.genConsVisit(env);
 
-        int occur = ctxt.indexOf(".");
-        FuncInfo funcInfo = funcMap.get(occur >= 0 ? ctxt.substring(0, occur) : ctxt);
+        int occur = env.ctxt.indexOf(".");
+        FuncInfo funcInfo = env.funcMap.get(occur >= 0 ? env.ctxt.substring(0, occur) : env.ctxt);
         String ifNameReturn = funcInfo.getLabelNameReturn();
-        cons.add(Utils.genCons(ifNameValue, ifNameReturn, location));
-        cons.add(Utils.genCons(ifNamePc, ifNameReturn, location));
+        env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameReturn), env.hypothesis, location));
+
+        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameReturn), env.hypothesis, location));
+
         return null;
     }
 }

@@ -1,7 +1,5 @@
 package ast;
 
-import utils.CodeLocation;
-
 import java.util.HashSet;
 
 public class ComplexIfLabel extends IfLabel {
@@ -44,8 +42,11 @@ public class ComplexIfLabel extends IfLabel {
         return rnt;
     }
     public void findPrincipal(HashSet<String> principalSet) {
-        left.findPrincipal(principalSet);
-        right.findPrincipal(principalSet);
+    }
+
+    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
+        left.findPrincipal(principalSet, getRidOf);
+        right.findPrincipal(principalSet, getRidOf);
     }
 
     public void replace(String k, String v) {

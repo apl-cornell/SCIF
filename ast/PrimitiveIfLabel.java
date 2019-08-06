@@ -1,7 +1,6 @@
 package ast;
 
-import utils.CodeLocation;
-import utils.Utils;
+import typecheck.Utils;
 
 import java.util.HashSet;
 
@@ -48,6 +47,15 @@ public class PrimitiveIfLabel extends IfLabel {
         if (value instanceof Name) {
             String name = ((Name) value).id;
             if (!name.equals(Utils.TOP) && !name.equals(Utils.BOTTOM)) {
+                principalSet.add(name);
+            }
+        }
+    }
+
+    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
+        if (value instanceof Name) {
+            String name = ((Name) value).id;
+            if (!name.equals(Utils.TOP) && !name.equals(Utils.BOTTOM) && !name.equals(getRidOf)) {
                 principalSet.add(name);
             }
         }

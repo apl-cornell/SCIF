@@ -1,7 +1,7 @@
-package utils;
+package typecheck;
 
 public class CodeLocation {
-    int lineNo = -1, columnNo = -1;
+    public int lineNo = -1, columnNo = -1;
 
     public CodeLocation(int lineNo, int columnNo) {
         this.lineNo = lineNo;

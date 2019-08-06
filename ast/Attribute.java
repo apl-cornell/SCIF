@@ -1,6 +1,6 @@
 package ast;
 
-import utils.*;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,8 +14,8 @@ public class Attribute extends TrailerExpr {
         ctx = c;
     }
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
-        String ifNameRnt = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
+    public String genConsVisit(VisitEnv env) {
+        String ifNameRnt = value.genConsVisit(env);
         return ifNameRnt;
     }
 }

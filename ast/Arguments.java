@@ -1,9 +1,8 @@
 package ast;
 
-import utils.*;
+import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -37,10 +36,10 @@ public class Arguments extends Node {
         return rnt;
     }
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
+    public String genConsVisit(VisitEnv env) {
 
         for (Arg arg : args) {
-            arg.genConsVisit(ctxt, funcMap, cons, varNameMap);
+            arg.genConsVisit(env);
         }
         return null;
     }

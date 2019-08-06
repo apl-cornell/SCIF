@@ -1,6 +1,8 @@
 package ast;
 
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,68 +23,71 @@ public class If extends Statement {
     }
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
-        String IfNameTest = test.genConsVisit(ctxt, funcMap, cons, varNameMap);
-        String IfNamePcBefore = Utils.getLabelNamePc(ctxt);
-        ctxt += ".If" + location.toString();
-        String IfNamePcAfter = Utils.getLabelNamePc(ctxt);
-        cons.add(Utils.genCons(IfNamePcBefore, IfNamePcAfter, location));
-        cons.add(Utils.genCons(IfNameTest, IfNamePcAfter, test.location));
+    public String genConsVisit(VisitEnv env) {
+        String originalCtxt = env.ctxt;
 
-        TestableVarInfo testedVar = null;
-        String beforeTestedLabel = "";
+        String IfNameTest = test.genConsVisit(env);
+        String IfNamePcBefore = Utils.getLabelNamePc(env.ctxt);
+        env.ctxt += ".If" + location.toString();
+        String IfNamePcAfter = Utils.getLabelNamePc(env.ctxt);
+
+
+        boolean createdHypo = false;
+        //TestableVarInfo testedVar = null;
+        //String beforeTestedLabel = "";
         boolean tested = false;
         if (test instanceof Compare) {
             Compare bo = (Compare) test;
-            if (bo.op == CompareOperator.Eq &&
+            if ((bo.op == CompareOperator.Eq || bo.op == CompareOperator.GtE || bo.op == CompareOperator.LtE) &&
                 bo.left instanceof Name && bo.right instanceof Name) {
                 Name left = (Name) bo.left, right = (Name) bo.right;
-                if (varNameMap.exists(left.id) && varNameMap.exists(right.id)) {
+                if (env.varNameMap.exists(left.id) && env.varNameMap.exists(right.id)) {
 
                     System.err.println("if both exists");
-                    VarInfo l = varNameMap.getInfo(left.id), r = varNameMap.getInfo(right.id);
+                    VarInfo l = env.varNameMap.getInfo(left.id), r = env.varNameMap.getInfo(right.id);
                     System.err.println(l.toString());
                     System.err.println(r.toString());
-                    if (l instanceof TestableVarInfo && r.type.isConst && r.type.typeName.equals(Utils.ADDRESSTYPE)) {
-                        testedVar = ((TestableVarInfo) l);
+                    if (l.type.typeName.equals(Utils.ADDRESSTYPE) && r.type.typeName.equals(Utils.ADDRESSTYPE)) {
+                        /*testedVar = ((TestableVarInfo) l);
                         beforeTestedLabel = testedVar.testedLabel;
                         tested = testedVar.tested;
-                        testedVar.setTested(r.toSherrlocFmt());
-                        System.err.println("testing label var");
+                        testedVar.setTested(r.toSherrlocFmt());*/
+
+                        createdHypo = true;
+                        Inequality hypo = new Inequality(l.toSherrlocFmt(), bo.op, r.toSherrlocFmt());
+
+                        env.hypothesis.add(hypo);
+                        System.err.println("testing label");
                     }
                 } else {
                     //TODO: cannot find both the variables
                 }
             }
         }
+        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location));
 
-        varNameMap.incLayer();
+        env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location));
+
+        env.varNameMap.incLayer();
         for (Statement stmt : body) {
-            stmt.genConsVisit(ctxt, funcMap, cons, varNameMap);
+            stmt.genConsVisit(env);
         }
-        varNameMap.decLayer();
+        env.varNameMap.decLayer();
 
-        String ifTestedLabel = "";
-        if (testedVar != null) {
-            ifTestedLabel = testedVar.testedLabel;
-            testedVar.testedLabel = beforeTestedLabel;
-            testedVar.tested = tested;
+        if (createdHypo) {
+            env.hypothesis.remove();
         }
         System.err.println("finished if branch");
 
-        varNameMap.incLayer();
+        env.varNameMap.incLayer();
         for (Statement stmt : orelse) {
-            stmt.genConsVisit(ctxt, funcMap, cons, varNameMap);
+            stmt.genConsVisit(env);
         }
-        varNameMap.decLayer();
+        env.varNameMap.decLayer();
 
         System.err.println("finished orelse branch");
-        if (testedVar != null) {
-            if ((ifTestedLabel == null || ifTestedLabel.equals(Utils.DEAD)) || (testedVar.testedLabel == null || testedVar.testedLabel.equals(Utils.DEAD))) {
-                testedVar.testedLabel = Utils.DEAD;
-                testedVar.tested = false;
-            }
-        }
+
+        env.ctxt = originalCtxt;
         return null;
     }
 }

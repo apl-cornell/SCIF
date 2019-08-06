@@ -1,19 +1,18 @@
-package utils;
+package typecheck;
 
-import ast.IfLabel;
-import ast.Name;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
-import utils.CodeLocation;
 
 public class VarInfo {
-    public String varName;
+    public String fullName;
+    public String localName;
     public TypeInfo type;
 
     public CodeLocation location;
 
-    public VarInfo(String varName, TypeInfo type, CodeLocation location) {
-        this.varName = varName;
+    public VarInfo(String fullName, String localName, TypeInfo type, CodeLocation location) {
+        this.fullName = fullName;
+        this.localName = localName;
         this.type = type;
         this.location = location;
     }
@@ -29,6 +28,7 @@ public class VarInfo {
     }
 
     public String toSherrlocFmt() {
-        return varName;// + ".." + "lblVar";
+        return fullName;// + ".." + "lblVar";
     }
+    public String labelToSherrlocFmt() {return  fullName + ".." + "lbl"; }
 }

@@ -1,7 +1,5 @@
 package ast;
 
-import utils.CodeLocation;
-
 public class Raise extends Statement {
     Expression exception;
     Expression from;

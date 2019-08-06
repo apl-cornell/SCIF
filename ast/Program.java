@@ -1,8 +1,7 @@
 package ast;
 
-import utils.*;
+import typecheck.*;
 
-import java.security.CodeSigner;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,9 +20,9 @@ public class Program extends Node {
     }
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
+    public String genConsVisit(VisitEnv env) {
         for (Statement stmt : body) {
-            stmt.genConsVisit(ctxt, funcMap, cons, varNameMap);
+            stmt.genConsVisit(env);
         }
         return null;
     }

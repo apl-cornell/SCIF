@@ -1,6 +1,8 @@
 package ast;
 
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +35,7 @@ public class AnnAssign extends Statement {
         if (simple) {
             String id = ((Name) target).id;
             CodeLocation loc = location;
-            varMap.put(id, Utils.toVarInfo(target, annotation, isConst, loc));
+            varMap.put(id, Utils.toVarInfo(id, id, annotation, isConst, loc));
         } else {
             //TODO
         }
@@ -41,29 +43,43 @@ public class AnnAssign extends Statement {
 
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
+    public String genConsVisit(VisitEnv env) {
         if (!simple) {
             //TODO
         }
         String ifNameTgt;
-        if (!ctxt.isEmpty()) {
-            ifNameTgt = (ctxt.equals("") ? "" : ctxt + ".") + ((Name) target).id;
+        VarInfo varInfo;
+        if (!env.ctxt.isEmpty()) {
+            ifNameTgt = (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
             String id = ((Name) target).id;
             CodeLocation loc = location;
-            varNameMap.add(((Name) target).id, ifNameTgt, Utils.toVarInfo(target, annotation, isConst, loc));
+            varInfo = Utils.toVarInfo(ifNameTgt, id, annotation, isConst, loc);
+            env.varNameMap.add(((Name) target).id, ifNameTgt, varInfo);
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
-                cons.add(Utils.genCons(ifLabel, ifNameTgt, location));
-                cons.add(Utils.genCons(ifNameTgt, ifLabel, location));
+                env.cons.add(new Constraint(new Inequality(ifLabel, ifNameTgt), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifNameTgt, ifLabel), env.hypothesis, location));
             }
         } else {
             ifNameTgt = ((Name) target).id;
+            varInfo = env.varNameMap.getInfo(ifNameTgt);
         }
-        String ifNamePc = Utils.getLabelNamePc(ctxt);
-        cons.add(Utils.genCons(ifNamePc, ifNameTgt, location));
+        if (varInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
+            env.principalSet.add(varInfo.toSherrlocFmt());
+        }
+
+        if (annotation instanceof LabeledType) {
+            if (annotation instanceof DepMap) {
+                ((DepMap) annotation).findPrincipal(env.principalSet);
+            } else {
+                ((LabeledType) annotation).ifl.findPrincipal(env.principalSet);
+            }
+        }
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
+        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, location));
         if (value != null) {
-            String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
-            cons.add(Utils.genCons(ifNameValue, ifNameTgt, value.location));
+            String ifNameValue = value.genConsVisit(env);
+            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis, location));
         }
         return null;
     }

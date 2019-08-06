@@ -1,5 +1,7 @@
 package ast;
 
+import java.util.HashSet;
+
 public class IfLabel extends Expression {
     public String toSherrlocFmt() {
         return "";
@@ -9,5 +11,9 @@ public class IfLabel extends Expression {
     }
     public void replace(String k, String v) {
 
+    }
+
+
+    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
     }
 }

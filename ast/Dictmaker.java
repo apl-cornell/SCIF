@@ -1,6 +1,8 @@
 package ast;
 
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,12 +22,13 @@ public class Dictmaker extends Expression {
         this.values.add(value);
     }
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
-        String ifNameRnt = ctxt + "." + "dictmaker" + location.toString();
+    public String genConsVisit(VisitEnv env) {
+        String ifNameRtn = env.ctxt + "." + "dictmaker" + location.toString();
         for (Expression value: values) {
-            String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
-            cons.add(Utils.genCons(ifNameValue, ifNameRnt, location));
+            String ifNameValue = value.genConsVisit(env);
+            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location));
+
         }
-        return ifNameRnt;
+        return ifNameRtn;
     }
 }

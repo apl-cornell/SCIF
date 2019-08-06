@@ -2,7 +2,7 @@ package ast;
 
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
-import utils.*;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +29,7 @@ public class Node {
         //Do nothing
     }
 
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
+    public String genConsVisit(VisitEnv env) {
         return null;
     }
     public void findPrincipal(HashSet<String> principalSet) {

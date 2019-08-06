@@ -2,7 +2,9 @@ import java.io.*;
 
 import ast.Program;
 import java_cup.runtime.*;
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.*;
 
@@ -26,28 +28,30 @@ public class TypeChecker {
             return;
         }
         HashMap<String, VarInfo> varMap = new HashMap<String, VarInfo>();
-        HashMap<String, FuncInfo> funcMap = new HashMap<String, FuncInfo>();
-        HashSet<String> principalSet = new HashSet<>();
-        principalSet.add("this");
+        VisitEnv env = new VisitEnv();
+        //HashSet<String> principalSet = new HashSet<>();
+        //env.principalSet.add("this");
 
-        ArrayList<IfConstraint> cons = new ArrayList<>();
+        //ArrayList<Constraint> cons = new ArrayList<>();
 
-        root.globalInfoVisit(varMap, funcMap);
-        root.findPrincipal(principalSet);
+        root.globalInfoVisit(varMap, env.funcMap);
+        //root.findPrincipal(principalSet);
 
         System.err.println("Display varMap:\n");
         for (HashMap.Entry<String, VarInfo>  varPair : varMap.entrySet()) {
-            String varName = varPair.getKey();
             VarInfo var = varPair.getValue();
+            String varName = var.labelToSherrlocFmt();
             String ifLabel = var.getLabel();
             if (ifLabel != null) {
-                cons.add(Utils.genCons(varName, ifLabel, var.location));
-                cons.add(Utils.genCons(ifLabel, varName, var.location));
+                env.cons.add(new Constraint(new Inequality(varName, ifLabel), var.location));
+
+                env.cons.add(new Constraint(new Inequality(ifLabel, varName), var.location));
+
             }
             System.out.println(varName);
             System.out.println(": " + var + "\n");
         }
-        for (HashMap.Entry<String, FuncInfo> funcPair : funcMap.entrySet()) {
+        for (HashMap.Entry<String, FuncInfo> funcPair : env.funcMap.entrySet()) {
             //String funcName = funcPair.getKey();
             FuncInfo func = funcPair.getValue();
             String ifNameCallBeforeLabel = func.getLabelNameCallBefore();
@@ -55,19 +59,25 @@ public class TypeChecker {
             String ifCallBeforeLabel = func.getCallBeforeLabel();
             String ifCallAfterLabel = func.getCallAfterLabel();
             if (ifNameCallBeforeLabel != null) {
-                cons.add(Utils.genCons(ifCallBeforeLabel, ifNameCallBeforeLabel, func.location));
-                cons.add(Utils.genCons(ifNameCallBeforeLabel, ifCallBeforeLabel, func.location));
+                env.cons.add(new Constraint(new Inequality(ifCallBeforeLabel, ifNameCallBeforeLabel), func.location));
+
+                env.cons.add(new Constraint(new Inequality(ifNameCallBeforeLabel, ifCallBeforeLabel), func.location));
+
             }
             if (ifNameCallAfterLabel != null) {
-                cons.add(Utils.genCons(ifCallAfterLabel, ifNameCallAfterLabel, func.location));
-                cons.add(Utils.genCons(ifNameCallAfterLabel, ifCallAfterLabel, func.location));
+                env.cons.add(new Constraint(new Inequality(ifCallAfterLabel, ifNameCallAfterLabel), func.location));
+
+                env.cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, ifCallAfterLabel), func.location));
+
             }
 
             String ifNameReturnLabel = func.getLabelNameReturn();
             String ifReturnLabel = func.getReturnLabel();
             if (ifReturnLabel != null) {
-                cons.add(Utils.genCons(ifReturnLabel, ifNameReturnLabel, func.location));
-                cons.add(Utils.genCons(ifNameReturnLabel, ifReturnLabel, func.location));
+                env.cons.add(new Constraint(new Inequality(ifReturnLabel, ifNameReturnLabel), func.location));
+
+                env.cons.add(new Constraint(new Inequality(ifNameReturnLabel, ifReturnLabel), func.location));
+
             }
 
             for (int i = 0; i < func.parameters.size(); ++i) {
@@ -75,27 +85,33 @@ public class TypeChecker {
                 String ifNameArgLabel = func.getLabelNameArg(i);
                 String ifArgLabel = arg.getLabel();
                 if (ifArgLabel != null) {
-                    cons.add(Utils.genCons(ifNameArgLabel, ifArgLabel, arg.location));
-                    cons.add(Utils.genCons(ifArgLabel, ifNameArgLabel, arg.location));
+                    env.cons.add(new Constraint(new Inequality(ifNameArgLabel, ifArgLabel), arg.location));
+
+                    env.cons.add(new Constraint(new Inequality(ifArgLabel, ifNameArgLabel), arg.location));
+
                 }
             }
 
         }
-        cons.add(Utils.genNewlineCons());
+        env.cons.add(new Constraint());
 
-        LookupMaps varNameMap = new LookupMaps(varMap);
+        env.varNameMap = new LookupMaps(varMap);
 
-        root.genConsVisit("", funcMap, cons, varNameMap);
+        root.genConsVisit(env);
 
         try {
             BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
-            System.err.println("Writing the constraints of size " + cons.size());
-            for (String principal : principalSet) {
-                consFile.write("CONSTRUCTOR " + principal + " 0\n");
+            System.err.println("Writing the constraints of size " + env.cons.size());
+            if (!env.principalSet.isEmpty()) {
+                for (String principal : env.principalSet) {
+                    consFile.write("CONSTRUCTOR " + principal + " 0\n");
+                }
             }
             consFile.write("\n");
-            for (IfConstraint con : cons) {
-                consFile.write(con.toSherrlocFmt() + "\n");
+            if (!env.cons.isEmpty()) {
+                for (Constraint con : env.cons) {
+                    consFile.write(con.toSherrlocFmt() + "\n");
+                }
             }
             consFile.close();
         } catch(Exception e) {

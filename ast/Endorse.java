@@ -1,6 +1,8 @@
 package ast;
 
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,15 +18,17 @@ public class Endorse extends Expression {
     }
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
-        String ifNameValue = value.genConsVisit(ctxt, funcMap, cons, varNameMap);
-        String ifNameRnt = ctxt + "." + "endorse" + location.toString();
+    public String genConsVisit(VisitEnv env) {
+        String ifNameValue = value.genConsVisit(env);
+        String ifNameRtn = env.ctxt + "." + "endorse" + location.toString();
 
         String fromLabel = from.toSherrlocFmt();
         String toLabel = to.toSherrlocFmt();
 
-        cons.add(Utils.genCons(ifNameValue, fromLabel, location));
-        cons.add(Utils.genCons(ifNameRnt, toLabel, location));
-        return ifNameRnt;
+        env.cons.add(new Constraint(new Inequality(ifNameValue, fromLabel), env.hypothesis, location));
+
+        env.cons.add(new Constraint(new Inequality(ifNameRtn, toLabel), env.hypothesis, location));
+
+        return ifNameRtn;
     }
 }

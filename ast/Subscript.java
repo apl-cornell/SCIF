@@ -1,6 +1,8 @@
 package ast;
 
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,65 +18,72 @@ public class Subscript extends TrailerExpr {
     }
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
-        VarInfo valueVarInfo = value.getVarInfo(ctxt, funcMap, cons, varNameMap);
-        String ifNameValue = valueVarInfo.varName;
-        String ifNameRnt = ifNameValue + "." + "Subscript" + location.toString();
+    public String genConsVisit(VisitEnv env) {
+        VarInfo valueVarInfo = value.getVarInfo(env);
+        String ifNameValue = valueVarInfo.labelToSherrlocFmt();
+        String ifNameRtn = ifNameValue + "." + "Subscript" + location.toString();
         if (valueVarInfo.type instanceof DepMapTypeInfo) {
-            VarInfo indexVarInfo = index.getVarInfo(ctxt, funcMap, cons, varNameMap);
-            if (indexVarInfo.type.typeName.equals(Utils.ADDRESSTYPE) && indexVarInfo instanceof TestableVarInfo
-                    && ((TestableVarInfo) indexVarInfo).tested) {
-                String ifNameIndex = ((TestableVarInfo) indexVarInfo).testedLabel;
+            VarInfo indexVarInfo = index.getVarInfo(env);
+            String ifNameIndex = indexVarInfo.fullName;
+
+            if (indexVarInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
                 System.err.println("typename " + valueVarInfo.type.typeName + " to " + ifNameIndex);
                 String ifDepMapIndexReq = ((DepMapTypeInfo) valueVarInfo.type).keyType.ifl.toSherrlocFmt(valueVarInfo.type.typeName, ifNameIndex);
                 String ifDepMapValue = ((DepMapTypeInfo) valueVarInfo.type).valueType.ifl.toSherrlocFmt(valueVarInfo.type.typeName, ifNameIndex);
-                cons.add(Utils.genCons(ifNameIndex, ifDepMapIndexReq, location));
-                cons.add(Utils.genCons(ifDepMapValue, ifNameRnt, location));
+                env.cons.add(new Constraint(new Inequality(ifNameIndex, ifDepMapIndexReq), env.hypothesis, location));
+
+                env.cons.add(new Constraint(new Inequality(ifDepMapValue, ifNameRtn), env.hypothesis, location));
+
             } else {
-                System.err.println("ERROR: untested address as index to access DEPMAP @" + locToString());
+                System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());
                 return "";
             }
         } else {
-            String ifNameIndex = index.genConsVisit(ctxt, funcMap, cons, varNameMap);
-            ifNameRnt = ctxt + "." + "Subscript" + location.toString();
-            cons.add(Utils.genCons(ifNameValue, ifNameRnt, location));
-            cons.add(Utils.genCons(ifNameIndex, ifNameRnt, location));
+            String ifNameIndex = index.genConsVisit(env);
+            ifNameRtn = env.ctxt + "." + "Subscript" + location.toString();
+            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location));
+
+            env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtn), env.hypothesis, location));
+
         }
-        return ifNameRnt;
+        return ifNameRtn;
     }
 
-    public VarInfo getVarInfo(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
+    public VarInfo getVarInfo(VisitEnv env) {
         VarInfo rtnVarInfo = null;
-        VarInfo valueVarInfo = value.getVarInfo(ctxt, funcMap, cons, varNameMap);
-        String ifNameValue = valueVarInfo.varName;
-        String ifNameRnt = ifNameValue + "." + "Subscript" + location.toString();
+        VarInfo valueVarInfo = value.getVarInfo(env);
+        String ifNameValue = valueVarInfo.labelToSherrlocFmt();
+        String ifNameRtn = ifNameValue + "." + "Subscript" + location.toString();
         if (valueVarInfo.type instanceof DepMapTypeInfo) {
-            VarInfo indexVarInfo = index.getVarInfo(ctxt, funcMap, cons, varNameMap);
-            String ifNameIndex = indexVarInfo.varName;
-            if (indexVarInfo.type.typeName.equals(Utils.ADDRESSTYPE) && indexVarInfo instanceof TestableVarInfo
-                    && ((TestableVarInfo) indexVarInfo).tested) {
+            VarInfo indexVarInfo = index.getVarInfo(env);
+            String ifNameIndex = indexVarInfo.fullName;
+            if (indexVarInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
 
                 TypeInfo rtnTypeInfo = new TypeInfo(((DepMapTypeInfo) valueVarInfo.type).valueType);
                 rtnTypeInfo.replace(valueVarInfo.type.typeName, ifNameIndex);
-                rtnVarInfo = new VarInfo(ifNameRnt, rtnTypeInfo, location);
+                rtnVarInfo = new VarInfo(ifNameRtn, ifNameRtn, rtnTypeInfo, location);
 
                 String ifDepMapIndexReq = ((DepMapTypeInfo) valueVarInfo.type).keyType.ifl.toSherrlocFmt(valueVarInfo.type.typeName, ifNameIndex);
                 String ifDepMapValue = ((DepMapTypeInfo) valueVarInfo.type).valueType.ifl.toSherrlocFmt(valueVarInfo.type.typeName, ifNameIndex);
-                cons.add(Utils.genCons(ifNameIndex, ifDepMapIndexReq, location));
-                cons.add(Utils.genCons(ifDepMapValue, ifNameRnt, location));
+                env.cons.add(new Constraint(new Inequality(ifNameIndex, ifDepMapIndexReq), env.hypothesis, location));
+
+                env.cons.add(new Constraint(new Inequality(ifDepMapValue, ifNameRtn), env.hypothesis, location));
+
 
 
             } else {
-                System.err.println("ERROR: untested address as index to access DEPMAP @" + locToString());
+                System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());
                 return null;
             }
         } else {
-            String ifNameIndex = index.genConsVisit(ctxt, funcMap, cons, varNameMap);
-            ifNameRnt = ctxt + "." + "Subscript" + location.toString();
-            cons.add(Utils.genCons(ifNameValue, ifNameRnt, location));
-            cons.add(Utils.genCons(ifNameIndex, ifNameRnt, location));
-            TypeInfo rtnTypeInfo = new TypeInfo(ifNameRnt, null, false);
-            rtnVarInfo = new VarInfo(ifNameRnt, rtnTypeInfo, location);
+            String ifNameIndex = index.genConsVisit(env);
+            ifNameRtn = env.ctxt + "." + "Subscript" + location.toString();
+            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location));
+
+            env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtn), env.hypothesis, location));
+
+            TypeInfo rtnTypeInfo = new TypeInfo(ifNameRtn, null, false);
+            rtnVarInfo = new VarInfo(ifNameRtn, ifNameRtn, rtnTypeInfo, location);
         }
         return rtnVarInfo;
     }

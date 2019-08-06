@@ -1,6 +1,6 @@
 package ast;
 
-import utils.*;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,9 +12,9 @@ public class ConstantExpr extends Expression {
     }
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
+    public String genConsVisit(VisitEnv env) {
 
-        String ifNameRnt = Utils.getLabelNamePc(ctxt);
+        String ifNameRnt = Utils.getLabelNamePc(env.ctxt);
         return ifNameRnt;
     }
 }

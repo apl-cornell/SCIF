@@ -1,6 +1,8 @@
 package ast;
 
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,30 +46,47 @@ public class FunctionDef extends Statement {
 
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
+    public String genConsVisit(VisitEnv env) {
+        String originalCtxt = env.ctxt;
         String funcName = "";
         if (name instanceof LabeledType) {
             funcName = ((LabeledType) name).x.id;
+
+            ((LabeledType) name).ifl.findPrincipal(env.principalSet);
         } else {
             funcName = ((Name) name).id;
         }
-        ctxt += funcName;// + location.toString();
+        env.ctxt += funcName;// + location.toString();
 
-        String ifNamePc = Utils.getLabelNamePc(ctxt);
-        FuncInfo funcInfo = funcMap.get(funcName);
+        args.genConsVisit(env);
+
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
+        FuncInfo funcInfo = env.funcMap.get(funcName);
 
         if (name instanceof LabeledType) {
             String ifNameCall = funcInfo.getLabelNameCallAfter();
-            cons.add(Utils.genCons(ifNameCall, ifNamePc, location));
-            cons.add(Utils.genCons(ifNamePc, ifNameCall, location));
+            env.cons.add(new Constraint(new Inequality(ifNameCall, ifNamePc), env.hypothesis, location));
+
+            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameCall), env.hypothesis, location));
+
         }
 
-        varNameMap.incLayer();
-        args.genConsVisit(ctxt, funcMap, cons, varNameMap);
+        env.varNameMap.incLayer();
+        args.genConsVisit(env);
         for (Statement stmt : body) {
-            stmt.genConsVisit(ctxt, funcMap, cons, varNameMap);
+            stmt.genConsVisit(env);
         }
-        varNameMap.decLayer();
+        env.varNameMap.decLayer();
+
+
+        if (rnt instanceof LabeledType) {
+            if (rnt instanceof DepMap) {
+                ((DepMap) rnt).findPrincipal(env.principalSet);
+            } else {
+                ((LabeledType) rnt).ifl.findPrincipal(env.principalSet);
+            }
+        }
+        env.ctxt = originalCtxt;
         return null;
     }
     public void findPrincipal(HashSet<String> principalSet) {

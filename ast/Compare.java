@@ -1,6 +1,8 @@
 package ast;
 
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,12 +18,14 @@ public class Compare extends Expression {
     }
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
-        String ifNameLeft = left.genConsVisit(ctxt, funcMap, cons, varNameMap);
-        String ifNameRight = right.genConsVisit(ctxt, funcMap, cons, varNameMap);
-        String ifNameRnt = ctxt + "." + "cmp" + location.toString();
-        cons.add(Utils.genCons(ifNameLeft, ifNameRnt, location));
-        cons.add(Utils.genCons(ifNameRight, ifNameRnt, location));
-        return ifNameRnt;
+    public String genConsVisit(VisitEnv env) {
+        String ifNameLeft = left.genConsVisit(env);
+        String ifNameRight = right.genConsVisit(env);
+        String ifNameRtn = env.ctxt + "." + "cmp" + location.toString();
+        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location));
+
+        env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location));
+
+        return ifNameRtn;
     }
 }

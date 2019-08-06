@@ -1,0 +1,43 @@
+package sherrlocUtils;
+
+import ast.Compare;
+import ast.CompareOperator;
+
+public class Inequality {
+    String lhs, rhs;
+    Relation relation;
+    public Inequality(String lhs, Relation relation, String rhs) {
+        this.lhs = lhs;
+        this.rhs = rhs;
+        this.relation = relation;
+    }
+    public Inequality(String lhs, CompareOperator co, String rhs) {
+        this.lhs = lhs;
+        this.rhs = rhs;
+        if (co == CompareOperator.Eq)
+            this.relation = Relation.EQ;
+        else if (co == CompareOperator.GtE)
+            this.relation = Relation.REQ;
+        else if (co == CompareOperator.LtE)
+            this.relation = Relation.LEQ;
+    }
+
+    public Inequality(String lhs, String rhs) {
+        this.lhs = lhs;
+        this.rhs = rhs;
+        this.relation = Relation.LEQ;
+    }
+
+    public String toSherrlocFmt() {
+        if (relation == Relation.EQ) {
+            return lhs + " == " + rhs;
+        } else if (relation == Relation.LEQ) {
+            return lhs + " <= " + rhs;
+        } else if (relation == Relation.REQ) {
+            return lhs + " >= " + rhs;
+        } else {
+            //TODO: error
+            return "";
+        }
+    }
+}

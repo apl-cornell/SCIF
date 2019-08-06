@@ -1,15 +1,11 @@
-package utils;
-
-import ast.IfLabel;
-import ast.LabeledType;
-import ast.Name;
+package typecheck;
 
 public class TestableVarInfo extends VarInfo {
     public String testedLabel;
     public boolean tested;
 
-    public TestableVarInfo(String varName, TypeInfo type, CodeLocation location, String testedLabel, boolean tested) {
-        super(varName, type, location);
+    public TestableVarInfo(String fullName, String localName, TypeInfo type, CodeLocation location, String testedLabel, boolean tested) {
+        super(fullName, localName, type, location);
         this.testedLabel = testedLabel;
         this.tested = tested;
     }

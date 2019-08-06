@@ -1,6 +1,6 @@
 package ast;
 
-import utils.CodeLocation;
+import java.util.HashSet;
 
 public class DepMap extends LabeledType {
     public LabeledType keyType;
@@ -13,5 +13,12 @@ public class DepMap extends LabeledType {
 
     public String toSherrloc(String name, String value) {
         return ifl.toSherrlocFmt(name, value);
+    }
+
+    @Override
+    public void findPrincipal(HashSet<String> principalSet) {
+        ifl.findPrincipal(principalSet);
+        keyType.findPrincipal(principalSet, x.id);
+        valueType.findPrincipal(principalSet, x.id);
     }
 }

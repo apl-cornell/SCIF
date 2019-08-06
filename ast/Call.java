@@ -1,6 +1,8 @@
 package ast;
 
-import utils.*;
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,10 +33,10 @@ public class Call extends TrailerExpr {
     }
 
     @Override
-    public String genConsVisit(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<IfConstraint> cons, LookupMaps varNameMap) {
+    public String genConsVisit(VisitEnv env) {
         //TODO: Assuming value is a Name for now
         String funcName = ((Name) value).id;
-        String ifNamePc = Utils.getLabelNamePc(ctxt);
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
         /*if (funcName.equals(Utils.ENDORCEFUNCNAME)) {
             //TODO: didn't add explicit ifLabel expression parsing at this point
             String ifNameExp = args.get(0).genConsVisit(ctxt, funcMap, cons, varNameMap);
@@ -48,17 +50,20 @@ public class Call extends TrailerExpr {
             return ifNameRnt;
         }
         else*/ {
-            FuncInfo funcInfo = funcMap.get(funcName);
+            FuncInfo funcInfo = env.funcMap.get(funcName);
             String ifNameFuncCall = funcInfo.getLabelNameCallBefore();
-            cons.add(Utils.genCons(ifNamePc, ifNameFuncCall, location));
+            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCall), env.hypothesis, location));
+
 
             //TODO: keywords style arg assign
             for (int i = 0; i < args.size(); ++i) {
                 Expression arg = args.get(i);
-                String ifNameArgValue = arg.genConsVisit(ctxt, funcMap, cons, varNameMap);
+                String ifNameArgValue = arg.genConsVisit(env);
                 String ifNameArgLabel = funcInfo.getLabelNameArg(i);
-                cons.add(Utils.genCons(ifNameArgValue, ifNameArgLabel, arg.location));
-                cons.add(Utils.genCons(ifNamePc, ifNameArgLabel, arg.location));
+                env.cons.add(new Constraint(new Inequality(ifNameArgValue, ifNameArgLabel), env.hypothesis, location));
+
+                env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameArgLabel), env.hypothesis, location));
+
             }
             String ifNameFuncReturn = funcInfo.getLabelNameReturn();
             return ifNameFuncReturn;

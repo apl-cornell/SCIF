@@ -1,10 +1,9 @@
-package utils;
+package typecheck;
 
 import ast.*;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 
 public class Utils {
@@ -48,10 +47,10 @@ public class Utils {
         return funcName + ".." + "call.after";
     }
     public static String getLabelNameFuncReturn(String funcName) {
-        return funcName + ".." + "rnt";
+        return funcName + ".." + "rtn";
     }
     public static String getLabelNameArgLabel(String funcName, VarInfo arg) {
-        return funcName + "." + arg.varName;
+        return funcName + "." + arg.localName + "..lbl";
     }
     public static String[] runSherrloc(String path, String consFilePath) throws Exception {
         String[] command = new String[] {"bash", "-c", path + "/sherrloc/sherrloc -c " + consFilePath};
@@ -70,18 +69,18 @@ public class Utils {
         return list.toArray(new String[0]);
     }
 
-    public static VarInfo toVarInfo(Expression name, Expression type, boolean isConst, CodeLocation loc) {
-        String varName = "";
+    public static VarInfo toVarInfo(String fullName, String localName, Expression type, boolean isConst, CodeLocation loc) {
+        /*String varName = "";
         if (name instanceof Name) {
             varName = ((Name) name).id;
         } else {
             //TODO
-        }
+        }*/
 
-        boolean testable = false;
+        //boolean testable = false;
         TypeInfo typeInfo = toTypeInfo(type, isConst);
 
-        if (type instanceof Name) {
+        /*if (type instanceof Name) {
             String typeName = ((Name) type).id;
             if (typeName.equals(Utils.ADDRESSTYPE)) {
                 testable = true;
@@ -91,14 +90,14 @@ public class Utils {
             if (typeName.equals(Utils.ADDRESSTYPE)) {
                 testable = true;
             }
-        }
+        }*/
 
-        System.err.println("creating new VarInfo" + (testable ? "testable" : "nontestable"));
-        System.err.println("VarName: " + varName);
-        if (testable)
+        //System.err.println("creating new VarInfo" + (testable ? "testable" : "nontestable"));
+        //System.err.println("VarName: " + varName);
+        /*if (testable)
             return new TestableVarInfo(varName, typeInfo, loc, null, false);
-        else
-            return new VarInfo(varName, typeInfo, loc);
+        else*/
+        return new VarInfo(fullName, localName, typeInfo, loc);
     }
 
     public static TypeInfo toTypeInfo(Expression type, boolean isConst) {
