@@ -30,7 +30,7 @@ public class Subscript extends TrailerExpr {
                 System.err.println("typename " + valueVarInfo.type.typeName + " to " + ifNameIndex);
                 String ifDepMapIndexReq = ((DepMapTypeInfo) valueVarInfo.type).keyType.ifl.toSherrlocFmt(valueVarInfo.type.typeName, ifNameIndex);
                 String ifDepMapValue = ((DepMapTypeInfo) valueVarInfo.type).valueType.ifl.toSherrlocFmt(valueVarInfo.type.typeName, ifNameIndex);
-                env.cons.add(new Constraint(new Inequality(ifNameIndex, ifDepMapIndexReq), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifNameIndex + "..lbl", ifDepMapIndexReq), env.hypothesis, location));
 
                 env.cons.add(new Constraint(new Inequality(ifDepMapValue, ifNameRtn), env.hypothesis, location));
 
@@ -65,7 +65,7 @@ public class Subscript extends TrailerExpr {
 
                 String ifDepMapIndexReq = ((DepMapTypeInfo) valueVarInfo.type).keyType.ifl.toSherrlocFmt(valueVarInfo.type.typeName, ifNameIndex);
                 String ifDepMapValue = ((DepMapTypeInfo) valueVarInfo.type).valueType.ifl.toSherrlocFmt(valueVarInfo.type.typeName, ifNameIndex);
-                env.cons.add(new Constraint(new Inequality(ifNameIndex, ifDepMapIndexReq), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifNameIndex + "..lbl", ifDepMapIndexReq), env.hypothesis, location));
 
                 env.cons.add(new Constraint(new Inequality(ifDepMapValue, ifNameRtn), env.hypothesis, location));
 

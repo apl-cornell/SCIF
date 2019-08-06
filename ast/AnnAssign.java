@@ -57,8 +57,8 @@ public class AnnAssign extends Statement {
             env.varNameMap.add(((Name) target).id, ifNameTgt, varInfo);
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
-                env.cons.add(new Constraint(new Inequality(ifLabel, ifNameTgt), env.hypothesis, location));
-                env.cons.add(new Constraint(new Inequality(ifNameTgt, ifLabel), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifLabel, ifNameTgt + "..lbl"), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifNameTgt + "..lbl", ifLabel), env.hypothesis, location));
             }
         } else {
             ifNameTgt = ((Name) target).id;
@@ -76,10 +76,10 @@ public class AnnAssign extends Statement {
             }
         }
         String ifNamePc = Utils.getLabelNamePc(env.ctxt);
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt + "..lbl"), env.hypothesis, location));
         if (value != null) {
             String ifNameValue = value.genConsVisit(env);
-            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgt + "..lbl"), env.hypothesis, location));
         }
         return null;
     }

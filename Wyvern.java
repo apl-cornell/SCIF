@@ -2,10 +2,9 @@
 
 import picocli.CommandLine;
 import picocli.CommandLine.*;
-import utils.Utils;
+import typecheck.Utils;
 
 import java.io.File;
-import java.io.UTFDataFormatException;
 import java.util.concurrent.Callable;
 
 @Command(name = "wyvern", version = "wyvern 0.1.0", mixinStandardHelpOptions = true,
