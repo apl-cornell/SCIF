@@ -1,0 +1,4 @@
+08:29:20.080 [main] TRACE Wyvern - wyvern starts
+08:29:20.083 [main] TRACE TypeChecker - typecheck starts
+08:29:20.205 [main] TRACE TypeChecker - typecheck finishes
+08:29:20.561 [main] TRACE Wyvern - wyvern finishes

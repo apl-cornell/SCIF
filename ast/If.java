@@ -43,10 +43,13 @@ public class If extends Statement {
                 Name left = (Name) bo.left, right = (Name) bo.right;
                 if (env.varNameMap.exists(left.id) && env.varNameMap.exists(right.id)) {
 
-                    System.err.println("if both exists");
+                    logger.debug("if both exists");
+                    //System.err.println("if both exists");
                     VarInfo l = env.varNameMap.getInfo(left.id), r = env.varNameMap.getInfo(right.id);
-                    System.err.println(l.toString());
-                    System.err.println(r.toString());
+                    logger.debug(l.toString());
+                    logger.debug(r.toString());
+                    //System.err.println(l.toString());
+                    //System.err.println(r.toString());
                     if (l.type.typeName.equals(Utils.ADDRESSTYPE) && r.type.typeName.equals(Utils.ADDRESSTYPE)) {
                         /*testedVar = ((TestableVarInfo) l);
                         beforeTestedLabel = testedVar.testedLabel;
@@ -57,7 +60,8 @@ public class If extends Statement {
                         Inequality hypo = new Inequality(l.toSherrlocFmt(), bo.op, r.toSherrlocFmt());
 
                         env.hypothesis.add(hypo);
-                        System.err.println("testing label");
+                        //System.err.println("testing label");
+                        logger.debug("testing label");
                     }
                 } else {
                     //TODO: cannot find both the variables
@@ -77,7 +81,9 @@ public class If extends Statement {
         if (createdHypo) {
             env.hypothesis.remove();
         }
-        System.err.println("finished if branch");
+
+        logger.debug("finished if branch");
+        //System.err.println("finished if branch");
 
         env.varNameMap.incLayer();
         for (Statement stmt : orelse) {
@@ -85,7 +91,8 @@ public class If extends Statement {
         }
         env.varNameMap.decLayer();
 
-        System.err.println("finished orelse branch");
+        logger.debug("finished orelse branch");
+        //System.err.println("finished orelse branch");
 
         env.ctxt = originalCtxt;
         return null;

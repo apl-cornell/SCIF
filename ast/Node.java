@@ -2,6 +2,8 @@ package ast;
 
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -34,4 +36,7 @@ public class Node {
     }
     public void findPrincipal(HashSet<String> principalSet) {
     }
+
+    protected static final Logger logger = LogManager.getLogger();
+
 }

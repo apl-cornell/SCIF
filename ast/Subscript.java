@@ -27,7 +27,8 @@ public class Subscript extends TrailerExpr {
             String ifNameIndex = indexVarInfo.fullName;
 
             if (indexVarInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
-                System.err.println("typename " + valueVarInfo.type.typeName + " to " + ifNameIndex);
+                logger.debug("typename {} to {}", valueVarInfo.type.typeName, ifNameIndex);
+                //System.err.println("typename " + valueVarInfo.type.typeName + " to " + ifNameIndex);
                 String ifDepMapIndexReq = ((DepMapTypeInfo) valueVarInfo.type).keyType.ifl.toSherrlocFmt(valueVarInfo.type.typeName, ifNameIndex);
                 String ifDepMapValue = ((DepMapTypeInfo) valueVarInfo.type).valueType.ifl.toSherrlocFmt(valueVarInfo.type.typeName, ifNameIndex);
                 env.cons.add(new Constraint(new Inequality(ifNameIndex + "..lbl", ifDepMapIndexReq), env.hypothesis, location));
@@ -35,7 +36,8 @@ public class Subscript extends TrailerExpr {
                 env.cons.add(new Constraint(new Inequality(ifDepMapValue, ifNameRtn), env.hypothesis, location));
 
             } else {
-                System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());
+                logger.error("non-address type variable as index to access DEPMAP @{}", locToString());
+                //System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());
                 return "";
             }
         } else {
@@ -72,7 +74,8 @@ public class Subscript extends TrailerExpr {
 
 
             } else {
-                System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());
+                logger.error("non-address type variable as index to access DEPMAP @{}", locToString());
+                //System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());
                 return null;
             }
         } else {

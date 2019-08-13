@@ -1,5 +1,7 @@
 // the main class of Wyvern
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
 import picocli.CommandLine.*;
 import typecheck.Utils;
@@ -35,6 +37,7 @@ public class Wyvern implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
+        logger.trace("wyvern starts");
         if (funcRequest.typecheck) {
             String outputFileName;
             File outputFile;
@@ -67,8 +70,13 @@ public class Wyvern implements Callable<Integer> {
         } else if (funcRequest.tokenize) {
             LexerTest.tokenize(inputFile);
         } else {
-                System.out.println("No funcRequest specified, this should never happen!");
+                logger.error("No funcRequest specified, this should never happen!");
+                //System.out.println("No funcRequest specified, this should never happen!");
         }
+
+        logger.trace("wyvern finishes");
         return 0;
     }
+
+    protected static final Logger logger = LogManager.getLogger();
 }

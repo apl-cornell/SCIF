@@ -16,6 +16,7 @@ public class VisitEnv {
     public Hypothesis hypothesis;
     public HashSet<String> principalSet;
 
+
     public VisitEnv(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<Constraint> cons, LookupMaps varNameMap, Hypothesis hypothesis, HashSet<String> principalSet) {
         this.ctxt = ctxt;
         this.funcMap = funcMap;

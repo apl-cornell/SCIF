@@ -5,18 +5,23 @@ import ast.*;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 import typecheck.CodeLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 parser code {:
-    public boolean DEBUG = true;
+    //public boolean DEBUG = true;
+    protected static final Logger logger = LogManager.getLogger();
 
     public void syntax_error(Symbol cur_token) {
-        System.err.println("Syntax error at " + cur_token);
+        logger.error("Syntax error at {}", cur_token);
+        //System.err.println();
         report_error("Syntax error", cur_token);
     }
 
     public void Debuglog(String s) {
-        if (DEBUG)
-            System.err.println(s);
+        logger.debug(s);
+        //if (DEBUG)
+        //    System.err.println(s);
     }
 
     /*public Node<String> makeKeyword(Object kw) {
@@ -41,12 +46,14 @@ parser code {:
             }
 
             Parser p = new Parser(lexer);
-            System.err.println("Parser init\n");
+            logger.trace("Parser init");
+            //System.err.println("Parser init\n");
 
             p.parse();
             //p.debug_parse();
+            logger.trace("Finish");
 
-            System.err.println("Finish\n");
+            //System.err.println("Finish\n");
 
             if (astFile != null) {
                 System.setErr(System.err);
@@ -141,7 +148,8 @@ start with program;
 program ::= file_input:list {:
         RESULT = new Program(list);
         RESULT.setLoc(new CodeLocation(listleft, listright));
-        System.err.println(RESULT);
+        logger.debug(RESULT);
+        //System.err.println(RESULT);
     :};
 
 //Information flow specific modification
@@ -256,7 +264,8 @@ funcdef ::=
         //makeNode("funcdef", a, b, c, d);
     :}
     | DEF:x maybeLabeledName:a parameters:b COLON suite:c {:
-        System.err.println("parsing function");
+        logger.debug("parsing function");
+        //System.err.println("parsing function");
         RESULT = new FunctionDef(a, b, c, null, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};

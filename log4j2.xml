@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn">
+    <Appenders>
+        <Console name="Error_User" target="SYSTEM_ERR">
+            <LevelRangeFilter minLevel="ERROR" maxLevel="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %class{36} - %msg%n"/>
+        </Console>
+        <File name="trace" fileName="logs/trace.log" append="false">
+            <LevelRangeFilter minLevel="trace" maxLevel="trace" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %class{36} - %msg%n" />
+        </File>
+        <File name="debug" fileName="logs/debug.log" append="false">
+            <LevelRangeFilter minLevel="debug" maxLevel="debug" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %class{36} - %msg%n" />
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="trace">
+            <AppenderRef ref="Error_User"/>
+            <AppenderRef ref="trace"/>
+            <AppenderRef ref="debug"/>
+        </Root>
+    </Loggers>
+</Configuration>

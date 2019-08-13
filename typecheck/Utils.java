@@ -1,6 +1,8 @@
 package typecheck;
 
 import ast.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -119,5 +121,8 @@ public class Utils {
         }
         return typeInfo;
     }
+
+    protected static final Logger logger = LogManager.getLogger();
+
 }
 
