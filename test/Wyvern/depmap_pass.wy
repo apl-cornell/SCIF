@@ -1,4 +1,5 @@
 ALICE : const address = 0
+BOB : address
 m : map(x:address{x}, int{x and BOB}){ALICE}
 
 def f{ALICE}(y:address{ALICE}) -> int{ALICE} :

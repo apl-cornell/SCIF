@@ -27,13 +27,13 @@ public class Utils {
 
 
 
-    public static IfConstraint genCons(String from, String to, CodeLocation location) {
+    /*public static IfConstraint genCons(String from, String to, CodeLocation location) {
         // right flows to left
         return new IfConstraint("<=", from, to, location);
-    }
-    public static IfConstraint genNewlineCons() {
+    }*/
+    /*public static IfConstraint genNewlineCons() {
         return new IfConstraint();
-    }
+    }*/
 
     public static String getLabelNamePc(String prefix) {
         if (prefix.equals("")) {

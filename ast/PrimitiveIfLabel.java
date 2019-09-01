@@ -43,6 +43,23 @@ public class PrimitiveIfLabel extends IfLabel {
         return rnt;
     }
 
+    public String toSherrlocFmtApply(HashSet<String> strSet, int no) {
+        String rnt = "";
+        if (value instanceof Name) {
+            String name = ((Name) value).id;
+            if (name.equals(Utils.BOTTOM)) {
+                rnt = Utils.SHERRLOC_BOTTOM;
+            } else if (name.equals(Utils.TOP)) {
+                rnt = Utils.SHERRLOC_TOP;
+            } else if (strSet.contains(name)) {
+                rnt = name + ".apply" + no;
+            } else {
+                rnt = name;
+            }
+        }
+        return rnt;
+    }
+
     public void findPrincipal(HashSet<String> principalSet) {
         if (value instanceof Name) {
             String name = ((Name) value).id;

@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 public class Expression extends Statement {
     public VarInfo getVarInfo(VisitEnv env) {
-        return null;
+        return new VarInfo();
     }
 
 }

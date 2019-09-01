@@ -1,11 +1,11 @@
 ALICE : const address = 0
 BOB : const address = 1
 
-def sqr{ALICE}(x : int{ALICE}) -> int{ALICE} :
+def sqr[x]{x}(x : int) -> int{x} :
     return x * x
 
-def f{ALICE}(x : int{ALICE}) -> int{ALICE}:
+def f{ALICE}(x : int{ALICE}) -> int{ALICE} :
     return sqr(x)
 
-def g{BOB}(x : int{BOB}) -> int{BOB} :
+def g{BOB}(x : int{ALICE}) -> int{BOB} :
     return sqr(x)

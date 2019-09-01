@@ -1,6 +1,12 @@
 ALICE : const address = 0
 BOB : const address = 1
 
+def sgn[x,y]{x}(x : int, y : int) -> bool{x or y} :
+    return x > y
+
+def h{ALICE}(x : int{ALICE}, y : int{BOB}) -> bool{ALICE or BOB} :
+    return sgn(x, y)
+
 def sqr[x]{x}(x : int) -> int{x} :
     return x * x
 

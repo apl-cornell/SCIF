@@ -128,6 +128,8 @@ nonterminal IfLabel ifLabel, unitIfLabel;
 nonterminal Expression maybeLabeledName;
 nonterminal Autoendorse autoendorse;
 nonterminal IfLabel maybeAutoendorseIfLabel;
+nonterminal ArrayList<String> polyDescription;
+nonterminal ArrayList<String> nameList;
 nonterminal Endorse endorseExpression;
 nonterminal DepMap depMap;
 
@@ -185,6 +187,7 @@ maybeAutoendorseIfLabel ::= autoendorse:a {:
         RESULT = a;
     :}
     | ifLabel:a {:
+        logger.debug("finished parsing callin labels");
         RESULT = a;
     :};
 
@@ -268,6 +271,38 @@ funcdef ::=
         //System.err.println("parsing function");
         RESULT = new FunctionDef(a, b, c, null, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a polyDescription:p parameters:b COLON suite:c {:
+        logger.debug("Finished parsing the poly func without callin labels");
+        Expression funId = new Name((String)a);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new PolyFunctionDef(funId, p, b, c, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a polyDescription:p parameters:b RARROW expr:c COLON suite:d {:
+        logger.debug("Finished parsing the poly func without callin labels");
+        Expression funId = new Name((String)a);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new PolyFunctionDef(funId, p, b, d, null, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a polyDescription:p LBRACE maybeAutoendorseIfLabel:lbl RBRACE parameters:b COLON suite:c {:
+        logger.debug("Finished parsing the poly func");
+        Expression funId = new Name((String)a);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        funId = new LabeledType((Name) funId, lbl);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new PolyFunctionDef(funId, p, b, c, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a polyDescription:p LBRACE maybeAutoendorseIfLabel:lbl RBRACE parameters:b RARROW expr:c COLON suite:d {:
+        logger.debug("Finished parsing the poly func");
+        Expression funId = new Name((String)a);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        funId = new LabeledType((Name) funId, lbl);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new PolyFunctionDef(funId, p, b, d, null, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
 maybeLabeledName ::=
     NAME:a {:
@@ -280,7 +315,22 @@ maybeLabeledName ::=
         RESULT = new LabeledType(name, b); //TODO
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
-
+polyDescription ::=
+    LSQB nameList:l RSQB {:
+        logger.debug("finished parsing polyDescription");
+        RESULT = l;
+    :};
+nameList ::=
+    NAME:x {:
+        logger.debug("parsing names in polyList");
+        ArrayList<String> rtn = new ArrayList<String>();
+        rtn.add((String)x);
+        RESULT = rtn;
+    :}
+    | nameList:l COMMA NAME:x {:
+        l.add((String)x);
+        RESULT = l;
+    :};
 
 //parameters: '(' [typedargslist] ')'
 //typedargslist: (tfpdef ['=' test] (',' tfpdef ['=' test])* [',' [

@@ -41,7 +41,21 @@ public class ComplexIfLabel extends IfLabel {
         }
         return rnt;
     }
-    public void findPrincipal(HashSet<String> principalSet) {
+
+    public String toSherrlocFmtApply(HashSet<String> strSet, int no) {
+        String l = left.toSherrlocFmtApply(strSet, no);
+        String r = right.toSherrlocFmtApply(strSet, no);
+        String rnt = "";
+        switch (op) {
+            case JOIN:
+                rnt = "(" + l + " ⊔ " + r + ")";
+                break;
+            case MEET:
+                rnt = "(" + l + " ⊓ " + r + ")";
+                break;
+
+        }
+        return rnt;
     }
 
     public void findPrincipal(HashSet<String> principalSet, String getRidOf) {

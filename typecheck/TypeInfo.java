@@ -7,6 +7,12 @@ public class TypeInfo {
     public IfLabel ifl;
     public boolean isConst;
 
+    public TypeInfo() {
+        this.typeName = "UNKNOWN";
+        this.ifl = null;
+        this.isConst = false;
+    }
+
     public TypeInfo(String typeName, IfLabel ifl, boolean isConst) {
         this.typeName = typeName;
         this.ifl = ifl;

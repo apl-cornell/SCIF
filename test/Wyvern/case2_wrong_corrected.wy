@@ -12,6 +12,6 @@ def foo{Alice}(a:int{Alice}) -> int{Alice}:
             rnt = rnt + i
         return rnt
 
+x : int{Bob} = 1
 def bar{Alice}(a:int{Alice}) -> int{Alice} :
-    x : int{Bob} = 1
     return endorse(x, Bob, Alice)

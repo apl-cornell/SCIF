@@ -2,6 +2,7 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -51,6 +52,9 @@ public class Call extends TrailerExpr {
         }
         else*/ {
             FuncInfo funcInfo = env.funcMap.get(funcName);
+            if (funcInfo instanceof PolyFuncInfo) {
+                ((PolyFuncInfo)funcInfo).apply();
+            }
             String ifNameFuncCall = funcInfo.getLabelNameCallBefore();
             env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCall), env.hypothesis, location));
 
@@ -60,10 +64,50 @@ public class Call extends TrailerExpr {
                 Expression arg = args.get(i);
                 String ifNameArgValue = arg.genConsVisit(env);
                 String ifNameArgLabel = funcInfo.getLabelNameArg(i);
-                env.cons.add(new Constraint(new Inequality(ifNameArgValue, ifNameArgLabel), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifNameArgValue, Relation.LEQ, ifNameArgLabel), env.hypothesis, location));
 
-                env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameArgLabel), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifNamePc, Relation.LEQ, ifNameArgLabel), env.hypothesis, location));
 
+            }
+            if (funcInfo instanceof PolyFuncInfo) {
+                String ifNameCallBeforeLabel = funcInfo.getLabelNameCallBefore();
+                String ifNameCallAfterLabel = funcInfo.getLabelNameCallAfter();
+                String ifCallBeforeLabel = funcInfo.getCallBeforeLabel();
+                String ifCallAfterLabel = funcInfo.getCallAfterLabel();
+                if (ifNameCallBeforeLabel != null) {
+                    env.cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), location));
+
+                    //env.cons.add(new Constraint(new Inequality(ifNameCallBeforeLabel, ifCallBeforeLabel), func.location));
+
+                }
+                if (ifNameCallAfterLabel != null) {
+                    env.cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel), location));
+
+                    //env.cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, ifCallAfterLabel), func.location));
+
+                }
+
+                String ifNameReturnLabel = funcInfo.getLabelNameReturn();
+                String ifReturnLabel = funcInfo.getReturnLabel();
+                if (ifReturnLabel != null) {
+                    env.cons.add(new Constraint(new Inequality(ifReturnLabel, Relation.EQ, ifNameReturnLabel), location));
+
+                    //env.cons.add(new Constraint(new Inequality(ifNameReturnLabel, ifReturnLabel), func.location));
+
+                }
+
+                for (int i = 0; i < funcInfo.parameters.size(); ++i) {
+                    VarInfo arg = funcInfo.parameters.get(i);
+                    if (arg.type.ifl == null) continue;;
+                    String ifNameArgLabel = funcInfo.getLabelNameArg(i);
+                    String ifArgLabel = ((PolyFuncInfo) funcInfo).getArgLabel(i);
+                    if (ifArgLabel != null) {
+                        env.cons.add(new Constraint(new Inequality(ifNameArgLabel, Relation.LEQ, ifArgLabel), location));
+
+                        //env.cons.add(new Constraint(new Inequality(ifArgLabel, ifNameArgLabel), arg.location));
+
+                    }
+                }
             }
             String ifNameFuncReturn = funcInfo.getLabelNameReturn();
             return ifNameFuncReturn;

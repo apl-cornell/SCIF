@@ -10,6 +10,13 @@ public class VarInfo {
 
     public CodeLocation location;
 
+    public VarInfo() {
+        this.fullName = "UNKNOWN";
+        this.localName = "UNKNOWN";
+        this.type = new TypeInfo();
+        this.location = new CodeLocation();
+    }
+
     public VarInfo(String fullName, String localName, TypeInfo type, CodeLocation location) {
         this.fullName = fullName;
         this.localName = localName;
