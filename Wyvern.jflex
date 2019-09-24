@@ -146,6 +146,8 @@ import java.util.HashMap;
         keywords.put("const", new Integer(sym.CONST));
         keywords.put("map", new Integer(sym.MAP));
         keywords.put("key", new Integer(sym.KEY));
+        keywords.put("contract", new Integer(sym.CONTRACT));
+        keywords.put("interface", new Integer(sym.INTERFACE));
     }
 
 

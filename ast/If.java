@@ -50,7 +50,7 @@ public class If extends Statement {
                     logger.debug(r.toString());
                     //System.err.println(l.toString());
                     //System.err.println(r.toString());
-                    if (l.type.typeName.equals(Utils.ADDRESSTYPE) && r.type.typeName.equals(Utils.ADDRESSTYPE)) {
+                    if (l.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE) && r.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
                         /*testedVar = ((TestableVarInfo) l);
                         beforeTestedLabel = testedVar.testedLabel;
                         tested = testedVar.tested;

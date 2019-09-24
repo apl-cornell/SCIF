@@ -27,7 +27,7 @@ public class Node {
         return genson.serialize(this);
     }
 
-    public void globalInfoVisit(HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap) {
+    public void globalInfoVisit(ContractInfo contractInfo) {
         //Do nothing
     }
 

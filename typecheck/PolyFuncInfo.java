@@ -104,8 +104,8 @@ public class PolyFuncInfo extends FuncInfo {
 
     public String getArgLabel(int index) {
         VarInfo varInfo = parameters.get(index);
-        if (varInfo.type.ifl == null) return null;
-        return varInfo.type.ifl.toSherrlocFmtApply(polyArgs, applyCounter);
+        if (varInfo.typeInfo.ifl == null) return null;
+        return varInfo.typeInfo.ifl.toSherrlocFmtApply(polyArgs, applyCounter);
     }
 
     public void substitutePoly() {
@@ -118,8 +118,8 @@ public class PolyFuncInfo extends FuncInfo {
             if (returnLabel != null)
                 returnLabel.replace(argName, argLabelName);
             for (VarInfo arg : parameters) {
-                if (arg.type.ifl != null)
-                    arg.type.ifl.replace(argName, argLabelName);
+                if (arg.typeInfo.ifl != null)
+                    arg.typeInfo.ifl.replace(argName, argLabelName);
             }
         }
     }

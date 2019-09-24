@@ -87,8 +87,15 @@ terminal UNARY, COMP, BIT, ADDISH, MULISH;
 terminal ENDORSE, AUTOENDORSE;
 terminal MAP;
 terminal CONST, KEY;
+terminal CONTRACT;
+terminal INTERFACE;
 
+nonterminal Node sourceCode;
+nonterminal Interface interface;
 nonterminal Program program;
+nonterminal HashSet<String> ipt_stmts;
+nonterminal ArrayList<Contract> contracts;
+nonterminal Contract contract;
 nonterminal ArrayList<Statement> file_input;
 //nonterminal Node<String> file_input_unit;
 nonterminal Expression decorator;
@@ -99,9 +106,10 @@ nonterminal Arg tfpdef;
 nonterminal ArrayList<Statement> stmt, simple_stmt, small_stmts;
 nonterminal Statement small_stmt, expr_stmt;
 nonterminal AnnAssign annassign;
-nonterminal Statement del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt, ipt_stmt;
-nonterminal Import ipt_name;
-nonterminal Name ipt_as_names;
+nonterminal Statement del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt;
+nonterminal String ipt_stmt;
+nonterminal String ipt_name;
+nonterminal String ipt_as_names;
 nonterminal Statement assert_stmt, compound_stmt;
 nonterminal Statement if_stmt, while_stmt, try_stmt;
 nonterminal ArrayList<Statement> elif_stmts;
@@ -132,6 +140,8 @@ nonterminal ArrayList<String> polyDescription;
 nonterminal ArrayList<String> nameList;
 nonterminal Endorse endorseExpression;
 nonterminal DepMap depMap;
+nonterminal ArrayList<FunctionSig> funcSigs;
+nonterminal FunctionSig funcSig, r_funcSig;
 
 precedence left OR;
 precedence left AND;
@@ -145,12 +155,106 @@ precedence left LPAR, RPAR, LSQB, RSQB, LBRACE, RBRACE;
 precedence right DOUBLESTAR;
 
 
-start with program;
+start with sourceCode;
 
-program ::= file_input:list {:
+sourceCode ::= program:a {: RESULT = a; :}
+    | interface:a {:RESULT = a; :};
+
+interface ::= INTERFACE:i NAME:x COLON NEWLINE INDENT funcSigs:a DEDENT {:
+        RESULT = new Interface((String)x, a);
+        RESULT.setLoc(new CodeLocation(ileft, iright));
+    :};
+
+funcSigs ::=
+    funcSig:a {:
+        ArrayList<FunctionSig> list = new ArrayList<>();
+        if (a != null) {
+            list.add(a);
+        }
+        RESULT = list;
+    :}
+    | funcSigs:list funcSig:a {:
+        if (a != null) {
+            list.add(a);
+        }
+        RESULT = list;
+    :};
+
+funcSig ::= r_funcSig:a {: RESULT = a;
+    :}
+    | r_funcSig:a SEMI{: RESULT = a; :}
+    | NEWLINE {:RESULT = null;:};
+
+r_funcSig ::=
+    DEF:x maybeLabeledName:a parameters:b RARROW expr:c {:
+        logger.debug("parsing func sig");
+        RESULT = new FunctionSig(a, b, null, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+        //makeNode("funcdef", a, b, c, d);
+    :}
+    | DEF:x maybeLabeledName:a parameters:b{:
+        logger.debug("parsing function");
+        //System.err.println("parsing function");
+        RESULT = new FunctionSig(a, b, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a polyDescription:p parameters:b {:
+        logger.debug("Finished parsing the poly func without callin labels");
+        Expression funId = new Name((String)a);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new PolyFunctionSig(funId, p, b, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a polyDescription:p parameters:b RARROW expr:c {:
+        logger.debug("Finished parsing the poly func without callin labels");
+        Expression funId = new Name((String)a);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new PolyFunctionSig(funId, p, b, null, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a polyDescription:p LBRACE maybeAutoendorseIfLabel:lbl RBRACE parameters:b {:
+        logger.debug("Finished parsing the poly func");
+        Expression funId = new Name((String)a);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        funId = new LabeledType((Name) funId, lbl);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new PolyFunctionSig(funId, p, b, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a polyDescription:p LBRACE maybeAutoendorseIfLabel:lbl RBRACE parameters:b RARROW expr:c {:
+        logger.debug("Finished parsing the poly func");
+        Expression funId = new Name((String)a);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        funId = new LabeledType((Name) funId, lbl);
+        funId.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new PolyFunctionSig(funId, p, b, null, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+
+program ::= ipt_stmts:a contracts:b {:
+        RESULT = new Program(a, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+        logger.debug(RESULT);
+    :}
+    | contracts:list {:
         RESULT = new Program(list);
         RESULT.setLoc(new CodeLocation(listleft, listright));
         logger.debug(RESULT);
+    :};
+
+contracts ::= contract:a {:
+        RESULT = new ArrayList<Contract>();
+        RESULT.add(a);
+    :}
+    | contracts:list contract:a {:
+        RESULT = list;
+        list.add(a);
+    :};
+
+
+contract ::= CONTRACT NAME:x COLON NEWLINE INDENT file_input:list DEDENT {:
+        RESULT = new Contract((String) x, list);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
         //System.err.println(RESULT);
     :};
 
@@ -314,6 +418,7 @@ maybeLabeledName ::=
         name.setLoc(new CodeLocation(aleft, aright));
         RESULT = new LabeledType(name, b); //TODO
         RESULT.setLoc(new CodeLocation(aleft, aright));
+        logger.debug("finished func name parsing");
     :};
 polyDescription ::=
     LSQB nameList:l RSQB {:
@@ -407,7 +512,7 @@ small_stmt ::= expr_stmt:a {: RESULT = a; :}
     | del_stmt:a {: RESULT = a; :}
     | pass_stmt:a {: RESULT = a; :}  
     | flow_stmt:a {: RESULT = a; :}  
-    | ipt_stmt:a {: RESULT = a; :}  
+    //| ipt_stmt:a {: RESULT = a; :}
     | assert_stmt:a {: RESULT = a; :} ;
 expr_stmt ::= 
     expr:a {:RESULT = a;:}
@@ -501,10 +606,26 @@ raise_stmt ::= RAISE:a {:
         RESULT = new Raise(a, b);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
-ipt_stmt ::= ipt_name:a {: RESULT = a; :};
+ipt_stmts ::=
+    ipt_stmts:s  ipt_stmt:a {:
+        if (a != null) {
+            s.add(a);
+        }
+        RESULT = s;
+    :}
+    | ipt_stmt:a {:
+        HashSet<String> rtn = new HashSet<>();
+        if (a != null) {
+            rtn.add(a);
+        }
+        RESULT = rtn;
+    :};
+ipt_stmt ::= ipt_name:a {: RESULT = a; :}
+    | ipt_name:a SEMI {:RESULT = a; :}
+    | NEWLINE {:RESULT = null;:};
 ipt_name ::= IMPORT:x ipt_as_names:a {:
-        RESULT = new Import();
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT = a;//new Import();
+        //RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
 
 
@@ -513,12 +634,12 @@ ipt_name ::= IMPORT:x ipt_as_names:a {:
 // assert_stmt: 'assert' expr [',' expr]
 ipt_as_names ::= 
     NAME:a {:
-        RESULT = new Name((String)a);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT = (String) a;//new Name((String)a);
+        //RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
     | NAME:a AS NAME:b {:
-        RESULT = new Name((String)a); //TODO
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT = (String) a;//new Name((String)a); //TODO
+        //RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
 assert_stmt ::= ASSERT:x expr:a COMMA expr:b {:
         RESULT = new Assert(a, b);

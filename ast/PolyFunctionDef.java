@@ -28,7 +28,7 @@ public class PolyFunctionDef extends FunctionDef {
 
 
     @Override
-    public void globalInfoVisit(HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap) {
+    public void globalInfoVisit(ContractInfo contractInfo) {
         String funcId;
         IfLabel callLabel = null, returnLabel = null;
         if (name instanceof LabeledType) {
@@ -40,9 +40,9 @@ public class PolyFunctionDef extends FunctionDef {
         if (rnt instanceof LabeledType) {
             returnLabel = ((LabeledType) rnt).ifl;
         }
-        ArrayList<VarInfo> argsInfo = args.globalInfoVisit();
+        ArrayList<VarInfo> argsInfo = args.parseArgs(contractInfo);
         logger.debug("creating polyFuncInfo with polyarg size: " + polyArgs.size());
-        funcMap.put(funcId, new PolyFuncInfo(funcId, polyArgs, callLabel, argsInfo, returnLabel, location));
+        contractInfo.funcMap.put(funcId, new PolyFuncInfo(funcId, polyArgs, callLabel, argsInfo, returnLabel, location));
     }
 
 

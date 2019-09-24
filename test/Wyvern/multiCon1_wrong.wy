@@ -1,0 +1,3 @@
+contract ContractB :
+    def add{BOB}(x : int{ALICE}, y : int{BOB}) -> int{BOB} :
+        return x + y

@@ -6,7 +6,7 @@ public class DepMapTypeInfo extends TypeInfo {
     public TypeInfo keyType;
     public TypeInfo valueType;
 
-    public DepMapTypeInfo(String typeName, IfLabel ifl, boolean isConst, TypeInfo keyType, TypeInfo valueType) {
+    public DepMapTypeInfo(Type typeName, IfLabel ifl, boolean isConst, TypeInfo keyType, TypeInfo valueType) {
         super(typeName, ifl, isConst);
         this.keyType = keyType;
         this.valueType = valueType;

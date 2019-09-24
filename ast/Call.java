@@ -5,6 +5,7 @@ import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
+import javax.swing.text.Utilities;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -36,8 +37,34 @@ public class Call extends TrailerExpr {
     @Override
     public String genConsVisit(VisitEnv env) {
         //TODO: Assuming value is a Name for now
-        String funcName = ((Name) value).id;
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
+        String funcName;
+        String ifNamePc;
+        FuncInfo funcInfo;
+        String ifNameFuncCall;
+        if (!(value instanceof Name)) {
+            if (value instanceof Attribute) {
+                //  the case: a.b(c) where a is a contract, b is a function and c are the arguments
+                // att = a.b
+                logger.debug("call value: " + value.toString());
+                Attribute att = (Attribute) value;
+                String ifContRtn = att.value.genConsVisit(env);
+                //TODO: assuming a's depth is 1
+                String varName = ((Name)att.value).id;
+                TypeInfo conType = env.varNameMap.getInfo(varName).typeInfo;
+                funcName = (att.attr).id;
+                ifNamePc = Utils.getLabelNamePc(env.ctxt);
+                funcInfo = env.contractMap.get(conType.type.typeName).funcMap.get(funcName);
+                if (funcInfo instanceof PolyFuncInfo) {
+                    ((PolyFuncInfo)funcInfo).apply();
+                }
+                ifNameFuncCall = funcInfo.getLabelNameCallBefore();
+                env.cons.add(new Constraint(new Inequality(ifContRtn, ifNameFuncCall), env.hypothesis, location));
+            } else {
+                return "";
+            }
+        } else {
+            funcName = ((Name) value).id;
+            ifNamePc = Utils.getLabelNamePc(env.ctxt);
         /*if (funcName.equals(Utils.ENDORCEFUNCNAME)) {
             //TODO: didn't add explicit ifLabel expression parsing at this point
             String ifNameExp = args.get(0).genConsVisit(ctxt, funcMap, cons, varNameMap);
@@ -50,12 +77,22 @@ public class Call extends TrailerExpr {
             cons.add(Utils.genCons(ifNameTo, ifNameRnt, location));
             return ifNameRnt;
         }
-        else*/ {
-            FuncInfo funcInfo = env.funcMap.get(funcName);
-            if (funcInfo instanceof PolyFuncInfo) {
-                ((PolyFuncInfo)funcInfo).apply();
+        else*/
+            if (!env.funcMap.containsKey(funcName)) {
+                if (env.contractMap.containsKey(funcName)) {
+                    if (args.size() != 1) return "";
+                    String ifNameArgValue = args.get(0).genConsVisit(env);
+                    return ifNameArgValue;
+                } else {
+                    return "";
+                }
             }
-            String ifNameFuncCall = funcInfo.getLabelNameCallBefore();
+            funcInfo = env.funcMap.get(funcName);
+            if (funcInfo instanceof PolyFuncInfo) {
+                ((PolyFuncInfo) funcInfo).apply();
+            }
+            ifNameFuncCall = funcInfo.getLabelNameCallBefore();
+        }
             env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCall), env.hypothesis, location));
 
 
@@ -98,7 +135,7 @@ public class Call extends TrailerExpr {
 
                 for (int i = 0; i < funcInfo.parameters.size(); ++i) {
                     VarInfo arg = funcInfo.parameters.get(i);
-                    if (arg.type.ifl == null) continue;;
+                    if (arg.typeInfo.ifl == null) continue;;
                     String ifNameArgLabel = funcInfo.getLabelNameArg(i);
                     String ifArgLabel = ((PolyFuncInfo) funcInfo).getArgLabel(i);
                     if (ifArgLabel != null) {
@@ -111,6 +148,5 @@ public class Call extends TrailerExpr {
             }
             String ifNameFuncReturn = funcInfo.getLabelNameReturn();
             return ifNameFuncReturn;
-        }
     }
 }

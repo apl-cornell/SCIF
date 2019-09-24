@@ -31,16 +31,15 @@ public class AnnAssign extends Statement {
     }
 
     @Override
-    public void globalInfoVisit(HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap) {
+    public void globalInfoVisit(ContractInfo contractInfo) {
         if (simple) {
             String id = ((Name) target).id;
             CodeLocation loc = location;
-            varMap.put(id, Utils.toVarInfo(id, id, annotation, isConst, loc));
+            contractInfo.varMap.put(id, contractInfo.toVarInfo(id, id, annotation, isConst, loc));
         } else {
             //TODO
         }
     }
-
 
     @Override
     public String genConsVisit(VisitEnv env) {
@@ -53,7 +52,7 @@ public class AnnAssign extends Statement {
             ifNameTgt = (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
             String id = ((Name) target).id;
             CodeLocation loc = location;
-            varInfo = Utils.toVarInfo(ifNameTgt, id, annotation, isConst, loc);
+            varInfo = env.contractInfo.toVarInfo(ifNameTgt, id, annotation, isConst, loc);
             env.varNameMap.add(((Name) target).id, ifNameTgt, varInfo);
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
@@ -64,7 +63,7 @@ public class AnnAssign extends Statement {
             ifNameTgt = ((Name) target).id;
             varInfo = env.varNameMap.getInfo(ifNameTgt);
         }
-        if (varInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
+        if (varInfo.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
             env.principalSet.add(varInfo.toSherrlocFmt());
         }
 

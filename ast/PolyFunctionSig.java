@@ -6,23 +6,24 @@ import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
-public class FunctionDef extends Statement {
-    Expression name;
-    Arguments args;
-    ArrayList<Statement> body;
-    ArrayList<Expression> decoratorList;
-    Expression rnt;
-    public FunctionDef(Expression name, Arguments args, ArrayList<Statement> body, ArrayList<Expression> decoratorList, Expression rnt) {
-        this.name = name;
-        this.args = args;
-        this.body = body;
-        this.decoratorList = decoratorList;
-        this.rnt = rnt;
-    }
-    public void setDecoratorList(ArrayList<Expression> decoratorList) {
-        this.decoratorList = decoratorList;
+public class PolyFunctionSig extends FunctionSig {
+    ArrayList<Integer> polyArgs;
+
+    public PolyFunctionSig(Expression name, ArrayList<String> polyArgs, Arguments args, ArrayList<Expression> decoratorList, Expression rnt) {
+        super(name, args, decoratorList, rnt);
+        this.polyArgs = new ArrayList<>();
+        HashMap<String, Integer> argToIndex = new HashMap<>();
+        for (int i = 0; i < args.args.size(); ++i) {
+            Arg arg = args.args.get(i);
+            argToIndex.put(arg.name.id, i);
+            logger.debug("argToIndex: " + arg.name.id + " " + i);
+        }
+        for (String polyArgName : polyArgs) {
+            //TODO: error handling : no such argName
+            logger.debug("lookupIndex: " + polyArgName);
+            this.polyArgs.add(argToIndex.get(polyArgName));
+        }
     }
 
 
@@ -39,25 +40,39 @@ public class FunctionDef extends Statement {
         if (rnt instanceof LabeledType) {
             returnLabel = ((LabeledType) rnt).ifl;
         }
-
         ArrayList<VarInfo> argsInfo = args.parseArgs(contractInfo);
-        contractInfo.funcMap.put(funcId, new FuncInfo(funcId, callLabel, argsInfo, returnLabel, location));
+        logger.debug("creating polyFuncInfo with polyarg size: " + polyArgs.size());
+        contractInfo.funcMap.put(funcId, new PolyFuncInfo(funcId, polyArgs, callLabel, argsInfo, returnLabel, location));
     }
 
 
-    @Override
+
+    /*@Override
     public String genConsVisit(VisitEnv env) {
+        super.genConsVisit(env);
+
+        return null;
+    }
+    /*
         String originalCtxt = env.ctxt;
         String funcName = "";
         if (name instanceof LabeledType) {
             funcName = ((LabeledType) name).x.id;
 
-            ((LabeledType) name).ifl.findPrincipal(env.principalSet);
+            //((LabeledType) name).ifl.findPrincipal(env.principalSet);
         } else {
             funcName = ((Name) name).id;
         }
+        FuncInfo funcInfo = env.funcMap.get(funcName);
+        if (funcInfo.callLabel != null)
+            funcInfo.callLabel.findPrincipal(env.principalSet);
         env.ctxt += funcName;// + location.toString();
 
+        for (VarInfo arg : funcInfo.parameters) {
+            if (arg.type.ifl != null) {
+                arg.type.ifl.
+            }
+        }
         args.genConsVisit(env);
 
         String ifNamePc = Utils.getLabelNamePc(env.ctxt);
@@ -89,14 +104,6 @@ public class FunctionDef extends Statement {
         env.ctxt = originalCtxt;
         return null;
     }
-    public void findPrincipal(HashSet<String> principalSet) {
-        if (name instanceof LabeledType) {
-            ((LabeledType) name).ifl.findPrincipal(principalSet);
-        }
-        args.findPrincipal(principalSet);
 
-        if (rnt instanceof LabeledType) {
-            ((LabeledType) rnt).ifl.findPrincipal(principalSet);
-        }
-    }
+ */
 }

@@ -3,24 +3,24 @@ package typecheck;
 import ast.IfLabel;
 
 public class TypeInfo {
-    public String typeName;
+    public Type type;
     public IfLabel ifl;
     public boolean isConst;
 
     public TypeInfo() {
-        this.typeName = "UNKNOWN";
+        this.type = new BuiltinType("UNKNOWN");
         this.ifl = null;
         this.isConst = false;
     }
 
-    public TypeInfo(String typeName, IfLabel ifl, boolean isConst) {
-        this.typeName = typeName;
+    public TypeInfo(Type type, IfLabel ifl, boolean isConst) {
+        this.type = type;
         this.ifl = ifl;
         this.isConst = isConst;
     }
 
     public TypeInfo(TypeInfo typeInfo) {
-        typeName = typeInfo.typeName;
+        type = typeInfo.type;
         ifl = typeInfo.ifl;
         isConst = typeInfo.isConst;
     }

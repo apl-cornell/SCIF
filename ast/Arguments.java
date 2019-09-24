@@ -28,10 +28,10 @@ public class Arguments extends Node {
         }
     }
 
-    public ArrayList<VarInfo> globalInfoVisit() {
+    public ArrayList<VarInfo> parseArgs(ContractInfo contractInfo) {
         ArrayList<VarInfo> rnt = new ArrayList<>();
         for (Arg arg : args) {
-            rnt.add(arg.globalInfoVisit());
+            rnt.add(arg.parseArg(contractInfo));
         }
         return rnt;
     }

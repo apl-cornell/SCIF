@@ -14,8 +14,8 @@ public class Arg extends Node {
         this.annotation = annotation;
     }
 
-    public VarInfo globalInfoVisit() {
-        return Utils.toVarInfo(name.id + "?", name.id, annotation, false, location);
+    public VarInfo parseArg(ContractInfo contractInfo) {
+        return contractInfo.toVarInfo(name.id + "?", name.id, annotation, false, location);
     }
 
     @Override
@@ -29,10 +29,10 @@ public class Arg extends Node {
             }
         }
         String ifName = env.ctxt + "." + name.id;
-        VarInfo varInfo = Utils.toVarInfo(ifName, name.id, annotation, false, location);
+        VarInfo varInfo = env.contractInfo.toVarInfo(ifName, name.id, annotation, false, location);
         env.varNameMap.add(name.id, ifName, varInfo);
 
-        if (varInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
+        if (varInfo.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
             env.principalSet.add(varInfo.toSherrlocFmt());
         }
 
