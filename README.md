@@ -1,5 +1,9 @@
 # Wyvern
 
+## Prerequisite
+
+[JFlex](https://jflex.de/)
+
 ## Usage
 ```make all``` to compile all files including sherrloc
 
