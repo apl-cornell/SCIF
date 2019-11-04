@@ -8,54 +8,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class FunctionDef extends Statement {
-    Expression name;
-    Arguments args;
+public class FunctionDef extends FunctionSig {
     ArrayList<Statement> body;
-    ArrayList<Expression> decoratorList;
-    Expression rnt;
-    public FunctionDef(Expression name, Arguments args, ArrayList<Statement> body, ArrayList<Expression> decoratorList, Expression rnt) {
-        this.name = name;
-        this.args = args;
+    public FunctionDef(String name, FuncLabels funcLabels, Arguments args, ArrayList<Statement> body, ArrayList<String> decoratorList, Type rnt) {
+        super(name, funcLabels, args, decoratorList, rnt);
         this.body = body;
-        this.decoratorList = decoratorList;
-        this.rnt = rnt;
     }
-    public void setDecoratorList(ArrayList<Expression> decoratorList) {
-        this.decoratorList = decoratorList;
-    }
-
-
-    @Override
-    public void globalInfoVisit(ContractInfo contractInfo) {
-        String funcId;
-        IfLabel callLabel = null, returnLabel = null;
-        if (name instanceof LabeledType) {
-            funcId = ((LabeledType) name).x.id;
-            callLabel = ((LabeledType) name).ifl;
-        } else {
-            funcId = ((Name) name).id;
-        }
-        if (rnt instanceof LabeledType) {
-            returnLabel = ((LabeledType) rnt).ifl;
-        }
-
-        ArrayList<VarInfo> argsInfo = args.parseArgs(contractInfo);
-        contractInfo.funcMap.put(funcId, new FuncInfo(funcId, callLabel, argsInfo, returnLabel, location));
-    }
-
 
     @Override
     public String genConsVisit(VisitEnv env) {
         String originalCtxt = env.ctxt;
-        String funcName = "";
-        if (name instanceof LabeledType) {
-            funcName = ((LabeledType) name).x.id;
-
-            ((LabeledType) name).ifl.findPrincipal(env.principalSet);
-        } else {
-            funcName = ((Name) name).id;
-        }
+        String funcName = name;
         env.ctxt += funcName;// + location.toString();
 
         args.genConsVisit(env);
@@ -63,13 +26,10 @@ public class FunctionDef extends Statement {
         String ifNamePc = Utils.getLabelNamePc(env.ctxt);
         FuncInfo funcInfo = env.funcMap.get(funcName);
 
-        if (name instanceof LabeledType) {
-            String ifNameCall = funcInfo.getLabelNameCallAfter();
-            env.cons.add(new Constraint(new Inequality(ifNameCall, ifNamePc), env.hypothesis, location));
+        String ifNameCall = funcInfo.getLabelNameCallPc();
+        env.cons.add(new Constraint(new Inequality(ifNameCall, ifNamePc), env.hypothesis, location));
 
-            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameCall), env.hypothesis, location));
-
-        }
+        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameCall), env.hypothesis, location));
 
         env.varNameMap.incLayer();
         args.genConsVisit(env);
@@ -79,24 +39,24 @@ public class FunctionDef extends Statement {
         env.varNameMap.decLayer();
 
 
-        if (rnt instanceof LabeledType) {
-            if (rnt instanceof DepMap) {
-                ((DepMap) rnt).findPrincipal(env.principalSet);
+        /*if (rtn instanceof LabeledType) {
+            if (rtn instanceof DepMap) {
+                ((DepMap) rtn).findPrincipal(env.principalSet);
             } else {
-                ((LabeledType) rnt).ifl.findPrincipal(env.principalSet);
+                ((LabeledType) rtn).ifl.findPrincipal(env.principalSet);
             }
-        }
+        }*/
         env.ctxt = originalCtxt;
         return null;
     }
-    public void findPrincipal(HashSet<String> principalSet) {
-        if (name instanceof LabeledType) {
-            ((LabeledType) name).ifl.findPrincipal(principalSet);
+    /*public void findPrincipal(HashSet<String> principalSet) {
+        if (sig.name instanceof LabeledType) {
+            ((LabeledType) sig.name).ifl.findPrincipal(principalSet);
         }
-        args.findPrincipal(principalSet);
+        sig.args.findPrincipal(principalSet);
 
-        if (rnt instanceof LabeledType) {
-            ((LabeledType) rnt).ifl.findPrincipal(principalSet);
+        if (sig.rnt instanceof LabeledType) {
+            ((LabeledType) sig.rnt).ifl.findPrincipal(principalSet);
         }
-    }
+    }*/
 }

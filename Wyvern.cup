@@ -89,6 +89,7 @@ terminal MAP;
 terminal CONST, KEY;
 terminal CONTRACT;
 terminal INTERFACE;
+terminal STRUCT;
 
 nonterminal Node sourceCode;
 nonterminal Interface interface;
@@ -98,8 +99,8 @@ nonterminal ArrayList<Contract> contracts;
 nonterminal Contract contract;
 nonterminal ArrayList<Statement> file_input;
 //nonterminal Node<String> file_input_unit;
-nonterminal Expression decorator;
-nonterminal ArrayList<Expression> decorators;
+nonterminal String decorator;
+nonterminal ArrayList<String> decorators;
 nonterminal FunctionDef decorated, funcdef;
 nonterminal Arguments parameters, typedarglist, probinittfpdef;
 nonterminal Arg tfpdef;
@@ -133,7 +134,7 @@ nonterminal Call arglist;
 nonterminal Keyword keyword;
 nonterminal LabeledType labeledType;
 nonterminal IfLabel ifLabel, unitIfLabel;
-nonterminal Expression maybeLabeledName;
+nonterminal Type type;
 nonterminal Autoendorse autoendorse;
 nonterminal IfLabel maybeAutoendorseIfLabel;
 nonterminal ArrayList<String> polyDescription;
@@ -142,6 +143,10 @@ nonterminal Endorse endorseExpression;
 nonterminal DepMap depMap;
 nonterminal ArrayList<FunctionSig> funcSigs;
 nonterminal FunctionSig funcSig, r_funcSig;
+nonterminal StructDef structDef;
+nonterminal ArrayList<AnnAssign> annassigns;
+nonterminal FuncLabels tFuncLabels;
+nonterminal IfLabel ifLabelOrNull;
 
 precedence left OR;
 precedence left AND;
@@ -159,6 +164,23 @@ start with sourceCode;
 
 sourceCode ::= program:a {: RESULT = a; :}
     | interface:a {:RESULT = a; :};
+
+// version: static lock
+funcLabels ::= LBRACE:x ifLabelOrNull:a COMMA ifLabelOrNull:b COMMA ifLabelOrNull:c RBRACE {:
+        RESULT = new FuncLabels(a, b, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | {:
+        RESULT = new FuncLabels();
+    :};
+
+ifLabelOrNull ::= ifLabel:x {:
+        RESULT = x;
+    :}
+    | {:
+        RESULT = null;
+    :};
+// ---
 
 interface ::= INTERFACE:i NAME:x COLON NEWLINE INDENT funcSigs:a DEDENT {:
         RESULT = new Interface((String)x, a);
@@ -186,48 +208,40 @@ funcSig ::= r_funcSig:a {: RESULT = a;
     | NEWLINE {:RESULT = null;:};
 
 r_funcSig ::=
-    DEF:x maybeLabeledName:a parameters:b RARROW expr:c {:
+    DEF:x NAME:funcName tFuncLabels:funclabels parameters:b RARROW type:c {:
         logger.debug("parsing func sig");
-        RESULT = new FunctionSig(a, b, null, c);
+        RESULT = new FunctionSig((String) funcName, funclabels, b, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
         //makeNode("funcdef", a, b, c, d);
     :}
-    | DEF:x maybeLabeledName:a parameters:b{:
+    | DEF:x NAME:funcName tFuncLabels:funclabels parameters:b{:
         logger.debug("parsing function");
         //System.err.println("parsing function");
-        RESULT = new FunctionSig(a, b, null, null);
+        RESULT = new FunctionSig((String) funcName, funclabels, b, null, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
-    | DEF:x NAME:a polyDescription:p parameters:b {:
+    | DEF:x NAME:a tFuncLabels:funclabels polyDescription:p parameters:b {:
         logger.debug("Finished parsing the poly func without callin labels");
-        Expression funId = new Name((String)a);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        RESULT = new PolyFunctionSig(funId, p, b, null, null);
+        String funId = (String) a;
+        RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
-    | DEF:x NAME:a polyDescription:p parameters:b RARROW expr:c {:
+    | DEF:x NAME:a tFuncLabels:funclabels polyDescription:p parameters:b RARROW type:c {:
         logger.debug("Finished parsing the poly func without callin labels");
-        Expression funId = new Name((String)a);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        RESULT = new PolyFunctionSig(funId, p, b, null, c);
+        String funId = (String) a;
+        RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
-    | DEF:x NAME:a polyDescription:p LBRACE maybeAutoendorseIfLabel:lbl RBRACE parameters:b {:
+    | DEF:x NAME:a  polyDescription:p tFuncLabels:funclabels parameters:b {:
         logger.debug("Finished parsing the poly func");
-        Expression funId = new Name((String)a);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        funId = new LabeledType((Name) funId, lbl);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        RESULT = new PolyFunctionSig(funId, p, b, null, null);
+        String funId = (String) a;
+        RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
-    | DEF:x NAME:a polyDescription:p LBRACE maybeAutoendorseIfLabel:lbl RBRACE parameters:b RARROW expr:c {:
+    | DEF:x NAME:a polyDescription:p tFuncLabels:funclabels parameters:b RARROW type:c {:
         logger.debug("Finished parsing the poly func");
-        Expression funId = new Name((String)a);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        funId = new LabeledType((Name) funId, lbl);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        RESULT = new PolyFunctionSig(funId, p, b, null, c);
+        String funId = (String) a;
+        RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
 
@@ -266,8 +280,7 @@ endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from COMMA ifLabel:to 
 
 labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
         //System.out.println("parsed labeledType with label: \n" + b.toString());
-        Name name = new Name((String)a);
-        name.setLoc(new CodeLocation(aleft, aright));
+        String name = (String)a;
         RESULT = new LabeledType(name, b);
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
@@ -281,19 +294,18 @@ labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
 
 depMap ::=
     MAP:x LPAR NAME:keyName COLON labeledType:keyType COMMA labeledType:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
-        Name name = new Name((String)keyName);
-        name.setLoc(new CodeLocation(keyNameleft, keyNameright));
+        String name = (String)keyName;
         RESULT = new DepMap(name, keyType, valueType, mapLabel);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
 
-maybeAutoendorseIfLabel ::= autoendorse:a {:
+/*maybeAutoendorseIfLabel ::= autoendorse:a {:
         RESULT = a;
     :}
     | ifLabel:a {:
         logger.debug("finished parsing callin labels");
         RESULT = a;
-    :};
+    :};*/
 
 autoendorse ::= AUTOENDORSE:x LPAR ifLabel:from COMMA ifLabel:to RPAR {:
         RESULT = new Autoendorse(from, to);
@@ -323,12 +335,11 @@ unitIfLabel ::= NAME:a {:
     :};
 
 decorator ::= AT:x NAME:a NEWLINE {:
-        RESULT = new Name((String)a);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT = (String)a;
     :};
 decorators ::= 
     decorator:a {:
-        ArrayList<Expression> rnt = new ArrayList<Expression>();
+        ArrayList<String> rnt = new ArrayList<String>();
         rnt.add(a);
         RESULT = rnt;
     :}
@@ -365,58 +376,38 @@ file_input ::=
 
 //funcdef: 'def' NAME parameters ['->' test] ':' suite
 funcdef ::= 
-    DEF:x maybeLabeledName:a parameters:b RARROW expr:c COLON suite:d {:
-        RESULT = new FunctionDef(a, b, d, null, c);
+    DEF:x NAME:funcName tFuncLabels:funcLabels parameters:b RARROW type:c COLON suite:d {:
+        RESULT = new FunctionDef((String) funcName, funcLabels, b, d, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
         //makeNode("funcdef", a, b, c, d);
     :}
-    | DEF:x maybeLabeledName:a parameters:b COLON suite:c {:
+    | DEF:x NAME:funcName tFuncLabels:funcLabels parameters:b COLON suite:c {:
         logger.debug("parsing function");
         //System.err.println("parsing function");
-        RESULT = new FunctionDef(a, b, c, null, null);
+        RESULT = new FunctionDef((String) funcName, funcLabels, b, c, null, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
-    | DEF:x NAME:a polyDescription:p parameters:b COLON suite:c {:
-        logger.debug("Finished parsing the poly func without callin labels");
-        Expression funId = new Name((String)a);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        RESULT = new PolyFunctionDef(funId, p, b, c, null, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
-    :}
-    | DEF:x NAME:a polyDescription:p parameters:b RARROW expr:c COLON suite:d {:
-        logger.debug("Finished parsing the poly func without callin labels");
-        Expression funId = new Name((String)a);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        RESULT = new PolyFunctionDef(funId, p, b, d, null, c);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
-    :}
-    | DEF:x NAME:a polyDescription:p LBRACE maybeAutoendorseIfLabel:lbl RBRACE parameters:b COLON suite:c {:
+    | DEF:x NAME:a polyDescription:p tFuncLabels:funcLabels  parameters:b COLON suite:c {:
         logger.debug("Finished parsing the poly func");
-        Expression funId = new Name((String)a);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        funId = new LabeledType((Name) funId, lbl);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        RESULT = new PolyFunctionDef(funId, p, b, c, null, null);
+        String funId = (String)a;
+        RESULT = new PolyFunctionDef(funId, funcLabels, p, b, c, null, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
-    | DEF:x NAME:a polyDescription:p LBRACE maybeAutoendorseIfLabel:lbl RBRACE parameters:b RARROW expr:c COLON suite:d {:
+    | DEF:x NAME:a  polyDescription:p tFuncLabels:funcLabels parameters:b RARROW type:c COLON suite:d {:
         logger.debug("Finished parsing the poly func");
-        Expression funId = new Name((String)a);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        funId = new LabeledType((Name) funId, lbl);
-        funId.setLoc(new CodeLocation(aleft, aright));
-        RESULT = new PolyFunctionDef(funId, p, b, d, null, c);
+        String funId = (String)a;
+        RESULT = new PolyFunctionDef(funId, funcLabels, p, b, d, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
-maybeLabeledName ::=
+type ::=
     NAME:a {:
-        RESULT = new Name((String)a);
+        RESULT = new Type((String)a);
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | NAME:a LBRACE maybeAutoendorseIfLabel:b RBRACE {:
-        Name name = new Name((String)a);
-        name.setLoc(new CodeLocation(aleft, aright));
-        RESULT = new LabeledType(name, b); //TODO
+    | labeledType:a {:
+        /*Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright));*/
+        RESULT = a;
         RESULT.setLoc(new CodeLocation(aleft, aright));
         logger.debug("finished func name parsing");
     :};
@@ -474,9 +465,8 @@ probinittfpdef ::=
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
 tfpdef ::= 
-    NAME:a COLON expr:b {:
-        Name name = new Name((String)a);
-        name.setLoc(new CodeLocation(aleft, aright));
+    NAME:a COLON type:b {:
+        String name = (String)a;
         RESULT = new Arg(name, b);
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
@@ -536,19 +526,19 @@ expr_stmt ::=
 //augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
 //            '<<=' | '>>=' | '**=' | '//=')
 annassign ::=
-    COLON CONST expr:a EQUAL expr:b {:
+    COLON CONST type:a EQUAL expr:b {:
         //System.out.println("Annassign case 1 parsing");
         AnnAssign rnt = new AnnAssign(null, a, b, false, true);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | COLON expr:a EQUAL expr:b {:
+    | COLON type:a EQUAL expr:b {:
         //System.out.println("Annassign case 1 parsing");
         AnnAssign rnt = new AnnAssign(null, a, b, false, false);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | COLON expr:a {:
+    | COLON type:a {:
         //System.out.println("Annassign case 2 parsing");
         AnnAssign rnt = new AnnAssign(null, a, null, false, false);
         RESULT = rnt;
@@ -664,7 +654,8 @@ compound_stmt ::= if_stmt:a {:RESULT = a;:}
     | try_stmt:a {:RESULT = a;:} 
     | funcdef:a {:RESULT = a;:} 
     | classdef:a {:RESULT = a;:}
-    | decorated:a {:RESULT = a;:}; 
+    | decorated:a {:RESULT = a;:}
+    | structDef:a {:RESULT = a; :};
 if_stmt ::= 
     IF:x expr:a COLON suite:b {:
         RESULT = new If(a, b);
@@ -988,6 +979,23 @@ setmaker_sub ::=
     :}
     | setmaker_sub:list COMMA expr:a {:
         list.addElement(a);
+        RESULT = list;
+    :};
+
+structDef ::=
+    STRUCT:x NAME:name COLON NEWLINE INDENT annassigns:a DEDENT {:
+        RESULT = new StructDef((String)name, a);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+annassigns ::=
+    annassigns:list NEWLINE {:RESULT = list;:}
+    | annassigns:list annassign:a {:
+        list.add(a);
+        RESULT = list;
+    :}
+    | annassign:a {:
+        ArrayList<AnnAssign> list = new ArrayList<>();
+        list.add(a);
         RESULT = list;
     :};
 

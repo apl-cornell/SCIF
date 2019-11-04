@@ -46,30 +46,28 @@ public class ContractInfo {
         return type;
     }
 
-    public TypeInfo toTypeInfo(Expression typeExp, boolean isConst) {
+    public TypeInfo toTypeInfo(ast.Type astType, boolean isConst) {
 
         TypeInfo typeInfo = null;
-        if (typeExp instanceof Name) {
-            String typeName = ((Name) typeExp).id;
+        if (!(astType instanceof LabeledType)) {
+            String typeName = astType.x;
             Type type = toType(typeName);
             typeInfo = new TypeInfo(type, null, isConst);
-        } else if (typeExp instanceof LabeledType) {
-            LabeledType lt = (LabeledType) typeExp;
+        } else {
+            LabeledType lt = (LabeledType) astType;
             if (lt instanceof DepMap) {
                 DepMap depMap = (DepMap) lt;
-                typeInfo = new DepMapTypeInfo(toType(lt.x.id), depMap.ifl, isConst, toTypeInfo(depMap.keyType, isConst), toTypeInfo(depMap.valueType, isConst));
+                typeInfo = new DepMapTypeInfo(toType(lt.x), depMap.ifl, isConst, toTypeInfo(depMap.keyType, isConst), toTypeInfo(depMap.valueType, isConst));
             } else {
-                typeInfo = new TypeInfo(toType(lt.x.id), lt.ifl, isConst);
+                typeInfo = new TypeInfo(toType(lt.x), lt.ifl, isConst);
             }
-        } else {
-            //TODO: error handling
         }
         return typeInfo;
     }
 
 
-    public VarInfo toVarInfo(String fullName, String localName, Expression type, boolean isConst, CodeLocation loc) {
-        TypeInfo typeInfo = toTypeInfo(type, isConst);
+    public VarInfo toVarInfo(String fullName, String localName, ast.Type astType, boolean isConst, CodeLocation loc) {
+        TypeInfo typeInfo = toTypeInfo(astType, isConst);
         return new VarInfo(fullName, localName, typeInfo, loc);
     }
 }

@@ -10,12 +10,12 @@ import java.util.HashSet;
 
 public class AnnAssign extends Statement {
     public Expression target;
-    public Expression annotation;
+    public Type annotation;
     public Expression value;
     public boolean isConst;
     public boolean simple; //if the target is a pure name or an expression
 
-    public AnnAssign(Expression target, Expression annotation, Expression value, boolean simple, boolean isConst) {
+    public AnnAssign(Expression target, Type annotation, Expression value, boolean simple, boolean isConst) {
         this.target = target;
         this.annotation = annotation;
         this.value = value;

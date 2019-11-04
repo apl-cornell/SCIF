@@ -1,6 +1,7 @@
 package typecheck;
 
 import ast.Autoendorse;
+import ast.FuncLabels;
 import ast.IfLabel;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
@@ -9,26 +10,26 @@ import java.util.ArrayList;
 
 public class FuncInfo {
     public String funcName;
-    public IfLabel callLabel;
+    public FuncLabels funcLabels;
     public ArrayList<VarInfo> parameters;
-    public IfLabel returnLabel;
+    public TypeInfo returnType;
     public CodeLocation location;
 
-    public FuncInfo(String funcName, IfLabel callLabel, ArrayList<VarInfo> parameters, IfLabel returnLabel, CodeLocation location) {
+    public FuncInfo(String funcName, FuncLabels funcLabels, ArrayList<VarInfo> parameters, TypeInfo returnType, CodeLocation location) {
         this.funcName = funcName;
-        this.callLabel = callLabel;
+        this.funcLabels = funcLabels;
         this.parameters = parameters;
-        this.returnLabel = returnLabel;
+        this.returnType = returnType;
         this.location = location;
     }
 
-    public String getLabelNameCallBefore() {
-        return Utils.getLabelNameFuncCallBefore(funcName);
+    public String getLabelNameCallPc() {
+        return Utils.getLabelNameFuncCallPc(funcName);
     }
 
-    public String getLabelNameCallAfter() {
+    /*public String getLabelNameCallAfter() {
         return Utils.getLabelNameFuncCallAfter(funcName);
-    }
+    }*/
 
     public String getLabelNameReturn() {
         return Utils.getLabelNameFuncReturn(funcName);
@@ -38,8 +39,17 @@ public class FuncInfo {
         return Utils.getLabelNameArgLabel(funcName, parameters.get(index));
     }
 
+    public String getCallPcLabel() {
+        if (funcLabels.begin_pc != null) {
+            return funcLabels.begin_pc.toSherrlocFmt();
+        }
+        else {
+            return null;
+        }
 
-    public String getCallBeforeLabel() {
+    }
+
+    /*public String getCallBeforeLabel() {
         if (callLabel != null) {
             if (callLabel instanceof Autoendorse) {
                 return ((Autoendorse) callLabel).from.toSherrlocFmt();
@@ -50,9 +60,9 @@ public class FuncInfo {
         else {
             return null;
         }
-    }
+    }*/
 
-    public String getCallAfterLabel() {
+    /*public String getCallAfterLabel() {
         if (callLabel != null) {
             if (callLabel instanceof Autoendorse) {
                 return ((Autoendorse) callLabel).to.toSherrlocFmt();
@@ -63,11 +73,11 @@ public class FuncInfo {
         else {
             return null;
         }
-    }
+    }*/
 
     public String getReturnLabel() {
-        if (returnLabel != null) {
-            return returnLabel.toSherrlocFmt();
+        if (returnType.ifl != null) {
+            return returnType.ifl.toSherrlocFmt();
         } else {
             return null;
         }

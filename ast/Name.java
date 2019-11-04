@@ -7,15 +7,15 @@ import java.util.HashMap;
 
 public class Name extends Variable {
     public String id;
-    Context ctx;
+    //Context ctx;
     public Name(String x) {
         id = x;
-        ctx = null;
+        // ctx = null;
     }
-    public Name(String x, Context y) {
+    /*public Name(String x, Context y) {
         id = x;
         ctx = y;
-    }
+    }*/
 
 
     @Override

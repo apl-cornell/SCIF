@@ -48,12 +48,22 @@ public class Utils {
             return prefix + ".." + "PC";
         }
     }
-    public static String getLabelNameFuncCallBefore(String funcName) {
+    public static String getLabelNameLock(String prefix) {
+        if (prefix.equals("")) {
+            return "LK";
+        } else {
+            return prefix + ".." + "LK";
+        }
+    }
+    public static String getLabelNameFuncCallPc(String funcName) {
+        return funcName + ".." + "call.pc";
+    }
+    /*public static String getLabelNameFuncCallBefore(String funcName) {
         return funcName + ".." + "call.before";
     }
     public static String getLabelNameFuncCallAfter(String funcName) {
         return funcName + ".." + "call.after";
-    }
+    }*/
     public static String getLabelNameFuncReturn(String funcName) {
         return funcName + ".." + "rtn";
     }

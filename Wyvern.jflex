@@ -148,6 +148,7 @@ import java.util.HashMap;
         keywords.put("key", new Integer(sym.KEY));
         keywords.put("contract", new Integer(sym.CONTRACT));
         keywords.put("interface", new Integer(sym.INTERFACE));
+        keywords.put("struct", new Integer(sym.STRUCT));
     }
 
 

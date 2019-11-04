@@ -10,14 +10,14 @@ import java.util.HashMap;
 public class PolyFunctionSig extends FunctionSig {
     ArrayList<Integer> polyArgs;
 
-    public PolyFunctionSig(Expression name, ArrayList<String> polyArgs, Arguments args, ArrayList<Expression> decoratorList, Expression rnt) {
-        super(name, args, decoratorList, rnt);
+    public PolyFunctionSig(String name, FuncLabels funcLabels, ArrayList<String> polyArgs, Arguments args, ArrayList<String> decoratorList, Type rtn) {
+        super(name, funcLabels, args, decoratorList, rtn);
         this.polyArgs = new ArrayList<>();
         HashMap<String, Integer> argToIndex = new HashMap<>();
         for (int i = 0; i < args.args.size(); ++i) {
             Arg arg = args.args.get(i);
-            argToIndex.put(arg.name.id, i);
-            logger.debug("argToIndex: " + arg.name.id + " " + i);
+            argToIndex.put(arg.name, i);
+            logger.debug("argToIndex: " + arg.name + " " + i);
         }
         for (String polyArgName : polyArgs) {
             //TODO: error handling : no such argName
@@ -29,9 +29,9 @@ public class PolyFunctionSig extends FunctionSig {
 
     @Override
     public void globalInfoVisit(ContractInfo contractInfo) {
-        String funcId;
-        IfLabel callLabel = null, returnLabel = null;
-        if (name instanceof LabeledType) {
+        String funcId = name;
+        //IfLabel callLabel = null, returnLabel = null;
+        /*if (name instanceof LabeledType) {
             funcId = ((LabeledType) name).x.id;
             callLabel = ((LabeledType) name).ifl;
         } else {
@@ -39,10 +39,10 @@ public class PolyFunctionSig extends FunctionSig {
         }
         if (rnt instanceof LabeledType) {
             returnLabel = ((LabeledType) rnt).ifl;
-        }
+        }*/
         ArrayList<VarInfo> argsInfo = args.parseArgs(contractInfo);
         logger.debug("creating polyFuncInfo with polyarg size: " + polyArgs.size());
-        contractInfo.funcMap.put(funcId, new PolyFuncInfo(funcId, polyArgs, callLabel, argsInfo, returnLabel, location));
+        contractInfo.funcMap.put(funcId, new PolyFuncInfo(funcId, funcLabels, polyArgs, argsInfo, contractInfo.toTypeInfo(rtn, false), location));
     }
 
 

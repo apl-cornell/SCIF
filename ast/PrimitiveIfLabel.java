@@ -5,8 +5,8 @@ import typecheck.Utils;
 import java.util.HashSet;
 
 public class PrimitiveIfLabel extends IfLabel {
-    Variable value; // could be a name
-    public PrimitiveIfLabel(Variable value) {
+    Name value; // could be a name
+    public PrimitiveIfLabel(Name value) {
         this.value = value;
     }
 

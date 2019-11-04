@@ -8,45 +8,39 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class FunctionSig extends Statement {
-    Expression name;
+    String name;
+    FuncLabels funcLabels;
     Arguments args;
-    ArrayList<Expression> decoratorList;
-    Expression rnt;
-    public FunctionSig(Expression name, Arguments args, ArrayList<Expression> decoratorList, Expression rnt) {
+    ArrayList<String> decoratorList;
+    Type rtn;
+    public FunctionSig(String name, FuncLabels funcLabels, Arguments args, ArrayList<String> decoratorList, Type rnt) {
         this.name = name;
+        this.funcLabels = funcLabels;
         this.args = args;
         this.decoratorList = decoratorList;
-        this.rnt = rnt;
+        this.rtn = rnt;
     }
-    public void setDecoratorList(ArrayList<Expression> decoratorList) {
+    public void setDecoratorList(ArrayList<String> decoratorList) {
         this.decoratorList = decoratorList;
     }
 
     @Override
     public void globalInfoVisit(ContractInfo contractInfo) {
-        String funcId;
-        IfLabel callLabel = null, returnLabel = null;
-        if (name instanceof LabeledType) {
-            funcId = ((LabeledType) name).x.id;
-            callLabel = ((LabeledType) name).ifl;
-        } else {
-            funcId = ((Name) name).id;
-        }
-        if (rnt instanceof LabeledType) {
-            returnLabel = ((LabeledType) rnt).ifl;
-        }
-
         ArrayList<VarInfo> argsInfo = args.parseArgs(contractInfo);
-        contractInfo.funcMap.put(funcId, new FuncInfo(funcId, callLabel, argsInfo, returnLabel, location));
+        contractInfo.funcMap.put(name, new FuncInfo(name, funcLabels, argsInfo, contractInfo.toTypeInfo(rtn, false), location));
     }
     public void findPrincipal(HashSet<String> principalSet) {
-        if (name instanceof LabeledType) {
-            ((LabeledType) name).ifl.findPrincipal(principalSet);
+        if (funcLabels != null) {
+            funcLabels.findPrincipal(principalSet);
         }
         args.findPrincipal(principalSet);
 
-        if (rnt instanceof LabeledType) {
-            ((LabeledType) rnt).ifl.findPrincipal(principalSet);
+        if (rtn instanceof LabeledType) {
+            if (rtn instanceof DepMap) {
+                ((DepMap) rtn).findPrincipal(principalSet);
+            } else {
+                ((LabeledType) rtn).ifl.findPrincipal(principalSet);
+            }
         }
     }
 }

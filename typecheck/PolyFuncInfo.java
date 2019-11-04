@@ -1,6 +1,7 @@
 package typecheck;
 
 import ast.Autoendorse;
+import ast.FuncLabels;
 import ast.IfLabel;
 
 import java.util.ArrayList;
@@ -13,8 +14,8 @@ public class PolyFuncInfo extends FuncInfo {
     HashSet<String> polyArgs;
     int applyCounter;
 
-    public PolyFuncInfo(String funcName, ArrayList<Integer> polyArgList, IfLabel callLabel, ArrayList<VarInfo> parameters, IfLabel returnLabel, CodeLocation location) {
-        super(funcName, callLabel, parameters, returnLabel, location);
+    public PolyFuncInfo(String funcName, FuncLabels funcLabels, ArrayList<Integer> polyArgList, ArrayList<VarInfo> parameters, TypeInfo returnType, CodeLocation location) {
+        super(funcName, funcLabels, parameters, returnType, location);
         this.polyArgList = polyArgList;
         this.polyArgs = new HashSet<>();
         for (int i : polyArgList) {
@@ -29,21 +30,21 @@ public class PolyFuncInfo extends FuncInfo {
     }
 
     @Override
-    public String getLabelNameCallBefore() {
-        String rtn = super.getLabelNameCallBefore();
+    public String getLabelNameCallPc() {
+        String rtn = super.getLabelNameCallPc();
         if (applyCounter > 0)
             return rtn + ".apply" + applyCounter;
         else
             return rtn;
     }
-    @Override
+    /*@Override
     public String getLabelNameCallAfter() {
         String rtn = super.getLabelNameCallAfter();
         if (applyCounter > 0)
             return rtn + ".apply" + applyCounter;
         else
             return rtn;
-    }
+    }*/
     @Override
     public String getLabelNameReturn() {
         String rtn = super.getLabelNameReturn();
@@ -62,15 +63,11 @@ public class PolyFuncInfo extends FuncInfo {
     }
 
     @Override
-    public String getCallBeforeLabel() {
+    public String getCallPcLabel() {
         logger.debug("entering polyfuncinfo - getCallBeforeLabel");
         String rtn = "";
-        if (callLabel != null) {
-            if (callLabel instanceof Autoendorse) {
-                rtn = ((Autoendorse) callLabel).from.toSherrlocFmtApply(polyArgs, applyCounter);
-            } else {
-                rtn = callLabel.toSherrlocFmtApply(polyArgs, applyCounter);
-            }
+        if (funcLabels.begin_pc != null) {
+            rtn = funcLabels.begin_pc.toSherrlocFmtApply(polyArgs, applyCounter);
         }
         else {
             return null;
@@ -79,7 +76,7 @@ public class PolyFuncInfo extends FuncInfo {
         return rtn;
     }
 
-    @Override
+    /*@Override
     public String getCallAfterLabel() {
         if (callLabel != null) {
             if (callLabel instanceof Autoendorse) {
@@ -91,12 +88,12 @@ public class PolyFuncInfo extends FuncInfo {
         else {
             return null;
         }
-    }
+    }*/
 
     @Override
     public String getReturnLabel() {
-        if (returnLabel != null) {
-            return returnLabel.toSherrlocFmtApply(polyArgs, applyCounter);
+        if (returnType.ifl != null) {
+            return returnType.ifl.toSherrlocFmtApply(polyArgs, applyCounter);
         } else {
             return null;
         }
@@ -108,15 +105,15 @@ public class PolyFuncInfo extends FuncInfo {
         return varInfo.typeInfo.ifl.toSherrlocFmtApply(polyArgs, applyCounter);
     }
 
-    public void substitutePoly() {
+    public void substitutePoly() { //TODO: might need to copy
         logger.debug("polyArgList size: " + polyArgList.size());
         for (int index : polyArgList) {
             String argName = parameters.get(index).localName;
             String argLabelName = getLabelNameArg(index);
-            if (callLabel != null)
-                callLabel.replace(argName, argLabelName);
-            if (returnLabel != null)
-                returnLabel.replace(argName, argLabelName);
+            if (funcLabels.begin_pc != null)
+                funcLabels.begin_pc.replace(argName, argLabelName);
+            if (returnType.ifl != null)
+                returnType.ifl.replace(argName, argLabelName);
             for (VarInfo arg : parameters) {
                 if (arg.typeInfo.ifl != null)
                     arg.typeInfo.ifl.replace(argName, argLabelName);

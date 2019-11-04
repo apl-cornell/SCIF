@@ -2,11 +2,10 @@ package ast;
 
 import java.util.HashSet;
 
-public class LabeledType extends Type {
-    public IfLabel ifl;
-    public LabeledType(String x, IfLabel ifl) {
-        super(x);
-        this.ifl = ifl;
+public class Type extends Expression {
+    public String x;
+    public Type(String x) {
+        this.x = x;
     }
 
     public String toSherrloc(String k, String v) {
@@ -15,11 +14,11 @@ public class LabeledType extends Type {
 
     @Override
     public void findPrincipal(HashSet<String> principalSet) {
-        ifl.findPrincipal(principalSet);
+        return;
     }
 
 
     public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
-        ifl.findPrincipal(principalSet, getRidOf);
+        return;
     }
 }

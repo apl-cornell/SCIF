@@ -92,10 +92,11 @@ public class TypeChecker {
             for (HashMap.Entry<String, FuncInfo> funcPair : env.funcMap.entrySet()) {
                 //String funcName = funcPair.getKey();
                 FuncInfo func = funcPair.getValue();
-                String ifNameCallBeforeLabel = func.getLabelNameCallBefore();
-                String ifNameCallAfterLabel = func.getLabelNameCallAfter();
-                String ifCallBeforeLabel = func.getCallBeforeLabel();
-                String ifCallAfterLabel = func.getCallAfterLabel();
+                //TODO: simplify
+                String ifNameCallBeforeLabel = func.getLabelNameCallPc();
+                String ifNameCallAfterLabel = func.getLabelNameCallPc();
+                String ifCallBeforeLabel = func.getCallPcLabel();
+                String ifCallAfterLabel = func.getCallPcLabel();
                 if (ifNameCallBeforeLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), func.location));
 

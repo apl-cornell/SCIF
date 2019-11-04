@@ -57,7 +57,7 @@ public class Call extends TrailerExpr {
                 if (funcInfo instanceof PolyFuncInfo) {
                     ((PolyFuncInfo)funcInfo).apply();
                 }
-                ifNameFuncCall = funcInfo.getLabelNameCallBefore();
+                ifNameFuncCall = funcInfo.getLabelNameCallPc();
                 env.cons.add(new Constraint(new Inequality(ifContRtn, ifNameFuncCall), env.hypothesis, location));
             } else {
                 return "";
@@ -91,7 +91,7 @@ public class Call extends TrailerExpr {
             if (funcInfo instanceof PolyFuncInfo) {
                 ((PolyFuncInfo) funcInfo).apply();
             }
-            ifNameFuncCall = funcInfo.getLabelNameCallBefore();
+            ifNameFuncCall = funcInfo.getLabelNameCallPc();
         }
             env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCall), env.hypothesis, location));
 
@@ -107,10 +107,11 @@ public class Call extends TrailerExpr {
 
             }
             if (funcInfo instanceof PolyFuncInfo) {
-                String ifNameCallBeforeLabel = funcInfo.getLabelNameCallBefore();
-                String ifNameCallAfterLabel = funcInfo.getLabelNameCallAfter();
-                String ifCallBeforeLabel = funcInfo.getCallBeforeLabel();
-                String ifCallAfterLabel = funcInfo.getCallAfterLabel();
+                // TODO: simplify
+                String ifNameCallBeforeLabel = funcInfo.getLabelNameCallPc();
+                String ifNameCallAfterLabel = funcInfo.getLabelNameCallPc();
+                String ifCallBeforeLabel = funcInfo.getCallPcLabel();
+                String ifCallAfterLabel = funcInfo.getCallPcLabel();
                 if (ifNameCallBeforeLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), location));
 
