@@ -10,6 +10,7 @@ import java.util.Set;
 
 public class VisitEnv {
     public String ctxt;
+    public Context prevContext;
     public HashMap<String, FuncInfo> funcMap;
     public ArrayList<Constraint> cons;
     public LookupMaps varNameMap;
@@ -19,9 +20,10 @@ public class VisitEnv {
     public HashMap<String, ContractInfo> contractMap;
 
 
-    public VisitEnv(String ctxt, HashMap<String, FuncInfo> funcMap, ArrayList<Constraint> cons, LookupMaps varNameMap, Hypothesis hypothesis, HashSet<String> principalSet,
+    public VisitEnv(String ctxt, Context prevContext, HashMap<String, FuncInfo> funcMap, ArrayList<Constraint> cons, LookupMaps varNameMap, Hypothesis hypothesis, HashSet<String> principalSet,
                     ContractInfo contractInfo, HashMap<String, ContractInfo> contractMap) {
         this.ctxt = ctxt;
+        this.prevContext = prevContext;
         this.funcMap = funcMap;
         this.cons = cons;
         this.varNameMap = varNameMap;
@@ -33,6 +35,7 @@ public class VisitEnv {
 
     public VisitEnv() {
         ctxt = "";
+        prevContext = null;
         funcMap = new HashMap<>();
         cons = new ArrayList<>();
         varNameMap = new LookupMaps();

@@ -46,8 +46,8 @@ public class PolyFuncInfo extends FuncInfo {
             return rtn;
     }*/
     @Override
-    public String getLabelNameReturn() {
-        String rtn = super.getLabelNameReturn();
+    public String getLabelNameRtnValue() {
+        String rtn = super.getLabelNameRtnValue();
         if (applyCounter > 0)
             return rtn + ".apply" + applyCounter;
         else
@@ -75,6 +75,28 @@ public class PolyFuncInfo extends FuncInfo {
         logger.debug("getcallbeforelabel finished: " + rtn);
         return rtn;
     }
+    @Override
+    public String getCallLockLabel() {
+        String rtn = "";
+        if (funcLabels.begin_lock != null) {
+            rtn = funcLabels.begin_lock.toSherrlocFmtApply(polyArgs, applyCounter);
+        }
+        else {
+            return null;
+        }
+        return rtn;
+    }
+    @Override
+    public String getRtnLockLabel() {
+        String rtn = "";
+        if (funcLabels.end_lock != null) {
+            rtn = funcLabels.end_lock.toSherrlocFmtApply(polyArgs, applyCounter);
+        }
+        else {
+            return null;
+        }
+        return rtn;
+    }
 
     /*@Override
     public String getCallAfterLabel() {
@@ -91,7 +113,7 @@ public class PolyFuncInfo extends FuncInfo {
     }*/
 
     @Override
-    public String getReturnLabel() {
+    public String getRtnValueLabel() {
         if (returnType.ifl != null) {
             return returnType.ifl.toSherrlocFmtApply(polyArgs, applyCounter);
         } else {

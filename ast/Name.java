@@ -19,10 +19,10 @@ public class Name extends Variable {
 
 
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         // assuming the name would be a variable name
         String ifNameRnt = env.varNameMap.getInfo(id).labelToSherrlocFmt();
-        return ifNameRnt;
+        return new Context(ifNameRnt, env.prevContext.lockName);
     }
 
     public VarInfo getVarInfo(VisitEnv env) {

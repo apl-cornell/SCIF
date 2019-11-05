@@ -35,19 +35,21 @@ public class Call extends TrailerExpr {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         //TODO: Assuming value is a Name for now
         String funcName;
         String ifNamePc;
         FuncInfo funcInfo;
-        String ifNameFuncCall;
+        String ifNameFuncCallPc, ifNameFuncCallLock;
+        String prevLockName = env.prevContext.lockName;
+
         if (!(value instanceof Name)) {
             if (value instanceof Attribute) {
                 //  the case: a.b(c) where a is a contract, b is a function and c are the arguments
                 // att = a.b
                 logger.debug("call value: " + value.toString());
                 Attribute att = (Attribute) value;
-                String ifContRtn = att.value.genConsVisit(env);
+                String ifContRtn = att.value.genConsVisit(env).valueLabelName; //the label of called contract
                 //TODO: assuming a's depth is 1
                 String varName = ((Name)att.value).id;
                 TypeInfo conType = env.varNameMap.getInfo(varName).typeInfo;
@@ -57,10 +59,11 @@ public class Call extends TrailerExpr {
                 if (funcInfo instanceof PolyFuncInfo) {
                     ((PolyFuncInfo)funcInfo).apply();
                 }
-                ifNameFuncCall = funcInfo.getLabelNameCallPc();
-                env.cons.add(new Constraint(new Inequality(ifContRtn, ifNameFuncCall), env.hypothesis, location));
+                ifNameFuncCallPc = funcInfo.getLabelNameCallPc();
+                ifNameFuncCallLock = funcInfo.getLabelNameCallLock();
+                env.cons.add(new Constraint(new Inequality(ifContRtn, ifNameFuncCallPc), env.hypothesis, location));
             } else {
-                return "";
+                return null;
             }
         } else {
             funcName = ((Name) value).id;
@@ -79,59 +82,68 @@ public class Call extends TrailerExpr {
         }
         else*/
             if (!env.funcMap.containsKey(funcName)) {
-                if (env.contractMap.containsKey(funcName)) {
-                    if (args.size() != 1) return "";
-                    String ifNameArgValue = args.get(0).genConsVisit(env);
-                    return ifNameArgValue;
+                if (env.contractMap.containsKey(funcName)) { //init contract
+                    if (args.size() != 1) return null;
+                    Context tmp = args.get(0).genConsVisit(env);
+                    String ifNameArgValue = tmp.valueLabelName;
+                    return new Context(ifNameArgValue, tmp.lockName);
                 } else {
-                    return "";
+                    return null;
                 }
             }
             funcInfo = env.funcMap.get(funcName);
             if (funcInfo instanceof PolyFuncInfo) {
                 ((PolyFuncInfo) funcInfo).apply();
             }
-            ifNameFuncCall = funcInfo.getLabelNameCallPc();
+            ifNameFuncCallPc = funcInfo.getLabelNameCallPc();
+            ifNameFuncCallLock = funcInfo.getLabelNameCallLock();
         }
-            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCall), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCallPc), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameFuncCallLock, prevLockName), env.hypothesis, location));
 
 
             //TODO: keywords style arg assign
             for (int i = 0; i < args.size(); ++i) {
                 Expression arg = args.get(i);
-                String ifNameArgValue = arg.genConsVisit(env);
+                Context tmp = arg.genConsVisit(env);
+                String ifNameArgValue = tmp.valueLabelName;
                 String ifNameArgLabel = funcInfo.getLabelNameArg(i);
                 env.cons.add(new Constraint(new Inequality(ifNameArgValue, Relation.LEQ, ifNameArgLabel), env.hypothesis, location));
 
                 env.cons.add(new Constraint(new Inequality(ifNamePc, Relation.LEQ, ifNameArgLabel), env.hypothesis, location));
+
+                env.cons.add(new Constraint(new Inequality(prevLockName, Relation.EQ, tmp.lockName), env.hypothesis, location));
 
             }
             if (funcInfo instanceof PolyFuncInfo) {
                 // TODO: simplify
                 String ifNameCallBeforeLabel = funcInfo.getLabelNameCallPc();
                 String ifNameCallAfterLabel = funcInfo.getLabelNameCallPc();
+                String ifNameCallLockLabel = funcInfo.getLabelNameCallLock();
                 String ifCallBeforeLabel = funcInfo.getCallPcLabel();
                 String ifCallAfterLabel = funcInfo.getCallPcLabel();
+                String ifCallLockLabel = funcInfo.getCallLockLabel();
+
                 if (ifNameCallBeforeLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), location));
-
-                    //env.cons.add(new Constraint(new Inequality(ifNameCallBeforeLabel, ifCallBeforeLabel), func.location));
-
                 }
                 if (ifNameCallAfterLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel), location));
-
-                    //env.cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, ifCallAfterLabel), func.location));
-
+                }
+                if (ifNameCallLockLabel != null) {
+                    env.cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallLockLabel), location));
                 }
 
-                String ifNameReturnLabel = funcInfo.getLabelNameReturn();
-                String ifReturnLabel = funcInfo.getReturnLabel();
-                if (ifReturnLabel != null) {
-                    env.cons.add(new Constraint(new Inequality(ifReturnLabel, Relation.EQ, ifNameReturnLabel), location));
+                String ifNameRtnValueLabel = funcInfo.getLabelNameRtnValue();
+                String ifRtnValueLabel = funcInfo.getRtnValueLabel();
+                String ifNameRtnLockLabel = funcInfo.getLabelNameRtnLock();
+                String ifRtnLockLabel = funcInfo.getRtnLockLabel();
 
-                    //env.cons.add(new Constraint(new Inequality(ifNameReturnLabel, ifReturnLabel), func.location));
-
+                if (ifRtnValueLabel != null) {
+                    env.cons.add(new Constraint(new Inequality(ifRtnValueLabel, Relation.EQ, ifNameRtnValueLabel), location));
+                }
+                if (ifRtnLockLabel != null) {
+                    env.cons.add(new Constraint(new Inequality(ifRtnLockLabel, Relation.EQ, ifNameRtnLockLabel), location));
                 }
 
                 for (int i = 0; i < funcInfo.parameters.size(); ++i) {
@@ -147,7 +159,8 @@ public class Call extends TrailerExpr {
                     }
                 }
             }
-            String ifNameFuncReturn = funcInfo.getLabelNameReturn();
-            return ifNameFuncReturn;
+            String ifNameFuncRtnValue = funcInfo.getLabelNameRtnValue();
+            String ifNameFuncRtnLock = funcInfo.getLabelNameRtnLock();
+            return new Context(ifNameFuncRtnValue, ifNameFuncRtnLock);
     }
 }

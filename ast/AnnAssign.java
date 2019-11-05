@@ -42,7 +42,7 @@ public class AnnAssign extends Statement {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         if (!simple) {
             //TODO
         }
@@ -75,12 +75,20 @@ public class AnnAssign extends Statement {
             }
         }
         String ifNamePc = Utils.getLabelNamePc(env.ctxt);
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt + "..lbl"), env.hypothesis, location));
+        String ifNameTgtLbl = ifNameTgt + "..lbl";
+        Context prevContext = env.prevContext;
+
+        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgtLbl), env.hypothesis, location));
         if (value != null) {
-            String ifNameValue = value.genConsVisit(env);
-            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgt + "..lbl"), env.hypothesis, location));
+            Context tmp = value.genConsVisit(env);
+            String ifNameValue = tmp.valueLabelName;
+            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgtLbl), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(tmp.lockName, CompareOperator.Eq, prevContext.lockName), env.hypothesis, location));
+            env.prevContext.lockName = tmp.lockName;
         }
-        return null;
+
+        Context rtn = new Context(ifNameTgtLbl, env.prevContext.lockName);
+        return rtn;
     }
 
     public void findPrincipal(HashSet<String> principalSet) {

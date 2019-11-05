@@ -31,7 +31,7 @@ public class Node {
         //Do nothing
     }
 
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         return null;
     }
     public void findPrincipal(HashSet<String> principalSet) {

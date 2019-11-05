@@ -31,8 +31,14 @@ public class FuncInfo {
         return Utils.getLabelNameFuncCallAfter(funcName);
     }*/
 
-    public String getLabelNameReturn() {
-        return Utils.getLabelNameFuncReturn(funcName);
+    public String getLabelNameRtnValue() {
+        return Utils.getLabelNameFuncRtnValue(funcName);
+    }
+    public String getLabelNameRtnLock() {
+        return Utils.getLabelNameFuncRtnLock(funcName);
+    }
+    public String getLabelNameCallLock() {
+        return Utils.getLabelNameFuncCallLock(funcName);
     }
 
     public String getLabelNameArg(int index) {
@@ -42,6 +48,24 @@ public class FuncInfo {
     public String getCallPcLabel() {
         if (funcLabels.begin_pc != null) {
             return funcLabels.begin_pc.toSherrlocFmt();
+        }
+        else {
+            return null;
+        }
+
+    }
+    public String getCallLockLabel() {
+        if (funcLabels.begin_lock != null) {
+            return funcLabels.begin_lock.toSherrlocFmt();
+        }
+        else {
+            return null;
+        }
+
+    }
+    public String getRtnLockLabel() {
+        if (funcLabels.end_lock != null) {
+            return funcLabels.end_lock.toSherrlocFmt();
         }
         else {
             return null;
@@ -75,7 +99,7 @@ public class FuncInfo {
         }
     }*/
 
-    public String getReturnLabel() {
+    public String getRtnValueLabel() {
         if (returnType.ifl != null) {
             return returnType.ifl.toSherrlocFmt();
         } else {

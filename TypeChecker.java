@@ -95,8 +95,10 @@ public class TypeChecker {
                 //TODO: simplify
                 String ifNameCallBeforeLabel = func.getLabelNameCallPc();
                 String ifNameCallAfterLabel = func.getLabelNameCallPc();
+                String ifNameCallLockLabel = func.getLabelNameCallLock();
                 String ifCallBeforeLabel = func.getCallPcLabel();
                 String ifCallAfterLabel = func.getCallPcLabel();
+                String ifCallLockLabel = func.getCallLockLabel();
                 if (ifNameCallBeforeLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), func.location));
 
@@ -109,14 +111,22 @@ public class TypeChecker {
                     //env.cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, ifCallAfterLabel), func.location));
 
                 }
+                if (ifNameCallLockLabel != null) {
+                    env.cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallLockLabel), func.location));
+                }
 
-                String ifNameReturnLabel = func.getLabelNameReturn();
-                String ifReturnLabel = func.getReturnLabel();
+                String ifNameReturnLabel = func.getLabelNameRtnValue();
+                String ifReturnLabel = func.getRtnValueLabel();
+                String ifNameRtnLockLabel = func.getLabelNameRtnLock();
+                String ifRtnLockLabel = func.getRtnLockLabel();
                 if (ifReturnLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifReturnLabel, Relation.EQ, ifNameReturnLabel), func.location));
 
                     //env.cons.add(new Constraint(new Inequality(ifNameReturnLabel, ifReturnLabel), func.location));
 
+                }
+                if (ifRtnLockLabel != null) {
+                    env.cons.add(new Constraint(new Inequality(ifRtnLockLabel, Relation.EQ, ifNameRtnLockLabel), func.location));
                 }
 
                 for (int i = 0; i < func.parameters.size(); ++i) {

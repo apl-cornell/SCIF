@@ -1,16 +1,13 @@
 package ast;
 
-import typecheck.ContractInfo;
-import typecheck.FuncInfo;
-import typecheck.VarInfo;
-import typecheck.VisitEnv;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class Program extends Node {
-    HashSet<String> iptContracts;
+    HashSet<String> iptContracts; // imported contracts
     ArrayList<Contract> contracts;
     public Program(HashSet<String> iptContracts, ArrayList<Contract> contracts) {
         this.iptContracts = iptContracts;
@@ -36,7 +33,7 @@ public class Program extends Node {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         for (Contract contract : contracts) {
             contract.genConsVisit(env);
         }

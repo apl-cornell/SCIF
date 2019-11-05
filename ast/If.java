@@ -2,8 +2,10 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
+import javax.swing.text.Utilities;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -23,13 +25,19 @@ public class If extends Statement {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         String originalCtxt = env.ctxt;
 
-        String IfNameTest = test.genConsVisit(env);
+        String prevLockLabel = env.prevContext.lockName;
+        String rtnValueLabel;
+
+        Context curContext = test.genConsVisit(env);
+        rtnValueLabel = curContext.valueLabelName;
+        String IfNameTest = curContext.valueLabelName;
         String IfNamePcBefore = Utils.getLabelNamePc(env.ctxt);
         env.ctxt += ".If" + location.toString();
         String IfNamePcAfter = Utils.getLabelNamePc(env.ctxt);
+        String IfNameLock = Utils.getLabelNameLock(env.ctxt);
 
 
         boolean createdHypo = false;
@@ -69,12 +77,17 @@ public class If extends Statement {
             }
         }
         env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location));
-
         env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location));
 
+        if (body.size() > 0 || orelse.size() > 0) {
+            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.EQ, curContext.valueLabelName), env.hypothesis, location));
+        }
+
+        Context leftContext = curContext, rightContext = curContext;
         env.varNameMap.incLayer();
         for (Statement stmt : body) {
-            stmt.genConsVisit(env);
+            leftContext = stmt.genConsVisit(env);
+            env.prevContext.lockName = leftContext.lockName;
         }
         env.varNameMap.decLayer();
 
@@ -84,17 +97,20 @@ public class If extends Statement {
 
         logger.debug("finished if branch");
         //System.err.println("finished if branch");
-
         env.varNameMap.incLayer();
         for (Statement stmt : orelse) {
-            stmt.genConsVisit(env);
+            rightContext = stmt.genConsVisit(env);
+            env.prevContext.lockName = rightContext.lockName;
         }
         env.varNameMap.decLayer();
+
+
+        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.EQ, Utils.joinLabels(leftContext.lockName, rightContext.lockName)), env.hypothesis, location));
 
         logger.debug("finished orelse branch");
         //System.err.println("finished orelse branch");
 
         env.ctxt = originalCtxt;
-        return null;
+        return new Context(null, IfNameLock);
     }
 }

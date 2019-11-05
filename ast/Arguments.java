@@ -36,7 +36,7 @@ public class Arguments extends Node {
         return rnt;
     }
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
 
         for (Arg arg : args) {
             arg.genConsVisit(env);

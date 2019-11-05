@@ -17,18 +17,21 @@ public class Return extends Statement {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
-        if (value == null) return null;
+    public Context genConsVisit(VisitEnv env) {
+        String prevLock = env.prevContext.lockName;
+        if (value == null) return new Context(null, prevLock);
         String ifNamePc = Utils.getLabelNamePc(env.ctxt);
-        String ifNameValue = value.genConsVisit(env);
+        Context expContext = value.genConsVisit(env);
+        String ifNameValue = expContext.valueLabelName;
 
         int occur = env.ctxt.indexOf(".");
         FuncInfo funcInfo = env.funcMap.get(occur >= 0 ? env.ctxt.substring(0, occur) : env.ctxt);
-        String ifNameReturn = funcInfo.getLabelNameReturn();
-        env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameReturn), env.hypothesis, location));
+        String ifNameRtnValue = funcInfo.getLabelNameRtnValue();
+        String ifNameRtnLock = funcInfo.getLabelNameRtnLock();
+        env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtnValue), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location));
 
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameReturn), env.hypothesis, location));
-
-        return null;
+        env.cons.add(new Constraint(new Inequality(expContext.lockName, ifNameRtnLock), env.hypothesis, location));
+        return new Context(null, prevLock);
     }
 }

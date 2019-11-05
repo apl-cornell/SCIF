@@ -1,9 +1,6 @@
 package ast;
 
-import typecheck.FuncInfo;
-import typecheck.IfConstraint;
-import typecheck.LookupMaps;
-import typecheck.VisitEnv;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,8 +14,8 @@ public class Assert extends Statement {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
-        test.genConsVisit(env);
-        return null;
+    public Context genConsVisit(VisitEnv env) {
+        Context tmp = test.genConsVisit(env);
+        return tmp;
     }
 }

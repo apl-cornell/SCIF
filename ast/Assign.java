@@ -17,22 +17,29 @@ public class Assign extends Statement {
 
 
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         String ifNamePc = Utils.getLabelNamePc(env.ctxt);
-        String ifNameValue = value.genConsVisit(env);
+        String prevLockName = env.prevContext.lockName;
+        String rtnLockName = "";
+        Context valueContext = value.genConsVisit(env);
+        String ifNameValue = valueContext.valueLabelName;
 
+        String ifNameTgt = ""; //TODO: only support one argument now
         for (Expression target : targets) {
-            String ifNameTgt = "";
             if (target instanceof Name) {
                 //Assuming target is Name
                 ifNameTgt = env.varNameMap.getName(((Name) target).id);
+                rtnLockName = valueContext.lockName;
                 /*VarInfo varInfo = env.varNameMap.getInfo(((Name) target).id);
                 if (varInfo instanceof TestableVarInfo) {
                     ((TestableVarInfo) varInfo).tested = false;
                     ((TestableVarInfo) varInfo).testedLabel = Utils.DEAD;
                 }*/
             } else if (target instanceof Subscript) {
-                ifNameTgt = target.genConsVisit(env);
+                env.prevContext = valueContext;
+                Context tmp = target.genConsVisit(env);
+                ifNameTgt = tmp.valueLabelName;
+                rtnLockName = tmp.lockName;
             } else {
                 //TODO: error handling
             }
@@ -40,7 +47,9 @@ public class Assign extends Statement {
 
             env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, location));
 
+            env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, rtnLockName), env.hypothesis, location));
+
         }
-        return "";
+        return new Context(ifNameTgt, rtnLockName);
     }
 }

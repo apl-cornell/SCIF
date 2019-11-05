@@ -2,6 +2,7 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -24,26 +25,31 @@ public class While extends Statement {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         String originalCtxt = env.ctxt;
 
-        String IfNameTest = test.genConsVisit(env);
+        String prevLock = env.prevContext.lockName;
+        Context testContext = test.genConsVisit(env);
+        String IfNameTestValue = testContext.valueLabelName;
         String IfNamePcBefore = Utils.getLabelNamePc(env.ctxt);
         env.ctxt += ".While" + location.toString();
         String IfNamePcAfter = Utils.getLabelNamePc(env.ctxt);
         env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location));
 
-        env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(IfNameTestValue, IfNamePcAfter), env.hypothesis, location));
 
-
+        Context lastContext = testContext;
         env.varNameMap.incLayer();
         for (Statement stmt : body) {
-            stmt.genConsVisit(env);
+            env.prevContext.lockName = lastContext.lockName;
+            Context tmp = stmt.genConsVisit(env);
+            lastContext = tmp;
         }
         env.varNameMap.decLayer();
+        env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.EQ, prevLock), env.hypothesis, location));
 
         env.ctxt = originalCtxt;
-        return null;
+        return lastContext;
     }
     public void findPrincipal(HashSet<String> principalSet) {
         for (Statement stmt : body) {

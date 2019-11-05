@@ -23,7 +23,7 @@ public class Contract extends Node {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         for (Statement stmt : body) {
             stmt.genConsVisit(env);
         }

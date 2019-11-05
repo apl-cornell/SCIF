@@ -2,6 +2,7 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -22,13 +23,20 @@ public class Dictmaker extends Expression {
         this.values.add(value);
     }
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         String ifNameRtn = env.ctxt + "." + "dictmaker" + location.toString();
+        String prevLock = env.prevContext.lockName;
+        Context lasttmp = null;
         for (Expression value: values) {
-            String ifNameValue = value.genConsVisit(env);
+            if (lasttmp != null) {
+                env.cons.add(new Constraint(new Inequality(prevLock, Relation.EQ, lasttmp.lockName), env.hypothesis, location));
+                env.prevContext.lockName = prevLock;
+            }
+            Context tmp = value.genConsVisit(env);
+            String ifNameValue = tmp.valueLabelName;
             env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location));
-
+            lasttmp = tmp;
         }
-        return ifNameRtn;
+        return lasttmp;
     }
 }

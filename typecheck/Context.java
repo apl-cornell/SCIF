@@ -1,5 +1,6 @@
 package typecheck;
 
+import ast.Str;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Hypothesis;
 
@@ -9,12 +10,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Context {
-    public String ctxt;
-    public HashMap<String, FuncInfo> funcMap;
-    public ArrayList<Constraint> cons;
-    public LookupMaps varNameMap;
-    public Hypothesis hypothesis;
-    public HashSet<String> principalSet;
-    public ContractInfo contractInfo;
-    public HashMap<String, ContractInfo> contractMap;
+    public String valueLabelName;
+    public String lockName;
+
+    public Context(String valueLabelName, String lockName) {
+        this.valueLabelName = valueLabelName;
+        this.lockName = lockName;
+    }
 }

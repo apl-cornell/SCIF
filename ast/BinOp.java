@@ -17,13 +17,20 @@ public class BinOp extends Expression {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
-        String ifNameLeft = left.genConsVisit(env);
-        String ifNameRight = right.genConsVisit(env);
+    public Context genConsVisit(VisitEnv env) {
+        String prevLockName = env.prevContext.lockName;
+
+        Context leftContext = left.genConsVisit(env);
+        String ifNameLeft = leftContext.valueLabelName;
+        env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, leftContext.lockName), env.hypothesis, location));
+
+        env.prevContext.lockName = leftContext.lockName;
+        Context rightContext = right.genConsVisit(env);
+        String ifNameRight = rightContext.valueLabelName;
         String ifNameRtn = env.ctxt + "." + "bin" + location.toString();
         env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location));
         env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location));
 
-        return ifNameRtn;
+        return new Context(ifNameRtn, rightContext.lockName);
     }
 }

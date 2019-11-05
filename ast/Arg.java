@@ -19,7 +19,7 @@ public class Arg extends Node {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
 
         if (annotation instanceof LabeledType) {
             if (annotation instanceof DepMap) {

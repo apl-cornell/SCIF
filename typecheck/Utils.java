@@ -58,14 +58,20 @@ public class Utils {
     public static String getLabelNameFuncCallPc(String funcName) {
         return funcName + ".." + "call.pc";
     }
+    public static String getLabelNameFuncCallLock(String funcName) {
+        return funcName + ".." + "call.lk";
+    }
     /*public static String getLabelNameFuncCallBefore(String funcName) {
         return funcName + ".." + "call.before";
     }
     public static String getLabelNameFuncCallAfter(String funcName) {
         return funcName + ".." + "call.after";
     }*/
-    public static String getLabelNameFuncReturn(String funcName) {
-        return funcName + ".." + "rtn";
+    public static String getLabelNameFuncRtnValue(String funcName) {
+        return funcName + ".." + "rtn.v";
+    }
+    public static String getLabelNameFuncRtnLock(String funcName) {
+        return funcName + ".." + "rtn.lk";
     }
     public static String getLabelNameArgLabel(String funcName, VarInfo arg) {
         return funcName + "." + arg.localName + "..lbl";
@@ -87,6 +93,9 @@ public class Utils {
         return list.toArray(new String[0]);
     }
 
+    public static String joinLabels(String lhs, String rhs) {
+        return "(" + lhs + " ⊔ " + rhs + ")";
+    }
 
     protected static final Logger logger = LogManager.getLogger();
 

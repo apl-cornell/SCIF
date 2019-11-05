@@ -9,11 +9,11 @@ import java.util.HashMap;
 
 public class Literal extends Expression {
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         String ifNameRtn = "LITERAL..." + location.toString();
         String ifNamePc = Utils.getLabelNamePc(env.ctxt);
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtn), env.hypothesis, location));
 
-        return ifNameRtn;
+        return new Context(ifNameRtn, env.prevContext.lockName);
     }
 }

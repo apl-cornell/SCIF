@@ -12,9 +12,9 @@ public class ConstantExpr extends Expression {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
 
         String ifNameRnt = Utils.getLabelNamePc(env.ctxt);
-        return ifNameRnt;
+        return new Context(ifNameRnt, env.prevContext.lockName);
     }
 }

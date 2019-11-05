@@ -113,6 +113,7 @@ nonterminal String ipt_name;
 nonterminal String ipt_as_names;
 nonterminal Statement assert_stmt, compound_stmt;
 nonterminal Statement if_stmt, while_stmt, try_stmt;
+nonterminal Statement endorse_block;
 nonterminal ArrayList<Statement> elif_stmts;
 nonterminal ArrayList<ExceptHandler> except_stmts;
 nonterminal ExceptHandler except_clause;
@@ -655,7 +656,14 @@ compound_stmt ::= if_stmt:a {:RESULT = a;:}
     | funcdef:a {:RESULT = a;:} 
     | classdef:a {:RESULT = a;:}
     | decorated:a {:RESULT = a;:}
-    | structDef:a {:RESULT = a; :};
+    | structDef:a {:RESULT = a; :}
+    | autoendorse_block:a {:RESULT = a;:};
+
+autoendorse_block ::=
+    ENDORSE:x LPAR ifLabel:l_from RARROW ifLabel:l_to RPAR COLON suite:body {:
+        RESULT = new EndorseBlock(l_from, l_to, body);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
 if_stmt ::= 
     IF:x expr:a COLON suite:b {:
         RESULT = new If(a, b);
@@ -932,7 +940,7 @@ trailer ::=
     | DOT NAME:a {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright));
-        RESULT = new Attribute(null, name, null);
+        RESULT = new Attribute(null, name);
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
 exprlist ::= 

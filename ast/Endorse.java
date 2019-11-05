@@ -18,8 +18,9 @@ public class Endorse extends Expression {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
-        String ifNameValue = value.genConsVisit(env);
+    public Context genConsVisit(VisitEnv env) {
+        Context tmp = value.genConsVisit(env);
+        String ifNameValue = tmp.valueLabelName;
         String ifNameRtn = env.ctxt + "." + "endorse" + location.toString();
 
         String fromLabel = from.toSherrlocFmt();
@@ -29,6 +30,6 @@ public class Endorse extends Expression {
 
         env.cons.add(new Constraint(new Inequality(ifNameRtn, toLabel), env.hypothesis, location));
 
-        return ifNameRtn;
+        return new Context(ifNameRtn, tmp.lockName);
     }
 }

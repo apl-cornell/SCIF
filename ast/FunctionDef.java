@@ -5,8 +5,6 @@ import sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 
 public class FunctionDef extends FunctionSig {
     ArrayList<Statement> body;
@@ -16,8 +14,9 @@ public class FunctionDef extends FunctionSig {
     }
 
     @Override
-    public String genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env) {
         String originalCtxt = env.ctxt;
+        Context originalContext = env.prevContext;
         String funcName = name;
         env.ctxt += funcName;// + location.toString();
 
@@ -26,18 +25,26 @@ public class FunctionDef extends FunctionSig {
         String ifNamePc = Utils.getLabelNamePc(env.ctxt);
         FuncInfo funcInfo = env.funcMap.get(funcName);
 
+
         String ifNameCall = funcInfo.getLabelNameCallPc();
         env.cons.add(new Constraint(new Inequality(ifNameCall, ifNamePc), env.hypothesis, location));
-
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameCall), env.hypothesis, location));
+
+        String ifNameCallLock = funcInfo.getLabelNameCallLock();
+
+        Context funcBeginContext = new Context(ifNamePc, ifNameCallLock);
+        env.prevContext = funcBeginContext;
 
         env.varNameMap.incLayer();
         args.genConsVisit(env);
+        Context tmp = env.prevContext;
         for (Statement stmt : body) {
-            stmt.genConsVisit(env);
+            tmp = stmt.genConsVisit(env);
+            env.prevContext = tmp;
         }
         env.varNameMap.decLayer();
 
+        env.cons.add(new Constraint(new Inequality(tmp.lockName, funcInfo.getLabelNameRtnLock()), env.hypothesis, location));
 
         /*if (rtn instanceof LabeledType) {
             if (rtn instanceof DepMap) {
@@ -47,7 +54,9 @@ public class FunctionDef extends FunctionSig {
             }
         }*/
         env.ctxt = originalCtxt;
-        return null;
+        // don't recover
+        // env.prevContext = originalContext;
+        return env.prevContext;
     }
     /*public void findPrincipal(HashSet<String> principalSet) {
         if (sig.name instanceof LabeledType) {
