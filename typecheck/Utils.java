@@ -96,6 +96,9 @@ public class Utils {
     public static String joinLabels(String lhs, String rhs) {
         return "(" + lhs + " ⊔ " + rhs + ")";
     }
+    public static String meetLabels(String lhs, String rhs) {
+        return "(" + lhs + " ⊓ " + rhs + ")";
+    }
 
     protected static final Logger logger = LogManager.getLogger();
 

@@ -97,6 +97,7 @@ public class If extends Statement {
 
         logger.debug("finished if branch");
         //System.err.println("finished if branch");
+        env.prevContext.lockName = curContext.lockName;
         env.varNameMap.incLayer();
         for (Statement stmt : orelse) {
             rightContext = stmt.genConsVisit(env);

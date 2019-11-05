@@ -9,14 +9,13 @@ import typecheck.VisitEnv;
 
 import java.util.ArrayList;
 
-public class EndorseBlock extends Statement {
-    IfLabel l_from, l_to;
+public class GuardBlock extends Statement {
+    IfLabel l;
     ArrayList<Statement> body;
     Expression target;
 
-    public EndorseBlock(IfLabel l_from, IfLabel l_to, ArrayList<Statement> body, Expression target) {
-        this.l_from = l_from;
-        this.l_to = l_to;
+    public GuardBlock(IfLabel l, ArrayList<Statement> body, Expression target) {
+        this.l = l;
         this.body = body;
         this.target = target;
     }
@@ -25,19 +24,13 @@ public class EndorseBlock extends Statement {
         String originalCtxt = env.ctxt;
         String prevLockLabel = env.prevContext.lockName;
 
-        String ifNamePcBefore = Utils.getLabelNamePc(env.ctxt);
-        env.ctxt += ".endorseBlock" + location.toString();
-        String ifNamePcAfter = Utils.getLabelNamePc(env.ctxt);
-
-        String fromLabel = l_from.toSherrlocFmt();
-        String toLabel = l_to.toSherrlocFmt();
-
-        env.cons.add(new Constraint(new Inequality(ifNamePcBefore, fromLabel), env.hypothesis, location));
-
-        env.cons.add(new Constraint(new Inequality(toLabel, Relation.EQ, ifNamePcAfter), env.hypothesis, location));
-        env.cons.add(new Constraint(new Inequality(fromLabel, Utils.joinLabels(prevLockLabel, ifNamePcAfter)), env.hypothesis, location));
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
+        env.ctxt += ".guardBlock" + location.toString();
         String newLockLabel = Utils.getLabelNameLock(env.ctxt);
-        env.cons.add(new Constraint(new Inequality(newLockLabel, Relation.EQ, Utils.meetLabels(prevLockLabel, ifNamePcAfter)), env.hypothesis, location));
+
+        String guardLabel = l.toSherrlocFmt();
+
+        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, newLockLabel), prevLockLabel), env.hypothesis, location));
         String newAfterLockLabel = Utils.getLabelNameLock(env.ctxt + ".after");
 
         Context lastContext = env.prevContext;
@@ -45,7 +38,7 @@ public class EndorseBlock extends Statement {
             lastContext = s.genConsVisit(env);
             env.prevContext.lockName = lastContext.lockName;
         }
-        env.cons.add(new Constraint(new Inequality(lastContext.lockName, newAfterLockLabel), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(lastContext.lockName, guardLabel), newAfterLockLabel), env.hypothesis, location));
         env.prevContext.lockName = newAfterLockLabel;
 
 
@@ -76,7 +69,7 @@ public class EndorseBlock extends Statement {
             }
             env.cons.add(new Constraint(new Inequality(lastContext.valueLabelName, ifNameTgt), env.hypothesis, location));
 
-            env.cons.add(new Constraint(new Inequality(ifNamePcBefore, ifNameTgt), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, location));
 
             env.cons.add(new Constraint(new Inequality(prevLockLabel, CompareOperator.Eq, rtnLockName), env.hypothesis, location));
             return new Context(ifNameTgt, rtnLockName);

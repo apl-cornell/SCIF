@@ -84,7 +84,7 @@ terminal LEFTSHIFTEQUAL, RIGHTSHIFTEQUAL, DOUBLESTAREQUAL, DOUBLESLASHEQUAL;
 terminal INT, NEWLINE;
 terminal INDENT, DEDENT;
 terminal UNARY, COMP, BIT, ADDISH, MULISH;
-terminal ENDORSE, AUTOENDORSE;
+terminal ENDORSE, AUTOENDORSE, GUARD;
 terminal MAP;
 terminal CONST, KEY;
 terminal CONTRACT;
@@ -148,6 +148,7 @@ nonterminal StructDef structDef;
 nonterminal ArrayList<AnnAssign> annassigns;
 nonterminal FuncLabels tFuncLabels;
 nonterminal IfLabel ifLabelOrNull;
+nonterminal GuardBlock guard_block;
 
 precedence left OR;
 precedence left AND;
@@ -657,12 +658,26 @@ compound_stmt ::= if_stmt:a {:RESULT = a;:}
     | classdef:a {:RESULT = a;:}
     | decorated:a {:RESULT = a;:}
     | structDef:a {:RESULT = a; :}
-    | autoendorse_block:a {:RESULT = a;:};
+    | endorse_block:a {:RESULT = a;:}
+    | guard_block:a {:RESULT = a;:};
 
-autoendorse_block ::=
-    ENDORSE:x LPAR ifLabel:l_from RARROW ifLabel:l_to RPAR COLON suite:body {:
-        RESULT = new EndorseBlock(l_from, l_to, body);
+guard_block ::=
+    GUARD:x LBRACE ifLabel:l RBRACE COLON suite:body {:
+        RESULT = new GuardBlock(l, body, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | expr:tgt EQUAL GUARD LBRACE ifLabel:l RBRACE COLON suite:body {:
+        RESULT = new GuardBlock(l, body, tgt);
+        RESULT.setLoc(new CodeLocation(tgtleft, tgtright));
+    :};
+endorse_block ::=
+    ENDORSE:x LBRACE ifLabel:l_from RARROW ifLabel:l_to RBRACE COLON suite:body {:
+        RESULT = new EndorseBlock(l_from, l_to, body, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | expr:tgt EQUAL ENDORSE LBRACE ifLabel:l_from RARROW ifLabel:l_to RBRACE COLON suite:body {:
+        RESULT = new EndorseBlock(l_from, l_to, body, tgt);
+        RESULT.setLoc(new CodeLocation(tgtleft, tgtright));
     :};
 if_stmt ::= 
     IF:x expr:a COLON suite:b {:

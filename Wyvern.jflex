@@ -66,8 +66,9 @@ import java.util.HashMap;
     "<N_TOKENS>"
 
     Wyvern-specific
-    "ENDORSE"
-    "AUTOENDORSE"
+    "ENDORSE",
+    "AUTOENDORSE",
+    "GUARD"
  */
 
 
@@ -149,6 +150,7 @@ import java.util.HashMap;
         keywords.put("contract", new Integer(sym.CONTRACT));
         keywords.put("interface", new Integer(sym.INTERFACE));
         keywords.put("struct", new Integer(sym.STRUCT));
+        keywords.put("guard", new Integer(sym.GUARD));
     }
 
 

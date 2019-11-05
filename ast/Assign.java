@@ -37,6 +37,7 @@ public class Assign extends Statement {
                 }*/
             } else if (target instanceof Subscript) {
                 env.prevContext = valueContext;
+                env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, valueContext.lockName), env.hypothesis, location));
                 Context tmp = target.genConsVisit(env);
                 ifNameTgt = tmp.valueLabelName;
                 rtnLockName = tmp.lockName;
