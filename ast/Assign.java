@@ -28,7 +28,7 @@ public class Assign extends Statement {
         for (Expression target : targets) {
             if (target instanceof Name) {
                 //Assuming target is Name
-                ifNameTgt = env.varNameMap.getName(((Name) target).id);
+                ifNameTgt = env.varNameMap.getName(((Name) target).id) + "..lbl";
                 rtnLockName = valueContext.lockName;
                 /*VarInfo varInfo = env.varNameMap.getInfo(((Name) target).id);
                 if (varInfo instanceof TestableVarInfo) {

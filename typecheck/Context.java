@@ -13,6 +13,16 @@ public class Context {
     public String valueLabelName;
     public String lockName;
 
+    public Context() {
+        valueLabelName = null;
+        lockName = null;
+    }
+
+    public Context(Context a) {
+        this.valueLabelName = a.valueLabelName;
+        this.lockName = a.lockName;
+    }
+
     public Context(String valueLabelName, String lockName) {
         this.valueLabelName = valueLabelName;
         this.lockName = lockName;

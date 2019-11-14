@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 public class Utils {
-    public static final String[] BUILTIN_TYPE_NAMES = new String[] {"bool", "int128", "uint256", "address", "bytes", "string", "int", "map"};
+    public static final String[] BUILTIN_TYPE_NAMES = new String[] {"bool", "int128", "uint256", "address", "bytes", "string", "int", "map", "void"};
     public static final HashSet<String> BUILTIN_TYPES = new HashSet<>(Arrays.asList(BUILTIN_TYPE_NAMES));
 
     //public static final String ENDORCE_FUNC_NAME = "endorce";

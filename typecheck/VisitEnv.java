@@ -35,7 +35,7 @@ public class VisitEnv {
 
     public VisitEnv() {
         ctxt = "";
-        prevContext = null;
+        prevContext = new Context();
         funcMap = new HashMap<>();
         cons = new ArrayList<>();
         varNameMap = new LookupMaps();

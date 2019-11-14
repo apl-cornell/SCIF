@@ -1,5 +1,11 @@
-a : int{alice}
-b : int{bob}
+contract sample :
+    a : int{alice}
+    b : int{bob}
 
-a = 1
-b = a
+    def f{alice, alice -> bob or alice}() :
+        a = 1
+        g()
+
+    def g{alice, alice -> alice}() :
+        a = 2
+        f()

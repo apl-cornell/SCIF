@@ -82,12 +82,17 @@ public class If extends Statement {
         if (body.size() > 0 || orelse.size() > 0) {
             env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.EQ, curContext.valueLabelName), env.hypothesis, location));
         }
-
-        Context leftContext = curContext, rightContext = curContext;
         env.varNameMap.incLayer();
+
+        Context leftContext = new Context(curContext), rightContext = new Context(curContext), prev2 = null;
         for (Statement stmt : body) {
-            leftContext = stmt.genConsVisit(env);
-            env.prevContext.lockName = leftContext.lockName;
+            if (prev2 != null) {
+                env.cons.add(new Constraint(new Inequality(leftContext.lockName, Relation.EQ, prev2.lockName), env.hypothesis, location));
+            }
+            Context tmp = stmt.genConsVisit(env);
+            env.prevContext = tmp;
+            prev2 = leftContext;
+            leftContext = new Context(tmp);
         }
         env.varNameMap.decLayer();
 

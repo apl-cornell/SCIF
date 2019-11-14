@@ -99,19 +99,19 @@ public class TypeChecker {
                 String ifCallBeforeLabel = func.getCallPcLabel();
                 String ifCallAfterLabel = func.getCallPcLabel();
                 String ifCallLockLabel = func.getCallLockLabel();
-                if (ifNameCallBeforeLabel != null) {
+                if (ifCallBeforeLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), func.location));
 
                     //env.cons.add(new Constraint(new Inequality(ifNameCallBeforeLabel, ifCallBeforeLabel), func.location));
 
                 }
-                if (ifNameCallAfterLabel != null) {
+                if (ifCallAfterLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel), func.location));
 
                     //env.cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, ifCallAfterLabel), func.location));
 
                 }
-                if (ifNameCallLockLabel != null) {
+                if (ifCallLockLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallLockLabel), func.location));
                 }
 

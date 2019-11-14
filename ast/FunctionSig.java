@@ -8,18 +8,26 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class FunctionSig extends Statement {
-    String name;
-    FuncLabels funcLabels;
-    Arguments args;
-    ArrayList<String> decoratorList;
-    Type rtn;
-    public FunctionSig(String name, FuncLabels funcLabels, Arguments args, ArrayList<String> decoratorList, Type rnt) {
+    public String name;
+    public FuncLabels funcLabels;
+    public Arguments args;
+    public ArrayList<String> decoratorList;
+    public Type rtn;
+    public FunctionSig(String name, FuncLabels funcLabels, Arguments args, ArrayList<String> decoratorList, Type rtn) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
         this.decoratorList = decoratorList;
-        this.rtn = rnt;
+        this.rtn = rtn;
     }
+    public FunctionSig(FunctionSig funcSig) {
+        this.name = funcSig.name;
+        this.funcLabels = funcSig.funcLabels;
+        this.args = funcSig.args;
+        this.decoratorList = funcSig.decoratorList;
+        this.rtn = funcSig.rtn;
+    }
+
     public void setDecoratorList(ArrayList<String> decoratorList) {
         this.decoratorList = decoratorList;
     }

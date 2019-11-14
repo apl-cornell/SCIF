@@ -47,6 +47,9 @@ public class ContractInfo {
     }
 
     public TypeInfo toTypeInfo(ast.Type astType, boolean isConst) {
+        if (astType == null) {
+            return new TypeInfo(new BuiltinType("void"), null, isConst);
+        }
 
         TypeInfo typeInfo = null;
         if (!(astType instanceof LabeledType)) {

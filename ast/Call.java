@@ -124,13 +124,13 @@ public class Call extends TrailerExpr {
                 String ifCallAfterLabel = funcInfo.getCallPcLabel();
                 String ifCallLockLabel = funcInfo.getCallLockLabel();
 
-                if (ifNameCallBeforeLabel != null) {
+                if (ifCallBeforeLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), location));
                 }
-                if (ifNameCallAfterLabel != null) {
+                if (ifCallAfterLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel), location));
                 }
-                if (ifNameCallLockLabel != null) {
+                if (ifCallLockLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallLockLabel), location));
                 }
 

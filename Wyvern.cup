@@ -165,14 +165,17 @@ precedence right DOUBLESTAR;
 start with sourceCode;
 
 sourceCode ::= program:a {: RESULT = a; :}
-    | interface:a {:RESULT = a; :};
+    | interface:a {:RESULT = a; :}
+    | {: logger.debug("empty program"); :};
 
 // version: static lock
-funcLabels ::= LBRACE:x ifLabelOrNull:a COMMA ifLabelOrNull:b COMMA ifLabelOrNull:c RBRACE {:
+tFuncLabels ::= LBRACE:x ifLabelOrNull:a COMMA ifLabelOrNull:b RARROW ifLabelOrNull:c RBRACE {:
+        logger.debug("parsing func begin labels");
         RESULT = new FuncLabels(a, b, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
     | {:
+        logger.debug("parsing empty funclabels");
         RESULT = new FuncLabels();
     :};
 
@@ -216,22 +219,10 @@ r_funcSig ::=
         RESULT.setLoc(new CodeLocation(xleft, xright));
         //makeNode("funcdef", a, b, c, d);
     :}
-    | DEF:x NAME:funcName tFuncLabels:funclabels parameters:b{:
+    | DEF:x NAME:funcName tFuncLabels:funclabels parameters:b {:
         logger.debug("parsing function");
         //System.err.println("parsing function");
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
-    :}
-    | DEF:x NAME:a tFuncLabels:funclabels polyDescription:p parameters:b {:
-        logger.debug("Finished parsing the poly func without callin labels");
-        String funId = (String) a;
-        RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
-    :}
-    | DEF:x NAME:a tFuncLabels:funclabels polyDescription:p parameters:b RARROW type:c {:
-        logger.debug("Finished parsing the poly func without callin labels");
-        String funId = (String) a;
-        RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
     | DEF:x NAME:a  polyDescription:p tFuncLabels:funclabels parameters:b {:
@@ -377,7 +368,13 @@ file_input ::=
 
 
 //funcdef: 'def' NAME parameters ['->' test] ':' suite
-funcdef ::= 
+funcdef ::=
+    r_funcSig:funcSig COLON suite:d {:
+        // System.err.println("parsing function");
+        RESULT = new FunctionDef(funcSig, d);
+        RESULT.setLoc(new CodeLocation(funcSigleft, funcSigright));
+    :};
+/*
     DEF:x NAME:funcName tFuncLabels:funcLabels parameters:b RARROW type:c COLON suite:d {:
         RESULT = new FunctionDef((String) funcName, funcLabels, b, d, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
@@ -387,6 +384,12 @@ funcdef ::=
         logger.debug("parsing function");
         //System.err.println("parsing function");
         RESULT = new FunctionDef((String) funcName, funcLabels, b, c, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:funcName parameters:b COLON suite:c {:
+        logger.debug("parsing function");
+        //System.err.println("parsing function");
+        RESULT = new FunctionDef((String) funcName, new FuncLabels(), b, c, null, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
     | DEF:x NAME:a polyDescription:p tFuncLabels:funcLabels  parameters:b COLON suite:c {:
@@ -401,6 +404,7 @@ funcdef ::=
         RESULT = new PolyFunctionDef(funId, funcLabels, p, b, d, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
+*/
 type ::=
     NAME:a {:
         RESULT = new Type((String)a);
@@ -411,7 +415,7 @@ type ::=
         name.setLoc(new CodeLocation(aleft, aright));*/
         RESULT = a;
         RESULT.setLoc(new CodeLocation(aleft, aright));
-        logger.debug("finished func name parsing");
+        logger.debug("finished labeled type parsing");
     :};
 polyDescription ::=
     LSQB nameList:l RSQB {:

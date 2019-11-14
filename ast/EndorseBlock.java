@@ -38,12 +38,18 @@ public class EndorseBlock extends Statement {
         env.cons.add(new Constraint(new Inequality(fromLabel, Utils.joinLabels(prevLockLabel, ifNamePcAfter)), env.hypothesis, location));
         String newLockLabel = Utils.getLabelNameLock(env.ctxt);
         env.cons.add(new Constraint(new Inequality(newLockLabel, Relation.EQ, Utils.meetLabels(prevLockLabel, ifNamePcAfter)), env.hypothesis, location));
+        env.prevContext.lockName = newLockLabel;
         String newAfterLockLabel = Utils.getLabelNameLock(env.ctxt + ".after");
 
-        Context lastContext = env.prevContext;
-        for (Statement s : body) {
-            lastContext = s.genConsVisit(env);
-            env.prevContext.lockName = lastContext.lockName;
+        Context lastContext = new Context(env.prevContext), prev2 = null;
+        for (Statement stmt : body) {
+            if (prev2 != null) {
+                env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.EQ, prev2.lockName), env.hypothesis, location));
+            }
+            Context tmp = stmt.genConsVisit(env);
+            env.prevContext = tmp;
+            prev2 = lastContext;
+            lastContext = new Context(tmp);
         }
         env.cons.add(new Constraint(new Inequality(lastContext.lockName, newAfterLockLabel), env.hypothesis, location));
         env.prevContext.lockName = newAfterLockLabel;

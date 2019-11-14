@@ -38,12 +38,16 @@ public class While extends Statement {
 
         env.cons.add(new Constraint(new Inequality(IfNameTestValue, IfNamePcAfter), env.hypothesis, location));
 
-        Context lastContext = testContext;
         env.varNameMap.incLayer();
+        Context lastContext = new Context(testContext), prev2 = null;
         for (Statement stmt : body) {
-            env.prevContext.lockName = lastContext.lockName;
+            if (prev2 != null) {
+                env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.EQ, prev2.lockName), env.hypothesis, location));
+            }
             Context tmp = stmt.genConsVisit(env);
-            lastContext = tmp;
+            env.prevContext = tmp;
+            prev2 = lastContext;
+            lastContext = new Context(tmp);
         }
         env.varNameMap.decLayer();
         env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.EQ, prevLock), env.hypothesis, location));

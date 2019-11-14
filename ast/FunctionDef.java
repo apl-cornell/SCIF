@@ -2,14 +2,19 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
 
 public class FunctionDef extends FunctionSig {
     ArrayList<Statement> body;
-    public FunctionDef(String name, FuncLabels funcLabels, Arguments args, ArrayList<Statement> body, ArrayList<String> decoratorList, Type rnt) {
-        super(name, funcLabels, args, decoratorList, rnt);
+    public FunctionDef(String name, FuncLabels funcLabels, Arguments args, ArrayList<Statement> body, ArrayList<String> decoratorList, Type rtn) {
+        super(name, funcLabels, args, decoratorList, rtn);
+        this.body = body;
+    }
+    public FunctionDef(FunctionSig funcSig, ArrayList<Statement> body) {
+        super(funcSig);
         this.body = body;
     }
 
@@ -37,14 +42,19 @@ public class FunctionDef extends FunctionSig {
 
         env.varNameMap.incLayer();
         args.genConsVisit(env);
-        Context tmp = env.prevContext;
+        Context prev = env.prevContext, prev2 = null;
         for (Statement stmt : body) {
-            tmp = stmt.genConsVisit(env);
+            if (prev2 != null) {
+                env.cons.add(new Constraint(new Inequality(prev.lockName, Relation.EQ, prev2.lockName), env.hypothesis, location));
+            }
+            Context tmp = stmt.genConsVisit(env);
             env.prevContext = tmp;
+            prev2 = prev;
+            prev = tmp;
         }
         env.varNameMap.decLayer();
 
-        env.cons.add(new Constraint(new Inequality(tmp.lockName, funcInfo.getLabelNameRtnLock()), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(prev.lockName, funcInfo.getLabelNameRtnLock()), env.hypothesis, location));
 
         /*if (rtn instanceof LabeledType) {
             if (rtn instanceof DepMap) {
