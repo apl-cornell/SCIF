@@ -2,6 +2,7 @@ import java.io.*;
 import java_cup.runtime.*;
 import java.util.*;
 import ast.*;
+import sherrlocUtils.*;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 import typecheck.CodeLocation;
@@ -90,6 +91,7 @@ terminal CONST, KEY;
 terminal CONTRACT;
 terminal INTERFACE;
 terminal STRUCT;
+terminal EQUALGREATER;
 
 nonterminal Node sourceCode;
 nonterminal Interface interface;
@@ -149,6 +151,9 @@ nonterminal ArrayList<AnnAssign> annassigns;
 nonterminal FuncLabels tFuncLabels;
 nonterminal IfLabel ifLabelOrNull;
 nonterminal GuardBlock guard_block;
+nonterminal ArrayList<TrustConstraint> trust_decs;
+nonterminal TrustConstraint trust_dec;
+nonterminal Relation trust_operator;
 
 precedence left OR;
 precedence left AND;
@@ -166,7 +171,34 @@ start with sourceCode;
 
 sourceCode ::= program:a {: RESULT = a; :}
     | interface:a {:RESULT = a; :}
-    | {: logger.debug("empty program"); :};
+    | {: logger.debug("empty program"); RESULT = null;:};
+
+// version: trust dec
+trust_decs ::= trust_dec:x {:
+        ArrayList<TrustConstraint> list = new ArrayList<>();
+        list.add(x);
+        RESULT = list;
+    :}
+    /*| trust_decs:list NEWLINE {:
+        RESULT = list;
+    :}*/
+    | trust_decs:list trust_dec:a {:
+        list.add(a);
+        RESULT = list;
+    :};
+
+trust_dec ::= LBRACE:x ifLabel:lhs trust_operator:optor ifLabel:rhs RBRACE NEWLINE {:
+        TrustConstraint cons = new TrustConstraint(lhs, optor, rhs);
+        RESULT = cons;
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    /*| NEWLINE trust_dec:x {:
+        RESULT = x;
+    :}*/;
+
+trust_operator ::= EQUAL {: RESULT = Relation.EQ; :}
+    | LESSEQUAL {: RESULT = Relation.REQ; :}
+    | EQUALGREATER {: RESULT = Relation.LEQ; :};
 
 // version: static lock
 tFuncLabels ::= LBRACE:x ifLabelOrNull:a COMMA ifLabelOrNull:b RARROW ifLabelOrNull:c RBRACE {:
@@ -188,8 +220,13 @@ ifLabelOrNull ::= ifLabel:x {:
 // ---
 
 interface ::= INTERFACE:i NAME:x COLON NEWLINE INDENT funcSigs:a DEDENT {:
-        RESULT = new Interface((String)x, a);
+        ArrayList<TrustConstraint> trust_list = new ArrayList<>();
+        RESULT = new Interface((String)x, trust_list, a);
         RESULT.setLoc(new CodeLocation(ileft, iright));
+    :}
+    | INTERFACE:i NAME:x COLON NEWLINE INDENT trust_decs:trust_list funcSigs:a DEDENT {:
+            RESULT = new Interface((String)x, trust_list, a);
+            RESULT.setLoc(new CodeLocation(ileft, iright));
     :};
 
 funcSigs ::=
@@ -207,10 +244,10 @@ funcSigs ::=
         RESULT = list;
     :};
 
-funcSig ::= r_funcSig:a {: RESULT = a;
+funcSig ::= r_funcSig:a NEWLINE {: RESULT = a;
     :}
-    | r_funcSig:a SEMI{: RESULT = a; :}
-    | NEWLINE {:RESULT = null;:};
+    | r_funcSig:a SEMI NEWLINE {: RESULT = a; :}
+    | NEWLINE funcSig:x {:RESULT = x;:};
 
 r_funcSig ::=
     DEF:x NAME:funcName tFuncLabels:funclabels parameters:b RARROW type:c {:
@@ -260,9 +297,15 @@ contracts ::= contract:a {:
 
 
 contract ::= CONTRACT NAME:x COLON NEWLINE INDENT file_input:list DEDENT {:
-        RESULT = new Contract((String) x, list);
+        ArrayList<TrustConstraint> trust_list = new ArrayList<>();
+        RESULT = new Contract((String) x, trust_list, list);
         RESULT.setLoc(new CodeLocation(xleft, xright));
         //System.err.println(RESULT);
+    :}
+    | CONTRACT NAME:x COLON NEWLINE INDENT trust_decs:trust_list file_input:list DEDENT {:
+            RESULT = new Contract((String) x, trust_list, list);
+            RESULT.setLoc(new CodeLocation(xleft, xright));
+            //System.err.println(RESULT);
     :};
 
 //Information flow specific modification
@@ -493,6 +536,7 @@ simple_stmt ::= small_stmts:a SEMI NEWLINE {: RESULT = a; :}
     | small_stmts:a NEWLINE {: RESULT = a; :}
     | NEWLINE:x {:
         RESULT = new ArrayList<Statement>();
+        logger.debug("new line when parsing empty stmt");
     :};
 small_stmts ::=
     small_stmt:a {:
@@ -534,19 +578,19 @@ expr_stmt ::=
 annassign ::=
     COLON CONST type:a EQUAL expr:b {:
         //System.out.println("Annassign case 1 parsing");
-        AnnAssign rnt = new AnnAssign(null, a, b, false, true);
+        AnnAssign rnt = new AnnAssign(null, a, b, true, true);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
     | COLON type:a EQUAL expr:b {:
         //System.out.println("Annassign case 1 parsing");
-        AnnAssign rnt = new AnnAssign(null, a, b, false, false);
+        AnnAssign rnt = new AnnAssign(null, a, b, true, false);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
     | COLON type:a {:
         //System.out.println("Annassign case 2 parsing");
-        AnnAssign rnt = new AnnAssign(null, a, null, false, false);
+        AnnAssign rnt = new AnnAssign(null, a, null, true, false);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
@@ -946,6 +990,7 @@ strings ::=
 //                    (comp_for | (',' (test | star_expr))* [','])) )
 trailer ::= 
     LPAR:a RPAR {:
+        //TODO: distinguish calls and initialization
         RESULT = new Call();
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
@@ -1016,12 +1061,14 @@ structDef ::=
     :};
 annassigns ::=
     annassigns:list NEWLINE {:RESULT = list;:}
-    | annassigns:list annassign:a {:
+    | annassigns:list NAME:name annassign:a {:
+        a.setTarget(new Name((String) name));
         list.add(a);
         RESULT = list;
     :}
-    | annassign:a {:
+    | NAME:name annassign:a {:
         ArrayList<AnnAssign> list = new ArrayList<>();
+        a.setTarget(new Name((String) name));
         list.add(a);
         RESULT = list;
     :};

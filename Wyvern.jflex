@@ -292,6 +292,7 @@ invalid = "$" | "?" | "`"
     ">>="   { return op(sym.RIGHTSHIFTEQUAL); }
     "**="   { return op(sym.DOUBLESTAREQUAL); }
     "//="   { return op(sym.DOUBLESLASHEQUAL); }
+    "=>"    { return op(sym.EQUALGREATER); }
 
     {integer}   {
         return op(sym.NUMBER, yytext());
