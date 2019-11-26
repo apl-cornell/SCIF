@@ -1,10 +1,8 @@
 package typecheck;
 
-import ast.DepMap;
-import ast.Expression;
-import ast.LabeledType;
-import ast.Name;
+import ast.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -14,13 +12,15 @@ public class ContractInfo {
     public HashMap<String, Type> typeMap;
     public HashMap<String, VarInfo> varMap;
     public HashMap<String, FuncInfo> funcMap;
+    public ArrayList<TrustConstraint> trustCons;
 
-    public ContractInfo(String name, HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap) {
+    public ContractInfo(String name, HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap, ArrayList<TrustConstraint> trustCons) {
         this.name = name;
         this.iptContracts = iptContracts;
         this.typeMap = typeMap;
         this.varMap = varMap;
         this.funcMap = funcMap;
+        this.trustCons = trustCons;
     }
 
     public ContractInfo() {
@@ -29,6 +29,7 @@ public class ContractInfo {
         typeMap = new HashMap<>();
         varMap = new HashMap<>();
         funcMap = new HashMap<>();
+        trustCons = new ArrayList<>();
     }
 
     public Type toType(String typeName) {
@@ -40,10 +41,22 @@ public class ContractInfo {
         } else if (iptContracts.contains(typeName)) {
             type = new ContractType(typeName);
         } else {
-            type = new StructType(typeName);
+            // type not found;
+            return null;
         }
         typeMap.put(typeName, type);
         return type;
+    }
+
+    public Type toStructType(String typeName, ArrayList<AnnAssign> members) {
+        if (typeMap.containsKey(typeName))
+            return typeMap.get(typeName);
+        ArrayList<VarInfo> memberList = new ArrayList<>();
+        for (AnnAssign member : members) {
+            VarInfo tmp = member.toVarInfo(this);
+            memberList.add(tmp);
+        }
+        return new StructType(typeName, memberList);
     }
 
     public TypeInfo toTypeInfo(ast.Type astType, boolean isConst) {

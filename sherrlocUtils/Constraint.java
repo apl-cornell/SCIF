@@ -31,10 +31,11 @@ public class Constraint {
         position = null;
     }
 
-    public String toSherrlocFmt() {
+    public String toSherrlocFmt(boolean withPosition) {
         if (inequality == null) {
             return "";
         }
-        return inequality.toSherrlocFmt() + " " + hypothesis.toSherrlocFmt()  + ";"+ position.toSherrlocFmt();
+        return inequality.toSherrlocFmt() + " " + hypothesis.toSherrlocFmt()  + ";"
+                + (withPosition ? position.toSherrlocFmt() : "");
     }
 }

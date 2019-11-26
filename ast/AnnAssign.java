@@ -29,6 +29,9 @@ public class AnnAssign extends Statement {
     public void setSimple(boolean simple) {
         this.simple = simple;
     }
+    public VarInfo toVarInfo(ContractInfo contractInfo) {
+        return contractInfo.toVarInfo("", ((Name)target).id, annotation, isConst, location);
+    }
 
     @Override
     public void globalInfoVisit(ContractInfo contractInfo) {
@@ -83,7 +86,9 @@ public class AnnAssign extends Statement {
             Context tmp = value.genConsVisit(env);
             String ifNameValue = tmp.valueLabelName;
             env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgtLbl), env.hypothesis, location));
-            env.cons.add(new Constraint(new Inequality(tmp.lockName, CompareOperator.Eq, prevContext.lockName), env.hypothesis, location));
+            if (prevContext != null && prevContext.lockName != null) {
+                env.cons.add(new Constraint(new Inequality(tmp.lockName, CompareOperator.Eq, prevContext.lockName), env.hypothesis, location));
+            }
             env.prevContext.lockName = tmp.lockName;
         }
 

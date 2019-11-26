@@ -21,7 +21,7 @@ public class IfConstraint {
         this.right = right.toSherrlocFmt();
         this.location = location;
     }
-    public String toSherrlocFmt() {
+    public String toSherrlocFmt(boolean withPosition) {
         if (op == null) {
             return "";
         }
@@ -29,7 +29,7 @@ public class IfConstraint {
         String l = left;//.toSherrlocFmt();
         String r = right;//.toSherrlocFmt();
         rnt = l + " " + op + " " + r + "; ";
-        if (location.valid())
+        if (withPosition && location.valid())
             rnt += "[" + location.toSherrlocFmt() + "]\n";
         else
             rnt += "\n";

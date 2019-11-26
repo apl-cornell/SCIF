@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class Node {
-    CodeLocation location;
+    public CodeLocation location;
     public Node() {
     }
     public void setLoc(CodeLocation location) {

@@ -1,28 +1,29 @@
 contract example :
+    {m => l}
+    {h => m}
+
     a : int{l}
-    b : int{l and m}
-    c : int{l and m and h}
+    b : int{m}
+    c : int{h}
 
     def f{l, l -> l}() :
         a = 1
-        endorse{l -> l and m} :
+        endorse{l -> m} :
             b = 3
-            endorse{l and m -> l and m and h}:
+            endorse{m -> h}:
                 c = 1
-                guard{m and h} :
-                    h()
+                guard{h} :
+                    h() 
                 foo()
             g()
 
-    def g{l and m, l and m and h -> l}() :
+    def g{m, h -> l}() :
         b = 1
 
     def h{l, l -> l}() :
         a = b
 
-    def foo{l and m and h, l and m and h -> l and m}() :
+    def foo{h, h -> m}() :
         c = 1
 
 
-    s : int{m}
-    ss : int{h}

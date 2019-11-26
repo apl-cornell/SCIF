@@ -42,7 +42,7 @@ public class FunctionDef extends FunctionSig {
 
         env.varNameMap.incLayer();
         args.genConsVisit(env);
-        Context prev = env.prevContext, prev2 = null;
+        Context prev = new Context(env.prevContext), prev2 = null;
         for (Statement stmt : body) {
             if (prev2 != null) {
                 env.cons.add(new Constraint(new Inequality(prev.lockName, Relation.EQ, prev2.lockName), env.hypothesis, location));
@@ -50,7 +50,7 @@ public class FunctionDef extends FunctionSig {
             Context tmp = stmt.genConsVisit(env);
             env.prevContext = tmp;
             prev2 = prev;
-            prev = tmp;
+            prev = new Context(tmp);
         }
         env.varNameMap.decLayer();
 

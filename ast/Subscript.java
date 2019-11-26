@@ -72,8 +72,6 @@ public class Subscript extends TrailerExpr {
 
                 env.cons.add(new Constraint(new Inequality(ifDepMapValue, ifNameRtn), env.hypothesis, location));
 
-
-
             } else {
                 logger.error("non-address type variable as index to access DEPMAP @{}", locToString());
                 //System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());

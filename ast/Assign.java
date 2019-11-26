@@ -35,7 +35,7 @@ public class Assign extends Statement {
                     ((TestableVarInfo) varInfo).tested = false;
                     ((TestableVarInfo) varInfo).testedLabel = Utils.DEAD;
                 }*/
-            } else if (target instanceof Subscript) {
+            } else if (target instanceof Subscript || target instanceof Attribute) {
                 env.prevContext = valueContext;
                 env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, valueContext.lockName), env.hypothesis, location));
                 Context tmp = target.genConsVisit(env);

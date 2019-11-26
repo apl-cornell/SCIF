@@ -15,10 +15,31 @@ public class Attribute extends TrailerExpr {
     }
     @Override
     public Context genConsVisit(VisitEnv env) {
-        String prevLockName = env.prevContext.lockName;
+        //TODO: assuming only one-level attribute access
+        // to add support to multi-level access
+        String varName = ((Name) value).id;
+        if (!env.contractInfo.varMap.containsKey(varName)) {
+            //TODO: throw errors: variable not found
+            return null;
+        }
+        VarInfo varInfo = env.contractInfo.varMap.get(varName);
+        if (!(varInfo.typeInfo.type instanceof StructType)) {
+            //TODO: throw errors: variable not struct
+            return null;
+        }
+
+        StructType structType = (StructType) varInfo.typeInfo.type;
+        //String prevLockName = env.prevContext.lockName;
         Context tmp = value.genConsVisit(env);
-        String ifNameRnt = tmp.valueLabelName;
-        env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, tmp.lockName), env.hypothesis, location));
+        String ifAttLabel = structType.getMemberLabel(attr.id);
+        String ifNameRnt = env.ctxt + ".struct" + location.toString();
+        env.cons.add(new Constraint(new Inequality(ifNameRnt, ifAttLabel), env.hypothesis, location));
+        if (!ifAttLabel.equals(tmp.valueLabelName)) {
+            env.cons.add(new Constraint(new Inequality(ifNameRnt, tmp.valueLabelName), env.hypothesis, location));
+        }
+
+
+        //env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, tmp.lockName), env.hypothesis, location));
         return new Context(ifNameRnt, tmp.lockName);
     }
 }

@@ -1,9 +1,6 @@
 import java.io.*;
 
-import ast.FunctionSig;
-import ast.Interface;
-import ast.Node;
-import ast.Program;
+import ast.*;
 import java_cup.runtime.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,6 +65,12 @@ public class TypeChecker {
         for (int fileIdx = 0; fileIdx < roots.size(); ++fileIdx) {
             String contractName = contractNames.get(fileIdx);
             ContractInfo contractInfo = env.contractMap.get(contractName);
+            // generate trust relationship dec constraints
+            for (TrustConstraint trustConstraint : contractInfo.trustCons) {
+                env.trustCons.add(new Constraint(new Inequality(trustConstraint.lhs.toSherrlocFmt(), trustConstraint.optor,trustConstraint.rhs.toSherrlocFmt()), trustConstraint.location));
+            }
+
+
             HashMap<String, VarInfo> varMap = contractInfo.varMap;
             env.funcMap = contractInfo.funcMap;
             env.contractInfo = contractInfo;
@@ -168,10 +171,18 @@ public class TypeChecker {
                     consFile.write("CONSTRUCTOR " + principal + " 0\n");
                 }
             }
-            consFile.write("\n");
+            if (!env.trustCons.isEmpty()) {
+                consFile.write("%%\n");
+                for (Constraint con : env.trustCons) {
+                    consFile.write(con.toSherrlocFmt(false) + "\n");
+                }
+                consFile.write("%%\n");
+            } else {
+                consFile.write("\n");
+            }
             if (!env.cons.isEmpty()) {
                 for (Constraint con : env.cons) {
-                    consFile.write(con.toSherrlocFmt() + "\n");
+                    consFile.write(con.toSherrlocFmt(true) + "\n");
                 }
             }
             consFile.close();

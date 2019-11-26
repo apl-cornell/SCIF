@@ -1,5 +1,8 @@
 package ast;
 
+import typecheck.CodeLocation;
+import typecheck.ContractInfo;
+
 import java.util.ArrayList;
 
 public class StructDef extends Statement {
@@ -9,4 +12,13 @@ public class StructDef extends Statement {
         this.members= members;
         this.structName = structName;
     }
+
+    @Override
+    public void globalInfoVisit(ContractInfo contractInfo) {
+        // assuming there is no double declaration
+
+        contractInfo.typeMap.put(structName, contractInfo.toStructType(structName, members));
+
+    }
+
 }
