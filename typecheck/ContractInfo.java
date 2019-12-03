@@ -73,7 +73,7 @@ public class ContractInfo {
             LabeledType lt = (LabeledType) astType;
             if (lt instanceof DepMap) {
                 DepMap depMap = (DepMap) lt;
-                typeInfo = new DepMapTypeInfo(toType(lt.x), depMap.ifl, isConst, toTypeInfo(depMap.keyType, isConst), toTypeInfo(depMap.valueType, isConst));
+                typeInfo = new DepMapTypeInfo(toType("DepMap"), depMap.ifl, isConst, toTypeInfo(depMap.keyType, isConst), toTypeInfo(depMap.valueType, isConst));
             } else {
                 typeInfo = new TypeInfo(toType(lt.x), lt.ifl, isConst);
             }

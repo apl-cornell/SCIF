@@ -25,6 +25,8 @@ public class BinOp extends Expression {
         env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, leftContext.lockName), env.hypothesis, location));
 
         env.prevContext.lockName = leftContext.lockName;
+        logger.debug("binOp/right:\n");
+        logger.debug(right.toString());
         Context rightContext = right.genConsVisit(env);
         String ifNameRight = rightContext.valueLabelName;
         String ifNameRtn = env.ctxt + "." + "bin" + location.toString();

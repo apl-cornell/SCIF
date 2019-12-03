@@ -1,5 +1,6 @@
 package typecheck;
 
+import ast.Variable;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 
@@ -22,6 +23,13 @@ public class VarInfo {
         this.localName = localName;
         this.typeInfo = type;
         this.location = location;
+    }
+
+    public VarInfo(VarInfo varInfo) {
+        this.fullName = varInfo.fullName;
+        this.localName = varInfo.localName;
+        this.typeInfo = new TypeInfo(varInfo.typeInfo);
+        this.location = varInfo.location;
     }
 
     public String getLabel() {

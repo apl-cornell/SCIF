@@ -20,4 +20,15 @@ public class StructType extends Type {
         }
         return null;
     }
+
+    public VarInfo getMemberVarInfo(String prefix, String memberName) {
+        for (VarInfo mb : members) {
+            if (mb.localName.equals(memberName)) {
+                VarInfo rtn = new VarInfo(mb);
+                rtn.fullName = prefix + "." + rtn.fullName;
+                return rtn;
+            }
+        }
+        return null;
+    }
 }

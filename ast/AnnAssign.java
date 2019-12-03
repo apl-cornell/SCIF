@@ -46,6 +46,8 @@ public class AnnAssign extends Statement {
 
     @Override
     public Context genConsVisit(VisitEnv env) {
+        logger.debug("entering AnnAssign: \n");
+        logger.debug(this.toString() + "\n");
         if (!simple) {
             //TODO
         }
@@ -66,6 +68,7 @@ public class AnnAssign extends Statement {
             ifNameTgt = ((Name) target).id;
             varInfo = env.varNameMap.getInfo(ifNameTgt);
         }
+        logger.debug(varInfo.typeInfo.toString());
         if (varInfo.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
             env.principalSet.add(varInfo.toSherrlocFmt());
         }

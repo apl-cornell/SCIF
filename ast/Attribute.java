@@ -42,4 +42,11 @@ public class Attribute extends TrailerExpr {
         //env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, tmp.lockName), env.hypothesis, location));
         return new Context(ifNameRnt, tmp.lockName);
     }
+    public VarInfo getVarInfo(VisitEnv env) {
+        VarInfo rtnVarInfo;
+        VarInfo parentVarInfo = value.getVarInfo(env);
+        StructType parentTypeInfo = (StructType) parentVarInfo.typeInfo.type;
+        rtnVarInfo = parentTypeInfo.getMemberVarInfo(parentVarInfo.fullName, attr.id);
+        return rtnVarInfo;
+    }
 }

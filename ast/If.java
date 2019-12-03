@@ -80,7 +80,7 @@ public class If extends Statement {
         env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location));
 
         if (body.size() > 0 || orelse.size() > 0) {
-            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.EQ, curContext.valueLabelName), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.EQ, curContext.lockName), env.hypothesis, location));
         }
         env.varNameMap.incLayer();
 

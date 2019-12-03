@@ -3,6 +3,8 @@ package sherrlocUtils;
 import ast.Compare;
 import ast.CompareOperator;
 
+// a <= b means a flows to b
+// that is, a > b in terms of integrity level
 public class Inequality {
     String lhs, rhs;
     Relation relation;

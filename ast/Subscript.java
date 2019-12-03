@@ -2,6 +2,7 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -23,6 +24,9 @@ public class Subscript extends TrailerExpr {
         String ifNameRtnLock = "";
         if (valueVarInfo.typeInfo instanceof DepMapTypeInfo) {
             VarInfo indexVarInfo = index.getVarInfo(env);
+            logger.debug("subscript/DepMap:");
+            logger.debug("lookup at: " + index.toString());
+            logger.debug(indexVarInfo.toString());
             String ifNameIndex = indexVarInfo.fullName;
 
             if (indexVarInfo.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
@@ -32,7 +36,7 @@ public class Subscript extends TrailerExpr {
                 String ifDepMapValue = ((DepMapTypeInfo) valueVarInfo.typeInfo).valueType.ifl.toSherrlocFmt(valueVarInfo.typeInfo.type.typeName, ifNameIndex);
                 env.cons.add(new Constraint(new Inequality(ifNameIndex + "..lbl", ifDepMapIndexReq), env.hypothesis, location));
 
-                env.cons.add(new Constraint(new Inequality(ifDepMapValue, ifNameRtnValue), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location));
 
                 ifNameRtnLock = env.prevContext.lockName;
             } else {
@@ -44,9 +48,9 @@ public class Subscript extends TrailerExpr {
             Context indexContext = index.genConsVisit(env);
             String ifNameIndex = indexContext.valueLabelName;
             ifNameRtnValue = env.ctxt + "." + "Subscript" + location.toString();
-            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtnValue), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location));
 
-            env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
+            // env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
             ifNameRtnLock = indexContext.lockName;
         }
         return new Context(ifNameRtnValue, ifNameRtnLock);

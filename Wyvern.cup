@@ -553,7 +553,7 @@ small_stmt ::= expr_stmt:a {: RESULT = a; :}
     | pass_stmt:a {: RESULT = a; :}  
     | flow_stmt:a {: RESULT = a; :}  
     //| ipt_stmt:a {: RESULT = a; :}
-    | assert_stmt:a {: RESULT = a; :} ;
+    | assert_stmt:a {: RESULT = a; :};
 expr_stmt ::= 
     expr:a {:RESULT = a;:}
     | expr:a annassign:b {://testlist_star_expr:a expr_rest_stmt:b {:
