@@ -2,12 +2,14 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Assign extends Statement {
+    //TODO: assuming targets only contains 1 element now
     ArrayList<Expression> targets;
     Expression value;
     public Assign(ArrayList<Expression> targets, Expression value) {
@@ -15,6 +17,15 @@ public class Assign extends Statement {
         this.value = value;
     }
 
+    @Override
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        NTCContext tgt = targets.get(0).NTCgenCons(env, now);
+        NTCContext v = value.NTCgenCons(env, now);
+        // con: tgt should be a supertype of v
+        env.cons.add(tgt.genCons(v, Relation.LEQ, env, location));
+        return now;
+    }
 
     @Override
     public Context genConsVisit(VisitEnv env) {

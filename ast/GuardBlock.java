@@ -3,9 +3,7 @@ package ast;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
-import typecheck.Context;
-import typecheck.Utils;
-import typecheck.VisitEnv;
+import typecheck.*;
 
 import java.util.ArrayList;
 
@@ -18,6 +16,18 @@ public class GuardBlock extends Statement {
         this.l = l;
         this.body = body;
         this.target = target;
+    }
+
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        // consider to be a new scope
+        // must contain at least one Statement
+        env.curSymTab = new SymTab(env.curSymTab);
+        NTCContext rtn = null;
+        for (Statement s : body) {
+            rtn = s.NTCgenCons(env, parent);
+        }
+        env.curSymTab = env.curSymTab.getParent();
+        return rtn;
     }
 
     public Context genConsVisit(VisitEnv env) {

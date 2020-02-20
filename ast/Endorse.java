@@ -17,6 +17,9 @@ public class Endorse extends Expression {
         this.to = to;
     }
 
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        return value.NTCgenCons(env, parent);
+    }
     @Override
     public Context genConsVisit(VisitEnv env) {
         Context tmp = value.genConsVisit(env);

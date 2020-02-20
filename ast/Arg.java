@@ -18,6 +18,11 @@ public class Arg extends Node {
         return contractInfo.toVarInfo(name + "?", name, annotation, false, location);
     }
 
+    public VarInfo parseArg(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        return env.toVarInfo(name, annotation, false, location, now);
+    }
+
     @Override
     public Context genConsVisit(VisitEnv env) {
 

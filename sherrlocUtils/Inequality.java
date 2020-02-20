@@ -4,7 +4,8 @@ import ast.Compare;
 import ast.CompareOperator;
 
 // a <= b means a flows to b
-// that is, a > b in terms of integrity level
+// that is, a >= b in terms of integrity level
+// in case of regular typechecking, a <= b means a is supertype of b
 public class Inequality {
     String lhs, rhs;
     Relation relation;

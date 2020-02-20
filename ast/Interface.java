@@ -1,6 +1,8 @@
 package ast;
 
 import typecheck.ContractInfo;
+import typecheck.NTCContext;
+import typecheck.NTCEnv;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,6 +16,18 @@ public class Interface extends Node {
         this.trustCons = trustCons;
         this.funcSigs = funcSigs;
     }
+
+    @Override
+    public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        for (FunctionSig functionSig : funcSigs) {
+            if (!functionSig.NTCGlobalInfo(env, now)) return false;
+        }
+        env.externalSymTab.put(contractName, env.globalSymTab);
+        return true;
+    }
+
+
     @Override
     public void globalInfoVisit(ContractInfo contractInfo) {
         contractInfo.name = contractName;

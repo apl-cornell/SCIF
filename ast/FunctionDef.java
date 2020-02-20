@@ -19,6 +19,15 @@ public class FunctionDef extends FunctionSig {
     }
 
     @Override
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        for (Statement stmt : body) {
+            stmt.NTCgenCons(env, now);
+        }
+        return now;
+    }
+
+    @Override
     public Context genConsVisit(VisitEnv env) {
         String originalCtxt = env.ctxt;
         Context originalContext = env.prevContext;

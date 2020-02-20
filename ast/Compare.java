@@ -2,6 +2,7 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -17,6 +18,22 @@ public class Compare extends Expression {
         right = r;
     }
 
+    @Override
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        //TODO: not included: Is, NotIs, In, NotIn
+        NTCContext now = new NTCContext(this, parent);
+        NTCContext l = left.NTCgenCons(env, now), r = right.NTCgenCons(env, now);
+
+        env.addCons(l.genCons(r, Relation.EQ, env, location));
+        if (op == CompareOperator.Eq || op == CompareOperator.NotEq) {
+            //env.addCons(l.genCons(r, Relation.EQ, env, location));
+        } else if (op == CompareOperator.Lt || op == CompareOperator.LtE
+                || op == CompareOperator.Gt || op == CompareOperator.GtE) {
+            env.addCons(l.genCons(env.getSymName(BuiltInT.INT), Relation.EQ, env, location));
+        }
+        env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        return now;
+    }
     @Override
     public Context genConsVisit(VisitEnv env) {
         String prevLockName = env.prevContext.lockName;

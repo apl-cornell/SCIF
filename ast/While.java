@@ -24,6 +24,25 @@ public class While extends Statement {
         this.orelse = null;
     }
 
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        // consider to be a new scope
+        // must contain at least one Statement
+        NTCContext now = new NTCContext(this, parent);
+        env.curSymTab = new SymTab(env.curSymTab);
+        NTCContext rtn = test.NTCgenCons(env, now);
+        env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
+
+        for (Statement s : body) {
+            s.NTCgenCons(env, now);
+        }
+        for (Statement s : orelse) {
+            s.NTCgenCons(env, now);
+        }
+        env.curSymTab = env.curSymTab.getParent();
+        env.addCons(now.genCons(rtn, Relation.EQ, env, location));
+        return now;
+    }
+
     @Override
     public Context genConsVisit(VisitEnv env) {
         String originalCtxt = env.ctxt;

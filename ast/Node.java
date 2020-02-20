@@ -27,6 +27,10 @@ public class Node {
         return genson.serialize(this);
     }
 
+    public String toSHErrLocFmt() {
+        return "Node" + location;
+    }
+
     public void globalInfoVisit(ContractInfo contractInfo) {
         //Do nothing
     }
@@ -35,6 +39,16 @@ public class Node {
         return null;
     }
     public void findPrincipal(HashSet<String> principalSet) {
+    }
+
+    public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
+        return false;
+    }
+
+    /* take each statement as an expression, return the type (context) as result. */
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        /* not supposed to call this implementation */
+        return null;
     }
 
     protected static final Logger logger = LogManager.getLogger();

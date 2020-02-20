@@ -2,6 +2,7 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -16,6 +17,15 @@ public class BoolOp extends Expression {
         right = r;
     }
 
+    @Override
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        NTCContext l = left.NTCgenCons(env, now), r = right.NTCgenCons(env, now);
+        env.cons.add(now.genCons(l, Relation.LEQ, env, location));
+        env.cons.add(now.genCons(r, Relation.LEQ, env, location));
+        env.cons.add(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        return now;
+    }
     @Override
     public Context genConsVisit(VisitEnv env) {
         String prevLockName = env.prevContext.lockName;

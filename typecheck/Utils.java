@@ -32,6 +32,9 @@ public class Utils {
     public static final String ADDRESSTYPE = "address";
 
 
+    public static final boolean isPrimitiveType(String x) {
+        return BUILTIN_TYPES.contains(x);
+    }
 
     /*public static IfConstraint genCons(String from, String to, CodeLocation location) {
         // right flows to left
@@ -98,6 +101,17 @@ public class Utils {
     }
     public static String meetLabels(String lhs, String rhs) {
         return "(" + lhs + " ⊓ " + rhs + ")";
+    }
+
+    public static String BuiltinType2ID(BuiltInT type) {
+        if (type == BuiltInT.INT)
+            return "int";
+        else if (type == BuiltInT.BOOL)
+            return "bool";
+        else if (type == BuiltInT.STRING)
+            return "string";
+        else
+            return "unknownT";
     }
 
     protected static final Logger logger = LogManager.getLogger();

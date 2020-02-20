@@ -18,6 +18,29 @@ public class Program extends Node {
         this.contracts = contracts;
     }
 
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        for (Contract contract : contracts) {
+            env.setGlobalSymTab(env.externalSymTab.get(contract.contractName));
+            env.curSymTab = env.globalSymTab;
+            contract.NTCgenCons(env, now);
+        }
+        return now;
+    }
+
+    @Override
+    public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
+        for (String iptContract : iptContracts)
+            if (env.externalSymTab.containsKey(iptContract))
+                return false;
+        for (Contract contract : contracts) {
+            env.setGlobalSymTab(new SymTab());
+            if (!contract.NTCGlobalInfo(env, parent))
+                return false;
+        }
+        return true;
+    }
+
     @Override
     public void globalInfoVisit(ContractInfo contractInfo) {
         if (contracts.size() < 1) return;

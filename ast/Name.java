@@ -1,5 +1,6 @@
 package ast;
 
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -17,6 +18,21 @@ public class Name extends Variable {
         ctx = y;
     }*/
 
+
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        Sym s = env.getCurSym(id);
+        if (s instanceof FuncSym) {
+            return null;
+        } else if (s instanceof VarSym) {
+            NTCContext now = new NTCContext(this, parent);
+            TypeInfo typeInfo = ((VarSym) s).varInfo.typeInfo;
+            env.addCons(now.genCons(typeInfo.type.typeName, Relation.EQ, env, location));
+            return now;
+        } else if (s instanceof TypeSym) {
+            return null;
+        }
+        return null;
+    }
 
     @Override
     public Context genConsVisit(VisitEnv env) {

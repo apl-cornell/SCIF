@@ -1,5 +1,6 @@
 package ast;
 
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -11,6 +12,13 @@ public class ConstantExpr extends Expression {
         this.value = value;
     }
 
+    @Override
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        //TODO: Constant are boolean
+        NTCContext now = new NTCContext(this, parent);
+        env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        return now;
+    }
     @Override
     public Context genConsVisit(VisitEnv env) {
 

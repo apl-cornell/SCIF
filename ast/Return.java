@@ -2,6 +2,7 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -14,6 +15,15 @@ public class Return extends Statement {
     }
     public Return() {
         this.value = null;
+    }
+
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        FuncInfo funcInfo = Utils.getCurrentFuncInfo(env, this);
+        NTCContext now = new NTCContext(this, parent);
+        NTCContext rtn = value.NTCgenCons(env, now);
+        env.addCons(now.genCons(rtn, Relation.EQ, env, location));
+        env.addCons(now.genCons(env.getSymName(funcInfo.returnType.type.typeName), Relation.EQ, env, location));
+        return now;
     }
 
     @Override

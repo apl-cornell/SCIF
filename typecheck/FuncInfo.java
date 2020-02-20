@@ -8,7 +8,7 @@ import com.owlike.genson.GensonBuilder;
 
 import java.util.ArrayList;
 
-public class FuncInfo {
+public class FuncInfo extends Type {
     public String funcName;
     public FuncLabels funcLabels;
     public ArrayList<VarInfo> parameters;
@@ -16,6 +16,7 @@ public class FuncInfo {
     public CodeLocation location;
 
     public FuncInfo(String funcName, FuncLabels funcLabels, ArrayList<VarInfo> parameters, TypeInfo returnType, CodeLocation location) {
+        this.typeName = funcName;
         this.funcName = funcName;
         this.funcLabels = funcLabels;
         this.parameters = parameters;

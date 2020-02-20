@@ -34,6 +34,48 @@ public class Call extends TrailerExpr {
         this.keywords.add(keyword);
     }
 
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        String funcName;
+        FuncInfo funcInfo;
+        if (!(value instanceof Name)) {
+            if (value instanceof Attribute) {
+                // a.b(c), a must be a contract
+                Attribute att = (Attribute) value;
+                String contractName = ((Name)att.value).id;
+                funcName = att.attr.id;
+                Sym s = env.getExtSym(contractName, funcName);
+                funcInfo = ((FuncSym) s).funcInfo;
+            } else {
+                return null;
+            }
+        } else {
+            // a(b)
+            funcName = ((Name) value).id;
+            Sym s = env.getCurSym(funcName);
+            if (s == null) {
+                // err: function not found
+                return null;
+            }
+            if (!(s instanceof FuncSym)) {
+                // err: type mismatch
+                return null;
+            }
+            funcInfo = ((FuncSym) s).funcInfo;
+        }
+        // typecheck arguments
+        for (int i = 0; i < args.size(); ++i) {
+            Expression arg = args.get(i);
+            TypeInfo paraInfo = funcInfo.parameters.get(i).typeInfo;
+            NTCContext argContext = arg.NTCgenCons(env, now);
+            String typeName = env.getSymName(paraInfo.type.typeName);
+            env.addCons(argContext.genCons(typeName, Relation.REQ, env, location));
+        }
+        String rtnTypeName = funcInfo.returnType.type.typeName;
+        env.addCons(now.genCons(rtnTypeName, Relation.EQ, env, location));
+        return now;
+    }
+
     @Override
     public Context genConsVisit(VisitEnv env) {
         //TODO: Assuming value is a Name for now

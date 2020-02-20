@@ -28,6 +28,15 @@ public class Arguments extends Node {
         }
     }
 
+    public ArrayList<VarInfo> parseArgs(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        ArrayList<VarInfo> rnt = new ArrayList<>();
+        for (Arg arg : args) {
+            rnt.add(arg.parseArg(env, now));
+        }
+        return rnt;
+    }
+
     public ArrayList<VarInfo> parseArgs(ContractInfo contractInfo) {
         ArrayList<VarInfo> rnt = new ArrayList<>();
         for (Arg arg : args) {

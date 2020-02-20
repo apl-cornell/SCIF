@@ -1,8 +1,6 @@
 package ast;
 
-import typecheck.ContractInfo;
-import typecheck.FuncInfo;
-import typecheck.VarInfo;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,6 +28,15 @@ public class FunctionSig extends Statement {
 
     public void setDecoratorList(ArrayList<String> decoratorList) {
         this.decoratorList = decoratorList;
+    }
+
+    @Override
+    public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        ArrayList<VarInfo> argsInfo = args.parseArgs(env, now);
+        env.globalSymTab.add(name, new FuncSym(name, new FuncInfo(name, funcLabels, argsInfo, env.toTypeInfo(rtn, false), location)));
+        return true;
+
     }
 
     @Override

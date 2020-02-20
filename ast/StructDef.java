@@ -13,6 +13,8 @@ public class StructDef extends Statement {
         this.structName = structName;
     }
 
+    //TODO: struct def NTCgenCons
+
     @Override
     public void globalInfoVisit(ContractInfo contractInfo) {
         // assuming there is no double declaration

@@ -16,6 +16,8 @@ public class Subscript extends TrailerExpr {
         index = i;
     }
 
+    //TODO: NTCgenCons
+
     @Override
     public Context genConsVisit(VisitEnv env) {
         VarInfo valueVarInfo = value.getVarInfo(env);

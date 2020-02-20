@@ -38,6 +38,24 @@ public class TypeChecker {
             }
         }
 
+        // Step 1: typecheck, generate constraints and check via SHErrLoc
+
+        // Collect global info
+        NTCEnv env = new NTCEnv();
+        for (Node root : roots) {
+            if (!root.NTCGlobalInfo(env)) {
+                // doesn't typecheck
+                return;
+            }
+        }
+
+        // Generate constraints
+        for (Node root : roots) {
+            root.NTCgenCons(env);
+        }
+
+        // Check using SHErrLoc and get a solution
+
         HashMap<String, ContractInfo> contractMap = new HashMap<>();
         ArrayList<String> contractNames = new ArrayList<>();
         //HashSet<String> principalSet = new HashSet<>();

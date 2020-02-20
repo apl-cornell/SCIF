@@ -2,6 +2,7 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -31,6 +32,35 @@ public class AnnAssign extends Statement {
     }
     public VarInfo toVarInfo(ContractInfo contractInfo) {
         return contractInfo.toVarInfo("", ((Name)target).id, annotation, isConst, location);
+    }
+
+    public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
+        if (!(target instanceof Name)) return false;
+        NTCContext now = new NTCContext(this, parent);
+        NTCContext tgt = target.NTCgenCons(env, now);
+
+        String name = ((Name) target).id;
+        env.globalSymTab.add(name, new VarSym(name, env.toVarInfo(name, annotation, isConst, location, tgt)));
+        return true;
+    }
+
+    @Override
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        NTCContext type = annotation.NTCgenCons(env, now);
+        NTCContext tgt = target.NTCgenCons(env, now);
+
+        if (parent.isContractLevel()) {
+            String name = ((Name) target).id;
+            env.addSym(name, new VarSym(name, env.toVarInfo(name, annotation, isConst, location, tgt)));
+        }
+
+        env.cons.add(type.genCons(tgt, Relation.EQ, env, location));
+        if (value != null) {
+            NTCContext v = value.NTCgenCons(env, now);
+            env.cons.add(tgt.genCons(v, Relation.LEQ, env, location));
+        }
+        return null;
     }
 
     @Override

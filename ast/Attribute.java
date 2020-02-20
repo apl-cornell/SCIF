@@ -13,6 +13,13 @@ public class Attribute extends TrailerExpr {
         value = v;
         attr = a;
     }
+    public VarInfo getVarInfo(NTCEnv env) {
+        VarInfo rtnVarInfo;
+        VarInfo parentVarInfo = value.getVarInfo(env);
+        StructType parentTypeInfo = (StructType) parentVarInfo.typeInfo.type;
+        rtnVarInfo = parentTypeInfo.getMemberVarInfo(parentVarInfo.fullName, attr.id);
+        return rtnVarInfo;
+    }
     @Override
     public Context genConsVisit(VisitEnv env) {
         //TODO: assuming only one-level attribute access

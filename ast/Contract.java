@@ -17,6 +17,25 @@ public class Contract extends Node {
     }
 
     @Override
+    public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        for (Statement stmt : body) {
+            if (!stmt.NTCGlobalInfo(env, now)) return false;
+        }
+        env.externalSymTab.put(contractName, env.globalSymTab);
+        return true;
+    }
+
+    @Override
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        for (Statement stmt : body) {
+            stmt.NTCgenCons(env, now);
+        }
+        return now;
+    }
+
+    @Override
     public void globalInfoVisit(ContractInfo contractInfo) {
         contractInfo.name = contractName;
         contractInfo.trustCons = trustCons;
