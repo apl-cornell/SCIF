@@ -21,9 +21,22 @@ public class FunctionDef extends FunctionSig {
     @Override
     public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
         NTCContext now = new NTCContext(this, parent);
+
+        // add args to local sym;
+        String funcName = this.name;
+        FuncInfo funcInfo = ((FuncSym) env.getCurSym(funcName)).funcInfo;
+        for (Arg arg : this.args.args) {
+            arg.NTCgenCons(env, now);
+        }
+        if (funcInfo.returnType != null) {
+            env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ, env.getSymName(funcInfo.returnType.type.typeName)), env.globalHypothesis, location));
+        }
+
+        env.setCurSymTab(new SymTab(env.curSymTab));
         for (Statement stmt : body) {
             stmt.NTCgenCons(env, now);
         }
+        env.curSymTab = env.curSymTab.getParent();
         return now;
     }
 

@@ -30,6 +30,14 @@ public class VarInfo {
         this.defContext = context;
     }
 
+    public VarInfo(String fullName, String localName, TypeInfo type, CodeLocation location) {
+        this.fullName = fullName;
+        this.localName = localName;
+        this.typeInfo = type;
+        this.location = location;
+        this.defContext = null;
+    }
+
     public VarInfo(VarInfo varInfo) {
         this.fullName = varInfo.fullName;
         this.localName = varInfo.localName;

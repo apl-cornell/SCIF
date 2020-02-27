@@ -37,9 +37,10 @@ public class AnnAssign extends Statement {
     public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
         if (!(target instanceof Name)) return false;
         NTCContext now = new NTCContext(this, parent);
-        NTCContext tgt = target.NTCgenCons(env, now);
+        NTCContext tgt = new NTCContext(target, now);
 
         String name = ((Name) target).id;
+        System.out.println("globalInfo, AnnAssign add:" + name);
         env.globalSymTab.add(name, new VarSym(name, env.toVarInfo(name, annotation, isConst, location, tgt)));
         return true;
     }
@@ -50,7 +51,7 @@ public class AnnAssign extends Statement {
         NTCContext type = annotation.NTCgenCons(env, now);
         NTCContext tgt = target.NTCgenCons(env, now);
 
-        if (parent.isContractLevel()) {
+        if (!parent.isContractLevel()) {
             String name = ((Name) target).id;
             env.addSym(name, new VarSym(name, env.toVarInfo(name, annotation, isConst, location, tgt)));
         }

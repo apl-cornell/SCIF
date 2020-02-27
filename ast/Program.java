@@ -22,7 +22,7 @@ public class Program extends Node {
         NTCContext now = new NTCContext(this, parent);
         for (Contract contract : contracts) {
             env.setGlobalSymTab(env.externalSymTab.get(contract.contractName));
-            env.curSymTab = env.globalSymTab;
+            env.setCurSymTab(env.globalSymTab);
             contract.NTCgenCons(env, now);
         }
         return now;
@@ -35,6 +35,7 @@ public class Program extends Node {
                 return false;
         for (Contract contract : contracts) {
             env.setGlobalSymTab(new SymTab());
+            Utils.addBuiltInTypes(env.globalSymTab);
             if (!contract.NTCGlobalInfo(env, parent))
                 return false;
         }

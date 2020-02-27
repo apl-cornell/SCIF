@@ -41,9 +41,9 @@ public class TypeChecker {
         // Step 1: typecheck, generate constraints and check via SHErrLoc
 
         // Collect global info
-        NTCEnv env = new NTCEnv();
+        NTCEnv NTCenv = new NTCEnv();
         for (Node root : roots) {
-            if (!root.NTCGlobalInfo(env)) {
+            if (!root.NTCGlobalInfo(NTCenv, null)) {
                 // doesn't typecheck
                 return;
             }
@@ -51,7 +51,7 @@ public class TypeChecker {
 
         // Generate constraints
         for (Node root : roots) {
-            root.NTCgenCons(env);
+            root.NTCgenCons(NTCenv, null);
         }
 
         // Check using SHErrLoc and get a solution
@@ -75,6 +75,14 @@ public class TypeChecker {
             //root.findPrincipal(principalSet);
         }
 
+        logger.debug("generating cons file for NTC");
+        // constructors: all types
+        // assumptions: none or relations between types
+        // constraints
+        Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons, outputFile);
+        if (true) return;
+
+        logger.debug("starting to ifc typecheck");
 
         VisitEnv env = new VisitEnv();
 
@@ -180,34 +188,8 @@ public class TypeChecker {
                 root.genConsVisit(env);
             }
         }
-        try {
-            BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
-            logger.debug("Writing the constraints of size {}", env.cons.size());
-            //System.err.println("Writing the constraints of size " + env.cons.size());
-            if (!env.principalSet.isEmpty()) {
-                for (String principal : env.principalSet) {
-                    consFile.write("CONSTRUCTOR " + principal + " 0\n");
-                }
-            }
-            if (!env.trustCons.isEmpty()) {
-                consFile.write("%%\n");
-                for (Constraint con : env.trustCons) {
-                    consFile.write(con.toSherrlocFmt(false) + "\n");
-                }
-                consFile.write("%%\n");
-            } else {
-                consFile.write("\n");
-            }
-            if (!env.cons.isEmpty()) {
-                for (Constraint con : env.cons) {
-                    consFile.write(con.toSherrlocFmt(true) + "\n");
-                }
-            }
-            consFile.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
+
+        Utils.writeCons2File(env.principalSet, env.trustCons, env.cons, outputFile);
 
         logger.trace("typecheck finishes");
     }

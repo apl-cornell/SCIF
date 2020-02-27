@@ -45,4 +45,9 @@ public class Name extends Variable {
         VarInfo rnt = env.varNameMap.getInfo(id);
         return rnt;
     }
+
+
+    public String toSHErrLocFmt() {
+        return id + "." + location;
+    }
 }

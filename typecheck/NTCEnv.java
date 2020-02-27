@@ -5,6 +5,7 @@ import sherrlocUtils.Hypothesis;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class NTCEnv {
     public SymTab globalSymTab;
@@ -16,7 +17,9 @@ public class NTCEnv {
         globalSymTab = new SymTab();
         externalSymTab = new HashMap<>();
         cons = new ArrayList<>();
-        globalSymTab = null; //TODO
+        //globalSymTab = null; //TODO
+        curSymTab = globalSymTab;
+        globalHypothesis = new Hypothesis();
     }
 
     public void setGlobalSymTab(SymTab curSymTab) {
@@ -30,6 +33,7 @@ public class NTCEnv {
     }
 
     public TypeInfo toTypeInfo(ast.Type astType, boolean isConst) {
+        if (astType == null) return null;
         if (Utils.isPrimitiveType(astType.x))
             return new TypeInfo(new BuiltinType(astType.x), null, isConst);
         else {
@@ -63,5 +67,17 @@ public class NTCEnv {
 
     public void addSym(String name, VarSym varSym) {
         curSymTab.add(name, varSym);
+    }
+
+    public HashSet<String> getTypeSet() {
+        HashSet<String> rtn = globalSymTab.getTypeSet();
+        for (BuiltInT builtInT : BuiltInT.values()) {
+            rtn.add(getSymName(builtInT));
+        }
+        return rtn;
+    }
+
+    public ArrayList<Constraint> getTypeRelationCons() {
+        return new ArrayList<>();
     }
 }

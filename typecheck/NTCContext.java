@@ -1,6 +1,8 @@
 package typecheck;
 
 import ast.Contract;
+import ast.FunctionDef;
+import ast.FunctionSig;
 import ast.Node;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
@@ -18,7 +20,10 @@ public class NTCContext {
     }
 
     private String calcSHErrLocName() {
-        return parent.getSHErrLocName() + "." + cur.toSHErrLocFmt();
+        /*if (parent != null)
+            return parent.getSHErrLocName() + "." + cur.toSHErrLocFmt();
+        else*/
+            return cur.toSHErrLocFmt();
     }
 
     public String getSHErrLocName() {
@@ -33,6 +38,10 @@ public class NTCContext {
     }
 
     public boolean isContractLevel() {
-        return (cur instanceof Contract);
+        if (cur instanceof Contract)
+            return true;
+        if ((cur instanceof FunctionDef) || (cur instanceof FunctionSig) || (parent == null))
+            return false;
+        return parent.isContractLevel();
     }
 }

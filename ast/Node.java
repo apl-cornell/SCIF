@@ -28,7 +28,7 @@ public class Node {
     }
 
     public String toSHErrLocFmt() {
-        return "Node" + location;
+        return this.getClass().getSimpleName() + "" + location;
     }
 
     public void globalInfoVisit(ContractInfo contractInfo) {

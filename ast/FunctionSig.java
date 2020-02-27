@@ -58,4 +58,8 @@ public class FunctionSig extends Statement {
             }
         }
     }
+
+    public String rtnToSHErrLocFmt() {
+        return toSHErrLocFmt() + ".RTN";
+    }
 }

@@ -18,8 +18,8 @@ public class Return extends Statement {
     }
 
     public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        FuncInfo funcInfo = Utils.getCurrentFuncInfo(env, this);
         NTCContext now = new NTCContext(this, parent);
+        FuncInfo funcInfo = Utils.getCurrentFuncInfo(env, now);
         NTCContext rtn = value.NTCgenCons(env, now);
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         env.addCons(now.genCons(env.getSymName(funcInfo.returnType.type.typeName), Relation.EQ, env, location));

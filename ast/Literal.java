@@ -2,6 +2,7 @@ package ast;
 
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -15,5 +16,22 @@ public class Literal extends Expression {
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtn), env.hypothesis, location));
 
         return new Context(ifNameRtn, env.prevContext.lockName);
+    }
+
+    @Override
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        // con: tgt should be a supertype of v
+        if (this instanceof Num) {
+            env.cons.add(now.genCons(env.getSymName(BuiltInT.INT), Relation.EQ, env, location));
+        } else if (this instanceof Str) {
+            env.cons.add(now.genCons(env.getSymName(BuiltInT.STRING), Relation.EQ, env, location));
+        }
+        return now;
+    }
+
+    public String toSHErrLocFmt() {
+        String ifNameRtn = "LITERAL..." + location.toString();
+        return ifNameRtn;
     }
 }

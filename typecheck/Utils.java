@@ -3,9 +3,9 @@ package typecheck;
 import ast.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sherrlocUtils.Constraint;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -114,7 +114,53 @@ public class Utils {
             return "unknownT";
     }
 
+    public static void writeCons2File(HashSet<String> constructors, ArrayList<Constraint> assumptions, ArrayList<Constraint> constraints, File outputFile) {
+        try {
+            BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
+            logger.debug("Writing the constraints of size {}", constraints.size());
+            //System.err.println("Writing the constraints of size " + env.cons.size());
+            if (!constructors.isEmpty()) {
+                for (String principal : constructors) {
+                    consFile.write("CONSTRUCTOR " + principal + " 0\n");
+                }
+            }
+            if (!assumptions.isEmpty()) {
+                consFile.write("%%\n");
+                for (Constraint con : assumptions) {
+                    consFile.write(con.toSherrlocFmt(false) + "\n");
+                }
+                consFile.write("%%\n");
+            } else {
+                consFile.write("\n");
+            }
+            if (!constraints.isEmpty()) {
+                for (Constraint con : constraints) {
+                    consFile.write(con.toSherrlocFmt(true) + "\n");
+                }
+            }
+            consFile.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     protected static final Logger logger = LogManager.getLogger();
 
+    public static FuncInfo getCurrentFuncInfo(NTCEnv env, NTCContext now) {
+        while (!(now.cur instanceof FunctionDef)) {
+            now = now.parent;
+        }
+        FunctionDef funcNode = (FunctionDef) now.cur;
+        Sym sym = env.getCurSym(funcNode.name);
+        return ((FuncSym) sym).funcInfo;
+    }
+
+    public static void addBuiltInTypes(SymTab globalSymTab) {
+        for (BuiltInT t : BuiltInT.values()) {
+            String typeName = Utils.BuiltinType2ID(t);
+            TypeSym s = new TypeSym(typeName, new BuiltinType(typeName));
+            globalSymTab.add(typeName, s);
+        }
+    }
 }
 

@@ -72,7 +72,7 @@ public class Call extends TrailerExpr {
             env.addCons(argContext.genCons(typeName, Relation.REQ, env, location));
         }
         String rtnTypeName = funcInfo.returnType.type.typeName;
-        env.addCons(now.genCons(rtnTypeName, Relation.EQ, env, location));
+        env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
         return now;
     }
 
