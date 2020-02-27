@@ -40,7 +40,6 @@ public class AnnAssign extends Statement {
         NTCContext tgt = new NTCContext(target, now);
 
         String name = ((Name) target).id;
-        System.out.println("globalInfo, AnnAssign add:" + name);
         env.globalSymTab.add(name, new VarSym(name, env.toVarInfo(name, annotation, isConst, location, tgt)));
         return true;
     }

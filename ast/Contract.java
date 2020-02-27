@@ -20,7 +20,6 @@ public class Contract extends Node {
     public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
         NTCContext now = new NTCContext(this, parent);
         for (Statement stmt : body) {
-            System.out.println("accessing Node: " + stmt.toSHErrLocFmt());
             if (!stmt.NTCGlobalInfo(env, now)) return false;
         }
         env.externalSymTab.put(contractName, env.globalSymTab);

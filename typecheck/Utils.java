@@ -110,6 +110,8 @@ public class Utils {
             return "bool";
         else if (type == BuiltInT.STRING)
             return "string";
+        else if (type == BuiltInT.VOID)
+            return "void";
         else
             return "unknownT";
     }

@@ -33,7 +33,7 @@ public class NTCEnv {
     }
 
     public TypeInfo toTypeInfo(ast.Type astType, boolean isConst) {
-        if (astType == null) return null;
+        if (astType == null) return new TypeInfo(new BuiltinType(Utils.BuiltinType2ID(BuiltInT.VOID)), null, isConst);
         if (Utils.isPrimitiveType(astType.x))
             return new TypeInfo(new BuiltinType(astType.x), null, isConst);
         else {
