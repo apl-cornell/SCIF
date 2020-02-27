@@ -35,6 +35,7 @@ public class Program extends Node {
                 return false;
         for (Contract contract : contracts) {
             env.setGlobalSymTab(new SymTab());
+            env.setCurSymTab(env.globalSymTab);
             Utils.addBuiltInTypes(env.globalSymTab);
             if (!contract.NTCGlobalInfo(env, parent))
                 return false;

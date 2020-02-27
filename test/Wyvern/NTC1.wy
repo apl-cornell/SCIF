@@ -1,0 +1,7 @@
+contract sample :
+    a : bool{alice}
+
+    def f{alice, alice -> bob or alice}() -> bool :
+        return g(1) 
+    def g{alice, alice -> alice}(x : bool) -> bool :
+        return a

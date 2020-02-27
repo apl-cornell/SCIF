@@ -65,8 +65,8 @@ public class NTCEnv {
         return extST.lookup(funcName);
     }
 
-    public void addSym(String name, VarSym varSym) {
-        curSymTab.add(name, varSym);
+    public void addSym(String name, Sym sym) {
+        curSymTab.add(name, sym);
     }
 
     public HashSet<String> getTypeSet() {

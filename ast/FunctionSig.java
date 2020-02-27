@@ -32,9 +32,11 @@ public class FunctionSig extends Statement {
 
     @Override
     public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
+        System.out.println("NTCGlobal funcSig: " + name);
         NTCContext now = new NTCContext(this, parent);
         ArrayList<VarInfo> argsInfo = args.parseArgs(env, now);
-        env.globalSymTab.add(name, new FuncSym(name, new FuncInfo(name, funcLabels, argsInfo, env.toTypeInfo(rtn, false), location)));
+        env.addSym(name, new FuncSym(name, new FuncInfo(name, funcLabels, argsInfo, env.toTypeInfo(rtn, false), location)));
+        System.out.println("finish NTCGlobal funcSig: " + name);
         return true;
 
     }
