@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
@@ -92,5 +93,12 @@ public class GuardBlock extends Statement {
         }
 
 
+    }
+
+    @Override
+    public void SolCodeGen(SolCode code) {
+        for (Statement stmt : body) {
+            stmt.SolCodeGen(code);
+        }
     }
 }

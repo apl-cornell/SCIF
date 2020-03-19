@@ -50,4 +50,9 @@ public class Name extends Variable {
     public String toSHErrLocFmt() {
         return id + "." + location;
     }
+
+    @Override
+    public String toSolCode() {
+        return id;
+    }
 }

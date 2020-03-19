@@ -1,5 +1,7 @@
 package ast;
 
+import compile.SolCode;
+import compile.Utils;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
@@ -46,5 +48,9 @@ public class BinOp extends Expression {
         env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location));
 
         return new Context(ifNameRtn, rightContext.lockName);
+    }
+
+    public String toSolCode() {
+        return SolCode.toBinOp(left.toSolCode(), Utils.toBinOp(op), right.toSolCode());
     }
 }

@@ -57,4 +57,18 @@ public class Arguments extends Node {
             arg.findPrincipal(principalSet);
         }
     }
+
+    public String toSolCode() {
+        String rtn = "";
+        boolean first = true;
+        for (Arg arg : args) {
+            if (!first) {
+                rtn += ", ";
+            } else
+                first = false;
+            // rnt += "type name"
+            rtn += arg.toSolCode();
+        }
+        return rtn;
+    }
 }

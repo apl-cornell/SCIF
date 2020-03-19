@@ -10,4 +10,12 @@ public class Map extends LabeledType {
         this.keyType = keyType;
         this.valueType = valueType;
     }
+
+    @Override
+    public String toSolCode() {
+        String rtn = "mapping";
+        String k = keyType.toSolCode(), v = valueType.toSolCode();
+        rtn += "(" + k + " => " + v + ")";
+        return rtn;
+    }
 }

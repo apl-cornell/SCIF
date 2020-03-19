@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
@@ -133,5 +134,12 @@ public class AnnAssign extends Statement {
         if (annotation instanceof LabeledType) {
             ((LabeledType) annotation).ifl.findPrincipal(principalSet);
         }
+    }
+
+    public void SolCodeGen(SolCode code) {
+        if (value != null)
+            code.addVarDef(annotation.toSolCode(), target.toSolCode(), isConst, value.toSolCode());
+        else
+            code.addVarDef(annotation.toSolCode(), target.toSolCode(), isConst);
     }
 }

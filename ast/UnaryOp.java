@@ -30,4 +30,10 @@ public class UnaryOp extends Expression {
     public Context genConsVisit(VisitEnv env) {
         return operand.genConsVisit(env);
     }
+
+    @Override
+    public String toSolCode() {
+        String v = operand.toSolCode();
+        return compile.Utils.toUnaryOp(op) + v;
+    }
 }

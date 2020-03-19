@@ -2,6 +2,7 @@ package ast;
 
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
+import compile.SolCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import typecheck.*;
@@ -51,6 +52,10 @@ public class Node {
         return null;
     }
 
+    public void SolCodeGen(SolCode code) {
+        // npt supposed to be called
+        return;
+    }
     protected static final Logger logger = LogManager.getLogger();
 
 }

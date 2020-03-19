@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
@@ -204,5 +205,19 @@ public class Call extends TrailerExpr {
             String ifNameFuncRtnValue = funcInfo.getLabelNameRtnValue();
             String ifNameFuncRtnLock = funcInfo.getLabelNameRtnLock();
             return new Context(ifNameFuncRtnValue, ifNameFuncRtnLock);
+    }
+
+    public String toSolCode() {
+        String argsCode = "";
+        boolean first = true;
+        for (Expression exp : args) {
+            if (!first)
+                argsCode += ", ";
+            else
+                first = false;
+            argsCode += exp.toSolCode();
+        }
+
+        return SolCode.toFunctionCall(value.toSolCode(), argsCode);
     }
 }

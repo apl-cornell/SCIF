@@ -1,5 +1,6 @@
 // the main class of Wyvern
 
+import ast.Node;
 import ast.Str;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,6 +31,8 @@ public class Wyvern implements Callable<Integer> {
         boolean parse;
         @Option(names = {"-l", "--lexer"}, required = true, description = "Tokenize")
         boolean tokenize;
+        @Option(names = {"-c", "--compiler"}, required = true, description = "Compile to Solodity")
+        boolean compile;
     }
 
     public static void main(String[] args) {
@@ -37,46 +40,69 @@ public class Wyvern implements Callable<Integer> {
         System.exit(exitCode);
     }
 
+    ArrayList<Node> typecheck(String[] outputFileNames) throws Exception {
+        String outputFileName;
+        File outputFile;
+        if (outputFileNames == null) {
+            outputFile = File.createTempFile("cons", "tmp");
+            outputFileName = outputFile.getAbsolutePath();
+            outputFile.deleteOnExit();
+        } else {
+            outputFileName = outputFileNames[0];
+            outputFile = new File(outputFileName);
+        }
+        ArrayList<File> files = new ArrayList<>();
+        for (File file : inputFiles) {
+            files.add(file);
+        }
+        ArrayList<Node> roots = TypeChecker.typecheck(files, outputFile);
+        String classDirectoryPath = new File(Wyvern.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+        String[] sherrlocResult = Utils.runSherrloc(classDirectoryPath, outputFileName);
+        if (sherrlocResult.length < 1) {
+            System.out.println(Utils.TYPECHECK_NORESULT_MSG);
+            return null;
+        } else if (sherrlocResult[sherrlocResult.length - 1].contains(Utils.SHERRLOC_PASS_INDICATOR)) {
+            System.out.println(Utils.TYPECHECK_PASS_MSG);
+        } else {
+            System.out.println(Utils.TYPECHECK_ERROR_MSG);
+            for (int i = 0; i < sherrlocResult.length; ++i)
+                if (sherrlocResult[i].contains(Utils.SHERRLOC_ERROR_INDICATOR)) {
+                    for (int j = i; j < sherrlocResult.length; ++j) {
+                        System.out.println(sherrlocResult[j]);
+                    }
+                    break;
+                }
+            return null;
+        }
+        return roots;
+    }
+
     @Override
     public Integer call() throws Exception {
         logger.trace("wyvern starts");
         if (funcRequest.typecheck) {
+            typecheck(outputFileNames);
+        } else if (funcRequest.parse) {
+            File astOutputFile = outputFileNames == null ? null : new File(outputFileNames[0]);
+            Parser.parse(inputFiles[0], astOutputFile);
+        } else if (funcRequest.tokenize) {
+            LexerTest.tokenize(inputFiles[0]);
+        } else if (funcRequest.compile) {
+            ArrayList<Node> roots = typecheck(null);
+            if (roots == null) {
+                return 1;
+            }
             String outputFileName;
             File outputFile;
             if (outputFileNames == null) {
-                outputFile = File.createTempFile("cons", "tmp");
+                outputFile = File.createTempFile("tmp", "sol");
                 outputFileName = outputFile.getAbsolutePath();
                 outputFile.deleteOnExit();
             } else {
                 outputFileName = outputFileNames[0];
                 outputFile = new File(outputFileName);
             }
-            ArrayList<File> files = new ArrayList<>();
-            for (File file : inputFiles) {
-                files.add(file);
-            }
-            TypeChecker.typecheck(files, outputFile);
-            String classDirectoryPath = new File(Wyvern.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
-            String[] sherrlocResult = Utils.runSherrloc(classDirectoryPath, outputFileName);
-            if (sherrlocResult.length < 1) {
-                System.out.println(Utils.TYPECHECK_NORESULT_MSG);
-            } else if (sherrlocResult[sherrlocResult.length - 1].contains(Utils.SHERRLOC_PASS_INDICATOR)) {
-                System.out.println(Utils.TYPECHECK_PASS_MSG);
-            } else {
-                System.out.println(Utils.TYPECHECK_ERROR_MSG);
-                for (int i = 0; i < sherrlocResult.length; ++i)
-                    if (sherrlocResult[i].contains(Utils.SHERRLOC_ERROR_INDICATOR)) {
-                        for (int j = i; j < sherrlocResult.length; ++j) {
-                            System.out.println(sherrlocResult[j]);
-                        }
-                        break;
-                    }
-            }
-        } else if (funcRequest.parse) {
-            File astOutputFile = outputFileNames == null ? null : new File(outputFileNames[0]);
-            Parser.parse(inputFiles[0], astOutputFile);
-        } else if (funcRequest.tokenize) {
-            LexerTest.tokenize(inputFiles[0]);
+            SolCompiler.compile(roots, outputFile);
         } else {
                 logger.error("No funcRequest specified, this should never happen!");
                 //System.out.println("No funcRequest specified, this should never happen!");

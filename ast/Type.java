@@ -34,4 +34,8 @@ public class Type extends Expression {
     public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
         return;
     }
+
+    public String toSolCode() {
+        return x;
+    }
 }

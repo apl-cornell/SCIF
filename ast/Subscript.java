@@ -96,4 +96,11 @@ public class Subscript extends TrailerExpr {
         }
         return rtnVarInfo;
     }
+
+    @Override
+    public String toSolCode() {
+        String i = index.toSolCode();
+        String v = value.toSolCode();
+        return v + "[" + i + "]";
+    }
 }

@@ -9,6 +9,7 @@ public class SymTab {
     public SymTab() {
         parent = null;
         table = new HashMap<>();
+        //Utils.addBuiltInSyms(table);
     }
     public SymTab(SymTab parent) {
         this.parent = parent;

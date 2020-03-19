@@ -25,4 +25,9 @@ public class ConstantExpr extends Expression {
         String ifNameRnt = Utils.getLabelNamePc(env.ctxt);
         return new Context(ifNameRnt, env.prevContext.lockName);
     }
+
+    @Override
+    public String toSolCode() {
+        return compile.Utils.toConstant(value);
+    }
 }

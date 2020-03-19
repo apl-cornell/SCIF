@@ -8,6 +8,7 @@ import sherrlocUtils.Constraint;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class Utils {
@@ -30,6 +31,8 @@ public class Utils {
 
 
     public static final String ADDRESSTYPE = "address";
+    public static final String PUBLIC_DECORATOR = "public";
+    public static final String PAYABLE_DECORATOR = "payable";
 
 
     public static final boolean isPrimitiveType(String x) {
@@ -164,5 +167,14 @@ public class Utils {
             globalSymTab.add(typeName, s);
         }
     }
+
+ /*   public static void addBuiltInSyms(HashMap<String, Sym> table) {
+        // msg.sender address msg.value int
+        ArrayList<VarInfo> members = new ArrayList<>();
+        VarInfo sender = new VarInfo("sender", "sender", , CodeLocation location) {
+)
+        TypeSym MSG = new TypeSym("MSG", new StructType("MSG", ))
+        // send (address, int)
+    }*/
 }
 

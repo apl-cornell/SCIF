@@ -1,5 +1,8 @@
 package ast;
 
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -21,6 +24,19 @@ public class Arg extends Node {
     public VarInfo parseArg(NTCEnv env, NTCContext parent) {
         NTCContext now = new NTCContext(this, parent);
         return env.toVarInfo(name, annotation, false, location, now);
+    }
+
+    @Override
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+
+        NTCContext type = annotation.NTCgenCons(env, now);
+
+        env.addSym(name, new VarSym(name, env.toVarInfo(name, annotation, false, location, now)));
+
+        env.cons.add(type.genCons(now, Relation.EQ, env, location));
+
+        return null;
     }
 
     @Override
@@ -49,4 +65,8 @@ public class Arg extends Node {
         }
     }
 
+
+    public String toSolCode() {
+        return annotation.toSolCode() + " " + name;
+    }
 }

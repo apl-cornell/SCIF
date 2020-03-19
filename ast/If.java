@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
@@ -139,5 +140,22 @@ public class If extends Statement {
 
         env.ctxt = originalCtxt;
         return new Context(null, IfNameLock);
+    }
+
+    @Override
+    public void SolCodeGen(SolCode code) {
+        String cond = test.toSolCode();
+        code.enterIf(cond);
+        for (Statement stmt : body) {
+            stmt.SolCodeGen(code);
+        }
+        code.leaveIf();
+        if (!orelse.isEmpty()) {
+            code.enterElse();
+            for (Statement stmt : orelse) {
+                stmt.SolCodeGen(code);
+            }
+            code.leaveElse();
+        }
     }
 }

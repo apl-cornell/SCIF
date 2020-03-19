@@ -13,4 +13,5 @@ public class Expression extends Statement {
         return new VarInfo();
     }
 
+    public String toSolCode() { return "unknown exp"; }
 }

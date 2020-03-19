@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -60,5 +61,13 @@ public class Contract extends Node {
         for (Statement stmt : body) {
             stmt.findPrincipal(principalSet);
         }
+    }
+
+    public void SolCodeGen(SolCode code) {
+        code.enterContractDef(contractName);
+        for (Statement stmt : body) {
+            stmt.SolCodeGen(code);
+        }
+        code.leaveContractDef();
     }
 }

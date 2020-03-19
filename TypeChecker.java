@@ -18,7 +18,7 @@ public class TypeChecker {
         //typecheck(inputFile, outputFile);
     }
 
-    public static void typecheck(ArrayList<File> inputFiles, File outputFile) {
+    public static ArrayList<Node> typecheck(ArrayList<File> inputFiles, File outputFile) {
 
         logger.trace("typecheck starts");
 
@@ -34,7 +34,7 @@ public class TypeChecker {
                 //System.err.println("Finish\n");
             } catch (Exception e) {
                 e.printStackTrace();
-                return;
+                return null;
             }
         }
 
@@ -45,7 +45,7 @@ public class TypeChecker {
         for (Node root : roots) {
             if (!root.NTCGlobalInfo(NTCenv, null)) {
                 // doesn't typecheck
-                return;
+                return null;
             }
         }
 
@@ -80,7 +80,7 @@ public class TypeChecker {
         // assumptions: none or relations between types
         // constraints
         Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons, outputFile);
-        if (true) return;
+        if (true) return roots;
 
         logger.debug("starting to ifc typecheck");
 
@@ -187,11 +187,14 @@ public class TypeChecker {
 
                 root.genConsVisit(env);
             }
+
         }
 
         Utils.writeCons2File(env.principalSet, env.trustCons, env.cons, outputFile);
 
         logger.trace("typecheck finishes");
+
+        return roots;
     }
 
     protected static final Logger logger = LogManager.getLogger();

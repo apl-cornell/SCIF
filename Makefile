@@ -5,8 +5,11 @@ default: Wyvern
 	
 all: Wyvern sherrloc-build
 
-Wyvern: TypeChecker.class LexerTest.class Parser.class Wyvern.java
+Wyvern: SolCompiler.class TypeChecker.class LexerTest.class Parser.class Wyvern.java
 	javac -cp .:${LIBPATH}/* Wyvern.java
+
+SolCompiler.class: TypeChecker.class SolCompiler.java ${wildcard compile/*.java} ${wildcard ast/*.java} ${wildcard typecheck/*.java} ${wildcard sherrlocUtils/*.java}
+	javac -cp .:${LIBPATH}/* SolCompiler.java TypeChecker.java compile/*.java ast/*.java typecheck/*.java sherrlocUtils/*.java
 
 TypeChecker.class: Parser.class Lexer.class TypeChecker.java ${wildcard ast/*.java} ${wildcard typecheck/*.java} ${wildcard sherrlocUtils/*.java}
 	javac -cp .:${LIBPATH}/* TypeChecker.java ast/*.java typecheck/*.java sherrlocUtils/*.java

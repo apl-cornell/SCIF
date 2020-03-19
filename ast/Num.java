@@ -10,4 +10,8 @@ public class Num<T extends Number> extends Literal {
         value = x;
     }
 
+    @Override
+    public String toSolCode() {
+        return value.toString();
+    }
 }

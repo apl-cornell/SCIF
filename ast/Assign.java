@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
@@ -63,5 +64,9 @@ public class Assign extends Statement {
 
         }
         return new Context(ifNameTgt, rtnLockName);
+    }
+
+    public void SolCodeGen(SolCode code) {
+        code.addAssign(targets.get(0).toSolCode(), value.toSolCode());
     }
 }

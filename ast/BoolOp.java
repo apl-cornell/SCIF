@@ -1,5 +1,7 @@
 package ast;
 
+import compile.SolCode;
+import compile.Utils;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
@@ -42,5 +44,9 @@ public class BoolOp extends Expression {
         env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location));
 
         return new Context(ifNameRtn, rightContext.lockName);
+    }
+
+    public String toSolCode() {
+        return SolCode.toBoolOp(left.toSolCode(), Utils.toBoolOp(op), right.toSolCode());
     }
 }

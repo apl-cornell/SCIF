@@ -35,4 +35,9 @@ public class Endorse extends Expression {
 
         return new Context(ifNameRtn, tmp.lockName);
     }
+
+    @Override
+    public String toSolCode() {
+        return value.toSolCode();
+    }
 }

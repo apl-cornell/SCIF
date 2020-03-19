@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
@@ -20,8 +21,10 @@ public class Return extends Statement {
     public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
         NTCContext now = new NTCContext(this, parent);
         FuncInfo funcInfo = Utils.getCurrentFuncInfo(env, now);
-        NTCContext rtn = value.NTCgenCons(env, now);
-        env.addCons(now.genCons(rtn, Relation.EQ, env, location));
+        if (value != null) {
+            NTCContext rtn = value.NTCgenCons(env, now);
+            env.addCons(now.genCons(rtn, Relation.EQ, env, location));
+        }
         env.addCons(now.genCons(env.getSymName(funcInfo.returnType.type.typeName), Relation.EQ, env, location));
         return now;
     }
@@ -47,5 +50,10 @@ public class Return extends Statement {
 
         env.cons.add(new Constraint(new Inequality(expContext.lockName, ifNameRtnLock), env.hypothesis, location));
         return new Context(null, prevLock);
+    }
+
+    @Override
+    public void SolCodeGen(SolCode code) {
+        code.addReturn(value != null ? value.toSolCode() : "");
     }
 }

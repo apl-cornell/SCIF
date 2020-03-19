@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
@@ -100,4 +101,26 @@ public class FunctionDef extends FunctionSig {
             ((LabeledType) sig.rnt).ifl.findPrincipal(principalSet);
         }
     }*/
+
+    public void SolCodeGen(SolCode code) {
+        boolean pub = false;
+        boolean payable = false;
+        if (decoratorList != null) {
+            if (decoratorList.contains(Utils.PUBLIC_DECORATOR))
+                pub = true;
+            if (decoratorList.contains(Utils.PAYABLE_DECORATOR))
+                payable = true;
+        }
+        String rtnTypeCode = "";
+        if (rtn != null)
+            rtnTypeCode = rtn.toSolCode();
+
+        code.enterFunctionDef(name, args.toSolCode(), rtnTypeCode, pub, payable);
+
+        for (Statement stmt : body) {
+            stmt.SolCodeGen(code);
+        }
+
+        code.leaveFunctionDef();
+    }
 }

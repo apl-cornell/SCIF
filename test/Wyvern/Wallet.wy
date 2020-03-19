@@ -1,0 +1,20 @@
+contract Wallet :
+    {TOP => this}
+    {this => sender}
+    {sender => BOT}
+    owner : address{this}
+    balance : int{this}
+
+    @public
+    def deposit{sender, sender -> sender}() :
+        endorse{sender -> this} :
+            balance = balance + endorse(msg.value, sender, this)
+
+    @public
+    def withdraw{sender, sender -> sender}(amount : int{sender}) :
+        if balance < amount or sender != owner :
+            return
+
+        endorse{sender -> this} :
+            balance = balance - endorse(amount, sender, this)
+            send(msg.sender, endorse(amount, sender, this))

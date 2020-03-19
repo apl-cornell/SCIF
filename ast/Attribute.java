@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import typecheck.*;
@@ -55,5 +56,9 @@ public class Attribute extends TrailerExpr {
         StructType parentTypeInfo = (StructType) parentVarInfo.typeInfo.type;
         rtnVarInfo = parentTypeInfo.getMemberVarInfo(parentVarInfo.fullName, attr.id);
         return rtnVarInfo;
+    }
+
+    public String toSolCode() {
+        return SolCode.toAttribute(value.toSolCode(), attr.id);
     }
 }

@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -68,6 +69,16 @@ public class Program extends Node {
     public void findPrincipal(HashSet<String> principalSet) {
         for (Contract contract : contracts) {
             contract.findPrincipal(principalSet);
+        }
+    }
+
+    public void SolCodeGen(SolCode code) {
+        code.addVersion(compile.Utils.SOLITIDY_VERSION);
+        /*for (String contractName : iptContracts) {
+            code.addImport(contractName);
+        }*/
+        for (Contract contract : contracts) {
+            contract.SolCodeGen(code);
         }
     }
 }

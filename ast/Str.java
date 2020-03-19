@@ -6,4 +6,8 @@ public class Str extends Literal {
         value = x;
     }
 
+    @Override
+    public String toSolCode() {
+        return value;
+    }
 }
