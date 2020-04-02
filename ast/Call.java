@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Call extends TrailerExpr {
-    ArrayList<Expression> args;
+    public ArrayList<Expression> args;
     ArrayList<Keyword> keywords;
     //TODO: starargs, kwargs
     public Call() {
@@ -55,7 +55,10 @@ public class Call extends TrailerExpr {
             funcName = ((Name) value).id;
             Sym s = env.getCurSym(funcName);
             if (s == null) {
-                // err: function not found
+                if (env.contractExists(funcName)) {
+                    // return type is ATM
+                    // TODO
+                }
                 return null;
             }
             if (!(s instanceof FuncSym)) {
@@ -208,6 +211,11 @@ public class Call extends TrailerExpr {
     }
 
     public String toSolCode() {
+        logger.debug("toSOl: Call");
+        String funcName = value.toSolCode();
+        if (Utils.isBuiltinFunc(funcName)) {
+            return Utils.transBuiltinFunc(funcName, this);
+        }
         String argsCode = "";
         boolean first = true;
         for (Expression exp : args) {
@@ -218,6 +226,7 @@ public class Call extends TrailerExpr {
             argsCode += exp.toSolCode();
         }
 
-        return SolCode.toFunctionCall(value.toSolCode(), argsCode);
+        return SolCode.toFunctionCall(funcName, argsCode);
     }
+
 }

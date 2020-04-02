@@ -23,7 +23,7 @@ public class Literal extends Expression {
         NTCContext now = new NTCContext(this, parent);
         // con: tgt should be a supertype of v
         if (this instanceof Num) {
-            env.cons.add(now.genCons(env.getSymName(BuiltInT.INT), Relation.EQ, env, location));
+            env.cons.add(now.genCons(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
         } else if (this instanceof Str) {
             env.cons.add(now.genCons(env.getSymName(BuiltInT.STRING), Relation.EQ, env, location));
         }

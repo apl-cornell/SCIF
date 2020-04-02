@@ -2,15 +2,17 @@ package typecheck;
 
 import ast.IfLabel;
 
-public class DepMapTypeInfo extends MapTypeInfo {
+public class MapTypeInfo extends TypeInfo {
     public TypeInfo keyType;
     public TypeInfo valueType;
 
-    public DepMapTypeInfo(Type typeName, IfLabel ifl, boolean isConst, TypeInfo keyType, TypeInfo valueType) {
-        super(typeName, ifl, isConst, keyType, valueType);
+    public MapTypeInfo(Type typeName, IfLabel ifl, boolean isConst, TypeInfo keyType, TypeInfo valueType) {
+        super(typeName, ifl, isConst);
+        this.keyType = keyType;
+        this.valueType = valueType;
     }
 
-    public DepMapTypeInfo(DepMapTypeInfo depMapTypeInfo) {
+    public MapTypeInfo(MapTypeInfo depMapTypeInfo) {
         super(depMapTypeInfo);
         keyType = new TypeInfo(depMapTypeInfo.keyType);
         valueType = new TypeInfo(depMapTypeInfo.valueType);

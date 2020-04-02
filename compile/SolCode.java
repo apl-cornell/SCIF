@@ -73,6 +73,7 @@ public class SolCode {
         addLine("function " + name + "(" + args + ")");
         addIndent();
         if (isPublic) addLine(Utils.PUBLIC_DECORATOR);
+        else addLine(Utils.PRIVATE_DECORATOR);
         if (isPayable) addLine(Utils.PAYABLE_DECORATOR);
         if (!returnType.isEmpty())
             addLine("returns (" + returnType + ")");

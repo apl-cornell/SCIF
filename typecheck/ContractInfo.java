@@ -74,6 +74,9 @@ public class ContractInfo {
             if (lt instanceof DepMap) {
                 DepMap depMap = (DepMap) lt;
                 typeInfo = new DepMapTypeInfo(toType("DepMap"), depMap.ifl, isConst, toTypeInfo(depMap.keyType, isConst), toTypeInfo(depMap.valueType, isConst));
+            } else if (lt instanceof Map) {
+                Map map = (Map) lt;
+                typeInfo = new MapTypeInfo(toType("Map"), map.ifl, isConst, toTypeInfo(map.keyType, isConst), toTypeInfo(map.valueType, isConst));
             } else {
                 typeInfo = new TypeInfo(toType(lt.x), lt.ifl, isConst);
             }

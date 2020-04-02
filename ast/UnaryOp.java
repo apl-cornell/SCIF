@@ -19,7 +19,7 @@ public class UnaryOp extends Expression {
         NTCContext rtn = operand.NTCgenCons(env, now);
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         if (op == UnaryOperator.USub || op == UnaryOperator.UAdd) {
-            env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.INT), Relation.EQ, env, location));
+            env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.EQ, env, location));
         } else if (op == UnaryOperator.Not || op == UnaryOperator.Invert) {
             env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
         }

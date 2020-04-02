@@ -1,5 +1,8 @@
 package typecheck;
 
+import ast.DepMap;
+import ast.LabeledType;
+import ast.Map;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Hypothesis;
 
@@ -33,14 +36,38 @@ public class NTCEnv {
     }
 
     public TypeInfo toTypeInfo(ast.Type astType, boolean isConst) {
+        TypeInfo typeInfo = null;
+
         if (astType == null) return new TypeInfo(new BuiltinType(Utils.BuiltinType2ID(BuiltInT.VOID)), null, isConst);
         if (Utils.isPrimitiveType(astType.x))
-            return new TypeInfo(new BuiltinType(astType.x), null, isConst);
+            typeInfo = new TypeInfo(new BuiltinType(astType.x), null, isConst);
         else {
-            //TODO: non-primitive types
-            return null;
+            LabeledType lt = (LabeledType) astType;
+            if (lt instanceof DepMap) {
+                DepMap depMap = (DepMap) lt;
+                typeInfo = new DepMapTypeInfo(new BuiltinType("DepMap"), depMap.ifl, isConst, toTypeInfo(depMap.keyType, isConst), toTypeInfo(depMap.valueType, isConst));
+            } else if (lt instanceof Map) {
+                Map map = (Map) lt;
+                typeInfo = new MapTypeInfo(new BuiltinType("Map"), map.ifl, isConst, toTypeInfo(map.keyType, isConst), toTypeInfo(map.valueType, isConst));
+            } else {
+                typeInfo = new TypeInfo(new BuiltinType(lt.x), lt.ifl, isConst);
+            }
         }
+        return typeInfo;
     }
+
+    /*private Type toType(LabeledType lt) {
+        Type rtn = null;
+        if (lt instanceof DepMap) {
+            DepMapTypeInfo
+        } else if (lt instanceof Map) {
+
+        } else {
+            TypeSym tp = (TypeSym) getCurSym(lt.x);
+            rtn = tp.type;
+        }
+        return rtn;
+    }*/
 
     public String getSymName(String id) {
         return curSymTab.lookup(id).getSLCName();
@@ -57,6 +84,10 @@ public class NTCEnv {
 
     public void addCons(Constraint genCons) {
         cons.add(genCons);
+    }
+
+    public boolean contractExists(String contractName) {
+        return externalSymTab.containsKey(contractName);
     }
 
     public Sym getExtSym(String contractName, String funcName) {

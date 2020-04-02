@@ -22,11 +22,17 @@ public class BinOp extends Expression {
 
     @Override
     public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        logger.debug("binOp:");
         NTCContext now = new NTCContext(this, parent);
-        NTCContext l = left.NTCgenCons(env, now), r = right.NTCgenCons(env, now);
+        NTCContext l = left.NTCgenCons(env, now);
+        logger.debug("binOp/left:");
+        logger.debug(l.toString());
+        NTCContext r = right.NTCgenCons(env, now);
+        logger.debug("binOp/right:");
+        logger.debug(r.toString());
         env.cons.add(now.genCons(l, Relation.LEQ, env, location));
         env.cons.add(now.genCons(r, Relation.LEQ, env, location));
-        env.cons.add(now.genCons(env.getSymName(BuiltInT.INT), Relation.EQ, env, location));
+        env.cons.add(now.genCons(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
         return now;
     }
 

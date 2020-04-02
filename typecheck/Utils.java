@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class Utils {
-    public static final String[] BUILTIN_TYPE_NAMES = new String[] {"bool", "int128", "uint256", "address", "bytes", "string", "int", "map", "void", "DepMap"};
+    public static final String[] BUILTIN_TYPE_NAMES = new String[] {"bool", "int128", "uint256", "address", "bytes", "string", "int", "void", "uint"};
     public static final HashSet<String> BUILTIN_TYPES = new HashSet<>(Arrays.asList(BUILTIN_TYPE_NAMES));
 
     //public static final String ENDORCE_FUNC_NAME = "endorce";
@@ -107,14 +107,16 @@ public class Utils {
     }
 
     public static String BuiltinType2ID(BuiltInT type) {
-        if (type == BuiltInT.INT)
-            return "int";
+        if (type == BuiltInT.UINT)
+            return "uint";
         else if (type == BuiltInT.BOOL)
             return "bool";
         else if (type == BuiltInT.STRING)
             return "string";
         else if (type == BuiltInT.VOID)
             return "void";
+        else if (type == BuiltInT.ADDRESS)
+            return "address";
         else
             return "unknownT";
     }
@@ -160,21 +162,63 @@ public class Utils {
         return ((FuncSym) sym).funcInfo;
     }
 
-    public static void addBuiltInTypes(SymTab globalSymTab) {
+    public static TypeInfo getBuiltinTypeInfo(String typeName, SymTab s) {
+        return new TypeInfo(((TypeSym) s.lookup(typeName)).type, null, false);
+    }
+
+    public static VarInfo createVarInfo(String fullName, String localName, String typeName, SymTab s) {
+        return new VarInfo(fullName,
+                localName,
+                new TypeInfo(((TypeSym) s.lookup(typeName)).type, null, false),
+                new CodeLocation());
+    }
+
+    public static void addBuiltInSyms(SymTab globalSymTab) {
         for (BuiltInT t : BuiltInT.values()) {
             String typeName = Utils.BuiltinType2ID(t);
             TypeSym s = new TypeSym(typeName, new BuiltinType(typeName));
             globalSymTab.add(typeName, s);
         }
+        /* msg:
+        *   sender - address
+        *   value - uint
+        * */
+        ArrayList<VarInfo> members = new ArrayList<>();
+        VarInfo sender = createVarInfo("msg.sender", "sender", "address", globalSymTab);
+        members.add(sender);
+        VarInfo value = createVarInfo("msg.value", "value", "uint", globalSymTab);
+        members.add(value);
+        StructType msgT = new StructType("msgT", members);
+        VarInfo msg = new VarInfo("msg", "msg",
+                new TypeInfo(msgT, null, false),
+                new CodeLocation());
+        globalSymTab.add("msg", new VarSym("msg", msg));
+
+        /* send(address, value) */
+        members = new ArrayList<>();
+        VarInfo recipient = createVarInfo("send.recipient", "recipient", "address", globalSymTab);
+        value = createVarInfo("send.value", "value", "uint", globalSymTab);
+        members.add(recipient);
+        members.add(value);
+        FuncInfo sendFuncInfo = new FuncInfo("send", null, members, getBuiltinTypeInfo("bool", globalSymTab), new CodeLocation());
+        FuncSym send = new FuncSym("send", sendFuncInfo);
+        globalSymTab.add("send", send);
     }
 
- /*   public static void addBuiltInSyms(HashMap<String, Sym> table) {
-        // msg.sender address msg.value int
-        ArrayList<VarInfo> members = new ArrayList<>();
-        VarInfo sender = new VarInfo("sender", "sender", , CodeLocation location) {
-)
-        TypeSym MSG = new TypeSym("MSG", new StructType("MSG", ))
-        // send (address, int)
-    }*/
+    public static boolean isBuiltinFunc(String funcName) {
+        if (funcName.equals("send"))
+            return true;
+        return false;
+    }
+
+    public static String transBuiltinFunc(String funcName, Call call) {
+        if (funcName.equals("send")) {
+            String recipient = call.args.get(0).toSolCode();
+            String value = call.args.get(1).toSolCode();
+            return recipient + ".send(" + value + ");";
+        }
+        else
+            return "unknown built-in function";
+    }
 }
 

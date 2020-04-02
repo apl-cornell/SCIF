@@ -31,7 +31,7 @@ public class Compare extends Expression {
             //env.addCons(l.genCons(r, Relation.EQ, env, location));
         } else if (op == CompareOperator.Lt || op == CompareOperator.LtE
                 || op == CompareOperator.Gt || op == CompareOperator.GtE) {
-            env.addCons(l.genCons(env.getSymName(BuiltInT.INT), Relation.EQ, env, location));
+            env.addCons(l.genCons(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
         }
         env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
         return now;

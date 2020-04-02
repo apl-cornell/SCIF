@@ -18,7 +18,9 @@ public class SymTab {
 
     public Sym lookup(String id) {
         System.out.println("sym lookup: " + id + " @" + this);
-        if (table.get(id) != null) return table.get(id);
+        if (table.get(id) != null) {
+            return table.get(id);
+        }
         return parent.lookup(id);
     }
     public void add(String id, Sym sym) {

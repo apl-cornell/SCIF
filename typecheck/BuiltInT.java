@@ -1,5 +1,5 @@
 package typecheck;
 
 public enum BuiltInT {
-    INT, BOOL, STRING, VOID
+    UINT, BOOL, STRING, VOID, ADDRESS
 }

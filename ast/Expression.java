@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -14,4 +15,9 @@ public class Expression extends Statement {
     }
 
     public String toSolCode() { return "unknown exp"; }
+
+    @Override
+    public void SolCodeGen(SolCode code) {
+        code.addLine(toSolCode());
+    }
 }

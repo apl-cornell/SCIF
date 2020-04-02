@@ -16,7 +16,29 @@ public class Subscript extends TrailerExpr {
         index = i;
     }
 
-    //TODO: NTCgenCons
+    //TODO: getVarInfo(NTCEnv)
+    @Override
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        NTCContext now = new NTCContext(this, parent);
+        VarInfo valueVarInfo = value.getVarInfo(env);
+        NTCContext idx = index.NTCgenCons(env, now);
+        value.NTCgenCons(env, now);
+        //TODO: support DepMap
+
+        if (valueVarInfo.typeInfo instanceof DepMapTypeInfo) {
+            return null;
+        } else if (valueVarInfo.typeInfo instanceof MapTypeInfo) {
+            MapTypeInfo typeInfo = (MapTypeInfo) valueVarInfo.typeInfo;
+            // index matches the keytype
+            env.addCons(idx.genCons(typeInfo.keyType.type.typeName, Relation.LEQ, env, location));
+            // valueType matches the result exp
+            env.addCons(now.genCons(typeInfo.valueType.type.typeName, Relation.EQ, env, location));
+            return now;
+        } else {
+            System.err.println("Subscript: value type not found");
+            return null;
+        }
+    }
 
     @Override
     public Context genConsVisit(VisitEnv env) {

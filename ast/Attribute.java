@@ -3,6 +3,7 @@ package ast;
 import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -14,6 +15,15 @@ public class Attribute extends TrailerExpr {
         value = v;
         attr = a;
     }
+
+    @Override
+    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+        VarInfo varInfo = getVarInfo(env);
+        NTCContext now = new NTCContext(this, parent);
+        env.addCons(now.genCons(varInfo.typeInfo.type.typeName, Relation.EQ, env, location));
+        return now;
+    }
+
     public VarInfo getVarInfo(NTCEnv env) {
         VarInfo rtnVarInfo;
         VarInfo parentVarInfo = value.getVarInfo(env);
@@ -21,6 +31,7 @@ public class Attribute extends TrailerExpr {
         rtnVarInfo = parentTypeInfo.getMemberVarInfo(parentVarInfo.fullName, attr.id);
         return rtnVarInfo;
     }
+
     @Override
     public Context genConsVisit(VisitEnv env) {
         //TODO: assuming only one-level attribute access
