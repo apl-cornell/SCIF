@@ -1,12 +1,9 @@
 package ast;
 
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class Arg extends Node {
@@ -18,19 +15,19 @@ public class Arg extends Node {
     }
 
     public VarInfo parseArg(ContractInfo contractInfo) {
-        return contractInfo.toVarInfo(name + "?", name, annotation, false, location);
+        return contractInfo.toVarInfo(name, annotation, false, location);
     }
 
-    public VarInfo parseArg(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public VarInfo parseArg(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
         return env.toVarInfo(name, annotation, false, location, now);
     }
 
     @Override
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
 
-        NTCContext type = annotation.NTCgenCons(env, now);
+        ScopeContext type = annotation.NTCgenCons(env, now);
 
         env.addSym(name, new VarSym(name, env.toVarInfo(name, annotation, false, location, now)));
 
@@ -50,7 +47,7 @@ public class Arg extends Node {
             }
         }
         String ifName = env.ctxt + "." + name;
-        VarInfo varInfo = env.contractInfo.toVarInfo(ifName, name, annotation, false, location);
+        VarInfo varInfo = env.contractInfo.toVarInfo(name, annotation, false, location);
         env.varNameMap.add(name, ifName, varInfo);
 
         if (varInfo.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
@@ -68,5 +65,12 @@ public class Arg extends Node {
 
     public String toSolCode() {
         return annotation.toSolCode() + " " + name;
+    }
+
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(annotation);
+        return rtn;
     }
 }

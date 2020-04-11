@@ -3,6 +3,10 @@ package typecheck;
 import java.util.HashMap;
 import java.util.HashSet;
 
+/*
+    variables, types, functions, contracts
+*/
+
 public class SymTab {
     SymTab parent;
     HashMap<String, Sym> table;

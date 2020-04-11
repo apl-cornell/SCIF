@@ -6,8 +6,8 @@ public class DepMapTypeInfo extends MapTypeInfo {
     public TypeInfo keyType;
     public TypeInfo valueType;
 
-    public DepMapTypeInfo(Type typeName, IfLabel ifl, boolean isConst, TypeInfo keyType, TypeInfo valueType) {
-        super(typeName, ifl, isConst, keyType, valueType);
+    public DepMapTypeInfo(Type typeName, IfLabel ifl, TypeInfo keyType, TypeInfo valueType) {
+        super(typeName, ifl, keyType, valueType);
     }
 
     public DepMapTypeInfo(DepMapTypeInfo depMapTypeInfo) {

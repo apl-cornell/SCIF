@@ -1,5 +1,6 @@
 package ast;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class FuncLabels extends Node {
@@ -23,4 +24,12 @@ public class FuncLabels extends Node {
         end_lock.findPrincipal(principalSet);
     }
 
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(begin_pc);
+        rtn.add(begin_lock);
+        rtn.add(end_lock);
+        return rtn;
+    }
 }

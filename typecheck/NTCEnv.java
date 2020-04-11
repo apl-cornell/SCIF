@@ -13,7 +13,8 @@ import java.util.HashSet;
 public class NTCEnv {
     public SymTab globalSymTab;
     public SymTab curSymTab;
-    public HashMap<String, SymTab> externalSymTab;
+    // public HashMap<String, SymTab> externalSymTab;
+    // external contracts will be added to the global SymTab
     public ArrayList<Constraint> cons;
     public Hypothesis globalHypothesis;
     public NTCEnv() {
@@ -30,7 +31,7 @@ public class NTCEnv {
     }
     public void setCurSymTab(SymTab curSymTab) { this.curSymTab = curSymTab; }
 
-    public VarInfo toVarInfo(String varName, ast.Type astType, boolean isConst, CodeLocation location, NTCContext context) {
+    public VarInfo toVarInfo(String varName, ast.Type astType, boolean isConst, CodeLocation location, ScopeContext context) {
         TypeInfo typeInfo = toTypeInfo(astType, isConst);
         return new VarInfo(varName, varName, typeInfo, location, context);
     }

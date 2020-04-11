@@ -31,8 +31,8 @@ public class FunctionSig extends Statement {
     }
 
     @Override
-    public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
         ArrayList<VarInfo> argsInfo = args.parseArgs(env, now);
         env.addSym(name, new FuncSym(name, new FuncInfo(name, funcLabels, argsInfo, env.toTypeInfo(rtn, false), location)));
         return true;
@@ -61,5 +61,20 @@ public class FunctionSig extends Statement {
 
     public String rtnToSHErrLocFmt() {
         return toSHErrLocFmt() + ".RTN";
+    }
+    @Override
+    public void passScopeContext(ScopeContext parent) {
+        scopeContext = new ScopeContext(this, parent);
+        for (Node node : children())
+            node.passScopeContext(scopeContext);
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        if (funcLabels != null)
+            rtn.add(funcLabels);
+        rtn.add(args);
+        rtn.add(this.rtn);
+        return rtn;
     }
 }

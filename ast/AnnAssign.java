@@ -7,7 +7,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class AnnAssign extends Statement {
@@ -32,13 +31,13 @@ public class AnnAssign extends Statement {
         this.simple = simple;
     }
     public VarInfo toVarInfo(ContractInfo contractInfo) {
-        return contractInfo.toVarInfo("", ((Name)target).id, annotation, isConst, location);
+        return contractInfo.toVarInfo(((Name)target).id, annotation, isConst, location);
     }
 
-    public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
+    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
         if (!(target instanceof Name)) return false;
-        NTCContext now = new NTCContext(this, parent);
-        NTCContext tgt = new NTCContext(target, now);
+        ScopeContext now = new ScopeContext(this, parent);
+        ScopeContext tgt = new ScopeContext(target, now);
 
         String name = ((Name) target).id;
         env.globalSymTab.add(name, new VarSym(name, env.toVarInfo(name, annotation, isConst, location, tgt)));
@@ -46,10 +45,10 @@ public class AnnAssign extends Statement {
     }
 
     @Override
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
-        NTCContext type = annotation.NTCgenCons(env, now);
-        NTCContext tgt = target.NTCgenCons(env, now);
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
+        ScopeContext type = annotation.NTCgenCons(env, now);
+        ScopeContext tgt = target.NTCgenCons(env, now);
 
         if (!parent.isContractLevel()) {
             String name = ((Name) target).id;
@@ -58,7 +57,7 @@ public class AnnAssign extends Statement {
 
         env.cons.add(type.genCons(tgt, Relation.EQ, env, location));
         if (value != null) {
-            NTCContext v = value.NTCgenCons(env, now);
+            ScopeContext v = value.NTCgenCons(env, now);
             env.cons.add(tgt.genCons(v, Relation.LEQ, env, location));
         }
         return null;
@@ -69,7 +68,7 @@ public class AnnAssign extends Statement {
         if (simple) {
             String id = ((Name) target).id;
             CodeLocation loc = location;
-            contractInfo.varMap.put(id, contractInfo.toVarInfo(id, id, annotation, isConst, loc));
+            contractInfo.varMap.put(id, contractInfo.toVarInfo(id, annotation, isConst, loc));
         } else {
             //TODO
         }
@@ -88,7 +87,7 @@ public class AnnAssign extends Statement {
             ifNameTgt = (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
             String id = ((Name) target).id;
             CodeLocation loc = location;
-            varInfo = env.contractInfo.toVarInfo(ifNameTgt, id, annotation, isConst, loc);
+            varInfo = env.contractInfo.toVarInfo(id, annotation, isConst, loc);
             env.varNameMap.add(((Name) target).id, ifNameTgt, varInfo);
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
@@ -126,8 +125,7 @@ public class AnnAssign extends Statement {
             env.prevContext.lockName = tmp.lockName;
         }
 
-        Context rtn = new Context(ifNameTgtLbl, env.prevContext.lockName);
-        return rtn;
+        return new Context(ifNameTgtLbl, env.prevContext.lockName);
     }
 
     public void findPrincipal(HashSet<String> principalSet) {
@@ -141,5 +139,14 @@ public class AnnAssign extends Statement {
             code.addVarDef(annotation.toSolCode(), target.toSolCode(), isConst, value.toSolCode());
         else
             code.addVarDef(annotation.toSolCode(), target.toSolCode(), isConst);
+    }
+
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(target);
+        rtn.add(annotation);
+        rtn.add(value);
+        return rtn;
     }
 }

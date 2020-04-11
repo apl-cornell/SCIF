@@ -22,5 +22,11 @@ public class StructDef extends Statement {
         contractInfo.typeMap.put(structName, contractInfo.toStructType(structName, members));
 
     }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.addAll(members);
+        return rtn;
+    }
 
 }

@@ -7,7 +7,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Attribute extends TrailerExpr {
     Name attr;
@@ -17,9 +16,9 @@ public class Attribute extends TrailerExpr {
     }
 
     @Override
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         VarInfo varInfo = getVarInfo(env);
-        NTCContext now = new NTCContext(this, parent);
+        ScopeContext now = new ScopeContext(this, parent);
         env.addCons(now.genCons(varInfo.typeInfo.type.typeName, Relation.EQ, env, location));
         return now;
     }
@@ -28,7 +27,7 @@ public class Attribute extends TrailerExpr {
         VarInfo rtnVarInfo;
         VarInfo parentVarInfo = value.getVarInfo(env);
         StructType parentTypeInfo = (StructType) parentVarInfo.typeInfo.type;
-        rtnVarInfo = parentTypeInfo.getMemberVarInfo(parentVarInfo.fullName, attr.id);
+        rtnVarInfo = parentTypeInfo.getMemberVarInfo(parentVarInfo.toSherrlocFmt(), attr.id);
         return rtnVarInfo;
     }
 
@@ -65,11 +64,17 @@ public class Attribute extends TrailerExpr {
         VarInfo rtnVarInfo;
         VarInfo parentVarInfo = value.getVarInfo(env);
         StructType parentTypeInfo = (StructType) parentVarInfo.typeInfo.type;
-        rtnVarInfo = parentTypeInfo.getMemberVarInfo(parentVarInfo.fullName, attr.id);
+        rtnVarInfo = parentTypeInfo.getMemberVarInfo(parentVarInfo.toSherrlocFmt(), attr.id);
         return rtnVarInfo;
     }
 
     public String toSolCode() {
         return SolCode.toAttribute(value.toSolCode(), attr.id);
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(value);
+        return rtn;
     }
 }

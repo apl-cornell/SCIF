@@ -3,6 +3,7 @@ package sherrlocUtils;
 import typecheck.CodeLocation;
 
 public class Constraint {
+    // names are unique strings
     Inequality inequality;
     Hypothesis hypothesis;
     Position position;

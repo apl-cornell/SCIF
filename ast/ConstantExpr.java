@@ -4,7 +4,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class ConstantExpr extends Expression {
     Constant value;
@@ -13,9 +12,9 @@ public class ConstantExpr extends Expression {
     }
 
     @Override
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         //TODO: Constant are boolean
-        NTCContext now = new NTCContext(this, parent);
+        ScopeContext now = new ScopeContext(this, parent);
         env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
         return now;
     }

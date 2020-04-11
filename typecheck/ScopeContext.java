@@ -1,36 +1,47 @@
 package typecheck;
 
-import ast.Contract;
-import ast.FunctionDef;
-import ast.FunctionSig;
-import ast.Node;
+import ast.*;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
 
-public class NTCContext {
+public class ScopeContext {
     Node cur;
-    NTCContext parent;
+    ScopeContext parent;
     String SHErrLocName;
 
-    public NTCContext(Node cur, NTCContext parent) {
+    public ScopeContext(Node cur, ScopeContext parent) {
         this.cur = cur;
         this.parent = parent;
         SHErrLocName = calcSHErrLocName();
     }
 
     private String calcSHErrLocName() {
-        /*if (parent != null)
-            return parent.getSHErrLocName() + "." + cur.toSHErrLocFmt();
-        else*/
-            return cur.toSHErrLocFmt();
+        String localPostfix;
+        if (cur instanceof Contract)
+            localPostfix = ((Contract) cur).contractName;
+        else if (cur instanceof FunctionSig)
+            localPostfix = ((FunctionSig) cur).name;
+        else if (cur instanceof If)
+            localPostfix = "if" + cur.locToString();
+        else if (cur instanceof While)
+            localPostfix = "while" + cur.locToString();
+        else if (cur instanceof Interface)
+            localPostfix = ((Interface) cur).contractName;
+        else
+            localPostfix = "unknown" + cur.locToString();
+
+        if (parent != null)
+            return parent.getSHErrLocName() + "." + localPostfix;
+        else
+            return localPostfix;
     }
 
     public String getSHErrLocName() {
         return SHErrLocName;
     }
 
-    public Constraint genCons(NTCContext rhs, Relation op, NTCEnv env, CodeLocation location) {
+    public Constraint genCons(ScopeContext rhs, Relation op, NTCEnv env, CodeLocation location) {
         return new Constraint(new Inequality(getSHErrLocName(), op, rhs.getSHErrLocName()), env.globalHypothesis, location);
     }
     public Constraint genCons(String rhs, Relation op, NTCEnv env, CodeLocation location) {

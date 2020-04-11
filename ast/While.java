@@ -7,7 +7,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class While extends Statement {
@@ -25,12 +24,12 @@ public class While extends Statement {
         this.orelse = null;
     }
 
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         // consider to be a new scope
         // must contain at least one Statement
-        NTCContext now = new NTCContext(this, parent);
+        ScopeContext now = new ScopeContext(this, parent);
         env.curSymTab = new SymTab(env.curSymTab);
-        NTCContext rtn = test.NTCgenCons(env, now);
+        ScopeContext rtn = test.NTCgenCons(env, now);
         env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
 
         for (Statement s : body) {
@@ -91,5 +90,19 @@ public class While extends Statement {
             stmt.SolCodeGen(code);
         }
         code.leaveWhile();
+    }
+    @Override
+    public void passScopeContext(ScopeContext parent) {
+        scopeContext = new ScopeContext(this, parent);
+        for (Node node : children())
+            node.passScopeContext(scopeContext);
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(test);
+        rtn.addAll(body);
+        rtn.addAll(orelse);
+        return rtn;
     }
 }

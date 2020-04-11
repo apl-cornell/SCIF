@@ -19,11 +19,11 @@ public class GuardBlock extends Statement {
         this.target = target;
     }
 
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         // consider to be a new scope
         // must contain at least one Statement
         env.curSymTab = new SymTab(env.curSymTab);
-        NTCContext rtn = null;
+        ScopeContext rtn = null;
         for (Statement s : body) {
             rtn = s.NTCgenCons(env, parent);
         }
@@ -100,5 +100,19 @@ public class GuardBlock extends Statement {
         for (Statement stmt : body) {
             stmt.SolCodeGen(code);
         }
+    }
+    @Override
+    public void passScopeContext(ScopeContext parent) {
+        scopeContext = new ScopeContext(this, parent);
+        for (Node node : children())
+            node.passScopeContext(scopeContext);
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(l);
+        rtn.addAll(body);
+        rtn.add(target);
+        return rtn;
     }
 }

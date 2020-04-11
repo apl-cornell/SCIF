@@ -20,8 +20,8 @@ public class FunctionDef extends FunctionSig {
     }
 
     @Override
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
 
         // add args to local sym;
         String funcName = this.name;
@@ -122,5 +122,11 @@ public class FunctionDef extends FunctionSig {
         }
 
         code.leaveFunctionDef();
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = super.children();
+        rtn.addAll(body);
+        return rtn;
     }
 }

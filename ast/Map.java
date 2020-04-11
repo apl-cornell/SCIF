@@ -1,6 +1,7 @@
 package ast;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 public class Map extends LabeledType {
     public LabeledType keyType;
@@ -16,6 +17,13 @@ public class Map extends LabeledType {
         String rtn = "mapping";
         String k = keyType.toSolCode(), v = valueType.toSolCode();
         rtn += "(" + k + " => " + v + ")";
+        return rtn;
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(keyType);
+        rtn.add(valueType);
         return rtn;
     }
 }

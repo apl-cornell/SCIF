@@ -18,4 +18,12 @@ public class Assert extends Statement {
         Context tmp = test.genConsVisit(env);
         return tmp;
     }
+
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(test);
+        rtn.add(msg);
+        return rtn;
+    }
 }

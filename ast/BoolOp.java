@@ -8,7 +8,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class BoolOp extends Expression {
     BoolOperator op;
@@ -20,9 +19,9 @@ public class BoolOp extends Expression {
     }
 
     @Override
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
-        NTCContext l = left.NTCgenCons(env, now), r = right.NTCgenCons(env, now);
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
+        ScopeContext l = left.NTCgenCons(env, now), r = right.NTCgenCons(env, now);
         env.cons.add(now.genCons(l, Relation.LEQ, env, location));
         env.cons.add(now.genCons(r, Relation.LEQ, env, location));
         env.cons.add(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
@@ -48,5 +47,12 @@ public class BoolOp extends Expression {
 
     public String toSolCode() {
         return SolCode.toBoolOp(left.toSolCode(), Utils.toBoolOp(op), right.toSolCode());
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(left);
+        rtn.add(right);
+        return rtn;
     }
 }

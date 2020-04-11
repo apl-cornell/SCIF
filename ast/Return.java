@@ -7,7 +7,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Return extends Statement {
     Expression value;
@@ -18,11 +17,11 @@ public class Return extends Statement {
         this.value = null;
     }
 
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
         FuncInfo funcInfo = Utils.getCurrentFuncInfo(env, now);
         if (value != null) {
-            NTCContext rtn = value.NTCgenCons(env, now);
+            ScopeContext rtn = value.NTCgenCons(env, now);
             env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         }
         env.addCons(now.genCons(env.getSymName(funcInfo.returnType.type.typeName), Relation.EQ, env, location));
@@ -55,5 +54,11 @@ public class Return extends Statement {
     @Override
     public void SolCodeGen(SolCode code) {
         code.addReturn(value != null ? value.toSolCode() : "");
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(value);
+        return rtn;
     }
 }

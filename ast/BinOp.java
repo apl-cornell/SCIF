@@ -8,7 +8,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 // Assume operators are INT
 public class BinOp extends Expression {
@@ -21,13 +20,13 @@ public class BinOp extends Expression {
     }
 
     @Override
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         logger.debug("binOp:");
-        NTCContext now = new NTCContext(this, parent);
-        NTCContext l = left.NTCgenCons(env, now);
+        ScopeContext now = new ScopeContext(this, parent);
+        ScopeContext l = left.NTCgenCons(env, now);
         logger.debug("binOp/left:");
         logger.debug(l.toString());
-        NTCContext r = right.NTCgenCons(env, now);
+        ScopeContext r = right.NTCgenCons(env, now);
         logger.debug("binOp/right:");
         logger.debug(r.toString());
         env.cons.add(now.genCons(l, Relation.LEQ, env, location));
@@ -58,5 +57,12 @@ public class BinOp extends Expression {
 
     public String toSolCode() {
         return SolCode.toBinOp(left.toSolCode(), Utils.toBinOp(op), right.toSolCode());
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(left);
+        rtn.add(right);
+        return rtn;
     }
 }

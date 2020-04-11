@@ -59,34 +59,35 @@ public class ContractInfo {
         return new StructType(typeName, memberList);
     }
 
-    public TypeInfo toTypeInfo(ast.Type astType, boolean isConst) {
+    public TypeInfo toTypeInfo(ast.Type astType) {
         if (astType == null) {
-            return new TypeInfo(new BuiltinType("void"), null, isConst);
+            return new TypeInfo(new BuiltinType("void"), null);
         }
 
         TypeInfo typeInfo = null;
         if (!(astType instanceof LabeledType)) {
             String typeName = astType.x;
             Type type = toType(typeName);
-            typeInfo = new TypeInfo(type, null, isConst);
+            typeInfo = new TypeInfo(type, null);
         } else {
             LabeledType lt = (LabeledType) astType;
             if (lt instanceof DepMap) {
                 DepMap depMap = (DepMap) lt;
-                typeInfo = new DepMapTypeInfo(toType("DepMap"), depMap.ifl, isConst, toTypeInfo(depMap.keyType, isConst), toTypeInfo(depMap.valueType, isConst));
+                // TODO: fix the naming
+                typeInfo = new DepMapTypeInfo(toType("DepMap"), depMap.ifl, toTypeInfo(depMap.keyType), toTypeInfo(depMap.valueType));
             } else if (lt instanceof Map) {
                 Map map = (Map) lt;
-                typeInfo = new MapTypeInfo(toType("Map"), map.ifl, isConst, toTypeInfo(map.keyType, isConst), toTypeInfo(map.valueType, isConst));
+                typeInfo = new MapTypeInfo(toType("Map"), map.ifl, toTypeInfo(map.keyType), toTypeInfo(map.valueType));
             } else {
-                typeInfo = new TypeInfo(toType(lt.x), lt.ifl, isConst);
+                typeInfo = new TypeInfo(toType(lt.x), lt.ifl);
             }
         }
         return typeInfo;
     }
 
 
-    public VarInfo toVarInfo(String fullName, String localName, ast.Type astType, boolean isConst, CodeLocation loc) {
-        TypeInfo typeInfo = toTypeInfo(astType, isConst);
-        return new VarInfo(fullName, localName, typeInfo, loc);
+    public VarInfo toVarInfo(String localName, ast.Type astType, boolean isConst, CodeLocation loc) {
+        TypeInfo typeInfo = toTypeInfo(astType);
+        return new VarInfo(localName, typeInfo, loc, isConst);
     }
 }

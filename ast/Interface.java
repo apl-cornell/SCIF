@@ -1,14 +1,14 @@
 package ast;
 
 import typecheck.ContractInfo;
-import typecheck.NTCContext;
+import typecheck.ScopeContext;
 import typecheck.NTCEnv;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
 public class Interface extends Node {
-    String contractName;
+    public String contractName;
     public ArrayList<TrustConstraint> trustCons;
     public ArrayList<FunctionSig> funcSigs;
     public Interface(String contractName, ArrayList<TrustConstraint> trustCons, ArrayList<FunctionSig> funcSigs) {
@@ -18,8 +18,8 @@ public class Interface extends Node {
     }
 
     @Override
-    public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
         for (FunctionSig functionSig : funcSigs) {
             if (!functionSig.NTCGlobalInfo(env, now)) return false;
         }
@@ -44,5 +44,18 @@ public class Interface extends Node {
         for (FunctionSig stmt : funcSigs) {
             stmt.findPrincipal(principalSet);
         }
+    }
+    @Override
+    public void passScopeContext(ScopeContext parent) {
+        scopeContext = new ScopeContext(this, parent);
+        for (Node node : children())
+            node.passScopeContext(scopeContext);
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.addAll(trustCons);
+        rtn.addAll(funcSigs);
+        return rtn;
     }
 }

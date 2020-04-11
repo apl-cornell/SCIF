@@ -1,6 +1,6 @@
 package ast;
 
-import typecheck.NTCContext;
+import typecheck.ScopeContext;
 import typecheck.NTCEnv;
 
 import java.util.HashSet;
@@ -12,8 +12,8 @@ public class Type extends Expression {
     }
 
     @Override
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
         return now;
     }
 

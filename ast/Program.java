@@ -4,7 +4,6 @@ import compile.SolCode;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class Program extends Node {
@@ -19,8 +18,8 @@ public class Program extends Node {
         this.contracts = contracts;
     }
 
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
         for (Contract contract : contracts) {
             env.setGlobalSymTab(env.externalSymTab.get(contract.contractName));
             env.setCurSymTab(env.globalSymTab);
@@ -30,7 +29,7 @@ public class Program extends Node {
     }
 
     @Override
-    public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
+    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
         for (String iptContract : iptContracts)
             if (env.externalSymTab.containsKey(iptContract))
                 return false;
@@ -80,5 +79,11 @@ public class Program extends Node {
         for (Contract contract : contracts) {
             contract.SolCodeGen(code);
         }
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.addAll(contracts);
+        return rtn;
     }
 }

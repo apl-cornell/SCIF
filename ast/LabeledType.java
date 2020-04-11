@@ -1,5 +1,6 @@
 package ast;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class LabeledType extends Type {
@@ -21,5 +22,11 @@ public class LabeledType extends Type {
 
     public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
         ifl.findPrincipal(principalSet, getRidOf);
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(ifl);
+        return rtn;
     }
 }

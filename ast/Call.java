@@ -6,9 +6,7 @@ import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
-import javax.swing.text.Utilities;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Call extends TrailerExpr {
     public ArrayList<Expression> args;
@@ -35,8 +33,8 @@ public class Call extends TrailerExpr {
         this.keywords.add(keyword);
     }
 
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
         String funcName;
         FuncInfo funcInfo;
         if (!(value instanceof Name)) {
@@ -71,7 +69,7 @@ public class Call extends TrailerExpr {
         for (int i = 0; i < args.size(); ++i) {
             Expression arg = args.get(i);
             TypeInfo paraInfo = funcInfo.parameters.get(i).typeInfo;
-            NTCContext argContext = arg.NTCgenCons(env, now);
+            ScopeContext argContext = arg.NTCgenCons(env, now);
             String typeName = env.getSymName(paraInfo.type.typeName);
             env.addCons(argContext.genCons(typeName, Relation.REQ, env, location));
         }
@@ -229,4 +227,13 @@ public class Call extends TrailerExpr {
         return SolCode.toFunctionCall(funcName, argsCode);
     }
 
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(value);
+        rtn.addAll(args);
+        if (keywords != null)
+            rtn.addAll(keywords);
+        return rtn;
+    }
 }

@@ -4,7 +4,6 @@ import compile.SolCode;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class Contract extends Node {
@@ -18,8 +17,8 @@ public class Contract extends Node {
     }
 
     @Override
-    public boolean NTCGlobalInfo(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
         for (Statement stmt : body) {
             if (!stmt.NTCGlobalInfo(env, now)) return false;
         }
@@ -28,8 +27,8 @@ public class Contract extends Node {
     }
 
     @Override
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
         for (Statement stmt : body) {
             stmt.NTCgenCons(env, now);
         }
@@ -69,5 +68,20 @@ public class Contract extends Node {
             stmt.SolCodeGen(code);
         }
         code.leaveContractDef();
+    }
+
+    @Override
+    public void passScopeContext(ScopeContext parent) {
+        scopeContext = new ScopeContext(this, parent);
+        for (Node node : children())
+            node.passScopeContext(scopeContext);
+    }
+
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.addAll(trustCons);
+        rtn.addAll(body);
+        return rtn;
     }
 }

@@ -8,7 +8,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Compare extends Expression {
     Expression left;
@@ -21,10 +20,10 @@ public class Compare extends Expression {
     }
 
     @Override
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         //TODO: not included: Is, NotIs, In, NotIn
-        NTCContext now = new NTCContext(this, parent);
-        NTCContext l = left.NTCgenCons(env, now), r = right.NTCgenCons(env, now);
+        ScopeContext now = new ScopeContext(this, parent);
+        ScopeContext l = left.NTCgenCons(env, now), r = right.NTCgenCons(env, now);
 
         env.addCons(l.genCons(r, Relation.EQ, env, location));
         if (op == CompareOperator.Eq || op == CompareOperator.NotEq) {
@@ -57,5 +56,12 @@ public class Compare extends Expression {
     public String toSolCode() {
         return SolCode.toCompareOp(left.toSolCode(), Utils.toCompareOp(op), right.toSolCode());
 
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(left);
+        rtn.add(right);
+        return rtn;
     }
 }

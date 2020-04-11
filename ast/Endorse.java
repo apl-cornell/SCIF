@@ -5,7 +5,6 @@ import sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Endorse extends Expression {
     Expression value;
@@ -17,7 +16,7 @@ public class Endorse extends Expression {
         this.to = to;
     }
 
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         return value.NTCgenCons(env, parent);
     }
     @Override
@@ -39,5 +38,13 @@ public class Endorse extends Expression {
     @Override
     public String toSolCode() {
         return value.toSolCode();
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(value);
+        rtn.add(from);
+        rtn.add(to);
+        return rtn;
     }
 }

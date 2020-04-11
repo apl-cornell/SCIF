@@ -4,7 +4,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class UnaryOp extends Expression {
     UnaryOperator op;
@@ -14,9 +13,9 @@ public class UnaryOp extends Expression {
         operand = y;
     }
 
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
-        NTCContext rtn = operand.NTCgenCons(env, now);
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
+        ScopeContext rtn = operand.NTCgenCons(env, now);
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         if (op == UnaryOperator.USub || op == UnaryOperator.UAdd) {
             env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.EQ, env, location));
@@ -35,5 +34,11 @@ public class UnaryOp extends Expression {
     public String toSolCode() {
         String v = operand.toSolCode();
         return compile.Utils.toUnaryOp(op) + v;
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(operand);
+        return rtn;
     }
 }

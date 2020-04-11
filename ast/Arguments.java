@@ -3,7 +3,6 @@ package ast;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class Arguments extends Node {
@@ -28,8 +27,8 @@ public class Arguments extends Node {
         }
     }
 
-    public ArrayList<VarInfo> parseArgs(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
+    public ArrayList<VarInfo> parseArgs(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
         ArrayList<VarInfo> rnt = new ArrayList<>();
         for (Arg arg : args) {
             rnt.add(arg.parseArg(env, now));
@@ -69,6 +68,16 @@ public class Arguments extends Node {
             // rnt += "type name"
             rtn += arg.toSolCode();
         }
+        return rtn;
+    }
+
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        if (args != null)
+            rtn.addAll(args);
+        if (defaults != null)
+            rtn.addAll(defaults);
         return rtn;
     }
 }

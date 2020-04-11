@@ -2,6 +2,7 @@ package ast;
 
 import typecheck.Utils;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class PrimitiveIfLabel extends IfLabel {
@@ -84,5 +85,11 @@ public class PrimitiveIfLabel extends IfLabel {
             if (name.equals(k))
                 ((Name) value).id = v;
         }
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(value);
+        return rtn;
     }
 }

@@ -3,9 +3,6 @@ package ast;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
 public class Name extends Variable {
     public String id;
     //Context ctx;
@@ -19,14 +16,14 @@ public class Name extends Variable {
     }*/
 
 
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         Sym s = env.getCurSym(id);
         logger.debug("Name: " + id);
         logger.debug(s.toString());
         if (s instanceof FuncSym) {
             return null;
         } else if (s instanceof VarSym) {
-            NTCContext now = new NTCContext(this, parent);
+            ScopeContext now = new ScopeContext(this, parent);
             TypeInfo typeInfo = ((VarSym) s).varInfo.typeInfo;
             logger.debug(typeInfo.toString());
             env.addCons(now.genCons(typeInfo.type.typeName, Relation.EQ, env, location));

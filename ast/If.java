@@ -6,9 +6,7 @@ import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
-import javax.swing.text.Utilities;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class If extends Statement {
     Expression test;
@@ -25,12 +23,12 @@ public class If extends Statement {
         this.orelse = new ArrayList<>();
     }
 
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         // consider to be a new scope
         // must contain at least one Statement
-        NTCContext now = new NTCContext(this, parent);
+        ScopeContext now = new ScopeContext(this, parent);
         env.curSymTab = new SymTab(env.curSymTab);
-        NTCContext rtn = null;
+        ScopeContext rtn = null;
 
         rtn = test.NTCgenCons(env, now);
         env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
@@ -157,5 +155,19 @@ public class If extends Statement {
             }
             code.leaveElse();
         }
+    }
+    @Override
+    public void passScopeContext(ScopeContext parent) {
+        scopeContext = new ScopeContext(this, parent);
+        for (Node node : children())
+            node.passScopeContext(scopeContext);
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(test);
+        rtn.addAll(body);
+        rtn.addAll(orelse);
+        return rtn;
     }
 }

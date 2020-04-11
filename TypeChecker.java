@@ -43,6 +43,7 @@ public class TypeChecker {
         // Collect global info
         NTCEnv NTCenv = new NTCEnv();
         for (Node root : roots) {
+            root.passScopeContext(null);
             if (!root.NTCGlobalInfo(NTCenv, null)) {
                 // doesn't typecheck
                 return null;

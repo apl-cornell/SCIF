@@ -7,7 +7,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Assign extends Statement {
     //TODO: assuming targets only contains 1 element now
@@ -19,10 +18,10 @@ public class Assign extends Statement {
     }
 
     @Override
-    public NTCContext NTCgenCons(NTCEnv env, NTCContext parent) {
-        NTCContext now = new NTCContext(this, parent);
-        NTCContext tgt = targets.get(0).NTCgenCons(env, now);
-        NTCContext v = value.NTCgenCons(env, now);
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
+        ScopeContext tgt = targets.get(0).NTCgenCons(env, now);
+        ScopeContext v = value.NTCgenCons(env, now);
         // con: tgt should be a supertype of v
         env.cons.add(tgt.genCons(v, Relation.LEQ, env, location));
         return now;
@@ -68,5 +67,12 @@ public class Assign extends Statement {
 
     public void SolCodeGen(SolCode code) {
         code.addAssign(targets.get(0).toSolCode(), value.toSolCode());
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.addAll(targets);
+        rtn.add(value);
+        return rtn;
     }
 }

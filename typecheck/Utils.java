@@ -8,7 +8,6 @@ import sherrlocUtils.Constraint;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class Utils {
@@ -153,7 +152,7 @@ public class Utils {
 
     protected static final Logger logger = LogManager.getLogger();
 
-    public static FuncInfo getCurrentFuncInfo(NTCEnv env, NTCContext now) {
+    public static FuncInfo getCurrentFuncInfo(NTCEnv env, ScopeContext now) {
         while (!(now.cur instanceof FunctionDef)) {
             now = now.parent;
         }

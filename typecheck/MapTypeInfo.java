@@ -6,8 +6,8 @@ public class MapTypeInfo extends TypeInfo {
     public TypeInfo keyType;
     public TypeInfo valueType;
 
-    public MapTypeInfo(Type typeName, IfLabel ifl, boolean isConst, TypeInfo keyType, TypeInfo valueType) {
-        super(typeName, ifl, isConst);
+    public MapTypeInfo(Type typeName, IfLabel ifl, TypeInfo keyType, TypeInfo valueType) {
+        super(typeName, ifl);
         this.keyType = keyType;
         this.valueType = valueType;
     }
