@@ -19,7 +19,7 @@ public class NTCEnv {
     public Hypothesis globalHypothesis;
     public NTCEnv() {
         globalSymTab = new SymTab();
-        externalSymTab = new HashMap<>();
+        // externalSymTab = new HashMap<>();
         cons = new ArrayList<>();
         //globalSymTab = null; //TODO
         curSymTab = globalSymTab;
@@ -33,25 +33,25 @@ public class NTCEnv {
 
     public VarInfo toVarInfo(String varName, ast.Type astType, boolean isConst, CodeLocation location, ScopeContext context) {
         TypeInfo typeInfo = toTypeInfo(astType, isConst);
-        return new VarInfo(varName, varName, typeInfo, location, context);
+        return new VarInfo(varName, typeInfo, location, context, isConst);
     }
 
-    public TypeInfo toTypeInfo(ast.Type astType, boolean isConst) {
+    public TypeInfo toTypeInfo(ast.Type astType) {
         TypeInfo typeInfo = null;
 
-        if (astType == null) return new TypeInfo(new BuiltinType(Utils.BuiltinType2ID(BuiltInT.VOID)), null, isConst);
+        if (astType == null) return new TypeInfo(new BuiltinType(Utils.BuiltinType2ID(BuiltInT.VOID)), null);
         if (Utils.isPrimitiveType(astType.x))
-            typeInfo = new TypeInfo(new BuiltinType(astType.x), null, isConst);
+            typeInfo = new TypeInfo(new BuiltinType(astType.x), null);
         else {
             LabeledType lt = (LabeledType) astType;
             if (lt instanceof DepMap) {
                 DepMap depMap = (DepMap) lt;
-                typeInfo = new DepMapTypeInfo(new BuiltinType("DepMap"), depMap.ifl, isConst, toTypeInfo(depMap.keyType, isConst), toTypeInfo(depMap.valueType, isConst));
+                typeInfo = new DepMapTypeInfo(new BuiltinType("DepMap"), depMap.ifl, toTypeInfo(depMap.keyType), toTypeInfo(depMap.valueType));
             } else if (lt instanceof Map) {
                 Map map = (Map) lt;
-                typeInfo = new MapTypeInfo(new BuiltinType("Map"), map.ifl, isConst, toTypeInfo(map.keyType, isConst), toTypeInfo(map.valueType, isConst));
+                typeInfo = new MapTypeInfo(new BuiltinType("Map"), map.ifl, toTypeInfo(map.keyType), toTypeInfo(map.valueType));
             } else {
-                typeInfo = new TypeInfo(new BuiltinType(lt.x), lt.ifl, isConst);
+                typeInfo = new TypeInfo(new BuiltinType(lt.x), lt.ifl);
             }
         }
         return typeInfo;
@@ -88,7 +88,9 @@ public class NTCEnv {
     }
 
     public boolean contractExists(String contractName) {
-        return externalSymTab.containsKey(contractName);
+        Sym rtn = globalSymTab.lookup(contractName);
+        if (rtn == null) return false;
+        return rtn instanceof ContractSym;
     }
 
     public Sym getExtSym(String contractName, String funcName) {

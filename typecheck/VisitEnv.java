@@ -10,47 +10,57 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class VisitEnv {
-    public String ctxt;
+    public ScopeContext ctxt;
     public Context prevContext;
-    public HashMap<String, FuncInfo> funcMap;
+    // public HashMap<String, FuncInfo> funcMap;
     public ArrayList<Constraint> cons;
     public ArrayList<Constraint> trustCons;
-    public LookupMaps varNameMap;
+    // public LookupMaps varNameMap;
+    public SymTab globalSymTab;
+    public SymTab curSymTab;
     public Hypothesis hypothesis;
-    public HashSet<String> principalSet;
-    public ContractInfo contractInfo;
-    public HashMap<String, ContractInfo> contractMap;
+    public HashSet<String> principalSet; // TODO: better imp
+    public ContractInfo curContractInfo;
+    // public HashMap<String, ContractInfo> contractMap;
 
 
-    public VisitEnv(String ctxt, Context prevContext,
-                    HashMap<String, FuncInfo> funcMap,
+    public VisitEnv(ScopeContext ctxt, Context prevContext,
+                    // HashMap<String, FuncInfo> funcMap,
                     ArrayList<Constraint> cons,
                     ArrayList<Constraint> trustCons,
-                    LookupMaps varNameMap, Hypothesis hypothesis,
+                    // LookupMaps varNameMap,
+                    SymTab globalSymTab,
+                    SymTab curSymTab,
+                    Hypothesis hypothesis,
                     HashSet<String> principalSet,
-                    ContractInfo contractInfo, HashMap<String, ContractInfo> contractMap) {
+                    ContractInfo curContractInfo
+                    /*HashMap<String, ContractInfo> contractMap*/) {
         this.ctxt = ctxt;
         this.prevContext = prevContext;
-        this.funcMap = funcMap;
+        // this.funcMap = funcMap;
         this.cons = cons;
         this.trustCons = trustCons;
-        this.varNameMap = varNameMap;
+        // this.varNameMap = varNameMap;
+        this.globalSymTab = globalSymTab;
+        this.curSymTab = curSymTab;
         this.hypothesis = hypothesis;
         this.principalSet = principalSet;
-        this.contractInfo = contractInfo;
-        this.contractMap = contractMap;
+        this.curContractInfo = curContractInfo;
+        // this.contractMap = contractMap;
     }
 
     public VisitEnv() {
-        ctxt = "";
+        ctxt = null;
         prevContext = new Context();
-        funcMap = new HashMap<>();
+        // funcMap = new HashMap<>();
         cons = new ArrayList<>();
         trustCons = new ArrayList<>();
-        varNameMap = new LookupMaps();
+        globalSymTab = new SymTab();
+        curSymTab = globalSymTab;
+        // varNameMap = new LookupMaps();
         hypothesis = new Hypothesis();
         principalSet = new HashSet<>();
-        contractInfo = null;
-        contractMap = new HashMap<>();
+        curContractInfo = null;
+        // contractMap = new HashMap<>();
     }
 }

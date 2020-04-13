@@ -31,7 +31,7 @@ public class AnnAssign extends Statement {
         this.simple = simple;
     }
     public VarInfo toVarInfo(ContractInfo contractInfo) {
-        return contractInfo.toVarInfo(((Name)target).id, annotation, isConst, location);
+        return contractInfo.toVarInfo(((Name)target).id, annotation, isConst, location, scopeContext);
     }
 
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
@@ -68,7 +68,7 @@ public class AnnAssign extends Statement {
         if (simple) {
             String id = ((Name) target).id;
             CodeLocation loc = location;
-            contractInfo.varMap.put(id, contractInfo.toVarInfo(id, annotation, isConst, loc));
+            contractInfo.addVar(id, contractInfo.toVarInfo(id, annotation, isConst, loc, scopeContext));
         } else {
             //TODO
         }

@@ -29,7 +29,7 @@ public class ScopeContext {
         else if (cur instanceof Interface)
             localPostfix = ((Interface) cur).contractName;
         else
-            localPostfix = "unknown" + cur.locToString();
+            localPostfix = cur.toSHErrLocFmt();
 
         if (parent != null)
             return parent.getSHErrLocName() + "." + localPostfix;
