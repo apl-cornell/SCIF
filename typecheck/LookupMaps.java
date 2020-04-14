@@ -8,12 +8,12 @@ import java.util.HashMap;
 
 public class LookupMaps {
     ArrayList<HashMap<String, String>> maps;
-    HashMap<String, VarInfo> varMap;
+    HashMap<String, VarSym> varMap;
     public LookupMaps() {
         maps = new ArrayList<>();
         varMap = new HashMap<>();
     }
-    public LookupMaps(HashMap<String, VarInfo> varMap) {
+    public LookupMaps(HashMap<String, VarSym> varMap) {
         maps = new ArrayList<>();
         HashMap<String, String> initMap = new HashMap<>();
         for (String s : varMap.keySet()) {
@@ -29,7 +29,7 @@ public class LookupMaps {
         }
         return null;
     }
-    public VarInfo getInfo(String k) {
+    public VarSym getInfo(String k) {
         return varMap.get(getName(k));
     }
     public void incLayer() {
@@ -49,7 +49,7 @@ public class LookupMaps {
         }
         return false;
     }
-    public void add(String k, String v, VarInfo vi) {
+    public void add(String k, String v, VarSym vi) {
         maps.get(maps.size() - 1).put(k, v);
         varMap.put(v, vi);
     }

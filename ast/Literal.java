@@ -9,7 +9,7 @@ public class Literal extends Expression {
     @Override
     public Context genConsVisit(VisitEnv env) {
         String ifNameRtn = "LITERAL..." + location.toString();
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtn), env.hypothesis, location));
 
         return new Context(ifNameRtn, env.prevContext.lockName);

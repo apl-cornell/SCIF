@@ -33,16 +33,19 @@ public class FunctionSig extends Statement {
     @Override
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        ArrayList<VarInfo> argsInfo = args.parseArgs(env, now);
-        env.addSym(name, new FuncSym(name, new FuncInfo(name, funcLabels, argsInfo, env.toTypeInfo(rtn, false), location)));
+        ArrayList<VarSym> argsInfo = args.parseArgs(env, now);
+        env.addSym(name, new FuncSym(name, funcLabels, argsInfo, env.toTypeSym(rtn), null, location));
         return true;
 
     }
 
     @Override
-    public void globalInfoVisit(ContractInfo contractInfo) {
-        ArrayList<VarInfo> argsInfo = args.parseArgs(contractInfo);
-        contractInfo.funcMap.put(name, new FuncInfo(name, funcLabels, argsInfo, contractInfo.toTypeInfo(rtn, false), location));
+    public void globalInfoVisit(ContractSym contractSym) {
+        ArrayList<VarSym> argsInfo = args.parseArgs(contractSym);
+        IfLabel ifl = null;
+        if (rtn instanceof LabeledType)
+            ifl = ((LabeledType) rtn).ifl;
+        contractSym.symTab.add(name, new FuncSym(name, funcLabels, argsInfo, contractSym.toTypeSym(rtn), ifl, location));
     }
     public void findPrincipal(HashSet<String> principalSet) {
         if (funcLabels != null) {

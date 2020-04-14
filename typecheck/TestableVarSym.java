@@ -1,11 +1,13 @@
 package typecheck;
 
-public class TestableVarInfo extends VarInfo {
+import ast.IfLabel;
+
+public class TestableVarSym extends VarSym {
     public String testedLabel;
     public boolean tested;
 
-    public TestableVarInfo(String fullName, String localName, TypeInfo type, CodeLocation location, String testedLabel, boolean tested) {
-        super(fullName, localName, type, location);
+    public TestableVarSym(String localName, TypeSym type, IfLabel ifl, CodeLocation location, ScopeContext context, boolean isConst, String testedLabel, boolean tested) {
+        super(localName, type, ifl, location, context, isConst);
         this.testedLabel = testedLabel;
         this.tested = tested;
     }

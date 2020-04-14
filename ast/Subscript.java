@@ -19,19 +19,19 @@ public class Subscript extends TrailerExpr {
     @Override
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        VarInfo valueVarInfo = value.getVarInfo(env);
+        VarSym valueVarSym = value.getVarInfo(env);
         ScopeContext idx = index.NTCgenCons(env, now);
         value.NTCgenCons(env, now);
         //TODO: support DepMap
 
-        if (valueVarInfo.typeInfo instanceof DepMapTypeInfo) {
+        if (valueVarSym.typeSym instanceof DepMapTypeSym) {
             return null;
-        } else if (valueVarInfo.typeInfo instanceof MapTypeInfo) {
-            MapTypeInfo typeInfo = (MapTypeInfo) valueVarInfo.typeInfo;
+        } else if (valueVarSym.typeSym instanceof MapTypeSym) {
+            MapTypeSym typeInfo = (MapTypeSym) valueVarSym.typeSym;
             // index matches the keytype
-            env.addCons(idx.genCons(typeInfo.keyType.type.typeName, Relation.LEQ, env, location));
+            env.addCons(idx.genCons(typeInfo.keyType.name, Relation.LEQ, env, location));
             // valueType matches the result exp
-            env.addCons(now.genCons(typeInfo.valueType.type.typeName, Relation.EQ, env, location));
+            env.addCons(now.genCons(typeInfo.valueType.name, Relation.EQ, env, location));
             return now;
         } else {
             System.err.println("Subscript: value type not found");
@@ -41,23 +41,23 @@ public class Subscript extends TrailerExpr {
 
     @Override
     public Context genConsVisit(VisitEnv env) {
-        VarInfo valueVarInfo = value.getVarInfo(env);
-        String ifNameValue = valueVarInfo.labelToSherrlocFmt();
+        VarSym valueVarSym = value.getVarInfo(env);
+        String ifNameValue = valueVarSym.labelToSherrlocFmt();
         String ifNameRtnValue = ifNameValue + "." + "Subscript" + location.toString();
         String ifNameRtnLock = "";
-        if (valueVarInfo.typeInfo instanceof DepMapTypeInfo) {
-            VarInfo indexVarInfo = index.getVarInfo(env);
+        if (valueVarSym.typeSym instanceof DepMapTypeSym) {
+            VarSym indexVarSym = index.getVarInfo(env);
             logger.debug("subscript/DepMap:");
             logger.debug("lookup at: " + index.toString());
-            logger.debug(indexVarInfo.toString());
-            String ifNameIndex = indexVarInfo.toSherrlocFmt();
+            logger.debug(indexVarSym.toString());
+            String ifNameIndex = indexVarSym.toSherrlocFmt();
 
-            if (indexVarInfo.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
-                logger.debug("typename {} to {}", valueVarInfo.typeInfo.type.typeName, ifNameIndex);
+            if (indexVarSym.typeSym.name.equals(Utils.ADDRESSTYPE)) {
+                logger.debug("typename {} to {}", valueVarSym.typeSym.name, ifNameIndex);
                 //System.err.println("typename " + valueVarInfo.type.typeName + " to " + ifNameIndex);
-                String ifDepMapIndexReq = ((DepMapTypeInfo) valueVarInfo.typeInfo).keyType.ifl.toSherrlocFmt(valueVarInfo.typeInfo.type.typeName, ifNameIndex);
-                String ifDepMapValue = ((DepMapTypeInfo) valueVarInfo.typeInfo).valueType.ifl.toSherrlocFmt(valueVarInfo.typeInfo.type.typeName, ifNameIndex);
-                env.cons.add(new Constraint(new Inequality(ifNameIndex + "..lbl", ifDepMapIndexReq), env.hypothesis, location));
+                // String ifDepMapIndexReq = ((DepMapTypeSym) valueVarSym.ifl.toSherrlocFmt(valueVarSym.typeSym.type.typeName, ifNameIndex);
+                String ifDepMapValue = (valueVarSym).ifl.toSherrlocFmt(valueVarSym.typeSym.name, ifNameIndex);
+                // env.cons.add(new Constraint(new Inequality(ifNameIndex + "..lbl", ifDepMapIndexReq), env.hypothesis, location));
 
                 env.cons.add(new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location));
 
@@ -79,23 +79,24 @@ public class Subscript extends TrailerExpr {
         return new Context(ifNameRtnValue, ifNameRtnLock);
     }
 
-    public VarInfo getVarInfo(VisitEnv env) {
-        VarInfo rtnVarInfo = null;
-        VarInfo valueVarInfo = value.getVarInfo(env);
-        String ifNameValue = valueVarInfo.labelToSherrlocFmt();
+    public VarSym getVarInfo(VisitEnv env) {
+        VarSym rtnVarSym = null;
+        VarSym valueVarSym = value.getVarInfo(env);
+        String ifNameValue = valueVarSym.labelToSherrlocFmt();
         String ifNameRtn = ifNameValue + "." + "Subscript" + location.toString();
-        if (valueVarInfo.typeInfo instanceof DepMapTypeInfo) {
-            VarInfo indexVarInfo = index.getVarInfo(env);
-            String ifNameIndex = indexVarInfo.toSherrlocFmt();
-            if (indexVarInfo.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
+        if (valueVarSym.typeSym instanceof DepMapTypeSym) {
+            VarSym indexVarSym = index.getVarInfo(env);
+            String ifNameIndex = indexVarSym.toSherrlocFmt();
+            if (indexVarSym.typeSym.name.equals(Utils.ADDRESSTYPE)) {
 
-                TypeInfo rtnTypeInfo = new TypeInfo(((DepMapTypeInfo) valueVarInfo.typeInfo).valueType);
-                rtnTypeInfo.replace(valueVarInfo.typeInfo.type.typeName, ifNameIndex);
-                rtnVarInfo = new VarInfo(ifNameRtn, rtnTypeInfo, location, false);
+                TypeSym rtnTypeSym = ((DepMapTypeSym) valueVarSym.typeSym).valueType;
+                rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location, valueVarSym.defContext, false);
+                //assert rtnVarSym != null;
+                rtnVarSym.replace(valueVarSym.typeSym.name, ifNameIndex);
 
-                String ifDepMapIndexReq = ((DepMapTypeInfo) valueVarInfo.typeInfo).keyType.ifl.toSherrlocFmt(valueVarInfo.typeInfo.type.typeName, ifNameIndex);
-                String ifDepMapValue = ((DepMapTypeInfo) valueVarInfo.typeInfo).valueType.ifl.toSherrlocFmt(valueVarInfo.typeInfo.type.typeName, ifNameIndex);
-                env.cons.add(new Constraint(new Inequality(ifNameIndex + "..lbl", ifDepMapIndexReq), env.hypothesis, location));
+                // String ifDepMapIndexReq = ((DepMapTypeSym) valueVarSym.typeSym).keyType.ifl.toSherrlocFmt(valueVarSym.typeSym.type.typeName, ifNameIndex);
+                String ifDepMapValue = (valueVarSym).ifl.toSherrlocFmt(valueVarSym.typeSym.name, ifNameIndex);
+                // env.cons.add(new Constraint(new Inequality(ifNameIndex + "..lbl", ifDepMapIndexReq), env.hypothesis, location));
 
                 env.cons.add(new Constraint(new Inequality(ifDepMapValue, ifNameRtn), env.hypothesis, location));
 
@@ -111,11 +112,11 @@ public class Subscript extends TrailerExpr {
 
             env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtn), env.hypothesis, location));
 
-            TypeInfo rtnTypeInfo = new TypeInfo(new BuiltinType(ifNameRtn), null, false);
+            TypeSym rtnTypeSym = new BuiltinTypeSym(ifNameRtn);
             //TODO: more careful thoughts
-            rtnVarInfo = new VarInfo(ifNameRtn, rtnTypeInfo, location, false);
+            rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location, valueVarSym.defContext, false);
         }
-        return rtnVarInfo;
+        return rtnVarSym;
     }
 
     @Override

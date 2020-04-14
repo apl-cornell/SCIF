@@ -32,12 +32,12 @@ public class GuardBlock extends Statement {
     }
 
     public Context genConsVisit(VisitEnv env) {
-        String originalCtxt = env.ctxt;
+        // String originalCtxt = env.ctxt;
         String prevLockLabel = env.prevContext.lockName;
 
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
-        env.ctxt += ".guardBlock" + location.toString();
-        String newLockLabel = Utils.getLabelNameLock(env.ctxt);
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt.getParent().getSHErrLocName());
+        // env.ctxt += ".guardBlock" + location.toString();
+        String newLockLabel = Utils.getLabelNameLock(env.ctxt.getSHErrLocName());
         env.prevContext.lockName = newLockLabel;
 
         String guardLabel = l.toSherrlocFmt();
@@ -59,7 +59,7 @@ public class GuardBlock extends Statement {
         env.prevContext.lockName = newAfterLockLabel;
 
 
-        env.ctxt = originalCtxt;
+        // env.ctxt = originalCtxt;
 
         if (target == null) {
             return new Context(lastContext.valueLabelName, newAfterLockLabel);
@@ -68,7 +68,7 @@ public class GuardBlock extends Statement {
             String rtnLockName = "";
             if (target instanceof Name) {
                 //Assuming target is Name
-                ifNameTgt = env.varNameMap.getName(((Name) target).id);
+                ifNameTgt = env.getVar(((Name) target).id).toSherrlocFmt();
                 rtnLockName = lastContext.lockName;
                 /*VarInfo varInfo = env.varNameMap.getInfo(((Name) target).id);
                 if (varInfo instanceof TestableVarInfo) {

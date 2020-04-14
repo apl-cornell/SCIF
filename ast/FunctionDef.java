@@ -25,12 +25,12 @@ public class FunctionDef extends FunctionSig {
 
         // add args to local sym;
         String funcName = this.name;
-        FuncInfo funcInfo = ((FuncSym) env.getCurSym(funcName)).funcInfo;
+        FuncSym funcSym = ((FuncSym) env.getCurSym(funcName));
         for (Arg arg : this.args.args) {
             arg.NTCgenCons(env, now);
         }
-        if (funcInfo.returnType != null) {
-            env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ, env.getSymName(funcInfo.returnType.type.typeName)), env.globalHypothesis, location));
+        if (funcSym.returnType != null) {
+            env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ, env.getSymName(funcSym.returnType.name)), env.globalHypothesis, location));
         }
 
         env.setCurSymTab(new SymTab(env.curSymTab));
@@ -43,27 +43,27 @@ public class FunctionDef extends FunctionSig {
 
     @Override
     public Context genConsVisit(VisitEnv env) {
-        String originalCtxt = env.ctxt;
+        // String originalCtxt = env.ctxt;
         Context originalContext = env.prevContext;
         String funcName = name;
-        env.ctxt += funcName;// + location.toString();
+        // env.ctxt += funcName;// + location.toString();
 
         args.genConsVisit(env);
 
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
-        FuncInfo funcInfo = env.funcMap.get(funcName);
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
+        FuncSym funcSym = env.getFunc(funcName);
 
 
-        String ifNameCall = funcInfo.getLabelNameCallPc();
+        String ifNameCall = funcSym.getLabelNameCallPc();
         env.cons.add(new Constraint(new Inequality(ifNameCall, ifNamePc), env.hypothesis, location));
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameCall), env.hypothesis, location));
 
-        String ifNameCallLock = funcInfo.getLabelNameCallLock();
+        String ifNameCallLock = funcSym.getLabelNameCallLock();
 
         Context funcBeginContext = new Context(ifNamePc, ifNameCallLock);
         env.prevContext = funcBeginContext;
 
-        env.varNameMap.incLayer();
+        env.incScopeLayer();
         args.genConsVisit(env);
         Context prev = new Context(env.prevContext), prev2 = null;
         for (Statement stmt : body) {
@@ -75,9 +75,9 @@ public class FunctionDef extends FunctionSig {
             prev2 = prev;
             prev = new Context(tmp);
         }
-        env.varNameMap.decLayer();
+        env.decScopeLayer();
 
-        env.cons.add(new Constraint(new Inequality(prev.lockName, funcInfo.getLabelNameRtnLock()), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(prev.lockName, funcSym.getLabelNameRtnLock()), env.hypothesis, location));
 
         /*if (rtn instanceof LabeledType) {
             if (rtn instanceof DepMap) {
@@ -86,7 +86,7 @@ public class FunctionDef extends FunctionSig {
                 ((LabeledType) rtn).ifl.findPrincipal(env.principalSet);
             }
         }*/
-        env.ctxt = originalCtxt;
+        // env.ctxt = originalCtxt;
         // don't recover
         // env.prevContext = originalContext;
         return env.prevContext;

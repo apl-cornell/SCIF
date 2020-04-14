@@ -43,4 +43,22 @@ public class SymTab {
         }
         return rtn;
     }
+
+    public HashMap<String, VarSym> getVars() {
+        HashMap<String, VarSym> rtn = new HashMap<>();
+        for (Sym sym : table.values()) {
+            if (sym instanceof VarSym)
+                rtn.put(sym.name, (VarSym) sym);
+        }
+        return rtn;
+    }
+
+    public HashMap<String, FuncSym> getFuncs() {
+        HashMap<String, FuncSym> rtn = new HashMap<>();
+        for (Sym sym : table.values()) {
+            if (sym instanceof FuncSym)
+                rtn.put(sym.name, (FuncSym) sym);
+        }
+        return rtn;
+    }
 }

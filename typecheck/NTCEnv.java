@@ -7,7 +7,6 @@ import sherrlocUtils.Constraint;
 import sherrlocUtils.Hypothesis;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class NTCEnv {
@@ -31,30 +30,30 @@ public class NTCEnv {
     }
     public void setCurSymTab(SymTab curSymTab) { this.curSymTab = curSymTab; }
 
-    public VarInfo toVarInfo(String varName, ast.Type astType, boolean isConst, CodeLocation location, ScopeContext context) {
-        TypeInfo typeInfo = toTypeInfo(astType, isConst);
-        return new VarInfo(varName, typeInfo, location, context, isConst);
+    public VarSym toVarSym(String varName, ast.Type astType, boolean isConst, CodeLocation location, ScopeContext context) {
+        TypeSym typeSym = toTypeSym(astType);
+        return new VarSym(varName, typeSym, null, location, context, isConst);
     }
 
-    public TypeInfo toTypeInfo(ast.Type astType) {
-        TypeInfo typeInfo = null;
+    public TypeSym toTypeSym(ast.Type astType) {
+        TypeSym typeSym = null;
 
-        if (astType == null) return new TypeInfo(new BuiltinType(Utils.BuiltinType2ID(BuiltInT.VOID)), null);
+        if (astType == null) return new BuiltinTypeSym(Utils.BuiltinType2ID(BuiltInT.VOID));
         if (Utils.isPrimitiveType(astType.x))
-            typeInfo = new TypeInfo(new BuiltinType(astType.x), null);
+            typeSym = new BuiltinTypeSym(astType.x);
         else {
             LabeledType lt = (LabeledType) astType;
             if (lt instanceof DepMap) {
                 DepMap depMap = (DepMap) lt;
-                typeInfo = new DepMapTypeInfo(new BuiltinType("DepMap"), depMap.ifl, toTypeInfo(depMap.keyType), toTypeInfo(depMap.valueType));
+                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType), toTypeSym(depMap.valueType));
             } else if (lt instanceof Map) {
                 Map map = (Map) lt;
-                typeInfo = new MapTypeInfo(new BuiltinType("Map"), map.ifl, toTypeInfo(map.keyType), toTypeInfo(map.valueType));
+                typeSym = new MapTypeSym(toTypeSym(map.keyType), toTypeSym(map.valueType));
             } else {
-                typeInfo = new TypeInfo(new BuiltinType(lt.x), lt.ifl);
+                typeSym = new BuiltinTypeSym(lt.x);
             }
         }
-        return typeInfo;
+        return typeSym;
     }
 
     /*private Type toType(LabeledType lt) {
@@ -94,9 +93,9 @@ public class NTCEnv {
     }
 
     public Sym getExtSym(String contractName, String funcName) {
-        SymTab extST = externalSymTab.get(contractName);
+        Sym extST = globalSymTab.lookup(contractName);
         if (extST == null) return null;
-        return extST.lookup(funcName);
+        return ((ContractSym) extST).lookupSym(funcName);
     }
 
     public void addSym(String name, Sym sym) {
@@ -113,5 +112,16 @@ public class NTCEnv {
 
     public ArrayList<Constraint> getTypeRelationCons() {
         return new ArrayList<>();
+    }
+
+    public ContractSym getContract(String name) {
+        Sym sym = globalSymTab.lookup(name);
+        if (sym != null && sym instanceof ContractSym)
+            return (ContractSym) sym;
+        return null;
+    }
+
+    public boolean containsContract(String iptContract) {
+        return getContract(iptContract) != null;
     }
 }

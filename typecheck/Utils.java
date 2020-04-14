@@ -78,8 +78,8 @@ public class Utils {
     public static String getLabelNameFuncRtnLock(String funcName) {
         return funcName + ".." + "rtn.lk";
     }
-    public static String getLabelNameArgLabel(String funcName, VarInfo arg) {
-        return funcName + "." + arg.localName + "..lbl";
+    public static String getLabelNameArgLabel(String funcName, VarSym arg) {
+        return funcName + "." + arg.name + "..lbl";
     }
     public static String[] runSherrloc(String path, String consFilePath) throws Exception {
         String[] command = new String[] {"bash", "-c", path + "/sherrloc/sherrloc -c " + consFilePath};
@@ -152,56 +152,57 @@ public class Utils {
 
     protected static final Logger logger = LogManager.getLogger();
 
-    public static FuncInfo getCurrentFuncInfo(NTCEnv env, ScopeContext now) {
+    public static FuncSym getCurrentFuncInfo(NTCEnv env, ScopeContext now) {
         while (!(now.cur instanceof FunctionDef)) {
             now = now.parent;
         }
         FunctionDef funcNode = (FunctionDef) now.cur;
         Sym sym = env.getCurSym(funcNode.name);
-        return ((FuncSym) sym).funcInfo;
+        return ((FuncSym) sym);
     }
 
-    public static TypeInfo getBuiltinTypeInfo(String typeName, SymTab s) {
-        return new TypeInfo(((TypeSym) s.lookup(typeName)).type, null, false);
+    public static TypeSym getBuiltinTypeInfo(String typeName, SymTab s) {
+        return (TypeSym) s.lookup(typeName);
     }
 
-    public static VarInfo createVarInfo(String fullName, String localName, String typeName, SymTab s) {
-        return new VarInfo(fullName,
+    public static VarSym createBuiltInVarInfo(String localName, String typeName, ScopeContext context, SymTab s) {
+        return new VarSym(
                 localName,
-                new TypeInfo(((TypeSym) s.lookup(typeName)).type, null, false),
-                new CodeLocation());
+                ((TypeSym) s.lookup(typeName)), null, new CodeLocation(), context, false);
     }
 
     public static void addBuiltInSyms(SymTab globalSymTab) {
         for (BuiltInT t : BuiltInT.values()) {
             String typeName = Utils.BuiltinType2ID(t);
-            TypeSym s = new TypeSym(typeName, new BuiltinType(typeName));
+            TypeSym s = new BuiltinTypeSym(typeName);
             globalSymTab.add(typeName, s);
         }
         /* msg:
         *   sender - address
         *   value - uint
         * */
-        ArrayList<VarInfo> members = new ArrayList<>();
-        VarInfo sender = createVarInfo("msg.sender", "sender", "address", globalSymTab);
+        ArrayList<VarSym> members = new ArrayList<>();
+        ScopeContext emptyContext = new ScopeContext("");
+        ScopeContext universalContext = new ScopeContext("UNIVERSAL");
+        VarSym sender = createBuiltInVarInfo("sender", "address", emptyContext, globalSymTab);
         members.add(sender);
-        VarInfo value = createVarInfo("msg.value", "value", "uint", globalSymTab);
+        VarSym value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
         members.add(value);
-        StructType msgT = new StructType("msgT", members);
-        VarInfo msg = new VarInfo("msg", "msg",
-                new TypeInfo(msgT, null, false),
-                new CodeLocation());
-        globalSymTab.add("msg", new VarSym("msg", msg));
+        StructTypeSym msgT = new StructTypeSym("msgT", members);
+        VarSym msg = new VarSym("msg",
+                msgT, null,
+                new CodeLocation(), universalContext, false);
+        globalSymTab.add("msg", new VarSym(msg));
 
         /* send(address, value) */
         members = new ArrayList<>();
-        VarInfo recipient = createVarInfo("send.recipient", "recipient", "address", globalSymTab);
-        value = createVarInfo("send.value", "value", "uint", globalSymTab);
+        VarSym recipient = createBuiltInVarInfo("recipient", "address", emptyContext, globalSymTab);
+        value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
         members.add(recipient);
         members.add(value);
-        FuncInfo sendFuncInfo = new FuncInfo("send", null, members, getBuiltinTypeInfo("bool", globalSymTab), new CodeLocation());
-        FuncSym send = new FuncSym("send", sendFuncInfo);
-        globalSymTab.add("send", send);
+        IfLabel thisLabel = new PrimitiveIfLabel(new Name("this"));
+        FuncSym sendFuncSym = new FuncSym("send", null, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel,  new CodeLocation());
+        globalSymTab.add("send", sendFuncSym);
     }
 
     public static boolean isBuiltinFunc(String funcName) {

@@ -1,6 +1,5 @@
 package typecheck;
 
-import ast.Autoendorse;
 import ast.FuncLabels;
 import ast.IfLabel;
 
@@ -9,13 +8,13 @@ import java.util.HashSet;
 
 import static typecheck.Utils.logger;
 
-public class PolyFuncInfo extends FuncInfo {
+public class PolyFuncSym extends FuncSym {
     ArrayList<Integer> polyArgList;
     HashSet<String> polyArgs;
     int applyCounter;
 
-    public PolyFuncInfo(String funcName, FuncLabels funcLabels, ArrayList<Integer> polyArgList, ArrayList<VarInfo> parameters, TypeInfo returnType, CodeLocation location) {
-        super(funcName, funcLabels, parameters, returnType, location);
+    public PolyFuncSym(String funcName, FuncLabels funcLabels, ArrayList<Integer> polyArgList, ArrayList<VarSym> parameters, TypeSym returnType, IfLabel returnLabel, CodeLocation location) {
+        super(funcName, funcLabels, parameters, returnType, returnLabel, location);
         this.polyArgList = polyArgList;
         this.polyArgs = new HashSet<>();
         for (int i : polyArgList) {
@@ -114,31 +113,31 @@ public class PolyFuncInfo extends FuncInfo {
 
     @Override
     public String getRtnValueLabel() {
-        if (returnType.ifl != null) {
-            return returnType.ifl.toSherrlocFmtApply(polyArgs, applyCounter);
+        if (returnLabel != null) {
+            return returnLabel.toSherrlocFmtApply(polyArgs, applyCounter);
         } else {
             return null;
         }
     }
 
     public String getArgLabel(int index) {
-        VarInfo varInfo = parameters.get(index);
-        if (varInfo.typeInfo.ifl == null) return null;
-        return varInfo.typeInfo.ifl.toSherrlocFmtApply(polyArgs, applyCounter);
+        VarSym varSym = parameters.get(index);
+        if (varSym.ifl == null) return null;
+        return varSym.ifl.toSherrlocFmtApply(polyArgs, applyCounter);
     }
 
     public void substitutePoly() { //TODO: might need to copy
         logger.debug("polyArgList size: " + polyArgList.size());
         for (int index : polyArgList) {
-            String argName = parameters.get(index).localName;
+            String argName = parameters.get(index).name;
             String argLabelName = getLabelNameArg(index);
             if (funcLabels.begin_pc != null)
                 funcLabels.begin_pc.replace(argName, argLabelName);
-            if (returnType.ifl != null)
-                returnType.ifl.replace(argName, argLabelName);
-            for (VarInfo arg : parameters) {
-                if (arg.typeInfo.ifl != null)
-                    arg.typeInfo.ifl.replace(argName, argLabelName);
+            if (returnLabel != null)
+                returnLabel.replace(argName, argLabelName);
+            for (VarSym arg : parameters) {
+                if (arg.ifl != null)
+                    arg.ifl.replace(argName, argLabelName);
             }
         }
     }

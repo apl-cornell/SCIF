@@ -27,7 +27,7 @@ public class Node {
         return this.getClass().getSimpleName() + "" + location;
     }
 
-    public void globalInfoVisit(ContractInfo contractInfo) {
+    public void globalInfoVisit(ContractSym contractSym) {
         //Do nothing
     }
 

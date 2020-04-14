@@ -1,7 +1,6 @@
 package ast;
 
 import sherrlocUtils.Relation;
-import typecheck.ContractInfo;
 
 import java.util.ArrayList;
 import java.util.HashSet;

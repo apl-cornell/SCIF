@@ -14,13 +14,13 @@ public class Arg extends Node {
         this.annotation = annotation;
     }
 
-    public VarInfo parseArg(ContractInfo contractInfo) {
-        return contractInfo.toVarInfo(name, annotation, false, location);
+    public VarSym parseArg(ContractSym contractSym) {
+        return contractSym.toVarSym(name, annotation, false, location, scopeContext);
     }
 
-    public VarInfo parseArg(NTCEnv env, ScopeContext parent) {
+    public VarSym parseArg(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        return env.toVarInfo(name, annotation, false, location, now);
+        return env.toVarSym(name, annotation, false, location, now);
     }
 
     @Override
@@ -29,7 +29,7 @@ public class Arg extends Node {
 
         ScopeContext type = annotation.NTCgenCons(env, now);
 
-        env.addSym(name, new VarSym(name, env.toVarInfo(name, annotation, false, location, now)));
+        env.addSym(name, env.toVarSym(name, annotation, false, location, now));
 
         env.cons.add(type.genCons(now, Relation.EQ, env, location));
 
@@ -46,12 +46,13 @@ public class Arg extends Node {
                 ((LabeledType) annotation).ifl.findPrincipal(env.principalSet);
             }
         }
-        String ifName = env.ctxt + "." + name;
-        VarInfo varInfo = env.contractInfo.toVarInfo(name, annotation, false, location);
-        env.varNameMap.add(name, ifName, varInfo);
+        // String ifName = env.ctxt + "." + name;
+        VarSym varSym = env.curContractSym.toVarSym(name, annotation, false, location, scopeContext);
+        env.addVar(name, varSym);
+        // env.varNameMap.add(name, ifName, varSym);
 
-        if (varInfo.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
-            env.principalSet.add(varInfo.toSherrlocFmt());
+        if (varSym.typeSym.name.equals(Utils.ADDRESSTYPE)) {
+            env.principalSet.add(varSym.toSherrlocFmt());
         }
 
         return null;

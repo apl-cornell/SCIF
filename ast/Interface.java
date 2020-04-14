@@ -1,6 +1,6 @@
 package ast;
 
-import typecheck.ContractInfo;
+import typecheck.ContractSym;
 import typecheck.ScopeContext;
 import typecheck.NTCEnv;
 
@@ -23,17 +23,18 @@ public class Interface extends Node {
         for (FunctionSig functionSig : funcSigs) {
             if (!functionSig.NTCGlobalInfo(env, now)) return false;
         }
-        env.externalSymTab.put(contractName, env.globalSymTab);
+        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab, trustCons);
+        env.addSym(contractName, contractSym);
         return true;
     }
 
 
     @Override
-    public void globalInfoVisit(ContractInfo contractInfo) {
-        contractInfo.name = contractName;
-        contractInfo.trustCons = trustCons;
+    public void globalInfoVisit(ContractSym contractSym) {
+        contractSym.name = contractName;
+        contractSym.trustCons = trustCons;
         for (FunctionSig stmt : funcSigs) {
-            stmt.globalInfoVisit(contractInfo);
+            stmt.globalInfoVisit(contractSym);
         }
     }
 

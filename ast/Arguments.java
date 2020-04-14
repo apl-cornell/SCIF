@@ -27,19 +27,19 @@ public class Arguments extends Node {
         }
     }
 
-    public ArrayList<VarInfo> parseArgs(NTCEnv env, ScopeContext parent) {
+    public ArrayList<VarSym> parseArgs(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        ArrayList<VarInfo> rnt = new ArrayList<>();
+        ArrayList<VarSym> rnt = new ArrayList<>();
         for (Arg arg : args) {
             rnt.add(arg.parseArg(env, now));
         }
         return rnt;
     }
 
-    public ArrayList<VarInfo> parseArgs(ContractInfo contractInfo) {
-        ArrayList<VarInfo> rnt = new ArrayList<>();
+    public ArrayList<VarSym> parseArgs(ContractSym contractSym) {
+        ArrayList<VarSym> rnt = new ArrayList<>();
         for (Arg arg : args) {
-            rnt.add(arg.parseArg(contractInfo));
+            rnt.add(arg.parseArg(contractSym));
         }
         return rnt;
     }

@@ -29,7 +29,7 @@ public class Assign extends Statement {
 
     @Override
     public Context genConsVisit(VisitEnv env) {
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
         String prevLockName = env.prevContext.lockName;
         String rtnLockName = "";
         Context valueContext = value.genConsVisit(env);
@@ -39,7 +39,8 @@ public class Assign extends Statement {
         for (Expression target : targets) {
             if (target instanceof Name) {
                 //Assuming target is Name
-                ifNameTgt = env.varNameMap.getName(((Name) target).id) + "..lbl";
+                // ifNameTgt = env.varNameMap.getName(((Name) target).id) + "..lbl";
+                ifNameTgt = env.getVar(((Name) target).id).labelToSherrlocFmt();
                 rtnLockName = valueContext.lockName;
                 /*VarInfo varInfo = env.varNameMap.getInfo(((Name) target).id);
                 if (varInfo instanceof TestableVarInfo) {

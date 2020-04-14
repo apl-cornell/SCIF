@@ -21,7 +21,7 @@ public class Program extends Node {
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         for (Contract contract : contracts) {
-            env.setGlobalSymTab(env.externalSymTab.get(contract.contractName));
+            env.setGlobalSymTab(env.getContract(contract.contractName).symTab);
             env.setCurSymTab(env.globalSymTab);
             contract.NTCgenCons(env, now);
         }
@@ -31,7 +31,7 @@ public class Program extends Node {
     @Override
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
         for (String iptContract : iptContracts)
-            if (env.externalSymTab.containsKey(iptContract))
+            if (env.containsContract(iptContract))
                 return false;
         for (Contract contract : contracts) {
             env.setGlobalSymTab(new SymTab());
@@ -44,16 +44,16 @@ public class Program extends Node {
     }
 
     @Override
-    public void globalInfoVisit(ContractInfo contractInfo) {
+    public void globalInfoVisit(ContractSym contractSym) {
         if (contracts.size() < 1) return;
         for (Contract contract : contracts) {
             if (!iptContracts.contains(contract.contractName)) {
                 iptContracts.add(contract.contractName);
             }
         }
-        contractInfo.iptContracts = iptContracts;
+        // contractSym.iptContracts = iptContracts;
         for (Contract contract : contracts) {
-            contract.globalInfoVisit(contractInfo);
+            contract.globalInfoVisit(contractSym);
         }
     }
 

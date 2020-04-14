@@ -10,6 +10,12 @@ public class ScopeContext {
     ScopeContext parent;
     String SHErrLocName;
 
+    public ScopeContext(String specifiedName) {
+        cur = null;
+        parent = null;
+        SHErrLocName = specifiedName;
+    }
+
     public ScopeContext(Node cur, ScopeContext parent) {
         this.cur = cur;
         this.parent = parent;
@@ -17,6 +23,7 @@ public class ScopeContext {
     }
 
     private String calcSHErrLocName() {
+
         String localPostfix;
         if (cur instanceof Contract)
             localPostfix = ((Contract) cur).contractName;
@@ -28,6 +35,8 @@ public class ScopeContext {
             localPostfix = "while" + cur.locToString();
         else if (cur instanceof Interface)
             localPostfix = ((Interface) cur).contractName;
+        else if (cur instanceof GuardBlock)
+            localPostfix = "guardBlock" + cur.locToString();
         else
             localPostfix = cur.toSHErrLocFmt();
 
@@ -54,5 +63,16 @@ public class ScopeContext {
         if ((cur instanceof FunctionDef) || (cur instanceof FunctionSig) || (parent == null))
             return false;
         return parent.isContractLevel();
+    }
+
+    public ScopeContext getParent() {
+        return parent;
+    }
+
+    public String getFuncName() {
+        ScopeContext now = this;
+        while (!(now.cur instanceof FunctionSig))
+            now =  now.parent;
+        return ((FunctionSig) now.cur).name;
     }
 }

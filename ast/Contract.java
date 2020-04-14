@@ -22,7 +22,8 @@ public class Contract extends Node {
         for (Statement stmt : body) {
             if (!stmt.NTCGlobalInfo(env, now)) return false;
         }
-        env.externalSymTab.put(contractName, env.globalSymTab);
+        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab, trustCons);
+        env.addSym(contractName, contractSym);
         return true;
     }
 
@@ -36,11 +37,11 @@ public class Contract extends Node {
     }
 
     @Override
-    public void globalInfoVisit(ContractInfo contractInfo) {
-        contractInfo.name = contractName;
-        contractInfo.trustCons = trustCons;
+    public void globalInfoVisit(ContractSym contractSym) {
+        contractSym.name = contractName;
+        contractSym.trustCons = trustCons;
         for (Statement stmt : body) {
-            stmt.globalInfoVisit(contractInfo);
+            stmt.globalInfoVisit(contractSym);
         }
     }
 

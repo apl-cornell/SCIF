@@ -24,9 +24,9 @@ public class Name extends Variable {
             return null;
         } else if (s instanceof VarSym) {
             ScopeContext now = new ScopeContext(this, parent);
-            TypeInfo typeInfo = ((VarSym) s).varInfo.typeInfo;
-            logger.debug(typeInfo.toString());
-            env.addCons(now.genCons(typeInfo.type.typeName, Relation.EQ, env, location));
+            TypeSym typeSym = ((VarSym) s).typeSym;
+            logger.debug(typeSym.toString());
+            env.addCons(now.genCons(typeSym.name, Relation.EQ, env, location));
             logger.debug(now.toString());
             return now;
         } else if (s instanceof TypeSym) {
@@ -36,19 +36,19 @@ public class Name extends Variable {
     }
 
     @Override
-    public VarInfo getVarInfo(NTCEnv env) {
-        return ((VarSym) env.getCurSym(id)).varInfo;
+    public VarSym getVarInfo(NTCEnv env) {
+        return ((VarSym) env.getCurSym(id));
     }
 
     @Override
     public Context genConsVisit(VisitEnv env) {
         // assuming the name would be a variable name
-        String ifNameRnt = env.varNameMap.getInfo(id).labelToSherrlocFmt();
+        String ifNameRnt = env.getVar(id).labelToSherrlocFmt();
         return new Context(ifNameRnt, env.prevContext.lockName);
     }
 
-    public VarInfo getVarInfo(VisitEnv env) {
-        VarInfo rnt = env.varNameMap.getInfo(id);
+    public VarSym getVarInfo(VisitEnv env) {
+        VarSym rnt = env.getVar(id);
         return rnt;
     }
 

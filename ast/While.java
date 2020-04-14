@@ -45,19 +45,19 @@ public class While extends Statement {
 
     @Override
     public Context genConsVisit(VisitEnv env) {
-        String originalCtxt = env.ctxt;
+        // String originalCtxt = env.ctxt;
 
         String prevLock = env.prevContext.lockName;
         Context testContext = test.genConsVisit(env);
         String IfNameTestValue = testContext.valueLabelName;
-        String IfNamePcBefore = Utils.getLabelNamePc(env.ctxt);
-        env.ctxt += ".While" + location.toString();
-        String IfNamePcAfter = Utils.getLabelNamePc(env.ctxt);
+        String IfNamePcBefore = Utils.getLabelNamePc(env.ctxt.getParent().getSHErrLocName());
+        // env.ctxt += ".While" + location.toString();
+        String IfNamePcAfter = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
         env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location));
 
         env.cons.add(new Constraint(new Inequality(IfNameTestValue, IfNamePcAfter), env.hypothesis, location));
 
-        env.varNameMap.incLayer();
+        env.incScopeLayer();
         Context lastContext = new Context(testContext), prev2 = null;
         for (Statement stmt : body) {
             if (prev2 != null) {
@@ -68,10 +68,10 @@ public class While extends Statement {
             prev2 = lastContext;
             lastContext = new Context(tmp);
         }
-        env.varNameMap.decLayer();
+        env.decScopeLayer();
         env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.EQ, prevLock), env.hypothesis, location));
 
-        env.ctxt = originalCtxt;
+        // env.ctxt = originalCtxt;
         return lastContext;
     }
     public void findPrincipal(HashSet<String> principalSet) {

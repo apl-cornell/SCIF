@@ -17,18 +17,18 @@ public class Attribute extends TrailerExpr {
 
     @Override
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
-        VarInfo varInfo = getVarInfo(env);
+        VarSym varSym = getVarInfo(env);
         ScopeContext now = new ScopeContext(this, parent);
-        env.addCons(now.genCons(varInfo.typeInfo.type.typeName, Relation.EQ, env, location));
+        env.addCons(now.genCons(varSym.typeSym.name, Relation.EQ, env, location));
         return now;
     }
 
-    public VarInfo getVarInfo(NTCEnv env) {
-        VarInfo rtnVarInfo;
-        VarInfo parentVarInfo = value.getVarInfo(env);
-        StructType parentTypeInfo = (StructType) parentVarInfo.typeInfo.type;
-        rtnVarInfo = parentTypeInfo.getMemberVarInfo(parentVarInfo.toSherrlocFmt(), attr.id);
-        return rtnVarInfo;
+    public VarSym getVarInfo(NTCEnv env) {
+        VarSym rtnVarSym;
+        VarSym parentVarSym = value.getVarInfo(env);
+        StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;
+        rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSherrlocFmt(), attr.id);
+        return rtnVarSym;
     }
 
     @Override
@@ -36,17 +36,17 @@ public class Attribute extends TrailerExpr {
         //TODO: assuming only one-level attribute access
         // to add support to multi-level access
         String varName = ((Name) value).id;
-        if (!env.contractInfo.varMap.containsKey(varName)) {
+        if (!env.curContractSym.containVar(varName)) {
             //TODO: throw errors: variable not found
             return null;
         }
-        VarInfo varInfo = env.contractInfo.varMap.get(varName);
-        if (!(varInfo.typeInfo.type instanceof StructType)) {
+        VarSym varSym = env.getVar(varName);
+        if (!(varSym.typeSym instanceof StructTypeSym)) {
             //TODO: throw errors: variable not struct
             return null;
         }
 
-        StructType structType = (StructType) varInfo.typeInfo.type;
+        StructTypeSym structType = (StructTypeSym) varSym.typeSym;
         //String prevLockName = env.prevContext.lockName;
         Context tmp = value.genConsVisit(env);
         String ifAttLabel = structType.getMemberLabel(attr.id);
@@ -60,12 +60,12 @@ public class Attribute extends TrailerExpr {
         //env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, tmp.lockName), env.hypothesis, location));
         return new Context(ifNameRnt, tmp.lockName);
     }
-    public VarInfo getVarInfo(VisitEnv env) {
-        VarInfo rtnVarInfo;
-        VarInfo parentVarInfo = value.getVarInfo(env);
-        StructType parentTypeInfo = (StructType) parentVarInfo.typeInfo.type;
-        rtnVarInfo = parentTypeInfo.getMemberVarInfo(parentVarInfo.toSherrlocFmt(), attr.id);
-        return rtnVarInfo;
+    public VarSym getVarInfo(VisitEnv env) {
+        VarSym rtnVarSym;
+        VarSym parentVarSym = value.getVarInfo(env);
+        StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;
+        rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSherrlocFmt(), attr.id);
+        return rtnVarSym;
     }
 
     public String toSolCode() {

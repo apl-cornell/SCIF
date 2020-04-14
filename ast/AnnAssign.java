@@ -30,8 +30,11 @@ public class AnnAssign extends Statement {
     public void setSimple(boolean simple) {
         this.simple = simple;
     }
-    public VarInfo toVarInfo(ContractInfo contractInfo) {
-        return contractInfo.toVarInfo(((Name)target).id, annotation, isConst, location, scopeContext);
+    public VarSym toVarInfo(ContractSym contractSym) {
+        IfLabel ifl = null;
+        if (annotation instanceof LabeledType)
+            ifl = ((LabeledType) annotation).ifl;
+        return contractSym.toVarSym(((Name)target).id, annotation, isConst, location, scopeContext);
     }
 
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
@@ -40,7 +43,7 @@ public class AnnAssign extends Statement {
         ScopeContext tgt = new ScopeContext(target, now);
 
         String name = ((Name) target).id;
-        env.globalSymTab.add(name, new VarSym(name, env.toVarInfo(name, annotation, isConst, location, tgt)));
+        env.globalSymTab.add(name, env.toVarSym(name, annotation, isConst, location, tgt));
         return true;
     }
 
@@ -52,7 +55,7 @@ public class AnnAssign extends Statement {
 
         if (!parent.isContractLevel()) {
             String name = ((Name) target).id;
-            env.addSym(name, new VarSym(name, env.toVarInfo(name, annotation, isConst, location, tgt)));
+            env.addSym(name, new VarSym(env.toVarSym(name, annotation, isConst, location, tgt)));
         }
 
         env.cons.add(type.genCons(tgt, Relation.EQ, env, location));
@@ -64,11 +67,11 @@ public class AnnAssign extends Statement {
     }
 
     @Override
-    public void globalInfoVisit(ContractInfo contractInfo) {
+    public void globalInfoVisit(ContractSym contractSym) {
         if (simple) {
             String id = ((Name) target).id;
             CodeLocation loc = location;
-            contractInfo.addVar(id, contractInfo.toVarInfo(id, annotation, isConst, loc, scopeContext));
+            contractSym.addVar(id, contractSym.toVarSym(id, annotation, isConst, loc, scopeContext));
         } else {
             //TODO
         }
@@ -81,26 +84,31 @@ public class AnnAssign extends Statement {
         if (!simple) {
             //TODO
         }
-        String ifNameTgt;
-        VarInfo varInfo;
-        if (!env.ctxt.isEmpty()) {
-            ifNameTgt = (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
-            String id = ((Name) target).id;
+        String SLCNameVar, SLCNameVarLbl;
+        VarSym varSym;
+        String id = ((Name) target).id;
+        if (!env.ctxt.isContractLevel()) {
             CodeLocation loc = location;
-            varInfo = env.contractInfo.toVarInfo(id, annotation, isConst, loc);
-            env.varNameMap.add(((Name) target).id, ifNameTgt, varInfo);
+            varSym = env.curContractSym.toVarSym(id, annotation, isConst, loc, scopeContext);
+            // ifNameTgt = varSym.toSherrlocFmt();
+                    // (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
+            // varSym = env.contractInfo.toVarInfo(id, annotation, isConst, loc);
+            env.addVar(id, varSym);
+            // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
-                env.cons.add(new Constraint(new Inequality(ifLabel, ifNameTgt + "..lbl"), env.hypothesis, location));
-                env.cons.add(new Constraint(new Inequality(ifNameTgt + "..lbl", ifLabel), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifLabel, varSym.labelToSherrlocFmt()), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(varSym.labelToSherrlocFmt(), ifLabel), env.hypothesis, location));
             }
         } else {
-            ifNameTgt = ((Name) target).id;
-            varInfo = env.varNameMap.getInfo(ifNameTgt);
+            // ifNameTgt = ((Name) target).id;
+            varSym = env.getVar(id);
         }
-        logger.debug(varInfo.typeInfo.toString());
-        if (varInfo.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
-            env.principalSet.add(varInfo.toSherrlocFmt());
+        SLCNameVar = varSym.toSherrlocFmt();
+        SLCNameVarLbl = varSym.labelToSherrlocFmt();
+        logger.debug(varSym.typeSym.toString());
+        if (varSym.typeSym.name.equals(Utils.ADDRESSTYPE)) {
+            env.principalSet.add(varSym.toSherrlocFmt());
         }
 
         if (annotation instanceof LabeledType) {
@@ -110,22 +118,22 @@ public class AnnAssign extends Statement {
                 ((LabeledType) annotation).ifl.findPrincipal(env.principalSet);
             }
         }
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
-        String ifNameTgtLbl = ifNameTgt + "..lbl";
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
+        // String ifNameTgtLbl = ifNameTgt + "..lbl";
         Context prevContext = env.prevContext;
 
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgtLbl), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis, location));
         if (value != null) {
             Context tmp = value.genConsVisit(env);
             String ifNameValue = tmp.valueLabelName;
-            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgtLbl), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameValue, SLCNameVarLbl), env.hypothesis, location));
             if (prevContext != null && prevContext.lockName != null) {
                 env.cons.add(new Constraint(new Inequality(tmp.lockName, CompareOperator.Eq, prevContext.lockName), env.hypothesis, location));
             }
             env.prevContext.lockName = tmp.lockName;
         }
 
-        return new Context(ifNameTgtLbl, env.prevContext.lockName);
+        return new Context(SLCNameVarLbl, env.prevContext.lockName);
     }
 
     public void findPrincipal(HashSet<String> principalSet) {

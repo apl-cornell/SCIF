@@ -19,24 +19,25 @@ public class Return extends Statement {
 
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        FuncInfo funcInfo = Utils.getCurrentFuncInfo(env, now);
+        FuncSym funcSym = Utils.getCurrentFuncInfo(env, now);
         if (value != null) {
             ScopeContext rtn = value.NTCgenCons(env, now);
             env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         }
-        env.addCons(now.genCons(env.getSymName(funcInfo.returnType.type.typeName), Relation.EQ, env, location));
+        env.addCons(now.genCons(env.getSymName(funcSym.returnType.name), Relation.EQ, env, location));
         return now;
     }
 
     @Override
     public Context genConsVisit(VisitEnv env) {
         String prevLock = env.prevContext.lockName;
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
+        String ifNamePc = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
 
-        int occur = env.ctxt.indexOf(".");
-        FuncInfo funcInfo = env.funcMap.get(occur >= 0 ? env.ctxt.substring(0, occur) : env.ctxt);
-        String ifNameRtnLock = funcInfo.getLabelNameRtnLock();
-        String ifNameRtnValue = funcInfo.getLabelNameRtnValue();
+        // int occur = env.ctxt.indexOf(".");
+        String funcName = env.ctxt.getFuncName();
+        FuncSym funcSym = env.getFunc(funcName);
+        String ifNameRtnLock = funcSym.getLabelNameRtnLock();
+        String ifNameRtnValue = funcSym.getLabelNameRtnValue();
         if (value == null) {
             env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location));
             return new Context(null, prevLock);

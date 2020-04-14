@@ -1,6 +1,7 @@
 import java.io.*;
 
 import ast.*;
+import java_cup.*;
 import java_cup.runtime.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -57,7 +58,8 @@ public class TypeChecker {
 
         // Check using SHErrLoc and get a solution
 
-        HashMap<String, ContractInfo> contractMap = new HashMap<>();
+        // HashMap<String, ContractSym> contractMap = new HashMap<>();
+        SymTab contractMap = new SymTab();
         ArrayList<String> contractNames = new ArrayList<>();
         //HashSet<String> principalSet = new HashSet<>();
         //env.principalSet.add("this");
@@ -65,14 +67,14 @@ public class TypeChecker {
         //ArrayList<Constraint> cons = new ArrayList<>();
 
         for (Node root : roots) {
-            ContractInfo contractInfo = new ContractInfo();
-            root.globalInfoVisit(contractInfo);
-            if (contractNames.contains(contractInfo.name)) {
+            ContractSym contractSym = new ContractSym();
+            root.globalInfoVisit(contractSym);
+            if (contractNames.contains(contractSym.name)) {
                 //TODO: duplicate contract names
             }
-            logger.debug(contractInfo.toString());
-            contractNames.add(contractInfo.name);
-            contractMap.put(contractInfo.name, contractInfo);
+            logger.debug(contractSym.toString());
+            contractNames.add(contractSym.name);
+            contractMap.add(contractSym.name, contractSym);
             //root.findPrincipal(principalSet);
         }
 
@@ -87,25 +89,26 @@ public class TypeChecker {
 
         VisitEnv env = new VisitEnv();
 
-        env.contractMap = contractMap;
+        env.globalSymTab = env.curSymTab = contractMap;
 
         for (int fileIdx = 0; fileIdx < roots.size(); ++fileIdx) {
             String contractName = contractNames.get(fileIdx);
-            ContractInfo contractInfo = env.contractMap.get(contractName);
+            ContractSym contractSym = env.getContract(contractName);
             // generate trust relationship dec constraints
-            for (TrustConstraint trustConstraint : contractInfo.trustCons) {
+            for (TrustConstraint trustConstraint : contractSym.trustCons) {
                 env.trustCons.add(new Constraint(new Inequality(trustConstraint.lhs.toSherrlocFmt(), trustConstraint.optor,trustConstraint.rhs.toSherrlocFmt()), trustConstraint.location));
             }
 
 
-            HashMap<String, VarInfo> varMap = contractInfo.varMap;
-            env.funcMap = contractInfo.funcMap;
-            env.contractInfo = contractInfo;
+            // HashMap<String, VarSym> varMap = contractSym.varMap;
+            // env.funcMap = contractSym.funcMap;
+            env.curContractSym = contractSym;
+            env.globalSymTab = env.curSymTab = contractSym.symTab; //TODO
 
             logger.debug("Display varMap:");
             //System.err.println("Display varMap:\n");
-            for (HashMap.Entry<String, VarInfo> varPair : varMap.entrySet()) {
-                VarInfo var = varPair.getValue();
+            for (HashMap.Entry<String, VarSym> varPair : contractSym.symTab.getVars().entrySet()) {
+                VarSym var = varPair.getValue();
                 String varName = var.labelToSherrlocFmt();
                 String ifLabel = var.getLabel();
                 if (ifLabel != null) {
@@ -119,9 +122,9 @@ public class TypeChecker {
                 //System.err.println(varName);
                 //System.err.println(": " + var + "\n");
             }
-            for (HashMap.Entry<String, FuncInfo> funcPair : env.funcMap.entrySet()) {
+            for (HashMap.Entry<String, FuncSym> funcPair : contractSym.symTab.getFuncs().entrySet()) {
                 //String funcName = funcPair.getKey();
-                FuncInfo func = funcPair.getValue();
+                FuncSym func = funcPair.getValue();
                 //TODO: simplify
                 String ifNameCallBeforeLabel = func.getLabelNameCallPc();
                 String ifNameCallAfterLabel = func.getLabelNameCallPc();
@@ -160,7 +163,7 @@ public class TypeChecker {
                 }
 
                 for (int i = 0; i < func.parameters.size(); ++i) {
-                    VarInfo arg = func.parameters.get(i);
+                    VarSym arg = func.parameters.get(i);
                     String ifNameArgLabel = func.getLabelNameArg(i);
                     String ifArgLabel = arg.getLabel();
                     if (ifArgLabel != null) {
@@ -184,7 +187,7 @@ public class TypeChecker {
 
             } else {
                 Program root = (Program) tmp;
-                env.varNameMap = new LookupMaps(varMap);
+                // env.varNameMap = new LookupMaps(varMap);
 
                 root.genConsVisit(env);
             }
