@@ -59,7 +59,8 @@ public class Return extends Statement {
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        rtn.add(value);
+        if (value != null)
+            rtn.add(value);
         return rtn;
     }
 }

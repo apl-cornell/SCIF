@@ -74,8 +74,9 @@ public class Contract extends Node {
     @Override
     public void passScopeContext(ScopeContext parent) {
         scopeContext = new ScopeContext(this, parent);
-        for (Node node : children())
+        for (Node node : children()) {
             node.passScopeContext(scopeContext);
+        }
     }
 
     @Override

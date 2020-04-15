@@ -119,10 +119,13 @@ public class EndorseBlock extends Statement {
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        rtn.add(l_from);
-        rtn.add(l_to);
+        if (l_from != null)
+            rtn.add(l_from);
+        if (l_to != null)
+            rtn.add(l_to);
         rtn.addAll(body);
-        rtn.add(target);
+        if (target != null)
+            rtn.add(target);
         return rtn;
     }
 }

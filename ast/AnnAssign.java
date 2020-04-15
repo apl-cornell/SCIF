@@ -154,7 +154,8 @@ public class AnnAssign extends Statement {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(target);
         rtn.add(annotation);
-        rtn.add(value);
+        if (value != null)
+            rtn.add(value);
         return rtn;
     }
 }

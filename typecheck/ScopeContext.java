@@ -1,6 +1,8 @@
 package typecheck;
 
 import ast.*;
+import com.owlike.genson.Genson;
+import com.owlike.genson.GensonBuilder;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
@@ -37,6 +39,8 @@ public class ScopeContext {
             localPostfix = ((Interface) cur).contractName;
         else if (cur instanceof GuardBlock)
             localPostfix = "guardBlock" + cur.locToString();
+        else if (cur instanceof Program)
+            localPostfix = ((Program) cur).programName;
         else
             localPostfix = cur.toSHErrLocFmt();
 
@@ -74,5 +78,11 @@ public class ScopeContext {
         while (!(now.cur instanceof FunctionSig))
             now =  now.parent;
         return ((FunctionSig) now.cur).name;
+    }
+
+    // static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();
+    @Override
+    public String toString() {
+        return SHErrLocName;
     }
 }

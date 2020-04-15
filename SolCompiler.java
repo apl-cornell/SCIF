@@ -25,3 +25,4 @@ public class SolCompiler {
 
     protected static final Logger logger = LogManager.getLogger();
 }
+ 

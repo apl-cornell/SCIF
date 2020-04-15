@@ -7,15 +7,22 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class Program extends Node {
+    public String programName;
     HashSet<String> iptContracts; // imported contracts
     ArrayList<Contract> contracts;
     public Program(HashSet<String> iptContracts, ArrayList<Contract> contracts) {
+        programName = "anonymous";
         this.iptContracts = iptContracts;
         this.contracts = contracts;
     }
     public Program(ArrayList<Contract> contracts) {
+        programName = "anonymous";
         this.iptContracts = new HashSet<>();
         this.contracts = contracts;
+    }
+
+    public void setProgramName(String name) {
+        programName = name;
     }
 
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {

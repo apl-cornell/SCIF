@@ -30,6 +30,7 @@ public class TypeChecker {
                 Parser p = new Parser(lexer);
                 Symbol result = p.parse();
                 Node root = (Node) result.value;
+                ((Program) root).setProgramName(inputFile.getName());
                 roots.add(root);
                 logger.debug("Finish");
                 //System.err.println("Finish\n");
@@ -55,8 +56,15 @@ public class TypeChecker {
         for (Node root : roots) {
             root.NTCgenCons(NTCenv, null);
         }
-
         // Check using SHErrLoc and get a solution
+
+
+        logger.debug("generating cons file for NTC");
+        // constructors: all types
+        // assumptions: none or relations between types
+        // constraints
+        Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons, outputFile);
+        if (true) return roots;
 
         // HashMap<String, ContractSym> contractMap = new HashMap<>();
         SymTab contractMap = new SymTab();
@@ -77,13 +85,6 @@ public class TypeChecker {
             contractMap.add(contractSym.name, contractSym);
             //root.findPrincipal(principalSet);
         }
-
-        logger.debug("generating cons file for NTC");
-        // constructors: all types
-        // assumptions: none or relations between types
-        // constraints
-        Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons, outputFile);
-        if (true) return roots;
 
         logger.debug("starting to ifc typecheck");
 

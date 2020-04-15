@@ -77,7 +77,8 @@ public class FunctionSig extends Statement {
         if (funcLabels != null)
             rtn.add(funcLabels);
         rtn.add(args);
-        rtn.add(this.rtn);
+        if (this.rtn != null)
+            rtn.add(this.rtn);
         return rtn;
     }
 }
