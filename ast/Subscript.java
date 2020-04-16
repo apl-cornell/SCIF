@@ -70,7 +70,7 @@ public class Subscript extends TrailerExpr {
         } else {
             Context indexContext = index.genConsVisit(env);
             String ifNameIndex = indexContext.valueLabelName;
-            ifNameRtnValue = env.ctxt + "." + "Subscript" + location.toString();
+            ifNameRtnValue = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
             env.cons.add(new Constraint(new Inequality(ifNameValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location));
 
             // env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
@@ -107,7 +107,7 @@ public class Subscript extends TrailerExpr {
             }
         } else {
             String ifNameIndex = index.genConsVisit(env).valueLabelName;
-            ifNameRtn = env.ctxt + "." + "Subscript" + location.toString();
+            ifNameRtn = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
             env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location));
 
             env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtn), env.hypothesis, location));

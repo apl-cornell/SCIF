@@ -52,6 +52,7 @@ public class Program extends Node {
 
     @Override
     public void globalInfoVisit(ContractSym contractSym) {
+        Utils.addBuiltInSyms(contractSym.symTab);
         if (contracts.size() < 1) return;
         for (Contract contract : contracts) {
             if (!iptContracts.contains(contract.contractName)) {

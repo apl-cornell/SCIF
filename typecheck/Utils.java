@@ -84,19 +84,22 @@ public class Utils {
         return funcName + "." + arg.name + "..lbl";
     }
     public static String[] runSherrloc(String path, String consFilePath) throws Exception {
+        logger.debug("runSherrloc()...");
         String[] command = new String[] {"bash", "-c", path + "/sherrloc/sherrloc -c " + consFilePath};
         ProcessBuilder pb = new ProcessBuilder(command);
         //pb.inheritIO();
         Process p = pb.start();
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        p.waitFor();
-
         ArrayList<String> list = new ArrayList<>();
         String tmp;
         while ((tmp = br.readLine()) != null) {
             list.add(tmp);
             //System.err.println(tmp);
         }
+        p.waitFor();
+        logger.debug("finished run SLC, collecting output...");
+        p.destroy();
+        br.close();
         return list.toArray(new String[0]);
     }
 
@@ -170,7 +173,7 @@ public class Utils {
     public static VarSym createBuiltInVarInfo(String localName, String typeName, ScopeContext context, SymTab s) {
         return new VarSym(
                 localName,
-                ((TypeSym) s.lookup(typeName)), null, new CodeLocation(), context, false);
+                ((TypeSym) s.lookup(typeName)), new PrimitiveIfLabel(new Name("this")), null, context, false);
     }
 
     public static void addBuiltInSyms(SymTab globalSymTab) {
@@ -193,7 +196,7 @@ public class Utils {
         StructTypeSym msgT = new StructTypeSym("msgT", members);
         VarSym msg = new VarSym("msg",
                 msgT, null,
-                new CodeLocation(), universalContext, false);
+                null, universalContext, false);
         globalSymTab.add("msg", new VarSym(msg));
 
         /* send(address, value) */
@@ -203,7 +206,8 @@ public class Utils {
         members.add(recipient);
         members.add(value);
         IfLabel thisLabel = new PrimitiveIfLabel(new Name("this"));
-        FuncSym sendFuncSym = new FuncSym("send", null, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel,  new CodeLocation());
+        FuncLabels funcLabels = new FuncLabels(thisLabel, thisLabel, null);
+        FuncSym sendFuncSym = new FuncSym("send", null, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel,  new ScopeContext("send"), null);
         globalSymTab.add("send", sendFuncSym);
     }
 

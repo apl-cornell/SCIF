@@ -23,7 +23,7 @@ public class Endorse extends Expression {
     public Context genConsVisit(VisitEnv env) {
         Context tmp = value.genConsVisit(env);
         String ifNameValue = tmp.valueLabelName;
-        String ifNameRtn = env.ctxt + "." + "endorse" + location.toString();
+        String ifNameRtn = scopeContext.getSHErrLocName() + "." + "endorse" + location.toString();
 
         String fromLabel = from.toSherrlocFmt();
         String toLabel = to.toSherrlocFmt();

@@ -54,10 +54,10 @@ public class If extends Statement {
         Context curContext = test.genConsVisit(env);
         rtnValueLabel = curContext.valueLabelName;
         String IfNameTest = curContext.valueLabelName;
-        String IfNamePcBefore = Utils.getLabelNamePc(env.ctxt.getParent().getSHErrLocName());
+        String IfNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".If" + location.toString();
-        String IfNamePcAfter = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
-        String IfNameLock = Utils.getLabelNameLock(env.ctxt.getSHErrLocName());
+        String IfNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
+        String IfNameLock = Utils.getLabelNameLock(scopeContext.getSHErrLocName());
 
 
         boolean createdHypo = false;

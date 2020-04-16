@@ -34,7 +34,7 @@ public class FunctionSig extends Statement {
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         ArrayList<VarSym> argsInfo = args.parseArgs(env, now);
-        env.addSym(name, new FuncSym(name, funcLabels, argsInfo, env.toTypeSym(rtn), null, location));
+        env.addSym(name, new FuncSym(name, funcLabels, argsInfo, env.toTypeSym(rtn), null, scopeContext, location));
         return true;
 
     }
@@ -45,7 +45,7 @@ public class FunctionSig extends Statement {
         IfLabel ifl = null;
         if (rtn instanceof LabeledType)
             ifl = ((LabeledType) rtn).ifl;
-        contractSym.symTab.add(name, new FuncSym(name, funcLabels, argsInfo, contractSym.toTypeSym(rtn), ifl, location));
+        contractSym.symTab.add(name, new FuncSym(name, funcLabels, argsInfo, contractSym.toTypeSym(rtn), ifl, scopeContext, location));
     }
     public void findPrincipal(HashSet<String> principalSet) {
         if (funcLabels != null) {

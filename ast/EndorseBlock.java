@@ -38,9 +38,9 @@ public class EndorseBlock extends Statement {
         // String originalCtxt = env.ctxt;
         String prevLockLabel = env.prevContext.lockName;
 
-        String ifNamePcBefore = Utils.getLabelNamePc(env.ctxt.getParent().getSHErrLocName());
+        String ifNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".endorseBlock" + location.toString();
-        String ifNamePcAfter = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
+        String ifNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
         String fromLabel = l_from.toSherrlocFmt();
         String toLabel = l_to.toSherrlocFmt();
@@ -49,10 +49,10 @@ public class EndorseBlock extends Statement {
 
         env.cons.add(new Constraint(new Inequality(toLabel, Relation.EQ, ifNamePcAfter), env.hypothesis, location));
         env.cons.add(new Constraint(new Inequality(fromLabel, Utils.joinLabels(prevLockLabel, ifNamePcAfter)), env.hypothesis, location));
-        String newLockLabel = Utils.getLabelNameLock(env.ctxt.getSHErrLocName());
+        String newLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName());
         env.cons.add(new Constraint(new Inequality(newLockLabel, Relation.EQ, Utils.meetLabels(prevLockLabel, ifNamePcAfter)), env.hypothesis, location));
         env.prevContext.lockName = newLockLabel;
-        String newAfterLockLabel = Utils.getLabelNameLock(env.ctxt + ".after");
+        String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
         Context lastContext = new Context(env.prevContext), prev2 = null;
         for (Statement stmt : body) {

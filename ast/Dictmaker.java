@@ -25,7 +25,7 @@ public class Dictmaker extends Expression {
     }
     @Override
     public Context genConsVisit(VisitEnv env) {
-        String ifNameRtn = env.ctxt + "." + "dictmaker" + location.toString();
+        String ifNameRtn = scopeContext.getSHErrLocName() + "." + "dictmaker" + location.toString();
         String prevLock = env.prevContext.lockName;
         Context lasttmp = null;
         for (Expression value: values) {

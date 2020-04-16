@@ -50,7 +50,7 @@ public class FunctionDef extends FunctionSig {
 
         args.genConsVisit(env);
 
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
+        String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         FuncSym funcSym = env.getFunc(funcName);
 
 

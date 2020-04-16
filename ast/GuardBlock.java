@@ -35,15 +35,15 @@ public class GuardBlock extends Statement {
         // String originalCtxt = env.ctxt;
         String prevLockLabel = env.prevContext.lockName;
 
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt.getParent().getSHErrLocName());
+        String ifNamePc = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".guardBlock" + location.toString();
-        String newLockLabel = Utils.getLabelNameLock(env.ctxt.getSHErrLocName());
+        String newLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName());
         env.prevContext.lockName = newLockLabel;
 
         String guardLabel = l.toSherrlocFmt();
 
         env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, newLockLabel), prevLockLabel), env.hypothesis, location));
-        String newAfterLockLabel = Utils.getLabelNameLock(env.ctxt + ".after");
+        String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
         Context lastContext = new Context(env.prevContext), prev2 = null;
         for (Statement stmt : body) {

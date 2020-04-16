@@ -29,7 +29,7 @@ public class Assign extends Statement {
 
     @Override
     public Context genConsVisit(VisitEnv env) {
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
+        String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         String prevLockName = env.prevContext.lockName;
         String rtnLockName = "";
         Context valueContext = value.genConsVisit(env);

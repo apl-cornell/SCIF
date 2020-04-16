@@ -98,7 +98,7 @@ public class Call extends TrailerExpr {
                 String varName = ((Name)att.value).id;
                 TypeSym conType = env.getVar(varName).typeSym;
                 funcName = (att.attr).id;
-                ifNamePc = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
+                ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
                 funcSym = env.getContract(conType.name).getFunc(funcName);
                 if (funcSym instanceof PolyFuncSym) {
                     ((PolyFuncSym) funcSym).apply();
@@ -111,7 +111,7 @@ public class Call extends TrailerExpr {
             }
         } else {
             funcName = ((Name) value).id;
-            ifNamePc = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
+            ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         /*if (funcName.equals(Utils.ENDORCEFUNCNAME)) {
             //TODO: didn't add explicit ifLabel expression parsing at this point
             String ifNameExp = args.get(0).genConsVisit(ctxt, funcMap, cons, varNameMap);

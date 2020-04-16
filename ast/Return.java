@@ -31,10 +31,10 @@ public class Return extends Statement {
     @Override
     public Context genConsVisit(VisitEnv env) {
         String prevLock = env.prevContext.lockName;
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
+        String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
         // int occur = env.ctxt.indexOf(".");
-        String funcName = env.ctxt.getFuncName();
+        String funcName = scopeContext.getFuncName();
         FuncSym funcSym = env.getFunc(funcName);
         String ifNameRtnLock = funcSym.getLabelNameRtnLock();
         String ifNameRtnValue = funcSym.getLabelNameRtnValue();

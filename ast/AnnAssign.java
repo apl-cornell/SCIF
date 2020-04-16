@@ -80,14 +80,15 @@ public class AnnAssign extends Statement {
     @Override
     public Context genConsVisit(VisitEnv env) {
         logger.debug("entering AnnAssign: \n");
-        logger.debug(this.toString() + "\n");
+        // logger.debug(this.toString() + "\n");
         if (!simple) {
             //TODO
         }
         String SLCNameVar, SLCNameVarLbl;
         VarSym varSym;
         String id = ((Name) target).id;
-        if (!env.ctxt.isContractLevel()) {
+        logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
+        if (!scopeContext.isContractLevel()) {
             CodeLocation loc = location;
             varSym = env.curContractSym.toVarSym(id, annotation, isConst, loc, scopeContext);
             // ifNameTgt = varSym.toSherrlocFmt();
@@ -104,6 +105,7 @@ public class AnnAssign extends Statement {
             // ifNameTgt = ((Name) target).id;
             varSym = env.getVar(id);
         }
+        logger.debug(varSym.toString());
         SLCNameVar = varSym.toSherrlocFmt();
         SLCNameVarLbl = varSym.labelToSherrlocFmt();
         logger.debug(varSym.typeSym.toString());
@@ -118,7 +120,7 @@ public class AnnAssign extends Statement {
                 ((LabeledType) annotation).ifl.findPrincipal(env.principalSet);
             }
         }
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
+        String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         // String ifNameTgtLbl = ifNameTgt + "..lbl";
         Context prevContext = env.prevContext;
 

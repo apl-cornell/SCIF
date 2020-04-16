@@ -21,7 +21,7 @@ public class ConstantExpr extends Expression {
     @Override
     public Context genConsVisit(VisitEnv env) {
 
-        String ifNameRnt = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
+        String ifNameRnt = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         return new Context(ifNameRnt, env.prevContext.lockName);
     }
 

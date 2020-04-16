@@ -19,7 +19,7 @@ public class TypeChecker {
         //typecheck(inputFile, outputFile);
     }
 
-    public static ArrayList<Node> typecheck(ArrayList<File> inputFiles, File outputFile) {
+    public static ArrayList<Node> regularTypecheck(ArrayList<File> inputFiles, File outputFile) {
 
         logger.trace("typecheck starts");
 
@@ -64,8 +64,11 @@ public class TypeChecker {
         // assumptions: none or relations between types
         // constraints
         Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons, outputFile);
-        if (true) return roots;
 
+        return roots;
+    }
+
+    public static void ifcTypecheck(ArrayList<Node> roots, File outputFile) {
         // HashMap<String, ContractSym> contractMap = new HashMap<>();
         SymTab contractMap = new SymTab();
         ArrayList<String> contractNames = new ArrayList<>();
@@ -199,7 +202,6 @@ public class TypeChecker {
 
         logger.trace("typecheck finishes");
 
-        return roots;
     }
 
     protected static final Logger logger = LogManager.getLogger();

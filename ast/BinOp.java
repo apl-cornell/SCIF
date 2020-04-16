@@ -24,11 +24,11 @@ public class BinOp extends Expression {
         logger.debug("binOp:");
         ScopeContext now = new ScopeContext(this, parent);
         ScopeContext l = left.NTCgenCons(env, now);
-        logger.debug("binOp/left:");
-        logger.debug(l.toString());
+        // logger.debug("binOp/left:");
+        // logger.debug(l.toString());
         ScopeContext r = right.NTCgenCons(env, now);
-        logger.debug("binOp/right:");
-        logger.debug(r.toString());
+        // logger.debug("binOp/right:");
+        // logger.debug(r.toString());
         env.cons.add(now.genCons(l, Relation.LEQ, env, location));
         env.cons.add(now.genCons(r, Relation.LEQ, env, location));
         env.cons.add(now.genCons(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
@@ -44,11 +44,11 @@ public class BinOp extends Expression {
         env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, leftContext.lockName), env.hypothesis, location));
 
         env.prevContext.lockName = leftContext.lockName;
-        logger.debug("binOp/right:\n");
-        logger.debug(right.toString());
+        // logger.debug("binOp/right:\n");
+        // logger.debug(right.toString());
         Context rightContext = right.genConsVisit(env);
         String ifNameRight = rightContext.valueLabelName;
-        String ifNameRtn = env.ctxt + "." + "bin" + location.toString();
+        String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bin" + location.toString();
         env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location));
         env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location));
 

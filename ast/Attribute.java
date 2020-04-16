@@ -50,7 +50,7 @@ public class Attribute extends TrailerExpr {
         //String prevLockName = env.prevContext.lockName;
         Context tmp = value.genConsVisit(env);
         String ifAttLabel = structType.getMemberLabel(attr.id);
-        String ifNameRnt = env.ctxt + ".struct" + location.toString();
+        String ifNameRnt = scopeContext.getSHErrLocName() + ".struct" + location.toString();
         env.cons.add(new Constraint(new Inequality(ifNameRnt, ifAttLabel), env.hypothesis, location));
         if (!ifAttLabel.equals(tmp.valueLabelName)) {
             env.cons.add(new Constraint(new Inequality(ifNameRnt, tmp.valueLabelName), env.hypothesis, location));

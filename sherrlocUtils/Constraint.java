@@ -17,13 +17,13 @@ public class Constraint {
     public Constraint(Inequality inequality, Hypothesis hypothesis, CodeLocation location) {
         this.inequality = inequality;
         this.hypothesis = new Hypothesis(hypothesis);
-        this.position = new Position(location);
+        this.position = location == null ? null : new Position(location);
     }
 
     public Constraint(Inequality inequality, CodeLocation location) {
         this.inequality = inequality;
         this.hypothesis = new Hypothesis();
-        this.position = new Position(location);
+        this.position = location == null ? null : new Position(location);
     }
 
     public Constraint() {
@@ -37,6 +37,6 @@ public class Constraint {
             return "";
         }
         return inequality.toSherrlocFmt() + " " + hypothesis.toSherrlocFmt()  + ";"
-                + (withPosition ? position.toSherrlocFmt() : "");
+                + (withPosition && position != null ? position.toSherrlocFmt() : "");
     }
 }

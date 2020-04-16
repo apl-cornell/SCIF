@@ -14,23 +14,27 @@ public class FuncSym extends Sym {
     public TypeSym returnType;
     public IfLabel returnLabel;
     public CodeLocation location;
+    public ScopeContext scopeContext;
 
     public FuncSym(String funcName,
                    FuncLabels funcLabels,
                    ArrayList<VarSym> parameters,
                    TypeSym returnType,
-                   IfLabel returnLabel, CodeLocation location) {
+                   IfLabel returnLabel,
+                   ScopeContext scopeContext,
+                   CodeLocation location) {
         // this.typeName = funcName;
         this.funcName = funcName;
         this.funcLabels = funcLabels;
         this.parameters = parameters;
         this.returnType = returnType;
         this.returnLabel = returnLabel;
+        this.scopeContext = scopeContext;
         this.location = location;
     }
 
     public String getLabelNameCallPc() {
-        return Utils.getLabelNameFuncCallPc(funcName);
+        return Utils.getLabelNameFuncCallPc(scopeContext.getSHErrLocName());
     }
 
     /*public String getLabelNameCallAfter() {
@@ -38,21 +42,21 @@ public class FuncSym extends Sym {
     }*/
 
     public String getLabelNameRtnValue() {
-        return Utils.getLabelNameFuncRtnValue(funcName);
+        return Utils.getLabelNameFuncRtnValue(scopeContext.getSHErrLocName());
     }
     public String getLabelNameRtnLock() {
-        return Utils.getLabelNameFuncRtnLock(funcName);
+        return Utils.getLabelNameFuncRtnLock(scopeContext.getSHErrLocName());
     }
     public String getLabelNameCallLock() {
-        return Utils.getLabelNameFuncCallLock(funcName);
+        return Utils.getLabelNameFuncCallLock(scopeContext.getSHErrLocName());
     }
 
     public String getLabelNameArg(int index) {
-        return Utils.getLabelNameArgLabel(funcName, parameters.get(index));
+        return Utils.getLabelNameArgLabel(scopeContext.getSHErrLocName(), parameters.get(index));
     }
 
     public String getCallPcLabel() {
-        if (funcLabels.begin_pc != null) {
+        if (funcLabels != null && funcLabels.begin_pc != null) {
             return funcLabels.begin_pc.toSherrlocFmt();
         }
         else {
@@ -61,7 +65,7 @@ public class FuncSym extends Sym {
 
     }
     public String getCallLockLabel() {
-        if (funcLabels.begin_lock != null) {
+        if (funcLabels != null && funcLabels.begin_lock != null) {
             return funcLabels.begin_lock.toSherrlocFmt();
         }
         else {
@@ -70,7 +74,7 @@ public class FuncSym extends Sym {
 
     }
     public String getRtnLockLabel() {
-        if (funcLabels.end_lock != null) {
+        if (funcLabels != null && funcLabels.end_lock != null) {
             return funcLabels.end_lock.toSherrlocFmt();
         }
         else {

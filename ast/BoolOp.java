@@ -38,7 +38,7 @@ public class BoolOp extends Expression {
         env.prevContext.lockName = leftContext.lockName;
         Context rightContext = right.genConsVisit(env);
         String ifNameRight = rightContext.valueLabelName;
-        String ifNameRtn = env.ctxt + "." + "bool" + location.toString();
+        String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bool" + location.toString();
         env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location));
         env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location));
 

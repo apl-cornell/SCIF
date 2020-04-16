@@ -46,7 +46,7 @@ public class Wyvern implements Callable<Integer> {
         if (outputFileNames == null) {
             outputFile = File.createTempFile("cons", "tmp");
             outputFileName = outputFile.getAbsolutePath();
-            outputFile.deleteOnExit();
+            // outputFile.deleteOnExit();
         } else {
             outputFileName = outputFileNames[0];
             outputFile = new File(outputFileName);
@@ -55,26 +55,15 @@ public class Wyvern implements Callable<Integer> {
         for (File file : inputFiles) {
             files.add(file);
         }
-        ArrayList<Node> roots = TypeChecker.typecheck(files, outputFile);
-        String classDirectoryPath = new File(Wyvern.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
-        String[] sherrlocResult = Utils.runSherrloc(classDirectoryPath, outputFileName);
-        if (sherrlocResult.length < 1) {
-            System.out.println(Utils.TYPECHECK_NORESULT_MSG);
-            return null;
-        } else if (sherrlocResult[sherrlocResult.length - 1].contains(Utils.SHERRLOC_PASS_INDICATOR)) {
-            System.out.println(Utils.TYPECHECK_PASS_MSG);
-        } else {
-            System.out.println(Utils.TYPECHECK_ERROR_MSG);
-            for (int i = 0; i < sherrlocResult.length; ++i)
-                if (sherrlocResult[i].contains(Utils.SHERRLOC_ERROR_INDICATOR)) {
-                    for (int j = i; j < sherrlocResult.length; ++j) {
-                        System.out.println(sherrlocResult[j]);
-                    }
-                    break;
-                }
-            return null;
-        }
-        return roots;
+        ArrayList<Node> roots = TypeChecker.regularTypecheck(files, outputFile);
+        System.out.println("Regular Typechecking:");
+        boolean passNTC = runSLC(outputFileName);
+        System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking:");
+        TypeChecker.ifcTypecheck(roots, outputFile);
+        logger.debug("running SHErrLoc...");
+        boolean passIFC = runSLC(outputFileName);
+
+        return (passNTC && passIFC) ? roots : null;
     }
 
     @Override
@@ -89,6 +78,7 @@ public class Wyvern implements Callable<Integer> {
             LexerTest.tokenize(inputFiles[0]);
         } else if (funcRequest.compile) {
             ArrayList<Node> roots = typecheck(null);
+            logger.debug("finished typecheck, compiling...");
             if (roots == null) {
                 return 1;
             }
@@ -110,6 +100,30 @@ public class Wyvern implements Callable<Integer> {
 
         logger.trace("wyvern finishes");
         return 0;
+    }
+
+    boolean runSLC(String outputFileName) throws Exception {
+
+        String classDirectoryPath = new File(Wyvern.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+        String[] sherrlocResult = Utils.runSherrloc(classDirectoryPath, outputFileName);
+        logger.debug(sherrlocResult);
+        if (sherrlocResult.length < 1) {
+            System.out.println(Utils.TYPECHECK_NORESULT_MSG);
+            return false;
+        } else if (sherrlocResult[sherrlocResult.length - 1].contains(Utils.SHERRLOC_PASS_INDICATOR)) {
+            System.out.println(Utils.TYPECHECK_PASS_MSG);
+        } else {
+            System.out.println(Utils.TYPECHECK_ERROR_MSG);
+            for (int i = 0; i < sherrlocResult.length; ++i)
+                if (sherrlocResult[i].contains(Utils.SHERRLOC_ERROR_INDICATOR)) {
+                    for (int j = i; j < sherrlocResult.length; ++j) {
+                        System.out.println(sherrlocResult[j]);
+                    }
+                    break;
+                }
+            return false;
+        }
+        return true;
     }
 
     protected static final Logger logger = LogManager.getLogger();

@@ -46,7 +46,7 @@ public class Compare extends Expression {
         env.prevContext.lockName = leftContext.lockName;
         Context rightContext = right.genConsVisit(env);
         String ifNameRight = rightContext.valueLabelName;
-        String ifNameRtn = env.ctxt + "." + "cmp" + location.toString();
+        String ifNameRtn = scopeContext.getSHErrLocName() + "." + "cmp" + location.toString();
         env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location));
         env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location));
 

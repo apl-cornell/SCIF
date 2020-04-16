@@ -45,7 +45,7 @@ public class PolyFunctionDef extends FunctionDef {
         IfLabel ifl = null;
         if (rtn instanceof LabeledType)
             ifl = ((LabeledType) rtn).ifl;
-        contractSym.addFunc(funcId, new PolyFuncSym(funcId, funcLabels, polyArgs, argsInfo, contractSym.toTypeSym(rtn), ifl, location));
+        contractSym.addFunc(funcId, new PolyFuncSym(funcId, funcLabels, polyArgs, argsInfo, contractSym.toTypeSym(rtn), ifl, scopeContext, location));
     }
 
 

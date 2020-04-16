@@ -13,8 +13,8 @@ public class PolyFuncSym extends FuncSym {
     HashSet<String> polyArgs;
     int applyCounter;
 
-    public PolyFuncSym(String funcName, FuncLabels funcLabels, ArrayList<Integer> polyArgList, ArrayList<VarSym> parameters, TypeSym returnType, IfLabel returnLabel, CodeLocation location) {
-        super(funcName, funcLabels, parameters, returnType, returnLabel, location);
+    public PolyFuncSym(String funcName, FuncLabels funcLabels, ArrayList<Integer> polyArgList, ArrayList<VarSym> parameters, TypeSym returnType, IfLabel returnLabel, ScopeContext scopeContext, CodeLocation location) {
+        super(funcName, funcLabels, parameters, returnType, returnLabel, scopeContext, location);
         this.polyArgList = polyArgList;
         this.polyArgs = new HashSet<>();
         for (int i : polyArgList) {

@@ -50,9 +50,9 @@ public class While extends Statement {
         String prevLock = env.prevContext.lockName;
         Context testContext = test.genConsVisit(env);
         String IfNameTestValue = testContext.valueLabelName;
-        String IfNamePcBefore = Utils.getLabelNamePc(env.ctxt.getParent().getSHErrLocName());
+        String IfNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".While" + location.toString();
-        String IfNamePcAfter = Utils.getLabelNamePc(env.ctxt.getSHErrLocName());
+        String IfNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location));
 
         env.cons.add(new Constraint(new Inequality(IfNameTestValue, IfNamePcAfter), env.hypothesis, location));

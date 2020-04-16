@@ -74,9 +74,9 @@ public class VarSym extends Sym {
     static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();
     @Override
     public String toString() {
-        return genson.serialize(isConst) + "|" +
+        return isConst + "|" +
                 genson.serialize(typeSym) + "|" +
-                genson.serialize(ifl) + "|" +
-                genson.serialize(location);
+                (ifl != null ? ifl.toSherrlocFmt() + "|" : "") +
+                (location != null ? location.toString() : "");
     }
 }

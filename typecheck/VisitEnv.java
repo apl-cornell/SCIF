@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class VisitEnv {
-    public ScopeContext ctxt;
+    // public ScopeContext ctxt;
     public Context prevContext;
     // public HashMap<String, FuncInfo> funcMap;
     public ArrayList<Constraint> cons;
@@ -32,7 +32,7 @@ public class VisitEnv {
                     HashSet<String> principalSet,
                     ContractSym curContractSym
                     /*HashMap<String, ContractInfo> contractMap*/) {
-        this.ctxt = ctxt;
+        // this.ctxt = ctxt;
         this.prevContext = prevContext;
         // this.funcMap = funcMap;
         this.cons = cons;
@@ -47,7 +47,7 @@ public class VisitEnv {
     }
 
     public VisitEnv() {
-        ctxt = null;
+        // ctxt = null;
         prevContext = new Context();
         // funcMap = new HashMap<>();
         cons = new ArrayList<>();
