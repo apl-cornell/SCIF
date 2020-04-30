@@ -25,6 +25,7 @@ public class Subscript extends TrailerExpr {
         //TODO: support DepMap
 
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
+            System.err.println("Subscript: DepMap to be support");
             return null;
         } else if (valueVarSym.typeSym instanceof MapTypeSym) {
             MapTypeSym typeInfo = (MapTypeSym) valueVarSym.typeSym;

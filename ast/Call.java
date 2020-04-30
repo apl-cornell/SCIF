@@ -41,10 +41,22 @@ public class Call extends TrailerExpr {
             if (value instanceof Attribute) {
                 // a.b(c), a must be a contract
                 Attribute att = (Attribute) value;
-                String contractName = ((Name)att.value).id;
+                String varName = ((Name)att.value).id;
                 funcName = att.attr.id;
-                Sym s = env.getExtSym(contractName, funcName);
-                funcSym = ((FuncSym) s);
+                Sym s = env.getCurSym(varName);
+                logger.debug("var " + varName + ": " + s.name);
+                if (!(s instanceof VarSym) || !(((VarSym) s).typeSym instanceof ContractSym)) {
+                    System.err.println("a.b not found");
+                    return null;
+                }
+                ContractSym contractSym = (ContractSym) ((VarSym) s).typeSym;
+                s = contractSym.getFunc(funcName);
+                if (s == null) {
+                    System.err.println("func in a.b() not found");
+                    return null;
+                }
+
+                funcSym = (FuncSym) s;
             } else {
                 return null;
             }
@@ -53,14 +65,16 @@ public class Call extends TrailerExpr {
             funcName = ((Name) value).id;
             Sym s = env.getCurSym(funcName);
             if (s == null) {
-                if (env.contractExists(funcName)) {
-                    // return type is ATM
-                    // TODO
-                }
+                System.err.println("func not found");
                 return null;
             }
             if (!(s instanceof FuncSym)) {
+                if (s instanceof ContractSym) {
+                    env.addCons(now.genCons(s.name, Relation.EQ, env, location));
+                    return now;
+                }
                 // err: type mismatch
+                System.err.println("contract not found");
                 return null;
             }
             funcSym = ((FuncSym) s);
@@ -91,7 +105,7 @@ public class Call extends TrailerExpr {
             if (value instanceof Attribute) {
                 //  the case: a.b(c) where a is a contract, b is a function and c are the arguments
                 // att = a.b
-                logger.debug("call value: " + value.toString());
+                logger.debug("call value: " + value.toSolCode());
                 Attribute att = (Attribute) value;
                 String ifContRtn = att.value.genConsVisit(env).valueLabelName; //the label of called contract
                 //TODO: assuming a's depth is 1

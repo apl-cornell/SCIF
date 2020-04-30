@@ -309,7 +309,7 @@ contract ::= CONTRACT NAME:x COLON NEWLINE INDENT file_input:list DEDENT {:
     :};
 
 //Information flow specific modification
-endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from COMMA ifLabel:to RPAR {:
+endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from RARROW ifLabel:to RPAR {:
         RESULT = new Endorse(a, from, to);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};

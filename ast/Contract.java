@@ -19,11 +19,12 @@ public class Contract extends Node {
     @Override
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
+        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab, trustCons);
+        env.addSym(contractName, contractSym);
+
         for (Statement stmt : body) {
             if (!stmt.NTCGlobalInfo(env, now)) return false;
         }
-        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab, trustCons);
-        env.addSym(contractName, contractSym);
         return true;
     }
 
@@ -40,6 +41,7 @@ public class Contract extends Node {
     public void globalInfoVisit(ContractSym contractSym) {
         contractSym.name = contractName;
         contractSym.trustCons = trustCons;
+        contractSym.addContract(contractName, contractSym);
         for (Statement stmt : body) {
             stmt.globalInfoVisit(contractSym);
         }

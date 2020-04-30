@@ -70,7 +70,10 @@ public class SolCode {
     }
 
     public void enterFunctionDef(String name, String args, String returnType, boolean isPublic, boolean isPayable) {
-        addLine("function " + name + "(" + args + ")");
+        if (name.equals(Utils.CONSTRUCTOR_NAME))
+            addLine("constructor (" + args + ")");
+        else
+            addLine("function " + name + "(" + args + ")");
         addIndent();
         if (isPublic) addLine(Utils.PUBLIC_DECORATOR);
         else addLine(Utils.PRIVATE_DECORATOR);
@@ -140,7 +143,7 @@ public class SolCode {
     }
 
     public static String toFunctionCall(String name, String args) {
-        return name + "(" + args + ");";
+        return name + "(" + args + ")";
     }
 
     public void output(File outputFile) {

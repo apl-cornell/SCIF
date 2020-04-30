@@ -19,13 +19,13 @@ public class Name extends Variable {
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         Sym s = env.getCurSym(id);
         logger.debug("Name: " + id);
-        logger.debug(s.toString());
+        // logger.debug(s.toString());
         if (s instanceof FuncSym) {
             return null;
         } else if (s instanceof VarSym) {
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
-            logger.debug(typeSym.toString());
+            logger.debug(s.name);
             env.addCons(now.genCons(typeSym.name, Relation.EQ, env, location));
             logger.debug(now.toString());
             return now;

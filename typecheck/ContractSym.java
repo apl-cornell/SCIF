@@ -4,7 +4,7 @@ import ast.*;
 
 import java.util.ArrayList;
 
-public class ContractSym extends Sym {
+public class ContractSym extends TypeSym {
     // public HashSet<String> iptContracts;
     /*public HashMap<String, Type> typeMap;
     public HashMap<String, VarInfo> varMap;
@@ -40,8 +40,6 @@ public class ContractSym extends Sym {
         if (sym == null) return null;
         if (sym instanceof TypeSym)
             return (TypeSym) sym;
-        else if (sym instanceof ContractSym)
-            return new ContractTypeSym(typeName, (ContractSym) sym);
         return null;
     }
 
@@ -64,13 +62,13 @@ public class ContractSym extends Sym {
         if (astType == null) {
             return new BuiltinTypeSym("void");
         }
+        System.err.println("[in]toTypeSym: " + astType.x);
 
+        Sym s = symTab.lookup(astType.x);
         TypeSym typeSym = null;
-        if (!(astType instanceof LabeledType)) {
-            String typeName = astType.x;
-            TypeSym type = toType(typeName);
-            typeSym = type;
-        } else {
+        if (s instanceof TypeSym)
+            typeSym = (TypeSym) s;
+        else  {
             LabeledType lt = (LabeledType) astType;
             if (lt instanceof DepMap) {
                 DepMap depMap = (DepMap) lt;
@@ -78,10 +76,10 @@ public class ContractSym extends Sym {
             } else if (lt instanceof Map) {
                 Map map = (Map) lt;
                 typeSym = new MapTypeSym(toTypeSym(map.keyType), toTypeSym(map.valueType));
-            } else {
-                typeSym = toType(lt.x);
             }
+
         }
+        System.err.println("[out]toTypeSym: " + typeSym.name);
         return typeSym;
     }
 
@@ -101,6 +99,9 @@ public class ContractSym extends Sym {
         symTab.add(funcname, funcSym);
     }
     public void addType(String typename, TypeSym typeSym) {
+        symTab.add(typename, typeSym);
+    }
+    public void addContract(String typename, ContractSym typeSym) {
         symTab.add(typename, typeSym);
     }
     public boolean isLValue() {

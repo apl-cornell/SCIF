@@ -29,6 +29,7 @@ public class SymTab {
     }
     public void add(String id, Sym sym) {
         System.out.println("sym add: " + id + " @" + this);
+        System.out.println(sym.name);
         table.put(id, sym);
     }
 

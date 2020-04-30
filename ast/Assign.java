@@ -23,6 +23,9 @@ public class Assign extends Statement {
         ScopeContext tgt = targets.get(0).NTCgenCons(env, now);
         ScopeContext v = value.NTCgenCons(env, now);
         // con: tgt should be a supertype of v
+        logger.debug(v);
+        logger.debug(env);
+        logger.debug(location);
         env.cons.add(tgt.genCons(v, Relation.LEQ, env, location));
         return now;
     }

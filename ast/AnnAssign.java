@@ -105,10 +105,10 @@ public class AnnAssign extends Statement {
             // ifNameTgt = ((Name) target).id;
             varSym = env.getVar(id);
         }
-        logger.debug(varSym.toString());
+        logger.debug(varSym.name);
         SLCNameVar = varSym.toSherrlocFmt();
         SLCNameVarLbl = varSym.labelToSherrlocFmt();
-        logger.debug(varSym.typeSym.toString());
+        logger.debug(varSym.typeSym.name);
         if (varSym.typeSym.name.equals(Utils.ADDRESSTYPE)) {
             env.principalSet.add(varSym.toSherrlocFmt());
         }

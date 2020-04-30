@@ -3,6 +3,7 @@ package typecheck;
 import ast.DepMap;
 import ast.LabeledType;
 import ast.Map;
+import ast.Type;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Hypothesis;
 
@@ -37,10 +38,12 @@ public class NTCEnv {
 
     public TypeSym toTypeSym(ast.Type astType) {
         TypeSym typeSym = null;
-
         if (astType == null) return new BuiltinTypeSym(Utils.BuiltinType2ID(BuiltInT.VOID));
-        if (Utils.isPrimitiveType(astType.x))
-            typeSym = new BuiltinTypeSym(astType.x);
+        System.err.println("[in]toTypeSym: " + astType.x);
+
+        Sym s = getCurSym(astType.x);
+        if (s instanceof TypeSym)//Utils.isPrimitiveType(astType.x))
+            typeSym = (TypeSym) s;// new BuiltinTypeSym(astType.x);
         else {
             LabeledType lt = (LabeledType) astType;
             if (lt instanceof DepMap) {
@@ -50,9 +53,11 @@ public class NTCEnv {
                 Map map = (Map) lt;
                 typeSym = new MapTypeSym(toTypeSym(map.keyType), toTypeSym(map.valueType));
             } else {
-                typeSym = new BuiltinTypeSym(lt.x);
+                // return null;
+                // typeSym = new BuiltinTypeSym(lt.x);
             }
         }
+        System.err.println("[out]toTypeSym: " + typeSym.name);
         return typeSym;
     }
 
