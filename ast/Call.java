@@ -29,6 +29,7 @@ public class Call extends TrailerExpr {
     public void addArg(Expression arg) {
         this.args.add(arg);
     }
+    public void setArgs(ArrayList<Expression> args) { this.args = args; }
     public void addKeyword(Keyword keyword) {
         this.keywords.add(keyword);
     }

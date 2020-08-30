@@ -1,0 +1,971 @@
+import java.io.*;
+import java_cup.runtime.*;
+import java.util.*;
+import ast.*;
+import sherrlocUtils.*;
+import com.owlike.genson.Genson;
+import com.owlike.genson.GensonBuilder;
+import typecheck.CodeLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+parser code {:
+    //public boolean DEBUG = true;
+    protected static final Logger logger = LogManager.getLogger();
+
+    public void syntax_error(Symbol cur_token) {
+        logger.error("Syntax error at {}", cur_token);
+        //System.err.println();
+        report_error("Syntax error", cur_token);
+    }
+
+    public void Debuglog(String s) {
+        logger.debug(s);
+        //if (DEBUG)
+        //    System.err.println(s);
+    }
+
+    /*public Node<String> makeKeyword(Object kw) {
+        if (kw instanceof String)
+            return new Node<String>((String)kw, -1, -1);
+        Symbol tmp = (Symbol) kw;
+        return new Node<String>(tmp.toString(), tmp.left, tmp.right);
+    }*/
+
+    public static void main(String args[]) {
+        File inputFile = new File(args[0]);
+        parse(inputFile, null);
+    }
+
+    public static void parse(File inputFile, File astFile) {
+        try {
+            Lexer lexer = new Lexer(new FileReader(inputFile));
+
+            if (astFile != null) {
+                PrintStream ps = new PrintStream(new FileOutputStream(astFile));
+                System.setErr(ps);
+            }
+
+            Parser p = new Parser(lexer);
+            logger.trace("Parser init");
+            //System.err.println("Parser init\n");
+
+            p.parse();
+            //p.debug_parse();
+            logger.trace("Finish");
+
+            //System.err.println("Finish\n");
+
+            if (astFile != null) {
+                System.setErr(System.err);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+:};
+
+terminal ERROR;
+terminal NUMBER, STRING;
+terminal FALSE, TRUE, NONE, NAME, ELLIPSIS;
+terminal AND, AS, ASSERT, ASYNC, AWAIT;
+terminal BREAK, CLASS, CONTINUE, DEF, DEL;
+terminal ELIF, ELSE, EXCEPT, FINALLY, FOR, FROM;
+terminal GLOBAL, IF, IMPORT, IN, IS, LAMBDA, NONLOCAL, NOT;
+terminal OR, PASS, RAISE, RETURN, TRY;
+terminal WHILE, WITH, YIELD;
+terminal LPAR, RPAR, LSQB, RSQB, COLON, COMMA, SEMI;
+terminal PLUS, MINUS, STAR, SLASH, VBAR, AMPER;
+terminal LESS, GREATER, EQUAL, DOT, PERCENT, LBRACE, RBRACE;
+terminal CIRCUMFLEX, TILDE, AT;
+terminal EQEQUAL, NOTEQUAL, LESSEQUAL, LEFTSHIFT, GREATEREQUAL, RIGHTSHIFT;
+terminal PLUSEQUAL, MINEQUAL, RARROW, DOUBLESTAR, STAREQUAL, DOUBLESLASH, SLASHEQUAL, VBAREQUAL;
+terminal PERCENTEQUAL, AMPEREQUAL, CIRCUMFLEXEQUAL, ATEQUAL;
+terminal LEFTSHIFTEQUAL, RIGHTSHIFTEQUAL, DOUBLESTAREQUAL, DOUBLESLASHEQUAL;
+terminal INT;
+terminal UNARY, COMP, BIT, ADDISH, MULISH;
+terminal ENDORSE, AUTOENDORSE, GUARD;
+terminal MAP;
+terminal CONST, KEY;
+terminal CONTRACT;
+terminal INTERFACE;
+terminal STRUCT;
+terminal EQUALGREATER;
+terminal NEWLINE, EXTENDS, LET;
+terminal LOCK, REF, SUPER, THEN, NEW;
+
+nonterminal Node sourceCode;
+nonterminal Interface interface;
+nonterminal Program program;
+nonterminal HashSet<String> ipt_stmts;
+nonterminal ArrayList<Contract> contracts;
+nonterminal Contract contract;
+nonterminal ArrayList<Statement> file_input;
+//nonterminal Node<String> file_input_unit;
+nonterminal String decorator;
+nonterminal ArrayList<String> decorators;
+nonterminal FunctionDef decorated, funcdef;
+nonterminal Arguments parameters, typedarglist, probinittfpdef;
+nonterminal Arg tfpdef;
+nonterminal ArrayList<Statement> stmt, simple_stmt, small_stmts;
+nonterminal Statement small_stmt, expr_stmt;
+nonterminal AnnAssign annassign;
+nonterminal Statement del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt;
+nonterminal String ipt_stmt;
+nonterminal String ipt_name;
+nonterminal String ipt_as_names;
+nonterminal Statement assert_stmt, compound_stmt;
+nonterminal Statement if_stmt, while_stmt, try_stmt;
+nonterminal Statement endorse_block;
+nonterminal ArrayList<Statement> elif_stmts;
+nonterminal ArrayList<ExceptHandler> except_stmts;
+nonterminal ExceptHandler except_clause;
+nonterminal ArrayList<Statement> suite, stmts;
+nonterminal Expression expr;
+nonterminal CompareOperator comp_op;
+nonterminal BinaryOperator bit_op, addish_op, mulish_op;
+nonterminal UnaryOperator unary_op;
+// nonterminal ArrayList<Expression> trailers;
+nonterminal TrailerExpr trailer_expr;
+nonterminal Expression atom;
+nonterminal Str strings;
+nonterminal TrailerExpr trailer;
+nonterminal ArrayList<Expression> exprlist, exprlist_sub;
+nonterminal Dictmaker dictmaker, dictmaker_sub;
+nonterminal Setmaker setmaker, setmaker_sub;
+nonterminal ClassDef classdef;
+nonterminal Call arglist;
+nonterminal Keyword keyword;
+nonterminal LabeledType labeledType;
+nonterminal IfLabel ifLabel, unitIfLabel;
+nonterminal Type typeSym;
+nonterminal Autoendorse autoendorse;
+nonterminal IfLabel maybeAutoendorseIfLabel;
+nonterminal ArrayList<String> polyDescription;
+nonterminal ArrayList<String> nameList;
+nonterminal Endorse endorseExpression;
+nonterminal DepMap depMap;
+nonterminal ArrayList<FunctionSig> funcSigs;
+nonterminal FunctionSig funcSig, r_funcSig;
+nonterminal StructDef structDef;
+nonterminal ArrayList<AnnAssign> annassigns;
+nonterminal FuncLabels tFuncLabels;
+nonterminal IfLabel ifLabelOrNull;
+nonterminal GuardBlock guard_block;
+nonterminal ArrayList<TrustConstraint> trust_decs;
+nonterminal TrustConstraint trust_dec;
+nonterminal Relation trust_operator;
+nonterminal let_stmt;//, ref_stmt, new_stmt, deref_stmt;
+
+precedence left OR;
+precedence left AND;
+precedence left NOT;
+precedence left COMP, LESS, GREATER, EQEQUAL, GREATEREQUAL, LESSEQUAL, NOTEQUAL, IN, IS;
+precedence left BIT, VBAR, CIRCUMFLEX, AMPER, LEFTSHIFT, RIGHTSHIFT;
+precedence left ADDISH, PLUS, MINUS;
+precedence left MULISH, STAR, AT, PERCENT, SLASH, DOUBLESLASH;
+precedence left UNARY;
+precedence left LPAR, RPAR, LSQB, RSQB, LBRACE, RBRACE;
+precedence right DOUBLESTAR;
+
+
+start with sourceCode;
+
+sourceCode ::= program:a {: RESULT = a; :}
+    | interface:a {:RESULT = a; :}
+    | {: logger.debug("empty program"); RESULT = null;:};
+
+// version: trust dec
+trust_decs ::= trust_dec:x {:
+        ArrayList<TrustConstraint> list = new ArrayList<>();
+        list.add(x);
+        RESULT = list;
+    :}
+    /*| trust_decs:list NEWLINE {:
+        RESULT = list;
+    :}*/
+    | trust_decs:list trust_dec:a {:
+        list.add(a);
+        RESULT = list;
+    :};
+
+trust_dec ::= LBRACE:x ifLabel:lhs trust_operator:optor ifLabel:rhs RBRACE {:
+        TrustConstraint cons = new TrustConstraint(lhs, optor, rhs);
+        RESULT = cons;
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    /*| NEWLINE trust_dec:x {:
+        RESULT = x;
+    :}*/;
+
+trust_operator ::= EQUAL {: RESULT = Relation.EQ; :}
+    | LESSEQUAL {: RESULT = Relation.REQ; :}
+    | EQUALGREATER {: RESULT = Relation.LEQ; :};
+
+// version: static lock
+tFuncLabels ::= LBRACE:x ifLabelOrNull:a COMMA ifLabelOrNull:b RARROW ifLabelOrNull:c RBRACE {:
+        logger.debug("parsing func begin labels");
+        RESULT = new FuncLabels(a, b, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | {:
+        logger.debug("parsing empty funclabels");
+        RESULT = new FuncLabels();
+    :};
+
+ifLabelOrNull ::= ifLabel:x {:
+        RESULT = x;
+    :}
+    | {:
+        RESULT = null;
+    :};
+// ---
+
+interface ::= INTERFACE:i NAME:x COLON NEWLINE  funcSigs:a  {:
+        ArrayList<TrustConstraint> trust_list = new ArrayList<>();
+        RESULT = new Interface((String)x, trust_list, a);
+        RESULT.setLoc(new CodeLocation(ileft, iright));
+    :}
+    | INTERFACE:i NAME:x COLON NEWLINE  trust_decs:trust_list funcSigs:a  {:
+            RESULT = new Interface((String)x, trust_list, a);
+            RESULT.setLoc(new CodeLocation(ileft, iright));
+    :};
+
+funcSigs ::=
+    funcSig:a {:
+        ArrayList<FunctionSig> list = new ArrayList<>();
+        if (a != null) {
+            list.add(a);
+        }
+        RESULT = list;
+    :}
+    | funcSigs:list funcSig:a {:
+        if (a != null) {
+            list.add(a);
+        }
+        RESULT = list;
+    :};
+
+funcSig ::= r_funcSig:a NEWLINE {: RESULT = a;
+    :}
+    | r_funcSig:a SEMI NEWLINE {: RESULT = a; :}
+    | NEWLINE funcSig:x {:RESULT = x;:};
+
+r_funcSig ::=
+    typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b  {:
+        System.out.println("parsing function");
+        // logger.debug("parsing func sig");
+        RESULT = new FunctionSig((String) funcName, funclabels, b, null, c);
+        RESULT.setLoc(new CodeLocation(cleft, cright));
+        //makeNode("funcdef", a, b, c, d);
+    :}
+    /*| DEF:x NAME:funcName tFuncLabels:funclabels parameters:b {:
+        logger.debug("parsing function");
+        //System.err.println("parsing function");
+        RESULT = new FunctionSig((String) funcName, funclabels, b, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a  polyDescription:p tFuncLabels:funclabels parameters:b {:
+        logger.debug("Finished parsing the poly func");
+        String funId = (String) a;
+        RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a polyDescription:p tFuncLabels:funclabels parameters:b RARROW typeSym:c {:
+        logger.debug("Finished parsing the poly func");
+        String funId = (String) a;
+        RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}*/;
+
+program ::= ipt_stmts:a contracts:b {:
+        RESULT = new Program(a, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+        logger.debug(RESULT);
+    :}
+    | contracts:list {:
+        RESULT = new Program(list);
+        RESULT.setLoc(new CodeLocation(listleft, listright));
+        logger.debug(RESULT);
+    :};
+
+contracts ::= contract:a {:
+        RESULT = new ArrayList<Contract>();
+        RESULT.add(a);
+    :}
+    | contracts:list contract:a {:
+        RESULT = list;
+        list.add(a);
+    :};
+
+
+contract ::= CONTRACT NAME:x LBRACE file_input:list RBRACE {:
+        ArrayList<TrustConstraint> trust_list = new ArrayList<>();
+        RESULT = new Contract((String) x, trust_list, list);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+        //System.err.println(RESULT);
+    :}
+    | CONTRACT NAME:x LBRACE EXTENDS NAME:y RBRACE LBRACE file_input:list RBRACE {:
+    //TODO: handle extends
+              /*ArrayList<TrustConstraint> trust_list = new ArrayList<>();
+              RESULT = new Contract((String) x, y, trust_list, list);
+              RESULT.setLoc(new CodeLocation(xleft, xright));*/
+              //System.err.println(RESULT);
+          :}
+   /* | CONTRACT NAME:x COLON NEWLINE  trust_decs:trust_list file_input:list  {:
+            RESULT = new Contract((String) x, trust_list, list);
+            RESULT.setLoc(new CodeLocation(xleft, xright));
+            //System.err.println(RESULT);
+    :}*/;
+
+//Information flow specific modification
+endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from RARROW ifLabel:to RPAR {:
+        RESULT = new Endorse(a, from, to);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+
+labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
+        //System.out.println("parsed labeledType with label: \n" + b.toString());
+        String name = (String)a;
+        RESULT = new LabeledType(name, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | MAP:x LPAR labeledType:keyType COMMA labeledType:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
+        RESULT = new ast.Map(keyType, valueType, mapLabel);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | depMap:a {:
+        RESULT = a;
+    :};
+
+depMap ::=
+    MAP:x LPAR NAME:keyName COLON labeledType:keyType COMMA labeledType:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
+        String name = (String)keyName;
+        RESULT = new DepMap(name, keyType, valueType, mapLabel);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+
+/*maybeAutoendorseIfLabel ::= autoendorse:a {:
+        RESULT = a;
+    :}
+    | ifLabel:a {:
+        logger.debug("finished parsing callin labels");
+        RESULT = a;
+    :};*/
+
+autoendorse ::= AUTOENDORSE:x LPAR ifLabel:from COMMA ifLabel:to RPAR {:
+        RESULT = new Autoendorse(from, to);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+
+ifLabel ::= unitIfLabel:a {:
+        RESULT = a;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :} 
+    | ifLabel:a AND ifLabel:b {:
+        RESULT = new ComplexIfLabel(a, IfOperator.MEET, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | ifLabel:a OR ifLabel:b {:
+        RESULT = new ComplexIfLabel(a, IfOperator.JOIN, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+unitIfLabel ::= NAME:a {:
+        Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new PrimitiveIfLabel(name);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | LPAR ifLabel:a RPAR {:
+        RESULT = a;
+    :};
+
+//file_input: (NEWLINE | stmt)* ENDMARKER
+file_input ::= 
+    file_input:fi stmt:fiu {: 
+        Debuglog("Debug: 1");
+        ArrayList<Statement> list = fi;
+        list.addAll(fiu);
+        RESULT = list;
+    :}
+    | stmt:a {:
+        Debuglog("Debug: 2");
+        RESULT = a;
+    :};
+
+//file_input_unit ::= NEWLINE {: RESULT = makeNode("NEWLINE"); :}
+//    | stmt:a {: RESULT = a; :};
+
+//eval_input: testlist NEWLINE* ENDMARKER
+
+
+//funcdef: 'def' NAME parameters ['->' test] ':' suite
+funcdef ::=
+    r_funcSig:funcSig suite:d {:
+        // System.err.println("parsing function");
+        RESULT = new FunctionDef(funcSig, d);
+        RESULT.setLoc(new CodeLocation(funcSigleft, funcSigright));
+    :};
+/*
+    DEF:x NAME:funcName tFuncLabels:funcLabels parameters:b RARROW typeSym:c COLON suite:d {:
+        RESULT = new FunctionDef((String) funcName, funcLabels, b, d, null, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+        //makeNode("funcdef", a, b, c, d);
+    :}
+    | DEF:x NAME:funcName tFuncLabels:funcLabels parameters:b COLON suite:c {:
+        logger.debug("parsing function");
+        //System.err.println("parsing function");
+        RESULT = new FunctionDef((String) funcName, funcLabels, b, c, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:funcName parameters:b COLON suite:c {:
+        logger.debug("parsing function");
+        //System.err.println("parsing function");
+        RESULT = new FunctionDef((String) funcName, new FuncLabels(), b, c, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a polyDescription:p tFuncLabels:funcLabels  parameters:b COLON suite:c {:
+        logger.debug("Finished parsing the poly func");
+        String funId = (String)a;
+        RESULT = new PolyFunctionDef(funId, funcLabels, p, b, c, null, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | DEF:x NAME:a  polyDescription:p tFuncLabels:funcLabels parameters:b RARROW typeSym:c COLON suite:d {:
+        logger.debug("Finished parsing the poly func");
+        String funId = (String)a;
+        RESULT = new PolyFunctionDef(funId, funcLabels, p, b, d, null, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+*/
+typeSym ::=
+    NAME:a {:
+        RESULT = new Type((String)a);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | labeledType:a {:
+        /*Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright));*/
+        RESULT = a;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+        logger.debug("finished labeled typeSym parsing");
+    :};
+polyDescription ::=
+    LSQB nameList:l RSQB {:
+        logger.debug("finished parsing polyDescription");
+        RESULT = l;
+    :};
+nameList ::=
+    NAME:x {:
+        logger.debug("parsing names in polyList");
+        ArrayList<String> rtn = new ArrayList<String>();
+        rtn.add((String)x);
+        RESULT = rtn;
+    :}
+    | nameList:l COMMA NAME:x {:
+        l.add((String)x);
+        RESULT = l;
+    :};
+
+//parameters: '(' [typedargslist] ')'
+//typedargslist: (tfpdef ['=' test] (',' tfpdef ['=' test])* [',' [
+//        '*' [tfpdef] (',' tfpdef ['=' test])* [',' ['**' tfpdef [',']]]
+//      | '**' tfpdef [',']]]
+//  | '*' [tfpdef] (',' tfpdef ['=' test])* [',' ['**' tfpdef [',']]]
+//  | '**' tfpdef [','])
+//tfpdef: NAME [':' test]
+parameters ::= 
+    LPAR typedarglist:a RPAR {:
+        RESULT = a;
+    :}
+    | LPAR:a RPAR {:
+        RESULT = new Arguments();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+typedarglist ::=
+    probinittfpdef:a {:RESULT = a; :}
+    | typedarglist:list COMMA probinittfpdef:a {:
+        list.merge(a);
+        RESULT = list;
+    :}; 
+probinittfpdef ::=
+    tfpdef:a  {:
+        ArrayList<Arg> args = new ArrayList<Arg>();
+        args.add(a);
+        RESULT = new Arguments(args, null);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | tfpdef:a EQUAL expr:b {:
+        ArrayList<Arg> args = new ArrayList<Arg>();
+        ArrayList<Expression> defaults = new ArrayList<Expression>();
+        args.add(a);
+        defaults.add(b);
+        RESULT = new Arguments(args, defaults);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+tfpdef ::= 
+     typeSym:b NAME:a{:
+        // System.err.println("pair (" + b + " " + a + ")");
+        String name = (String)a;
+        RESULT = new Arg(name, b);
+        RESULT.setLoc(new CodeLocation(bleft, bright));
+    :};
+
+//stmt: simple_stmt | compound_stmt
+//simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
+//small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
+//             import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
+//expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
+//                     ('=' (yield_expr|testlist_star_expr))*)
+stmt ::= typeSym:a annassign:b SEMI {://testlist_star_expr:a expr_rest_stmt:b {:
+            ArrayList<Statement> rnt = new ArrayList<Statement>();
+                 b.setType(a);
+                 /*if (a instanceof Name) {
+                     b.setSimple(true);
+                 }*/
+                 rnt.add(b);
+                 RESULT = rnt;
+             :}
+    | funcdef:a {:
+        ArrayList<Statement> rnt = new ArrayList<Statement>();
+        rnt.add(a);
+        RESULT = rnt;
+    :};
+simple_stmt ::= small_stmts:a {: RESULT = a; :};
+small_stmts ::=
+    small_stmt:a {:
+        ArrayList<Statement> list = new ArrayList<Statement>();
+        list.add(a);
+        RESULT = list;
+    :}
+    | small_stmts:list small_stmt:a {:
+        list.add(a);
+        RESULT = list;
+    :};
+small_stmt ::= expr_stmt:a {: RESULT = a; :}
+    | del_stmt:a {: RESULT = a; :}
+    | pass_stmt:a {: RESULT = a; :}  
+    | flow_stmt:a {: RESULT = a; :}  
+    //| ipt_stmt:a {: RESULT = a; :}
+    | assert_stmt:a {: RESULT = a; :};
+expr_stmt ::= 
+    expr:a SEMI {:RESULT = a;:}
+    | typeSym:a annassign:b SEMI {://testlist_star_expr:a expr_rest_stmt:b {:
+                       b.setType(a);
+                       /*if (a instanceof Name) {
+                           b.setSimple(true);
+                       }*/
+                       RESULT = b;
+    :}
+    | expr:a EQUAL expr:b SEMI {:
+        ArrayList<Expression> list = new ArrayList<Expression>();
+        list.add(a);
+        Assign rnt = new Assign(list, b);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+
+//annassign: ':' test ['=' test]
+//testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
+//augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+//            '<<=' | '>>=' | '**=' | '//=')
+annassign ::=
+    /*COLON CONST typeSym:a EQUAL expr:b {:
+        //System.out.println("Annassign case 1 parsing");
+        AnnAssign rnt = new AnnAssign(null, a, b, true, true);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}*/
+    NAME:a EQUAL expr:b {:
+        System.out.println("Annassign case 1 parsing");
+        Name x = new Name((String)a);
+        x.setLoc(new CodeLocation(aleft, aright));
+        AnnAssign rnt = new AnnAssign(x, null, b, true, false);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    |
+    NAME:a {:
+        System.out.println("Annassign case 2 parsing");
+        Name x = new Name((String)a);
+        x.setLoc(new CodeLocation(aleft, aright));
+        AnnAssign rnt = new AnnAssign(x, null, null, true, false);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+
+//# For normal and annotated assignments, additional restrictions enforced by the interpreter
+// del_stmt: 'del' exprlist
+// pass_stmt: 'pass'
+// flow_stmt: break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt
+// break_stmt: 'break'
+// continue_stmt: 'continue'
+// return_stmt: 'return' [testlist]
+// yield_stmt: yield_expr
+// raise_stmt: 'raise' [test ['from' test]]
+// import_stmt: import_name | import_from
+// import_name: 'import' dotted_as_names
+del_stmt ::= DEL:x exprlist:a SEMI {:
+            RESULT = new Delete(a);
+            RESULT.setLoc(new CodeLocation(xleft, xright));
+        :};
+pass_stmt ::= PASS:a SEMI {:
+        RESULT = new Pass();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+flow_stmt ::= break_stmt:a {: RESULT = a;:}
+        | continue_stmt:a {: RESULT = a;:}
+        | return_stmt:a {: RESULT = a;:}
+        | raise_stmt:a {: RESULT = a;:};
+break_stmt ::= BREAK:a SEMI {:
+        RESULT = new Break();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+continue_stmt ::= CONTINUE:a SEMI {:
+        RESULT = new Continue();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+return_stmt ::= RETURN:a SEMI {:
+        RESULT = new Return();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | RETURN:x expr:a SEMI {:
+        RESULT = new Return(a);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+raise_stmt ::= RAISE:a SEMI {:
+        RESULT = new Raise();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | RAISE:x expr:a SEMI {:
+        RESULT = new Raise(a);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | RAISE:x expr:a FROM expr:b SEMI {:
+        RESULT = new Raise(a, b);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+ipt_stmts ::=
+    ipt_stmts:s  ipt_stmt:a {:
+        if (a != null) {
+            s.add(a);
+        }
+        RESULT = s;
+    :}
+    | ipt_stmt:a {:
+        HashSet<String> rtn = new HashSet<>();
+        if (a != null) {
+            rtn.add(a);
+        }
+        RESULT = rtn;
+    :};
+ipt_stmt ::= ipt_name:a SEMI {:RESULT = a; :};
+
+ipt_name ::= IMPORT:x ipt_as_names:a {:
+        RESULT = a;//new Import();
+        //RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+
+
+// # note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
+// import_as_name: NAME ['as' NAME]
+// assert_stmt: 'assert' expr [',' expr]
+ipt_as_names ::= 
+    NAME:a {:
+        RESULT = (String) a;//new Name((String)a);
+        //RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | NAME:a AS NAME:b {:
+        RESULT = (String) a;//new Name((String)a); //TODO
+        //RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+assert_stmt ::= ASSERT:x expr:a COMMA expr:b SEMI {:
+        RESULT = new Assert(a, b);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | ASSERT:x expr:a SEMI {:
+        RESULT = new Assert(a, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+
+
+// compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt
+// if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
+// while_stmt: 'while' test ':' suite ['else' ':' suite]
+// try_stmt: ('try' ':' suite
+//            ((except_clause ':' suite)+
+//             ['else' ':' suite]
+//             ['finally' ':' suite] |
+//            'finally' ':' suite))
+compound_stmt ::= if_stmt:a {:RESULT = a;:}
+    | funcdef:a {:RESULT = a;:}
+    | guard_block:a {:RESULT = a;:};
+
+guard_block ::=
+    GUARD:x LBRACE ifLabel:l RBRACE suite:body {:
+        RESULT = new GuardBlock(l, body, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+if_stmt ::= 
+    IF:x LBRACE ifLabel RBRACE LPAR expr:a RPAR suite:b {:
+        RESULT = new If(a, b);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :}
+    | IF:x LBRACE ifLabel RBRACE LPAR expr:a RPAR suite:b ELSE suite:c {:
+        RESULT = new If(a, b, c);
+        RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+let_stmt ::=
+    LET:x NAME:a EQEQUAL expr:b IN suite:c {:
+        // TODO: let exp
+        // RESULT = new Let(a, b, c);
+        // RESULT.setLoc(new CodeLocation(xleft, xright));
+    :};
+// , ref_stmt, new_stmt, deref_stmt;
+suite ::= LBRACE small_stmts:a RBRACE {:
+        System.out.println("parsing suite");
+        RESULT = a;
+    :}
+    | LBRACE RBRACE {:
+        RESULT = new ArrayList<Statement>();
+    :};
+stmts ::=
+    stmt:a {:
+        RESULT = a;
+    :}
+    | stmts:list stmt:b {:
+        list.addAll(b);
+        RESULT = list;
+    :};
+
+expr ::=
+    expr:a OR:o expr:b {:
+        RESULT = new BoolOp(a, BoolOperator.Or, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | expr:a AND:o expr:b {:
+        RESULT = new BoolOp(a, BoolOperator.And, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | NOT:o expr:a {:
+        RESULT = new UnaryOp(UnaryOperator.Not, a);
+        RESULT.setLoc(new CodeLocation(oleft, oright));
+    :}
+    | expr:a comp_op:o expr:b {:
+        //System.out.println("compare expr parsed");
+        RESULT = new Compare(a, o, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :} %prec COMP
+    | expr:a bit_op:o expr:b {:
+        RESULT = new BinOp(a, o, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :} %prec BIT
+    | expr:a addish_op:o expr:b {:
+        RESULT = new BinOp(a, o, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :} %prec ADDISH
+    | expr:a mulish_op:o expr:b {:
+        RESULT = new BinOp(a, o, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :} %prec MULISH
+    | unary_op:o expr:a {:
+        RESULT = new UnaryOp(o, a);
+        RESULT.setLoc(new CodeLocation(oleft, oright));
+    :} %prec UNARY
+    | expr:a DOUBLESTAR:o expr:b {:
+        RESULT = new BinOp(a, BinaryOperator.Pow, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | trailer_expr:a {:RESULT = a; :}
+    | atom:a {:
+        //System.out.println("atom expr parsed");
+        RESULT = a;
+    :};
+
+// # <> isn't actually a valid comparison operator in Python. It's here for the
+// # sake of a __future__ import described in PEP 401 (which really works :-)
+// comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+// star_expr: '*' expr
+// expr: xor_expr ('|' xor_expr)*
+// xor_expr: and_expr ('^' and_expr)*
+// and_expr: shift_expr ('&' shift_expr)*
+// shift_expr: arith_expr (('<<'|'>>') arith_expr)*
+// arith_expr: term (('+'|'-') term)*
+// term: factor (('*'|'@'|'/'|'%'|'//') factor)*
+// factor: ('+'|'-'|'~') factor | power
+// power: atom_expr ['**' factor]
+comp_op ::= LESS {:RESULT = CompareOperator.Lt; :}
+    | GREATER  {:RESULT = CompareOperator.Gt;:}
+    | EQEQUAL {:RESULT = CompareOperator.Eq;:}
+    | GREATEREQUAL {:RESULT = CompareOperator.GtE;:}
+    | LESSEQUAL {:RESULT = CompareOperator.LtE;:}
+    | NOTEQUAL {:RESULT = CompareOperator.NotEq;:}
+    | IN {:
+        //System.out.println("IN comp op parsed");
+        RESULT = CompareOperator.In;
+    :}
+    | NOT IN {:RESULT = CompareOperator.NotIn;:}
+    | IS {:RESULT = CompareOperator.Is;:}
+    | IS NOT{:RESULT = CompareOperator.IsNot;:} ;
+
+bit_op ::= 
+    VBAR:o {:RESULT = BinaryOperator.BitOr;:}
+    | CIRCUMFLEX:o {:RESULT = BinaryOperator.BitXor;:}
+    | AMPER:o {:RESULT = BinaryOperator.BitAnd;:}
+    | LEFTSHIFT:o {:RESULT = BinaryOperator.Lshift;:}
+    | RIGHTSHIFT:o {:RESULT = BinaryOperator.Rshift;:};
+
+addish_op ::=
+    PLUS:o {:RESULT = BinaryOperator.Add;:}
+    | MINUS:o {:RESULT = BinaryOperator.Sub;:};
+
+mulish_op ::=
+    STAR:o {:RESULT = BinaryOperator.Mult;:}
+    | AT:o {:RESULT = BinaryOperator.MatMult;:}
+    | PERCENT:o {:RESULT = BinaryOperator.Mod;:}
+    | SLASH:o {:RESULT = BinaryOperator.Div;:}
+    | DOUBLESLASH:o {:RESULT = BinaryOperator.FloorDiv;:};
+
+unary_op ::=
+    PLUS:o {:RESULT = UnaryOperator.UAdd;:}
+    | MINUS:o {:RESULT = UnaryOperator.USub;:}
+    | TILDE:o {:RESULT = UnaryOperator.Invert;:};
+
+trailer_expr ::=
+    atom:a trailer:b {:
+        b.setValue(a);
+        RESULT = b;
+    :}
+    | trailer_expr:a trailer:b {:
+        b.setValue(a);
+        RESULT = b;
+    :};
+/*trailers ::=
+    trailer:a {:
+        ArrayList<Expression> rnt = new ArrayList<Expression>();
+        rnt.add(a);
+        RESULT = rnt;
+    :}
+    | trailers:a trailer:b {:
+        a.add(b);
+        RESULT = a;
+    :};*/
+
+atom ::= 
+    LPAR:a RPAR {:
+        RESULT = new Expression();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | LPAR expr:a RPAR {:RESULT = a; :}
+    | LBRACE:a RBRACE {:
+        RESULT = new Expression();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | LBRACE dictmaker:a RBRACE {:RESULT = a;:}
+    | LBRACE setmaker:a RBRACE {:RESULT = a;:}
+    | NAME:a {:
+        RESULT = new Name((String)a);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | labeledType:a {: RESULT = a; :}
+    | NUMBER:a {:
+        RESULT = new Num<Integer>(Integer.valueOf((String)a));
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | strings:a {:RESULT = a;:}
+    | ELLIPSIS:o {:RESULT = null;:}
+    | NONE:k {:
+        RESULT = new ConstantExpr(Constant.NONE);
+        RESULT.setLoc(new CodeLocation(kleft, kright));
+    :}
+    | TRUE:k {:
+        RESULT = new ConstantExpr(Constant.TRUE);
+        RESULT.setLoc(new CodeLocation(kleft, kright));
+    :}
+    | FALSE:k {:
+        RESULT = new ConstantExpr(Constant.FALSE);
+        RESULT.setLoc(new CodeLocation(kleft, kright));
+    :}
+    | endorseExpression:a {:
+        RESULT = a;
+    :};
+strings ::=
+    STRING:a {:
+        RESULT = new Str((String)a);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    /*| strings:a STRING:b {:
+        RESULT = null; //TODO
+    :}*/;
+
+// trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
+// subscript: test | [test] ':' [test] [sliceop]
+// testlist: test (',' test)* [',']
+// dictorsetmaker: ( ((test ':' test | '**' expr)
+//                    (comp_for | (',' (test ':' test | '**' expr))* [','])) |
+//                   ((test | star_expr)
+//                    (comp_for | (',' (test | star_expr))* [','])) )
+trailer ::= 
+    LPAR:a RPAR {:
+        //TODO: distinguish calls and initialization
+        RESULT = new Call();
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | LPAR arglist:a RPAR {:
+        RESULT = a;
+    :}
+    | LSQB expr:a RSQB {:
+        RESULT = new Subscript(null, a, null);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | DOT NAME:a {:
+        Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright));
+        RESULT = new Attribute(null, name);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+arglist ::=
+    keyword:a {:
+        Call rnt = new Call();
+        rnt.addKeyword(a);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | expr:a {:
+        //System.out.println("parsing first arg for arglist");
+        Call rnt = new Call();
+        rnt.addArg(a);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :}
+    | arglist:list COMMA keyword:a {:
+        list.addKeyword(a);
+        RESULT = list;
+    :}
+    | arglist:list COMMA expr:a {:
+        //System.out.println("parsing one more arg for arglist");
+        list.addArg(a);
+        RESULT = list;
+    :};
+exprlist ::= 
+    exprlist_sub:a {:RESULT = a;:} 
+    | exprlist_sub:a COMMA {:RESULT = a;:};
+exprlist_sub ::=
+    expr:a {:
+        ArrayList<Expression> rnt = new ArrayList<Expression>();
+        rnt.add(a);
+        RESULT = rnt;
+    :}
+    //| star_expr:a {:RESULT = makeNode("exprlist_sub", a);:}
+    | exprlist_sub:list COMMA expr:a {:
+        list.add(a);
+        RESULT = list;
+    :};
+
+keyword ::=
+    NAME:a EQUAL expr:b {:
+        RESULT = new Keyword((String)a, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright));
+    :};
+
+
+

@@ -1,15 +1,21 @@
 LIBPATH=lib
 CUP=java-cup-11b.jar
 
-default: Wyvern
+default: STC
 	
-all: Wyvern sherrloc-build
+all: STC sherrloc-build
 
-Wyvern: SolCompiler.class TypeChecker.class LexerTest.class Parser.class Wyvern.java
-	javac -cp .:${LIBPATH}/* Wyvern.java
+SCIF: Parser.class TypeChecker.java
 
-SolCompiler.class: TypeChecker.class SolCompiler.java ${wildcard compile/*.java} ${wildcard ast/*.java} ${wildcard typecheck/*.java} ${wildcard sherrlocUtils/*.java}
-	javac -cp .:${LIBPATH}/* SolCompiler.java TypeChecker.java compile/*.java ast/*.java typecheck/*.java sherrlocUtils/*.java
+STC: TypeChecker.class LexerTest.class Parser.class STC.java 
+	javac -cp .:${LIBPATH}/* STC.java
+
+TypeChecker.class: Parser.class Lexer.class TypeChecker.java ${wildcard ast/*.java} ${wildcard typecheck/*.java} ${wildcard sherrlocUtils/*.java}
+	javac -cp .:${LIBPATH}/* TypeChecker.java ast/*.java typecheck/*.java sherrlocUtils/*.java
+
+SCIFParser: SCIF.jflex SCIF.cup
+	jflex SCIF.jflex
+	java -jar ${LIBPATH}/${CUP} -expect 1000 -interface -parser Parser SCIF.cup
 
 TypeChecker.class: Parser.class Lexer.class TypeChecker.java ${wildcard ast/*.java} ${wildcard typecheck/*.java} ${wildcard sherrlocUtils/*.java}
 	javac -cp .:${LIBPATH}/* TypeChecker.java ast/*.java typecheck/*.java sherrlocUtils/*.java
@@ -20,14 +26,14 @@ LexerTest.class: Lexer.java LexerTest.java
 Lexer.class: Lexer.java 
 	javac -cp .:${LIBPATH}/* Lexer.java
 
-Lexer.java: Wyvern.jflex 
-	jflex Wyvern.jflex
+Lexer.java: SCIF.jflex 
+	jflex SCIF.jflex
 
 Parser.class: Lexer.java Parser.java ${wildcard ast/*.java} ${wildcard typecheck/*.java}
-	javac -cp .:${LIBPATH}/* ast/*.java typecheck/*.java sym.java Parser.java
+	javac -cp .:${LIBPATH}/* ast/*.java typecheck/*.java compile/*.java sym.java Parser.java
 
-Parser.java: Wyvern.cup
-	java -jar ${LIBPATH}/${CUP} -expect 1000 -interface -parser Parser Wyvern.cup
+Parser.java: SCIF.cup
+	java -jar ${LIBPATH}/${CUP} -expect 1000 -interface -parser Parser SCIF.cup
 
 sherrloc-build:
 	cd sherrloc; ant

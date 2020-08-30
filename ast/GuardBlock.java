@@ -97,9 +97,18 @@ public class GuardBlock extends Statement {
 
     @Override
     public void SolCodeGen(SolCode code) {
+        /*
+            guard{l}
+            lock(l)
+         */
+        code.enterGuard(l);
         for (Statement stmt : body) {
             stmt.SolCodeGen(code);
         }
+        /*
+            unlock(l);
+         */
+        code.exitGuard();
     }
     @Override
     public void passScopeContext(ScopeContext parent) {

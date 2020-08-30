@@ -24,6 +24,7 @@ public class AnnAssign extends Statement {
         this.isConst = isConst;
     }
 
+    public void setType(Type type) { this.annotation = type; }
     public void setTarget(Expression target) {
         this.target = target;
     }

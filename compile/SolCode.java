@@ -1,5 +1,6 @@
 package compile;
 
+import ast.IfLabel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -162,5 +163,32 @@ public class SolCode {
         for (String line : code) {
             System.out.println(line);
         }
+    }
+
+    public void enterFuncCheck(String funcName) {
+        /*
+            f{pc}(x_i{l_i}) from sender
+            assert sender => pc, l_i
+         */
+    }
+
+    public void enterEndorseBlock(IfLabel l_from, IfLabel l_to) {
+        /*
+            endorse{l_from -> l_to}:
+            assume L is the lock set
+            for any l in L, l_from => l_to join l
+         */
+    }
+
+    public void enterGuard(IfLabel l) {
+        /*
+            lock(l)
+         */
+    }
+
+    public void exitGuard() {
+        /*
+            unlock(l);
+         */
     }
 }

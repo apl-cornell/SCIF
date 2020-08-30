@@ -106,6 +106,12 @@ public class EndorseBlock extends Statement {
 
     @Override
     public void SolCodeGen(SolCode code) {
+        /*
+            endorse{l_from -> l_to}
+            assume L is the lock set
+            for any l in L, l_from => l_to join l
+         */
+        code.enterEndorseBlock(l_from, l_to);
         for (Statement stmt : body) {
             stmt.SolCodeGen(code);
         }

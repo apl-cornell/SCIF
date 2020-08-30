@@ -117,6 +117,11 @@ public class FunctionDef extends FunctionSig {
 
         code.enterFunctionDef(name, args.toSolCode(), rtnTypeCode, pub, payable);
 
+        /*
+            f{pc}(x_i{l_i}) from sender
+            assert sender => pc, l_i
+         */
+        code.enterFuncCheck(name);
         for (Statement stmt : body) {
             stmt.SolCodeGen(code);
         }

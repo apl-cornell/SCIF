@@ -8,10 +8,17 @@ import java.util.HashSet;
 
 public class Contract extends Node {
     public String contractName;
+    public String superContractName = "";
     public ArrayList<TrustConstraint> trustCons;
     ArrayList<Statement> body;
     public Contract(String contractName, ArrayList<TrustConstraint> trustCons, ArrayList<Statement> body) {
         this.contractName = contractName;
+        this.trustCons = trustCons;
+        this.body = body;
+    }
+    public Contract(String contractName, String superContractName, ArrayList<TrustConstraint> trustCons, ArrayList<Statement> body) {
+        this.contractName = contractName;
+        this.superContractName = superContractName;
         this.trustCons = trustCons;
         this.body = body;
     }

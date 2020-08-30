@@ -35,6 +35,9 @@ public class Utils {
     public static final String PUBLIC_DECORATOR = "public";
     public static final String PAYABLE_DECORATOR = "payable";
 
+    public static final String TRUSTCENTER_NAME = "trustCenter";
+    public static final String SET_CONTRACT_NAME = "Set";
+
 
     public static final boolean isPrimitiveType(String x) {
         return BUILTIN_TYPES.contains(x);
