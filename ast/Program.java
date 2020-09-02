@@ -10,17 +10,25 @@ public class Program extends Node {
     public String programName;
     HashSet<String> iptContracts; // imported contracts
     ArrayList<Contract> contracts;
+    String contractName;
     public Program(HashSet<String> iptContracts, ArrayList<Contract> contracts) {
         programName = "anonymous";
+        contractName = "UNKNOWN";
+        if (!contracts.isEmpty())
+            contractName = contracts.get(0).contractName;
         this.iptContracts = iptContracts;
         this.contracts = contracts;
     }
     public Program(ArrayList<Contract> contracts) {
         programName = "anonymous";
+        contractName = "UNKNOWN";
+        if (!contracts.isEmpty())
+            contractName = contracts.get(0).contractName;
         this.iptContracts = new HashSet<>();
         this.contracts = contracts;
     }
 
+    public String getFirstContractName() { return contractName; }
     public void setProgramName(String name) {
         programName = name;
     }
@@ -28,6 +36,7 @@ public class Program extends Node {
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         for (Contract contract : contracts) {
+            logger.debug("contract: " + contract.contractName + "\n" + env.getContract(contract.contractName));
             env.setGlobalSymTab(env.getContract(contract.contractName).symTab);
             env.setCurSymTab(env.globalSymTab);
             contract.NTCgenCons(env, now);
@@ -38,14 +47,18 @@ public class Program extends Node {
     @Override
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
         for (String iptContract : iptContracts)
-            if (env.containsContract(iptContract))
+            if (!env.containsContract(iptContract)) {
+                logger.debug("not containing imported contract: " + iptContract);
                 return false;
+            }
         for (Contract contract : contracts) {
-            env.setGlobalSymTab(new SymTab());
+            // env.setGlobalSymTab(new SymTab());
             env.setCurSymTab(env.globalSymTab);
             Utils.addBuiltInSyms(env.globalSymTab);
-            if (!contract.NTCGlobalInfo(env, parent))
+            if (!contract.NTCGlobalInfo(env, parent)) {
+                logger.debug("GlobalInfo failed with: " + contract);
                 return false;
+            }
         }
         return true;
     }
@@ -61,6 +74,7 @@ public class Program extends Node {
         }
         // contractSym.iptContracts = iptContracts;
         for (Contract contract : contracts) {
+            logger.debug("visit Contract: " + contract.contractName + "\n" + contractSym.symTab.getTypeSet());
             contract.globalInfoVisit(contractSym);
         }
     }

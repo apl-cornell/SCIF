@@ -58,7 +58,8 @@ public class Node {
     public void passScopeContext(ScopeContext parent) {
         scopeContext = parent;
         for (Node node : children())
-            node.passScopeContext(scopeContext);
+            if (node != null)
+                node.passScopeContext(scopeContext);
     }
 
     static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();

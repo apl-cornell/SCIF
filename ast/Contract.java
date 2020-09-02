@@ -26,12 +26,14 @@ public class Contract extends Node {
     @Override
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab, trustCons);
-        env.addSym(contractName, contractSym);
+        env.setCurSymTab(new SymTab(env.curSymTab));
+        ContractSym contractSym = new ContractSym(contractName, env.curSymTab, trustCons);
+        env.addGlobalSym(contractName, contractSym);
 
         for (Statement stmt : body) {
             if (!stmt.NTCGlobalInfo(env, now)) return false;
         }
+        env.curSymTab = env.curSymTab.getParent();
         return true;
     }
 

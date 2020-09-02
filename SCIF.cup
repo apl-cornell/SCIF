@@ -92,7 +92,7 @@ terminal INTERFACE;
 terminal STRUCT;
 terminal EQUALGREATER;
 terminal NEWLINE, EXTENDS, LET;
-terminal LOCK, REF, SUPER, THEN, NEW;
+terminal REF, SUPER, THEN, NEW;
 
 nonterminal Node sourceCode;
 nonterminal Interface interface;
@@ -203,7 +203,7 @@ trust_operator ::= EQUAL {: RESULT = Relation.EQ; :}
     | EQUALGREATER {: RESULT = Relation.LEQ; :};
 
 // version: static lock
-tFuncLabels ::= LBRACE:x ifLabelOrNull:a COMMA ifLabelOrNull:b RARROW ifLabelOrNull:c RBRACE {:
+tFuncLabels ::= LBRACE:x ifLabelOrNull:a RIGHTSHIFT ifLabelOrNull:b SEMI ifLabelOrNull:c RBRACE {:
         logger.debug("parsing func begin labels");
         RESULT = new FuncLabels(a, b, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
@@ -312,11 +312,11 @@ contract ::= CONTRACT NAME:x LBRACE file_input:list RBRACE {:
               RESULT.setLoc(new CodeLocation(xleft, xright));*/
               //System.err.println(RESULT);
           :}
-   /* | CONTRACT NAME:x COLON NEWLINE  trust_decs:trust_list file_input:list  {:
+    | CONTRACT NAME:x LBRACE trust_decs:trust_list file_input:list RBRACE {:
             RESULT = new Contract((String) x, trust_list, list);
             RESULT.setLoc(new CodeLocation(xleft, xright));
             //System.err.println(RESULT);
-    :}*/;
+    :};
 
 //Information flow specific modification
 endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from RARROW ifLabel:to RPAR {:
@@ -330,7 +330,7 @@ labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
         RESULT = new LabeledType(name, b);
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | MAP:x LPAR labeledType:keyType COMMA labeledType:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
+    | MAP:x LPAR typeSym:keyType COMMA typeSym:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
         RESULT = new ast.Map(keyType, valueType, mapLabel);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
@@ -546,7 +546,9 @@ small_stmt ::= expr_stmt:a {: RESULT = a; :}
     | pass_stmt:a {: RESULT = a; :}  
     | flow_stmt:a {: RESULT = a; :}  
     //| ipt_stmt:a {: RESULT = a; :}
-    | assert_stmt:a {: RESULT = a; :};
+    | assert_stmt:a {: RESULT = a; :}
+    | guard_block:a {: RESULT = a; :}
+    | if_stmt:a {:RESULT = a;:};
 expr_stmt ::= 
     expr:a SEMI {:RESULT = a;:}
     | typeSym:a annassign:b SEMI {://testlist_star_expr:a expr_rest_stmt:b {:
@@ -701,7 +703,7 @@ compound_stmt ::= if_stmt:a {:RESULT = a;:}
     | guard_block:a {:RESULT = a;:};
 
 guard_block ::=
-    GUARD:x LBRACE ifLabel:l RBRACE suite:body {:
+    GUARD:x LPAR ifLabel:l RPAR suite:body {:
         RESULT = new GuardBlock(l, body, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};

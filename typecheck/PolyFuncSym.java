@@ -29,8 +29,8 @@ public class PolyFuncSym extends FuncSym {
     }
 
     @Override
-    public String getLabelNameCallPc() {
-        String rtn = super.getLabelNameCallPc();
+    public String getLabelNameCallPcAfter() {
+        String rtn = super.getLabelNameCallPcAfter();
         if (applyCounter > 0)
             return rtn + ".apply" + applyCounter;
         else
@@ -74,7 +74,7 @@ public class PolyFuncSym extends FuncSym {
         logger.debug("getcallbeforelabel finished: " + rtn);
         return rtn;
     }
-    @Override
+    /*@Override
     public String getCallLockLabel() {
         String rtn = "";
         if (funcLabels.begin_lock != null) {
@@ -95,7 +95,7 @@ public class PolyFuncSym extends FuncSym {
             return null;
         }
         return rtn;
-    }
+    }*/
 
     /*@Override
     public String getCallAfterLabel() {

@@ -48,7 +48,7 @@ public class GuardBlock extends Statement {
         Context lastContext = new Context(env.prevContext), prev2 = null;
         for (Statement stmt : body) {
             if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.EQ, prev2.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, location));
             }
             Context tmp = stmt.genConsVisit(env);
             env.prevContext = tmp;
@@ -121,7 +121,7 @@ public class GuardBlock extends Statement {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(l);
         rtn.addAll(body);
-        rtn.add(target);
+        if (target != null) rtn.add(target);
         return rtn;
     }
 }

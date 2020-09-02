@@ -51,14 +51,14 @@ public class AnnAssign extends Statement {
     @Override
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
+        if (!parent.isContractLevel()) {
+            String name = ((Name) target).id;
+            env.addSym(name, new VarSym(env.toVarSym(name, annotation, isConst, location, now)));
+        }
         ScopeContext type = annotation.NTCgenCons(env, now);
         ScopeContext tgt = target.NTCgenCons(env, now);
 
-        if (!parent.isContractLevel()) {
-            String name = ((Name) target).id;
-            env.addSym(name, new VarSym(env.toVarSym(name, annotation, isConst, location, tgt)));
-        }
-
+        logger.debug("1: \n" + env + "\n2: " + target.toSolCode() + "\n" + tgt);
         env.cons.add(type.genCons(tgt, Relation.EQ, env, location));
         if (value != null) {
             ScopeContext v = value.NTCgenCons(env, now);

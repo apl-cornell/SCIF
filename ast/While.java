@@ -60,16 +60,16 @@ public class While extends Statement {
         env.incScopeLayer();
         Context lastContext = new Context(testContext), prev2 = null;
         for (Statement stmt : body) {
-            if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.EQ, prev2.lockName), env.hypothesis, location));
-            }
             Context tmp = stmt.genConsVisit(env);
+            if (lastContext != null) {
+                env.cons.add(new Constraint(new Inequality(tmp.lockName, Relation.LEQ, lastContext.lockName), env.hypothesis, location));
+            }
             env.prevContext = tmp;
             prev2 = lastContext;
             lastContext = new Context(tmp);
         }
         env.decScopeLayer();
-        env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.EQ, prevLock), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.LEQ, prevLock), env.hypothesis, location));
 
         // env.ctxt = originalCtxt;
         return lastContext;

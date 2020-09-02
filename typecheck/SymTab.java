@@ -23,6 +23,8 @@ public class SymTab {
     public Sym lookup(String id) {
         System.out.println("sym lookup: " + id + " @" + this);
         if (table.get(id) != null) {
+            System.out.println("SUCC");
+
             return table.get(id);
         }
         return parent == null ? null : parent.lookup(id);
@@ -61,5 +63,9 @@ public class SymTab {
                 rtn.put(sym.name, (FuncSym) sym);
         }
         return rtn;
+    }
+
+    public void setParent(SymTab parent) {
+        this.parent = parent;
     }
 }

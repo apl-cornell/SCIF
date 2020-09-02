@@ -146,11 +146,11 @@ import java.util.HashMap;
         keywords.put("contract", new Integer(sym.CONTRACT));
         keywords.put("interface", new Integer(sym.INTERFACE));
         keywords.put("struct", new Integer(sym.STRUCT));
-        keywords.put("guard", new Integer(sym.GUARD));
+        keywords.put("lock", new Integer(sym.GUARD));
         keywords.put("ref", new Integer(sym.REF));
         keywords.put("extends", new Integer(sym.EXTENDS));
         keywords.put("super", new Integer(sym.SUPER));
-        keywords.put("lock", new Integer(sym.LOCK));
+        // keywords.put("lock", new Integer(sym.LOCK));
         keywords.put("let", new Integer(sym.LET));
         keywords.put("then", new Integer(sym.THEN));
         keywords.put("else", new Integer(sym.ELSE));
@@ -283,6 +283,7 @@ invalid = "$" | "?" | "`"
     "&="    { return op(sym.AMPEREQUAL); }
     "^="    { return op(sym.CIRCUMFLEXEQUAL); }
     "@="    { return op(sym.ATEQUAL); }
+    "&&"    { return op(sym.AND); }
     "<<="   { return op(sym.LEFTSHIFTEQUAL); }
     ">>="   { return op(sym.RIGHTSHIFTEQUAL); }
     "**="   { return op(sym.DOUBLESTAREQUAL); }

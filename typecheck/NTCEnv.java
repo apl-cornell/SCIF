@@ -129,4 +129,8 @@ public class NTCEnv {
     public boolean containsContract(String iptContract) {
         return getContract(iptContract) != null;
     }
+
+    public void addGlobalSym(String contractName, ContractSym contractSym) {
+        globalSymTab.add(contractName, contractSym);
+    }
 }

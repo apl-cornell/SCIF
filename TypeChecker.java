@@ -52,6 +52,8 @@ public class TypeChecker {
             }
         }
 
+        logger.debug("Current Contracts: " + NTCenv.globalSymTab.getTypeSet());
+
         // Generate constraints
         for (Node root : roots) {
             root.NTCgenCons(NTCenv, null);
@@ -63,7 +65,7 @@ public class TypeChecker {
         // constructors: all types
         // assumptions: none or relations between types
         // constraints
-        Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons, outputFile);
+        Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons, outputFile, false);
 
         return roots;
     }
@@ -79,13 +81,23 @@ public class TypeChecker {
 
         for (Node root : roots) {
             ContractSym contractSym = new ContractSym();
+            contractSym.name = ((Program)root).getFirstContractName();
+            contractNames.add(contractSym.name);
+            contractMap.add(contractSym.name, contractSym);
+            //root.findPrincipal(principalSet);
+        }
+
+        logger.debug("contracts: \n" + contractMap.getTypeSet());
+        int idx = 0;
+        for (Node root : roots) {
+            ContractSym contractSym = (ContractSym) contractMap.lookup(contractNames.get(idx));
+            ++idx;
+            contractSym.symTab = new SymTab(contractMap);
             root.globalInfoVisit(contractSym);
             if (contractNames.contains(contractSym.name)) {
                 //TODO: duplicate contract names
             }
             logger.debug(contractSym.toString());
-            contractNames.add(contractSym.name);
-            contractMap.add(contractSym.name, contractSym);
             //root.findPrincipal(principalSet);
         }
 
@@ -98,6 +110,7 @@ public class TypeChecker {
         for (int fileIdx = 0; fileIdx < roots.size(); ++fileIdx) {
             String contractName = contractNames.get(fileIdx);
             ContractSym contractSym = env.getContract(contractName);
+            logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n" + env.curSymTab.getTypeSet());
             // generate trust relationship dec constraints
             for (TrustConstraint trustConstraint : contractSym.trustCons) {
                 env.trustCons.add(new Constraint(new Inequality(trustConstraint.lhs.toSherrlocFmt(), trustConstraint.optor,trustConstraint.rhs.toSherrlocFmt()), trustConstraint.location));
@@ -107,7 +120,8 @@ public class TypeChecker {
             // HashMap<String, VarSym> varMap = contractSym.varMap;
             // env.funcMap = contractSym.funcMap;
             env.curContractSym = contractSym;
-            env.globalSymTab = env.curSymTab = contractSym.symTab; //TODO
+            env.curSymTab = contractSym.symTab;
+            env.curSymTab.setParent(env.globalSymTab);//TODO
 
             logger.debug("Display varMap:");
             //System.err.println("Display varMap:\n");
@@ -130,12 +144,15 @@ public class TypeChecker {
                 //String funcName = funcPair.getKey();
                 FuncSym func = funcPair.getValue();
                 //TODO: simplify
-                String ifNameCallBeforeLabel = func.getLabelNameCallPc();
-                String ifNameCallAfterLabel = func.getLabelNameCallPc();
+                String ifNameCallBeforeLabel = func.getLabelNameCallPcBefore();
+                String ifNameCallAfterLabel = func.getLabelNameCallPcAfter();
                 String ifNameCallLockLabel = func.getLabelNameCallLock();
                 String ifCallBeforeLabel = func.getCallPcLabel();
-                String ifCallAfterLabel = func.getCallPcLabel();
+                String ifCallAfterLabel = func.getCallAfterLabel();
                 String ifCallLockLabel = func.getCallLockLabel();
+                logger.debug("add func's sig constraints: [" + func.funcName + "]");
+                logger.debug(ifNameCallBeforeLabel + "\n" + ifNameCallAfterLabel + "\n" + ifNameCallLockLabel + "\n" + ifCallAfterLabel + "\n" +ifCallLockLabel);
+                // String ifAfterCallLabel = func.getCallAfterLabel();
                 if (ifCallBeforeLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), func.location));
 
@@ -146,24 +163,41 @@ public class TypeChecker {
                     env.cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel), func.location));
 
                     //env.cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, ifCallAfterLabel), func.location));
-
+                    if (!ifCallAfterLabel.equals(ifCallBeforeLabel)) //TODO: deal with before and after are different
+                        env.cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.REQ, ifNameCallLockLabel), func.location));
                 }
+
                 if (ifCallLockLabel != null) {
-                    env.cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallLockLabel), func.location));
+                    env.cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.REQ, ifNameCallLockLabel), func.location));
                 }
 
                 String ifNameReturnLabel = func.getLabelNameRtnValue();
                 String ifReturnLabel = func.getRtnValueLabel();
                 String ifNameRtnLockLabel = func.getLabelNameRtnLock();
-                String ifRtnLockLabel = func.getRtnLockLabel();
+                // String ifAfterCallLabel = func.getCallAfterLabel();
+                // String ifRtnLockLabel = func.getRtnLockLabel();
                 if (ifReturnLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifReturnLabel, Relation.EQ, ifNameReturnLabel), func.location));
 
                     //env.cons.add(new Constraint(new Inequality(ifNameReturnLabel, ifReturnLabel), func.location));
 
                 }
-                if (ifRtnLockLabel != null) {
-                    env.cons.add(new Constraint(new Inequality(ifRtnLockLabel, Relation.EQ, ifNameRtnLockLabel), func.location));
+                /*if (ifRtnLockLabel != null) {
+                    env.cons.add(new Constraint(new Inequality(ifNameRtnLockLabel, ifRtnLockLabel), func.location));
+                }
+                if (ifAfterCallLabel != null) {
+                    env.cons.add(new Constraint(new Inequality(ifNameRtnLockLabel, ifAfterCallLabel), func.location));
+                }*/
+                if (ifCallLockLabel != null && ifCallAfterLabel != null && ifCallLockLabel.equals(ifCallAfterLabel)) {
+                    env.cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameRtnLockLabel), func.location));
+
+                } else {
+                    if (ifCallLockLabel != null) {
+                        env.cons.add(new Constraint(new Inequality(ifCallLockLabel, ifNameRtnLockLabel), func.location));
+                    }
+                    if (ifCallAfterLabel != null) {
+                        env.cons.add(new Constraint(new Inequality(ifCallAfterLabel, ifNameRtnLockLabel), func.location));
+                    }
                 }
 
                 for (int i = 0; i < func.parameters.size(); ++i) {
@@ -198,7 +232,7 @@ public class TypeChecker {
 
         }
 
-        Utils.writeCons2File(env.principalSet, env.trustCons, env.cons, outputFile);
+        Utils.writeCons2File(env.principalSet, env.trustCons, env.cons, outputFile, true);
 
         logger.trace("typecheck finishes");
 

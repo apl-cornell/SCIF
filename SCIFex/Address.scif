@@ -1,0 +1,8 @@
+contract Address {
+    void alertSend{BOT >> BOT; BOT}(address x, uint amount) {
+
+    }
+    void alertReceive{BOT >> BOT; BOT}(address x, uint amount) {
+
+    }
+}

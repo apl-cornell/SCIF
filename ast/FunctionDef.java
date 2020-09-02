@@ -25,6 +25,7 @@ public class FunctionDef extends FunctionSig {
 
         // add args to local sym;
         String funcName = this.name;
+        logger.debug("func: " + funcName);
         FuncSym funcSym = ((FuncSym) env.getCurSym(funcName));
         for (Arg arg : this.args.args) {
             arg.NTCgenCons(env, now);
@@ -54,7 +55,7 @@ public class FunctionDef extends FunctionSig {
         FuncSym funcSym = env.getFunc(funcName);
 
 
-        String ifNameCall = funcSym.getLabelNameCallPc();
+        String ifNameCall = funcSym.getLabelNameCallPcAfter();
         env.cons.add(new Constraint(new Inequality(ifNameCall, ifNamePc), env.hypothesis, location));
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameCall), env.hypothesis, location));
 
@@ -63,12 +64,13 @@ public class FunctionDef extends FunctionSig {
         Context funcBeginContext = new Context(ifNamePc, ifNameCallLock);
         env.prevContext = funcBeginContext;
 
+
         env.incScopeLayer();
         args.genConsVisit(env);
         Context prev = new Context(env.prevContext), prev2 = null;
         for (Statement stmt : body) {
             if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(prev.lockName, Relation.EQ, prev2.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(prev.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, location));
             }
             Context tmp = stmt.genConsVisit(env);
             env.prevContext = tmp;
@@ -77,7 +79,7 @@ public class FunctionDef extends FunctionSig {
         }
         env.decScopeLayer();
 
-        env.cons.add(new Constraint(new Inequality(prev.lockName, funcSym.getLabelNameRtnLock()), env.hypothesis, location));
+        // env.cons.add(new Constraint(new Inequality(prev.lockName, funcSym.getLabelNameRtnLock()), env.hypothesis, location));
 
         /*if (rtn instanceof LabeledType) {
             if (rtn instanceof DepMap) {

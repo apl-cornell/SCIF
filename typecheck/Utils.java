@@ -4,6 +4,7 @@ import ast.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -65,8 +66,11 @@ public class Utils {
             return prefix + ".." + "LK";
         }
     }
-    public static String getLabelNameFuncCallPc(String funcName) {
-        return funcName + ".." + "call.pc";
+    public static String getLabelNameFuncCallPcBefore(String funcName) {
+        return funcName + ".." + "call.pc.bfr";
+    }
+    public static String getLabelNameFuncCallPcAfter(String funcName) {
+        return funcName + ".." + "call.pc.aft";
     }
     public static String getLabelNameFuncCallLock(String funcName) {
         return funcName + ".." + "call.lk";
@@ -128,18 +132,36 @@ public class Utils {
             return "unknownT";
     }
 
-    public static void writeCons2File(HashSet<String> constructors, ArrayList<Constraint> assumptions, ArrayList<Constraint> constraints, File outputFile) {
+    public static void writeCons2File(HashSet<String> constructors, ArrayList<Constraint> assumptions, ArrayList<Constraint> constraints, File outputFile, boolean isIFC) {
         try {
             BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
             logger.debug("Writing the constraints of size {}", constraints.size());
             //System.err.println("Writing the constraints of size " + env.cons.size());
+            if (!constructors.contains("BOT") && isIFC) {
+                constructors.add("BOT");
+            }
+            if (!constructors.contains("TOP") && isIFC)
+                constructors.add("TOP");
+            if (!constructors.contains("this") && isIFC)
+                constructors.add("this");
+
             if (!constructors.isEmpty()) {
                 for (String principal : constructors) {
                     consFile.write("CONSTRUCTOR " + principal + " 0\n");
                 }
             }
-            if (!assumptions.isEmpty()) {
+            if (!assumptions.isEmpty() || isIFC) {
                 consFile.write("%%\n");
+                if (isIFC) {
+                    for (String x : constructors) {
+                        if (!x.equals("BOT") && !x.equals("TOP")) {
+                            consFile.write("BOT" + " >= " + x + ";" + "\n");
+                        }
+                        if (!x.equals("TOP")) {
+                            consFile.write("TOP" + " <= " + x + ";" + "\n");
+                        }
+                    }
+                }
                 for (Constraint con : assumptions) {
                     consFile.write(con.toSherrlocFmt(false) + "\n");
                 }
@@ -185,11 +207,23 @@ public class Utils {
             TypeSym s = new BuiltinTypeSym(typeName);
             globalSymTab.add(typeName, s);
         }
+        ArrayList<VarSym> members = new ArrayList<>();
+        /*
+            add address type as a contract type
+         */
+
+        /*String contractName = "address";
+        ArrayList<TrustConstraint> trustCons = new ArrayList<>();
+        SymTab symTab = new SymTab();
+
+
+        ContractSym contractSym = new ContractSym(contractName, symTab, trustCons);*/
+
         /* msg:
         *   sender - address
         *   value - uint
         * */
-        ArrayList<VarSym> members = new ArrayList<>();
+        members = new ArrayList<>();
         ScopeContext emptyContext = new ScopeContext("");
         ScopeContext universalContext = new ScopeContext("UNIVERSAL");
         VarSym sender = createBuiltInVarInfo("sender", "address", emptyContext, globalSymTab);
@@ -203,14 +237,16 @@ public class Utils {
         globalSymTab.add("msg", new VarSym(msg));
 
         /* send(address, value) */
+
         members = new ArrayList<>();
         VarSym recipient = createBuiltInVarInfo("recipient", "address", emptyContext, globalSymTab);
         value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
         members.add(recipient);
         members.add(value);
         IfLabel thisLabel = new PrimitiveIfLabel(new Name("this"));
-        FuncLabels funcLabels = new FuncLabels(thisLabel, thisLabel, null);
-        FuncSym sendFuncSym = new FuncSym("send", null, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel,  new ScopeContext("send"), null);
+        IfLabel botLabel  = new PrimitiveIfLabel(new Name("BOT"));
+        FuncLabels funcLabels = new FuncLabels(botLabel, botLabel, botLabel);
+        FuncSym sendFuncSym = new FuncSym("send", funcLabels, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel,  new ScopeContext("send"), null);
         globalSymTab.add("send", sendFuncSym);
     }
 
@@ -228,6 +264,11 @@ public class Utils {
         }
         else
             return "unknown built-in function";
+    }
+
+    public static boolean emptyFile(String outputFileName) {
+        File file = new File(outputFileName);
+        return file.length() == 0;
     }
 }
 

@@ -4,32 +4,32 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class FuncLabels extends Node {
-    public IfLabel begin_pc, begin_lock, end_lock;
+    public IfLabel begin_pc, to_pc, gamma_label;
 
     public FuncLabels() {
         begin_pc = null;
-        begin_lock = null;
-        end_lock = null;
+        to_pc = null;
+        gamma_label = null;
     }
 
-    public FuncLabels(IfLabel begin_pc, IfLabel begin_lock, IfLabel end_lock) {
+    public FuncLabels(IfLabel begin_pc, IfLabel to_pc, IfLabel gamma_label) {
         this.begin_pc = begin_pc;
-        this.begin_lock = begin_lock;
-        this.end_lock = end_lock;
+        this.to_pc = to_pc;
+        this.gamma_label = gamma_label;
     }
 
     public void findPrincipal(HashSet<String> principalSet) {
         begin_pc.findPrincipal(principalSet);
-        begin_lock.findPrincipal(principalSet);
-        end_lock.findPrincipal(principalSet);
+        to_pc.findPrincipal(principalSet);
+        gamma_label.findPrincipal(principalSet);
     }
 
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(begin_pc);
-        rtn.add(begin_lock);
-        rtn.add(end_lock);
+        rtn.add(to_pc);
+        rtn.add(gamma_label);
         return rtn;
     }
 }

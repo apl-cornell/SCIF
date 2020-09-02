@@ -1,0 +1,20 @@
+import Address;
+contract Token {
+  // Map balance{this};
+
+  bool{high} transfer{high >> high; BOT}(address{BOT} frm, address{BOT} to, uint{BOT} amount) {
+      Address{BOT} _frm = Address(frm);
+      Address{BOT} _to = Address(to);
+
+      // lock(high) {
+        _frm.alertSend(to, amount);
+        _to.alertReceive(frm, amount);
+      // }
+    return true;
+  }
+
+  uint{high} getBal{BOT >> high; high}(address user) {
+      //...
+      return 1;
+  }
+}

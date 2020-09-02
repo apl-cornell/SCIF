@@ -4,9 +4,9 @@ import java.awt.*;
 import java.util.ArrayList;
 
 public class Map extends LabeledType {
-    public LabeledType keyType;
-    public LabeledType valueType;
-    public Map(LabeledType keyType, LabeledType valueType, IfLabel ifl) {
+    public Type keyType;
+    public Type valueType;
+    public Map(Type keyType, Type valueType, IfLabel ifl) {
         super("map", ifl);
         this.keyType = keyType;
         this.valueType = valueType;

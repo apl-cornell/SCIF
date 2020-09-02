@@ -1,0 +1,20 @@
+import Token;
+
+contract Uniswap {
+    address{high} this;
+  Token{high} tX;
+  Token{high} tY;
+
+  uint{high} exchangeXForY{BOT >> high; high}(address{BOT} buyer, uint{BOT} xSold) {
+    uint{high} prod = tX.getBal(this) * tY.getBal(this);
+    uint{high} yKept = prod / (tX.getBal(this) + endorse(xSold, BOT->high));
+    uint{high} yBought = tY.getBal(this) - yKept;
+
+    lock(high) {
+        assert tX.transfer(buyer, this, xSold);
+        assert tY.transfer(this, buyer, yBought);
+    }
+    return yBought;
+  }
+}
+

@@ -25,6 +25,7 @@ public class FuncSym extends Sym {
                    CodeLocation location) {
         // this.typeName = funcName;
         this.funcName = funcName;
+        this.name = funcName;
         this.funcLabels = funcLabels;
         this.parameters = parameters;
         this.returnType = returnType;
@@ -33,13 +34,13 @@ public class FuncSym extends Sym {
         this.location = location;
     }
 
-    public String getLabelNameCallPc() {
-        return Utils.getLabelNameFuncCallPc(scopeContext.getSHErrLocName());
+    public String getLabelNameCallPcBefore() {
+        return Utils.getLabelNameFuncCallPcBefore(scopeContext.getSHErrLocName());
     }
 
-    /*public String getLabelNameCallAfter() {
-        return Utils.getLabelNameFuncCallAfter(funcName);
-    }*/
+    public String getLabelNameCallPcAfter() {
+        return Utils.getLabelNameFuncCallPcAfter(scopeContext.getSHErrLocName());
+    }
 
     public String getLabelNameRtnValue() {
         return Utils.getLabelNameFuncRtnValue(scopeContext.getSHErrLocName());
@@ -65,23 +66,25 @@ public class FuncSym extends Sym {
 
     }
     public String getCallLockLabel() {
-        if (funcLabels != null && funcLabels.begin_lock != null) {
-            return funcLabels.begin_lock.toSherrlocFmt();
+        if (funcLabels != null && funcLabels.gamma_label != null) {
+            return funcLabels.gamma_label.toSherrlocFmt();
         }
         else {
             return null;
         }
 
     }
-    public String getRtnLockLabel() {
-        if (funcLabels != null && funcLabels.end_lock != null) {
-            return funcLabels.end_lock.toSherrlocFmt();
+
+
+    /*public String getRtnLockLabel() {
+        if (funcLabels != null && funcLabels.gamma_label != null) {
+            return funcLabels.gamma_label.toSherrlocFmt();
         }
         else {
             return null;
         }
 
-    }
+    }*/
 
     /*public String getCallBeforeLabel() {
         if (callLabel != null) {
@@ -96,18 +99,14 @@ public class FuncSym extends Sym {
         }
     }*/
 
-    /*public String getCallAfterLabel() {
-        if (callLabel != null) {
-            if (callLabel instanceof Autoendorse) {
-                return ((Autoendorse) callLabel).to.toSherrlocFmt();
-            } else {
-                return callLabel.toSherrlocFmt();
-            }
+    public String getCallAfterLabel() {
+        if (funcLabels != null && funcLabels.to_pc != null) {
+            return funcLabels.to_pc.toSherrlocFmt();
         }
         else {
             return null;
         }
-    }*/
+    }
 
     public String getRtnValueLabel() {
         if (returnLabel != null) {

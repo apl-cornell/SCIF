@@ -100,14 +100,14 @@ public class If extends Statement {
         env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location));
 
         if (body.size() > 0 || orelse.size() > 0) {
-            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.EQ, curContext.lockName), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.REQ, curContext.lockName), env.hypothesis, location));
         }
         env.incScopeLayer();
 
         Context leftContext = new Context(curContext), rightContext = new Context(curContext), prev2 = null;
         for (Statement stmt : body) {
             if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(leftContext.lockName, Relation.EQ, prev2.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(leftContext.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, location));
             }
             Context tmp = stmt.genConsVisit(env);
             env.prevContext = tmp;
@@ -131,7 +131,7 @@ public class If extends Statement {
         env.decScopeLayer();
 
 
-        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.EQ, Utils.joinLabels(leftContext.lockName, rightContext.lockName)), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.LEQ, Utils.joinLabels(leftContext.lockName, rightContext.lockName)), env.hypothesis, location));
 
         logger.debug("finished orelse branch");
         //System.err.println("finished orelse branch");

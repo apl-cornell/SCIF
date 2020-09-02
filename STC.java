@@ -55,9 +55,12 @@ public class STC implements Callable<Integer> {
         }
         ArrayList<Node> roots = TypeChecker.regularTypecheck(files, outputFile);
         System.out.println("Regular Typechecking:");
-        boolean passNTC = runSLC(outputFileName);
+        boolean passNTC = true;
+        if (!Utils.emptyFile(outputFileName))
+            passNTC = runSLC(outputFileName);
         System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking:");
         TypeChecker.ifcTypecheck(roots, outputFile);
+        System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
         logger.debug("running SHErrLoc...");
         boolean passIFC = runSLC(outputFileName);
 

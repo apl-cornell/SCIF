@@ -118,7 +118,7 @@ public class Call extends TrailerExpr {
                 if (funcSym instanceof PolyFuncSym) {
                     ((PolyFuncSym) funcSym).apply();
                 }
-                ifNameFuncCallPc = funcSym.getLabelNameCallPc();
+                ifNameFuncCallPc = funcSym.getLabelNameCallPcBefore();
                 ifNameFuncCallLock = funcSym.getLabelNameCallLock();
                 env.cons.add(new Constraint(new Inequality(ifContRtn, ifNameFuncCallPc), env.hypothesis, location));
             } else {
@@ -154,7 +154,7 @@ public class Call extends TrailerExpr {
             if (funcSym instanceof PolyFuncSym) {
                 ((PolyFuncSym) funcSym).apply();
             }
-            ifNameFuncCallPc = funcSym.getLabelNameCallPc();
+            ifNameFuncCallPc = funcSym.getLabelNameCallPcBefore();
             ifNameFuncCallLock = funcSym.getLabelNameCallLock();
         }
             env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCallPc), env.hypothesis, location));
@@ -171,17 +171,18 @@ public class Call extends TrailerExpr {
 
                 env.cons.add(new Constraint(new Inequality(ifNamePc, Relation.LEQ, ifNameArgLabel), env.hypothesis, location));
 
-                env.cons.add(new Constraint(new Inequality(prevLockName, Relation.EQ, tmp.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(prevLockName, Relation.LEQ, tmp.lockName), env.hypothesis, location));
 
             }
             if (funcSym instanceof PolyFuncSym) {
+                /*
                 // TODO: simplify
                 String ifNameCallBeforeLabel = funcSym.getLabelNameCallPc();
                 String ifNameCallAfterLabel = funcSym.getLabelNameCallPc();
                 String ifNameCallLockLabel = funcSym.getLabelNameCallLock();
                 String ifCallBeforeLabel = funcSym.getCallPcLabel();
                 String ifCallAfterLabel = funcSym.getCallPcLabel();
-                String ifCallLockLabel = funcSym.getCallLockLabel();
+                // String ifCallLockLabel = funcSym.getCallLockLabel();
 
                 if (ifCallBeforeLabel != null) {
                     env.cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), location));
@@ -216,7 +217,7 @@ public class Call extends TrailerExpr {
                         //env.cons.add(new Constraint(new Inequality(ifArgLabel, ifNameArgLabel), arg.location));
 
                     }
-                }
+                }*/
             }
             String ifNameFuncRtnValue = funcSym.getLabelNameRtnValue();
             String ifNameFuncRtnLock = funcSym.getLabelNameRtnLock();
