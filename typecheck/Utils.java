@@ -128,6 +128,8 @@ public class Utils {
             return "void";
         else if (type == BuiltInT.ADDRESS)
             return "address";
+        else if (type == BuiltInT.BYTES)
+            return "bytes";
         else
             return "unknownT";
     }
@@ -245,9 +247,20 @@ public class Utils {
         members.add(value);
         IfLabel thisLabel = new PrimitiveIfLabel(new Name("this"));
         IfLabel botLabel  = new PrimitiveIfLabel(new Name("BOT"));
-        FuncLabels funcLabels = new FuncLabels(botLabel, botLabel, botLabel);
+        FuncLabels funcLabels = new FuncLabels(thisLabel, thisLabel, botLabel);
         FuncSym sendFuncSym = new FuncSym("send", funcLabels, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel,  new ScopeContext("send"), null);
         globalSymTab.add("send", sendFuncSym);
+
+        /* trustedSend(address, value) */
+        members = new ArrayList<>();
+        recipient = createBuiltInVarInfo("recipient", "address", emptyContext, globalSymTab);
+        value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
+        members.add(recipient);
+        members.add(value);
+        IfLabel trustedSendLabel  = new PrimitiveIfLabel(new Name("trustedSend"));
+        funcLabels = new FuncLabels(trustedSendLabel, trustedSendLabel, trustedSendLabel);
+        FuncSym trustedSendFuncSym = new FuncSym("trustedSend", funcLabels, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel,  new ScopeContext("trustedSend"), null);
+        globalSymTab.add("trustedSend", trustedSendFuncSym);
     }
 
     public static boolean isBuiltinFunc(String funcName) {

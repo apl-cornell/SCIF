@@ -163,7 +163,7 @@ public class TypeChecker {
                     env.cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel), func.location));
 
                     //env.cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, ifCallAfterLabel), func.location));
-                    if (!ifCallAfterLabel.equals(ifCallBeforeLabel)) //TODO: deal with before and after are different
+                    // if (!ifCallAfterLabel.equals(ifCallBeforeLabel)) //TODO: deal with before and after are different
                         env.cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.REQ, ifNameCallLockLabel), func.location));
                 }
 
