@@ -4,8 +4,10 @@ import compile.SolCode;
 import typecheck.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
+// As for now, multiple contracts in one Program might cause problem
 public class Program extends Node {
     public String programName;
     HashSet<String> iptContracts; // imported contracts
@@ -29,8 +31,32 @@ public class Program extends Node {
     }
 
     public String getFirstContractName() { return contractName; }
+    public Contract findContract(String name) {
+        for (Contract contract : contracts) {
+            if (contract.contractName.equals(name))
+                return contract;
+        }
+        return null;
+    }
+    public boolean containContract(String name) {
+        return findContract(name) != null;
+    }
     public void setProgramName(String name) {
         programName = name;
+    }
+
+    public boolean codePasteContract(String name, HashMap<String, Contract> contractMap) {
+        Contract contract = findContract(name);
+        if (contract == null) return false;
+        return contract.codePasteContract(contractMap);
+    }
+
+    public boolean NTCinherit(InheritGraph graph) {
+        for (Contract contract : contracts) {
+            if (!contract.NTCinherit(graph))
+                return false;
+        }
+        return true;
     }
 
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
@@ -107,5 +133,9 @@ public class Program extends Node {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.addAll(contracts);
         return rtn;
+    }
+
+    public ArrayList<Contract> getAllContracts() {
+        return contracts;
     }
 }

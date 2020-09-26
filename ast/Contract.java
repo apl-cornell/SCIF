@@ -4,6 +4,7 @@ import compile.SolCode;
 import typecheck.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class Contract extends Node {
@@ -21,6 +22,13 @@ public class Contract extends Node {
         this.superContractName = superContractName;
         this.trustCons = trustCons;
         this.body = body;
+    }
+
+    public boolean NTCinherit(InheritGraph graph) {
+        // add an edge from superclass to this contract
+        if (!superContractName.equals(""))
+            graph.addEdge(superContractName, contractName);
+        return true;
     }
 
     @Override
@@ -96,5 +104,35 @@ public class Contract extends Node {
         rtn.addAll(trustCons);
         rtn.addAll(body);
         return rtn;
+    }
+
+    public boolean codePasteContract(HashMap<String, Contract> contractMap) {
+        if (superContractName.equals(""))
+            return true;
+
+        // check no functions with the same name
+        // add other functions from superContract
+        // trust_list is also inherited
+        Contract superContract = contractMap.get(superContractName);
+        if (superContract == null) {
+            // TODO: superContract not found
+            return  false;
+        }
+
+        // inherit from superContract
+
+        // trust_list
+        ArrayList<TrustConstraint> newTrustCons = new ArrayList<>();
+        newTrustCons.addAll(superContract.trustCons);
+        newTrustCons.addAll(trustCons);
+        trustCons = newTrustCons;
+
+        // Statement
+        ArrayList<Statement> newBody = new ArrayList<>();
+        newBody.addAll(superContract.body);
+        newBody.addAll(body);
+        body = newBody;
+
+        return true;
     }
 }

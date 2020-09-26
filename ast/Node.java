@@ -47,6 +47,10 @@ public class Node {
         return null;
     }
 
+    public boolean NTCinherit(InheritGraph graph) {
+        return false;
+    }
+
     public void SolCodeGen(SolCode code) {
         // npt supposed to be called
         return;

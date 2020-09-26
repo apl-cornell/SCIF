@@ -42,6 +42,48 @@ public class TypeChecker {
 
         // Step 1: typecheck, generate constraints and check via SHErrLoc
 
+        // Code-paste superclass'd methods and datafield
+        HashMap<String, Contract> contractMap =  new HashMap<>();
+        InheritGraph graph = new InheritGraph();
+        for (Node root : roots) {
+            if (!root.NTCinherit(graph)) {
+                // TODO: doesn't typecheck
+                return null;
+            }
+            for (Contract contract : ((Program) root).getAllContracts()) {
+                contractMap.put(contract.contractName, contract);
+            }
+        }
+
+        logger.debug(" check if there is any non-existent contract name: " + contractMap.keySet() + " " + graph.getAllNodes());
+        // check if there is any non-existent contract name
+        for (String contractName : graph.getAllNodes()) {
+            if (!contractMap.containsKey(contractName)) {
+                // TODO: mentioning non-existent contract
+                return null;
+            }
+        }
+
+        logger.debug(" code-paste in a topological order");
+        // code-paste in a topological order
+        for (String x : graph.getTopologicalQueue()) {
+            Node rt = null;
+            for (Node root : roots) {
+                if (((Program) root).containContract(x)) {
+                    rt = root;
+                    break;
+                }
+            }
+            if (rt == null) {
+                // TODO: contract not found
+                return null;
+            }
+            if (!((Program) rt).codePasteContract(x, contractMap)) {
+                // TODO: inherit failed
+                return null;
+            }
+        }
+        
         // Collect global info
         NTCEnv NTCenv = new NTCEnv();
         for (Node root : roots) {
@@ -53,6 +95,7 @@ public class TypeChecker {
         }
 
         logger.debug("Current Contracts: " + NTCenv.globalSymTab.getTypeSet());
+
 
         // Generate constraints
         for (Node root : roots) {
