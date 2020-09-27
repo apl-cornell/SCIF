@@ -1,0 +1,8 @@
+contract Holder {
+    void alertSend{low >> low; low}(address x, uint amount) {
+	// ...
+    }
+    void alertReceive{low >> low; low}(address x, uint amount) {
+	// ...
+    }
+}

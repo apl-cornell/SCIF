@@ -1,0 +1,5 @@
+contract Callback {
+    void call{BOT >> BOT; BOT}(bytes data) {
+        // ...
+    }
+}

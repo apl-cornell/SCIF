@@ -1,10 +1,13 @@
-import Address;
+import Holder;
 contract Token {
-  // Map balance{this};
+    {high => low}
+  map(address, uint){high} balance;
 
-  bool{high} transfer{high >> high; BOT}(address{BOT} frm, address{BOT} to, uint{BOT} amount) {
-      Address{BOT} _frm = Address(frm);
-      Address{BOT} _to = Address(to);
+  bool{high} transfer{high >> high; high}(address frm, address to, uint amount) {
+      // ... check if the frm is the caller and has enough balance
+
+      Holder _frm = Holder(frm);
+      Holder _to = Holder(to);
 
       // lock(high) {
         _frm.alertSend(to, amount);
@@ -13,8 +16,7 @@ contract Token {
     return true;
   }
 
-  uint{high} getBal{BOT >> high; high}(address user) {
-      //...
-      return 1;
+  uint{high} getBal{low >> high; high}(address user) {
+      // ... 
   }
 }
