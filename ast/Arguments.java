@@ -80,4 +80,33 @@ public class Arguments extends Node {
             rtn.addAll(defaults);
         return rtn;
     }
+
+    public boolean typeMatch(Arguments arguments) {
+        boolean bothArgsNull = arguments.args == null && args == null;
+        boolean bothDefaultsNull = defaults == null && arguments.defaults == null;
+
+        if (!bothArgsNull) {
+            if (args == null || arguments.args == null || args.size() != arguments.args.size())
+                return false;
+            int index = 0;
+            while (index < args.size()) {
+                if (!args.get(index).typeMatch(arguments.args.get(index)))
+                    return false;
+                ++index;
+            }
+        }
+
+        if (!bothDefaultsNull) {
+            if (defaults == null || arguments.defaults == null || defaults.size() != arguments.defaults.size())
+                return false;
+            int index = 0;
+            while (index < defaults.size()) {
+                if (!defaults.get(index).typeMatch(arguments.defaults.get(index)))
+                    return false;
+                ++index;
+            }
+        }
+
+        return true;
+    }
 }

@@ -35,6 +35,14 @@ public class UnaryOp extends Expression {
         String v = operand.toSolCode();
         return compile.Utils.toUnaryOp(op) + v;
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof UnaryOp &&
+                op == ((UnaryOp) expression).op &&
+                operand.typeMatch(((UnaryOp) expression).operand);
+    }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();

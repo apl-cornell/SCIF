@@ -58,6 +58,15 @@ public class BinOp extends Expression {
     public String toSolCode() {
         return SolCode.toBinOp(left.toSolCode(), Utils.toBinOp(op), right.toSolCode());
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof BinOp &&
+                left.typeMatch(((BinOp) expression).left) &&
+                op == ((BinOp) expression).op &&
+                right.typeMatch(((BinOp) expression).right);
+    }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();

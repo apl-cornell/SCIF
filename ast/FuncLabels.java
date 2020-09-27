@@ -32,4 +32,10 @@ public class FuncLabels extends Node {
         rtn.add(gamma_label);
         return rtn;
     }
+
+    public boolean typeMatch(FuncLabels funcLabels) {
+        return begin_pc.typeMatch(funcLabels.begin_pc)
+                && to_pc.typeMatch(funcLabels.to_pc)
+                && gamma_label.typeMatch(funcLabels.gamma_label);
+    }
 }

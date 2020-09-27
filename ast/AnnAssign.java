@@ -161,4 +161,12 @@ public class AnnAssign extends Statement {
             rtn.add(value);
         return rtn;
     }
+
+    /*public boolean typeMatch(AnnAssign a) {
+        return target.typeMatch(a.target) &&
+                annotation.typeMatch(a.annotation) &&
+                value.typeMatch(a.value) &&
+                isConst == a.isConst &&
+                simple == a.simple;
+    }*/
 }

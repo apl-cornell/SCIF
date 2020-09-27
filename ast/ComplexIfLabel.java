@@ -63,6 +63,15 @@ public class ComplexIfLabel extends IfLabel {
         right.findPrincipal(principalSet, getRidOf);
     }
 
+    @Override
+    public boolean typeMatch(IfLabel begin_pc) {
+        if (!(begin_pc instanceof ComplexIfLabel))
+            return false;
+
+        ComplexIfLabel cil = (ComplexIfLabel) begin_pc;
+        return op == cil.op && left.typeMatch(cil.left) && right.typeMatch(cil.right);
+    }
+
     public void replace(String k, String v) {
         left.replace(k, v);
         right.replace(k, v);

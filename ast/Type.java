@@ -38,4 +38,10 @@ public class Type extends Expression {
     public String toSolCode() {
         return x;
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Type &&
+                x.equals(((Type) expression).x);
+    }
 }

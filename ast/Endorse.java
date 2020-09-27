@@ -39,6 +39,15 @@ public class Endorse extends Expression {
     public String toSolCode() {
         return value.toSolCode();
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Endorse &&
+                value.typeMatch(((Endorse) expression).value) &&
+                from.typeMatch(((Endorse) expression).from) &&
+                to.typeMatch(((Endorse) expression).to);
+    }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();

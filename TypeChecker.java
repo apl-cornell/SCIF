@@ -83,7 +83,7 @@ public class TypeChecker {
                 return null;
             }
         }
-        
+
         // Collect global info
         NTCEnv NTCenv = new NTCEnv();
         for (Node root : roots) {

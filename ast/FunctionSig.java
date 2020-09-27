@@ -81,4 +81,27 @@ public class FunctionSig extends Statement {
             rtn.add(this.rtn);
         return rtn;
     }
+
+    public boolean typeMatch(FunctionSig f) {
+        if (!f.name.equals(name))
+            return false;
+        if (!f.funcLabels.typeMatch(funcLabels))
+            return false;
+        if (!f.args.typeMatch(args))
+            return false;
+
+        if (!(decoratorList == null && f.decoratorList == null)) {
+            if (decoratorList == null || f.decoratorList == null || decoratorList.size() != f.decoratorList.size())
+                return false;
+            int index = 0;
+            while (index < decoratorList.size()) {
+                if (!decoratorList.get(index).equals(f.decoratorList.get(index)))
+                    return false;
+                ++index;
+            }
+        }
+        if (!f.rtn.typeMatch(rtn))
+            return false;
+        return true;
+    }
 }

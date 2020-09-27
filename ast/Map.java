@@ -26,4 +26,12 @@ public class Map extends LabeledType {
         rtn.add(valueType);
         return rtn;
     }
+
+    @Override
+    public boolean typeMatch(Type annotation) {
+        return annotation instanceof Map &&
+                super.typeMatch(annotation) &&
+                keyType.typeMatch(((Map) annotation).keyType) &&
+                valueType.typeMatch(((Map) annotation).valueType);
+    }
 }

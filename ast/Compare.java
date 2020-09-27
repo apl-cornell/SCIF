@@ -57,6 +57,15 @@ public class Compare extends Expression {
         return SolCode.toCompareOp(left.toSolCode(), Utils.toCompareOp(op), right.toSolCode());
 
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Compare &&
+                left.typeMatch(((Compare) expression).left) &&
+                op == ((Compare) expression).op &&
+                right.typeMatch(((Compare) expression).right);
+    }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();

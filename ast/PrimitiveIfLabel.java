@@ -79,6 +79,13 @@ public class PrimitiveIfLabel extends IfLabel {
         }
     }
 
+    @Override
+    public boolean typeMatch(IfLabel begin_pc) {
+        if (!(begin_pc instanceof PrimitiveIfLabel))
+            return false;
+        return value.typeMatch(((PrimitiveIfLabel) begin_pc).value);
+    }
+
     public void replace(String k, String v) {
         if (value instanceof Name) {
             String name = ((Name) value).id;

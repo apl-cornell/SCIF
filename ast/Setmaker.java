@@ -36,4 +36,10 @@ public class Setmaker extends Expression {
         }
         return lasttmp;
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Setmaker &&
+                Utils.arrayExpressionTypeMatch(elements, ((Setmaker) expression).elements);
+    }
 }

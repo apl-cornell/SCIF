@@ -77,4 +77,11 @@ public class Attribute extends TrailerExpr {
         rtn.add(value);
         return rtn;
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Attribute &&
+                super.typeMatch(expression) &&
+                attr.typeMatch(((Attribute) expression).attr);
+    }
 }

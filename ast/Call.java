@@ -252,4 +252,41 @@ public class Call extends TrailerExpr {
             rtn.addAll(keywords);
         return rtn;
     }
+
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        if (!(expression instanceof Call &&
+                super.typeMatch(expression)))
+            return false;
+
+        Call c = (Call) expression;
+
+        boolean bothArgsNull = c.args == null && args == null;
+        boolean bothkeywordsNull = keywords == null && c.keywords == null;
+
+        if (!bothArgsNull) {
+            if (args == null || c.args == null || args.size() != c.args.size())
+                return false;
+            int index = 0;
+            while (index < args.size()) {
+                if (!args.get(index).typeMatch(c.args.get(index)))
+                    return false;
+                ++index;
+            }
+        }
+
+        if (!bothkeywordsNull) {
+            if (keywords == null || c.keywords == null || keywords.size() != c.keywords.size())
+                return false;
+            int index = 0;
+            while (index < keywords.size()) {
+                if (!keywords.get(index).typeMatch(c.keywords.get(index)))
+                    return false;
+                ++index;
+            }
+        }
+
+        return true;
+    }
 }

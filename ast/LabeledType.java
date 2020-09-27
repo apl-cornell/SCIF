@@ -29,4 +29,11 @@ public class LabeledType extends Type {
         rtn.add(ifl);
         return rtn;
     }
+
+    @Override
+    public boolean typeMatch(Type annotation) {
+        return annotation instanceof LabeledType &&
+                super.typeMatch(annotation) &&
+                ifl.typeMatch(((LabeledType) annotation).ifl);
+    }
 }

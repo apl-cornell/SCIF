@@ -133,4 +133,11 @@ public class Subscript extends TrailerExpr {
         rtn.add(index);
         return rtn;
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Subscript &&
+                super.typeMatch(expression) &&
+                index.typeMatch(((Subscript) expression).index);
+    }
 }

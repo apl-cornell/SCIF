@@ -29,4 +29,10 @@ public class ConstantExpr extends Expression {
     public String toSolCode() {
         return compile.Utils.toConstant(value);
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof ConstantExpr &&
+                value.equals(((ConstantExpr) expression).value);
+    }
 }

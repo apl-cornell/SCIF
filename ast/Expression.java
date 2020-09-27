@@ -3,7 +3,7 @@ package ast;
 import compile.SolCode;
 import typecheck.*;
 
-public class Expression extends Statement {
+public abstract class Expression extends Statement {
     public VarSym getVarInfo(VisitEnv env) {
         return new VarSym();
     }
@@ -17,4 +17,6 @@ public class Expression extends Statement {
     public void SolCodeGen(SolCode code) {
         code.addLine(toSolCode());
     }
+
+    public abstract boolean typeMatch(Expression expression);
 }

@@ -5,7 +5,7 @@ import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
-public class Literal extends Expression {
+public abstract class Literal extends Expression {
     @Override
     public Context genConsVisit(VisitEnv env) {
         String ifNameRtn = "LITERAL..." + location.toString();

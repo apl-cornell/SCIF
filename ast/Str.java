@@ -10,4 +10,10 @@ public class Str extends Literal {
     public String toSolCode() {
         return value;
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Str &&
+                value.equals(((Str) expression).value);
+    }
 }

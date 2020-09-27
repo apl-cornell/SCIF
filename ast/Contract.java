@@ -128,8 +128,60 @@ public class Contract extends Node {
         trustCons = newTrustCons;
 
         // Statement
+        HashMap<String, AnnAssign> varNames = new HashMap<>();
+        HashMap<String, FunctionSig> funcNames = new HashMap<>();
+        for (Statement statement : body) {
+            if (statement instanceof FunctionSig) {
+                FunctionSig f = (FunctionSig) statement;
+                if (varNames.containsKey(f.name) || funcNames.containsKey(f.name)) {
+                    //TODO: duplicate names
+                    return false;
+                }
+                funcNames.put(f.name, f);
+            } else {
+                AnnAssign a = (AnnAssign) statement;
+                Name x = (Name) a.target;
+                if (varNames.containsKey(x.id) || funcNames.containsKey(x.id)) {
+                    //TODO: duplicate names
+                    return false;
+                }
+                varNames.put(x.id, a);
+            }
+        }
+
         ArrayList<Statement> newBody = new ArrayList<>();
-        newBody.addAll(superContract.body);
+        for (Statement statement : superContract.body) {
+            // check if duplicate names
+            // check if they match exactly
+            boolean overriden = false;
+            if (statement instanceof FunctionSig) {
+                FunctionSig f = (FunctionSig) statement;
+                if (funcNames.containsKey(f.name)) {
+                    if (!funcNames.get(f.name).typeMatch(f)) {
+                        // TODO: func overriden type not match
+                        return false;
+                    }
+                    overriden = true;
+                } else if (varNames.containsKey(f.name)) {
+                    // TODO: var overriden by func
+                    return false;
+                }
+            } else {
+                AnnAssign a = (AnnAssign) statement;
+                Name x = (Name) a.target;
+                if (varNames.containsKey(x.id)) {
+                    // TODO: var being overriden
+                    return false;
+                } else if (funcNames.containsKey(x.id)) {
+                    // TODO: func overriden by var
+                    return false;
+                }
+            }
+
+            if (!overriden) {
+                newBody.add(statement);
+            }
+        }
         newBody.addAll(body);
         body = newBody;
 

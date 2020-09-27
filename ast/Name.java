@@ -61,4 +61,8 @@ public class Name extends Variable {
     public String toSolCode() {
         return id;
     }
+
+    public boolean typeMatch(Name value) {
+        return id.equals(value.id);
+    }
 }

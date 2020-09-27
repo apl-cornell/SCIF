@@ -40,4 +40,11 @@ public class Dictmaker extends Expression {
         }
         return lasttmp;
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Dictmaker &&
+                Utils.arrayExpressionTypeMatch(keys, ((Dictmaker) expression).keys) &&
+                Utils.arrayExpressionTypeMatch(values, ((Dictmaker) expression).values);
+    }
 }

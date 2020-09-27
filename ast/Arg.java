@@ -74,4 +74,8 @@ public class Arg extends Node {
         rtn.add(annotation);
         return rtn;
     }
+
+    public boolean typeMatch(Arg arg) {
+        return name.equals(arg.name) && annotation.typeMatch(arg.annotation);
+    }
 }

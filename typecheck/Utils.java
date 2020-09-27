@@ -283,5 +283,20 @@ public class Utils {
         File file = new File(outputFileName);
         return file.length() == 0;
     }
+
+    public static boolean arrayExpressionTypeMatch(ArrayList<Expression> x, ArrayList<Expression> y) {
+
+        if (!(x == null && y == null)) {
+            if (x == null || y == null || x.size() != y.size())
+                return false;
+            int index = 0;
+            while (index < x.size()) {
+                if (!x.get(index).typeMatch(y.get(index)))
+                    return false;
+                ++index;
+            }
+        }
+        return true;
+    }
 }
 

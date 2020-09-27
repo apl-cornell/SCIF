@@ -48,6 +48,15 @@ public class BoolOp extends Expression {
     public String toSolCode() {
         return SolCode.toBoolOp(left.toSolCode(), Utils.toBoolOp(op), right.toSolCode());
     }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof BoolOp &&
+                op == ((BoolOp) expression).op &&
+                left.typeMatch(((BoolOp) expression).left) &&
+                right.typeMatch(((BoolOp) expression).right);
+    }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
