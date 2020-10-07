@@ -9,7 +9,7 @@ import typecheck.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class While extends Statement {
+public class While extends NonFirstLayerStatement {
     Expression test;
     ArrayList<Statement> body;
     ArrayList<Statement> orelse; //TODO: ignoring for now

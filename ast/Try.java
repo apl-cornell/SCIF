@@ -2,7 +2,7 @@ package ast;
 
 import java.util.ArrayList;
 
-public class Try extends Statement {
+public class Try extends NonFirstLayerStatement {
     ArrayList<Statement> body;
     ArrayList<ExceptHandler> handlers;
     ArrayList<Statement> orelse;

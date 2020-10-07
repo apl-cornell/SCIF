@@ -8,7 +8,7 @@ import typecheck.*;
 
 import java.util.ArrayList;
 
-public class Assign extends Statement {
+public class Assign extends NonFirstLayerStatement {
     //TODO: assuming targets only contains 1 element now
     ArrayList<Expression> targets;
     Expression value;

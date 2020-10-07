@@ -5,6 +5,7 @@ import sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class Endorse extends Expression {
     Expression value;
@@ -56,4 +57,5 @@ public class Endorse extends Expression {
         rtn.add(to);
         return rtn;
     }
+
 }

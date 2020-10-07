@@ -11,17 +11,20 @@ public class Contract extends Node {
     public String contractName;
     public String superContractName = "";
     public ArrayList<TrustConstraint> trustCons;
+    public IfLabel ifl;
     ArrayList<Statement> body;
-    public Contract(String contractName, ArrayList<TrustConstraint> trustCons, ArrayList<Statement> body) {
+    public Contract(String contractName, ArrayList<TrustConstraint> trustCons, ArrayList<Statement> body, IfLabel ifl) {
         this.contractName = contractName;
         this.trustCons = trustCons;
         this.body = body;
+        this.ifl = ifl;
     }
-    public Contract(String contractName, String superContractName, ArrayList<TrustConstraint> trustCons, ArrayList<Statement> body) {
+    public Contract(String contractName, String superContractName, ArrayList<TrustConstraint> trustCons, ArrayList<Statement> body, IfLabel ifl) {
         this.contractName = contractName;
         this.superContractName = superContractName;
         this.trustCons = trustCons;
         this.body = body;
+        this.ifl = ifl;
     }
 
     public boolean NTCinherit(InheritGraph graph) {
@@ -35,7 +38,7 @@ public class Contract extends Node {
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         env.setCurSymTab(new SymTab(env.curSymTab));
-        ContractSym contractSym = new ContractSym(contractName, env.curSymTab, trustCons);
+        ContractSym contractSym = new ContractSym(contractName, env.curSymTab, trustCons, ifl);
         env.addGlobalSym(contractName, contractSym);
 
         for (Statement stmt : body) {
@@ -58,6 +61,7 @@ public class Contract extends Node {
     public void globalInfoVisit(ContractSym contractSym) {
         contractSym.name = contractName;
         contractSym.trustCons = trustCons;
+        contractSym.ifl = ifl;
         contractSym.addContract(contractName, contractSym);
         for (Statement stmt : body) {
             stmt.globalInfoVisit(contractSym);
@@ -67,6 +71,7 @@ public class Contract extends Node {
     @Override
     public Context genConsVisit(VisitEnv env) {
         //env.prevContext = new Context()
+        findPrincipal(env.principalSet);
         for (Statement stmt : body) {
             stmt.genConsVisit(env);
         }
@@ -77,6 +82,7 @@ public class Contract extends Node {
         for (TrustConstraint trustConstraint : trustCons) {
             trustConstraint.findPrincipal(principalSet);
         }
+        ifl.findPrincipal(principalSet);
         for (Statement stmt : body) {
             stmt.findPrincipal(principalSet);
         }

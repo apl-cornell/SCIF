@@ -155,6 +155,11 @@ public class TypeChecker {
             ContractSym contractSym = env.getContract(contractName);
             logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n" + env.curSymTab.getTypeSet());
             // generate trust relationship dec constraints
+
+            String ifNameContract = contractSym.getLabelNameContract();
+            String ifContract = contractSym.getLabelContract();
+            env.cons.add(new Constraint(new Inequality(ifNameContract, Relation.EQ, ifContract), contractSym.ifl.location));
+
             for (TrustConstraint trustConstraint : contractSym.trustCons) {
                 env.trustCons.add(new Constraint(new Inequality(trustConstraint.lhs.toSherrlocFmt(), trustConstraint.optor,trustConstraint.rhs.toSherrlocFmt()), trustConstraint.location));
             }

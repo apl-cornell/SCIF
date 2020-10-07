@@ -10,12 +10,14 @@ public class ContractSym extends TypeSym {
     public HashMap<String, VarInfo> varMap;
     public HashMap<String, FuncInfo> funcMap;*/
     public SymTab symTab;
+    public IfLabel ifl;
     public ArrayList<TrustConstraint> trustCons;
 
     public ContractSym(String name,
                        SymTab symTab,
                        // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
-                       ArrayList<TrustConstraint> trustCons) {
+                       ArrayList<TrustConstraint> trustCons,
+                       IfLabel ifl) {
         this.name = name;
         /*this.iptContracts = iptContracts;
         this.typeMap = typeMap;
@@ -23,6 +25,7 @@ public class ContractSym extends TypeSym {
         this.funcMap = funcMap;*/
         this.symTab = symTab;
         this.trustCons = trustCons;
+        this.ifl = ifl;
     }
 
     public ContractSym() {
@@ -122,5 +125,14 @@ public class ContractSym extends TypeSym {
             return (FuncSym) sym;
         else
             return null;
+    }
+
+
+    public String getLabelNameContract() {
+        return Utils.getLabelNameContract(name);
+    }
+
+    public String getLabelContract() {
+        return ifl.toSherrlocFmt();
     }
 }

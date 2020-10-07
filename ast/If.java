@@ -8,7 +8,7 @@ import typecheck.*;
 
 import java.util.ArrayList;
 
-public class If extends Statement {
+public class If extends NonFirstLayerStatement {
     Expression test;
     ArrayList<Statement> body;
     ArrayList<Statement> orelse;

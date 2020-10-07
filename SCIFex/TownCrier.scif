@@ -1,6 +1,6 @@
 import Callback;
 
-contract TownCrier {
+contract TownCrier[high] {
     {trustedSend = high}
     {high => this}
     address{high} requester;

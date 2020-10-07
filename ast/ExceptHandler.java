@@ -2,7 +2,7 @@ package ast;
 
 import java.util.ArrayList;
 
-public class ExceptHandler extends Statement {
+public class ExceptHandler extends NonFirstLayerStatement {
     Expression type;
     Str name;
     ArrayList<Statement> body;

@@ -221,6 +221,7 @@ ifLabelOrNull ::= ifLabel:x {:
     :};
 // ---
 
+//TODO: not usable for now; since the core calculus is not surppoting interface
 interface ::= INTERFACE:i NAME:x COLON NEWLINE  funcSigs:a  {:
         ArrayList<TrustConstraint> trust_list = new ArrayList<>();
         RESULT = new Interface((String)x, trust_list, a);
@@ -299,25 +300,25 @@ contracts ::= contract:a {:
     :};
 
 
-contract ::= CONTRACT NAME:x LBRACE file_input:list RBRACE {:
+contract ::= CONTRACT NAME:x LSQB ifLabel:ifl RSQB LBRACE file_input:list RBRACE {:
         ArrayList<TrustConstraint> trust_list = new ArrayList<>();
-        RESULT = new Contract((String) x, trust_list, list);
+        RESULT = new Contract((String) x, trust_list, list, ifl);
         RESULT.setLoc(new CodeLocation(xleft, xright));
         //System.err.println(RESULT);
     :}
-    | CONTRACT NAME:x EXTENDS NAME:y LBRACE file_input:list RBRACE {:
+    | CONTRACT NAME:x LSQB ifLabel:ifl RSQB EXTENDS NAME:y LBRACE file_input:list RBRACE {:
         ArrayList<TrustConstraint> trust_list = new ArrayList<>();
-        RESULT = new Contract((String) x, (String) y, trust_list, list);
+        RESULT = new Contract((String) x, (String) y, trust_list, list, ifl);
         RESULT.setLoc(new CodeLocation(xleft, xright));
         //System.err.println(RESULT);
     :}
-    | CONTRACT NAME:x LBRACE trust_decs:trust_list file_input:list RBRACE {:
-            RESULT = new Contract((String) x, trust_list, list);
+    | CONTRACT NAME:x LSQB ifLabel:ifl RSQB LBRACE trust_decs:trust_list file_input:list RBRACE {:
+            RESULT = new Contract((String) x, trust_list, list, ifl);
             RESULT.setLoc(new CodeLocation(xleft, xright));
             //System.err.println(RESULT);
     :}
-    | CONTRACT NAME:x EXTENDS NAME:y LBRACE trust_decs:trust_list file_input:list RBRACE {:
-            RESULT = new Contract((String) x, (String) y, trust_list, list);
+    | CONTRACT NAME:x LSQB ifLabel:ifl RSQB EXTENDS NAME:y LBRACE trust_decs:trust_list file_input:list RBRACE {:
+            RESULT = new Contract((String) x, (String) y, trust_list, list, ifl);
             RESULT.setLoc(new CodeLocation(xleft, xright));
             //System.err.println(RESULT);
     :};
@@ -357,10 +358,10 @@ depMap ::=
         RESULT = a;
     :};*/
 
-autoendorse ::= AUTOENDORSE:x LPAR ifLabel:from COMMA ifLabel:to RPAR {:
+/*autoendorse ::= AUTOENDORSE:x LPAR ifLabel:from COMMA ifLabel:to RPAR {:
         RESULT = new Autoendorse(from, to);
         RESULT.setLoc(new CodeLocation(xleft, xright));
-    :};
+    :};*/
 
 ifLabel ::= unitIfLabel:a {:
         RESULT = a;
@@ -857,15 +858,15 @@ trailer_expr ::=
     :};*/
 
 atom ::= 
-    LPAR:a RPAR {:
+    /*LPAR:a RPAR {:
         RESULT = new Expression();
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | LPAR expr:a RPAR {:RESULT = a; :}
-    | LBRACE:a RBRACE {:
+    | */LPAR expr:a RPAR {:RESULT = a; :}
+    /*| LBRACE:a RBRACE {:
         RESULT = new Expression();
         RESULT.setLoc(new CodeLocation(aleft, aright));
-    :}
+    :}*/
     | LBRACE dictmaker:a RBRACE {:RESULT = a;:}
     | LBRACE setmaker:a RBRACE {:RESULT = a;:}
     | NAME:a {:

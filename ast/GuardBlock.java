@@ -8,7 +8,7 @@ import typecheck.*;
 
 import java.util.ArrayList;
 
-public class GuardBlock extends Statement {
+public class GuardBlock extends NonFirstLayerStatement {
     IfLabel l;
     ArrayList<Statement> body;
     Expression target;

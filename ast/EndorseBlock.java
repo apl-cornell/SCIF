@@ -8,7 +8,7 @@ import typecheck.*;
 
 import java.util.ArrayList;
 
-public class EndorseBlock extends Statement {
+public class EndorseBlock extends NonFirstLayerStatement {
     IfLabel l_from, l_to;
     ArrayList<Statement> body;
     Expression target;

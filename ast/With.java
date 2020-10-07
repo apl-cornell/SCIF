@@ -1,5 +1,5 @@
 package ast;
 
-public class With extends Statement {
+public class With extends NonFirstLayerStatement {
     //TODO
 }

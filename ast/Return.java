@@ -8,7 +8,7 @@ import typecheck.*;
 
 import java.util.ArrayList;
 
-public class Return extends Statement {
+public class Return extends NonFirstLayerStatement {
     Expression value;
     public Return(Expression value) {
         this.value = value;

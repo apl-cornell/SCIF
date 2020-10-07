@@ -19,9 +19,9 @@ public class FuncLabels extends Node {
     }
 
     public void findPrincipal(HashSet<String> principalSet) {
-        begin_pc.findPrincipal(principalSet);
-        to_pc.findPrincipal(principalSet);
-        gamma_label.findPrincipal(principalSet);
+        if (begin_pc != null) begin_pc.findPrincipal(principalSet);
+        if (to_pc != null) to_pc.findPrincipal(principalSet);
+        if (gamma_label != null) gamma_label.findPrincipal(principalSet);
     }
 
     @Override
@@ -34,8 +34,10 @@ public class FuncLabels extends Node {
     }
 
     public boolean typeMatch(FuncLabels funcLabels) {
-        return begin_pc.typeMatch(funcLabels.begin_pc)
-                && to_pc.typeMatch(funcLabels.to_pc)
-                && gamma_label.typeMatch(funcLabels.gamma_label);
+        boolean l1 = begin_pc == null, l2 = to_pc == null, l3 = gamma_label == null;
+        boolean r1 = funcLabels.begin_pc == null, r2 = funcLabels.to_pc == null, r3 = funcLabels.gamma_label == null;
+        return ((l1 && r1) || (!(l1 || r1) && begin_pc.typeMatch(funcLabels.begin_pc)))
+                && ((l2 && r2) || (!(l2 || r2) && to_pc.typeMatch(funcLabels.to_pc)))
+                && ((l3 && r3) || (!(l3 || r3) && gamma_label.typeMatch(funcLabels.gamma_label)));
     }
 }

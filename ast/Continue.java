@@ -1,4 +1,4 @@
 package ast;
 
-public class Continue extends Statement {
+public class Continue extends NonFirstLayerStatement {
 }

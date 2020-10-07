@@ -1,6 +1,6 @@
 package ast;
 
-public class AugAssign extends Statement {
+public class AugAssign extends NonFirstLayerStatement {
     Expression target;
     BinaryOperator op;
     Expression value;

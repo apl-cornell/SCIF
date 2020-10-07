@@ -5,7 +5,7 @@ import typecheck.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Assert extends Statement {
+public class Assert extends NonFirstLayerStatement {
     Expression test;
     Expression msg;
     public Assert(Expression test, Expression msg) {

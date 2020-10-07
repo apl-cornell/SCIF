@@ -1,5 +1,5 @@
 import Holder;
-contract Token {
+contract Token [high] {
     {high => low}
   map(address, uint){high} balance;
 

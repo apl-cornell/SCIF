@@ -4,7 +4,7 @@ import typecheck.ContractSym;
 
 import java.util.ArrayList;
 
-public class StructDef extends Statement {
+public class StructDef extends NonFirstLayerStatement {
     String structName;
     ArrayList<AnnAssign> members;
     public StructDef(String structName, ArrayList<AnnAssign> members) {

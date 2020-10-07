@@ -61,6 +61,7 @@ public class PrimitiveIfLabel extends IfLabel {
         return rnt;
     }
 
+    @Override
     public void findPrincipal(HashSet<String> principalSet) {
         if (value instanceof Name) {
             String name = ((Name) value).id;
@@ -98,5 +99,11 @@ public class PrimitiveIfLabel extends IfLabel {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(value);
         return rtn;
+    }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof PrimitiveIfLabel &&
+                typeMatch((IfLabel) expression);
     }
 }

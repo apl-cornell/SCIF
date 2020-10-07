@@ -1,4 +1,4 @@
-contract CompleteBank extends BrokenBank {
+contract CompleteBank[high] extends BrokenBank {
     address owner;
 
     void withdraw(address sender, uint amount) {

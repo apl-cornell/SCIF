@@ -1,5 +1,5 @@
 package ast;
 
-public class ClassDef extends Statement {
+public class ClassDef extends NonFirstLayerStatement {
 
 }

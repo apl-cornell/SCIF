@@ -23,7 +23,7 @@ public class Interface extends Node {
         for (FunctionSig functionSig : funcSigs) {
             if (!functionSig.NTCGlobalInfo(env, now)) return false;
         }
-        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab, trustCons);
+        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab, trustCons, null); //TODO ifl should be included in interface
         env.addSym(contractName, contractSym);
         return true;
     }

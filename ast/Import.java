@@ -1,5 +1,5 @@
 package ast;
 
-public class Import extends Statement {
+public class Import extends NonFirstLayerStatement {
     //TODO
 }

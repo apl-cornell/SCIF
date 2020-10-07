@@ -62,6 +62,12 @@ public class Name extends Variable {
         return id;
     }
 
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Name &&
+                ((Name) expression).id.equals(id);
+    }
+
     public boolean typeMatch(Name value) {
         return id.equals(value.id);
     }

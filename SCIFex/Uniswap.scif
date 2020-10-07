@@ -1,6 +1,6 @@
 import Token;
 
-contract Uniswap {
+contract Uniswap[high] {
     {high => low}
     address{high} this; // ... built-in
     Token{high} tX;

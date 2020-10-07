@@ -1,4 +1,4 @@
-contract Holder {
+contract Holder[low] {
     void alertSend{low >> low; low}(address x, uint amount) {
 	// ...
     }

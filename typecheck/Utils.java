@@ -298,5 +298,9 @@ public class Utils {
         }
         return true;
     }
+
+    public static String getLabelNameContract(String name) {
+        return name + "." + "codeLbl";
+    }
 }
 

@@ -1,4 +1,4 @@
-contract BrokenBank {
+contract BrokenBank[high] {
     {high => this}
     uint{high} balance;
 

@@ -3,6 +3,8 @@ package ast;
 import compile.SolCode;
 import typecheck.*;
 
+import java.util.HashSet;
+
 public abstract class Expression extends Statement {
     public VarSym getVarInfo(VisitEnv env) {
         return new VarSym();
@@ -18,5 +20,9 @@ public abstract class Expression extends Statement {
         code.addLine(toSolCode());
     }
 
+    @Override
+    public void findPrincipal(HashSet<String> principalSet) {
+
+    }
     public abstract boolean typeMatch(Expression expression);
 }

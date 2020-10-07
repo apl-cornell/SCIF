@@ -30,7 +30,6 @@ public class LabeledType extends Type {
         return rtn;
     }
 
-    @Override
     public boolean typeMatch(Type annotation) {
         return annotation instanceof LabeledType &&
                 super.typeMatch(annotation) &&

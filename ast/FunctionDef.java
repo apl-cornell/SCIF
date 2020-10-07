@@ -59,6 +59,9 @@ public class FunctionDef extends FunctionSig {
         env.cons.add(new Constraint(new Inequality(ifNameCall, ifNamePc), env.hypothesis, location));
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameCall), env.hypothesis, location));
 
+        String ifNameContract = env.curContractSym.getLabelNameContract();
+        env.cons.add(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis, location));
+
         String ifNameCallLock = funcSym.getLabelNameCallLock();
 
         Context funcBeginContext = new Context(ifNamePc, ifNameCallLock);
