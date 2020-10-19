@@ -1,0 +1,24 @@
+import Callback;
+
+contract TownCrier[high] {
+    {trustedSend = high}
+    {high => this}
+    address{high} requester;
+    Callback{high} callback;
+    uint{high} FEE;
+    address{high} SGX_ADDR;
+
+    void deliver{high >> high; BOT}(bytes data) {
+        // ... check if the sender is the SGX and requester is not 0
+
+        requester = 0;
+        callback.call(data);
+        trustedSend(SGX_ADDR, FEE);
+    }
+
+    void cancel{BOT >> high; BOT}() {
+        // ... check if the sender is the requester
+        requester = 0;
+        send(requester, FEE);
+    }
+}
