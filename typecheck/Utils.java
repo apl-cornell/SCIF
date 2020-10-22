@@ -75,6 +75,9 @@ public class Utils {
     public static String getLabelNameFuncCallLock(String funcName) {
         return funcName + ".." + "call.lk";
     }
+    public static String getLabelNameFuncCallGamma(String funcName) {
+        return funcName + ".." + "gamma.lk";
+    }
     /*public static String getLabelNameFuncCallBefore(String funcName) {
         return funcName + ".." + "call.before";
     }
@@ -302,5 +305,6 @@ public class Utils {
     public static String getLabelNameContract(String name) {
         return name + "." + "codeLbl";
     }
+
 }
 

@@ -74,18 +74,21 @@ public class FunctionDef extends FunctionSig {
         env.incScopeLayer();
         args.genConsVisit(env);
         Context prev = new Context(env.prevContext), prev2 = null;
+        CodeLocation loc = null;
         for (Statement stmt : body) {
             if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(prev.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(prev.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, loc));
             }
             Context tmp = stmt.genConsVisit(env);
             env.prevContext = tmp;
             prev2 = prev;
+            loc = stmt.location;
             prev = new Context(tmp);
         }
         env.decScopeLayer();
 
-        // env.cons.add(new Constraint(new Inequality(prev.lockName, funcSym.getLabelNameRtnLock()), env.hypothesis, location));
+        String ifNameGammaLock = funcSym.getLabelNameCallGamma();
+        env.cons.add(new Constraint(new Inequality(prev.lockName, ifNameGammaLock), env.hypothesis, loc));
 
         /*if (rtn instanceof LabeledType) {
             if (rtn instanceof DepMap) {

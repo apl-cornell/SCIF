@@ -130,8 +130,10 @@ public class If extends NonFirstLayerStatement {
         }
         env.decScopeLayer();
 
+        // env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, Utils.joinLabels(leftContext.lockName, rightContext.lockName)), env.hypothesis, location));
 
-        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.LEQ, Utils.joinLabels(leftContext.lockName, rightContext.lockName)), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, leftContext.lockName), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, rightContext.lockName), env.hypothesis, location));
 
         logger.debug("finished orelse branch");
         //System.err.println("finished orelse branch");

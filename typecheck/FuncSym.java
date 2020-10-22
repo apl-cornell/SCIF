@@ -125,4 +125,8 @@ public class FuncSym extends Sym {
     public String toString() {
         return genson.serialize(this);
     }
+
+    public String getLabelNameCallGamma() {
+        return Utils.getLabelNameFuncCallGamma(scopeContext.getSHErrLocName());
+    }
 }
