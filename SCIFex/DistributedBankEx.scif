@@ -1,0 +1,46 @@
+contract DistributedBank [high] {
+    {high => this}
+    DistributedBank{high} otherBank;
+    uint{high} balance;
+    map(address, uint){high} balances;
+
+    void deposit{BOT >> high; BOT}(address{BOT} sender, uint{BOT} amount) {
+
+        // ... check if this is the sender and the amount is paid
+
+        address{high} gSender = endorse(sender, BOT->high);
+        uint{high} gAmount = endorse(amount, BOT->high);
+
+        if{high} (balances[gSender] >= gAmount && balance >= gAmount) {
+            balances[gSender] = balances[gSender] + gAmount;
+            balance = balance + gAmount;
+            otherBank.incBal(gSender, gAmount);
+        }
+    }
+    
+    void withdraw{BOT >> high; BOT}(address{BOT} sender, uint{BOT} amount) {
+
+        // ... check if this is the sender
+
+        address{high} gSender = endorse(sender, BOT->high);
+        uint{high} gAmount = endorse(amount, BOT->high);
+
+        if{high} (balances[gSender] >= gAmount && balance >= gAmount) {
+            balances[gSender] = balances[gSender] - gAmount;
+            balance = balance - gAmount;
+            lock(high) {
+                send(gSender, gAmount);
+            }
+            otherBank.decBal(gSender, gAmount);
+        }
+    }
+
+    void decBal{high >> high; high}(address{high} user, uint{high} amount) {
+        balances[user] = balances[user] - amount;
+    }
+    
+    void incBal{high >> high; high}(address{high} user, uint{high} amount) {
+        balances[user] = balances[user] + amount;
+    }
+    
+}

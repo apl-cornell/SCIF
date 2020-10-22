@@ -13,6 +13,7 @@ contract DistributedBank [high] {
 
         if{high} (balances[gSender] >= gAmount && balance >= gAmount) {
             balances[gSender] = balances[gSender] - gAmount;
+            balance = balance - gAmount;
             otherBank.decBal(gSender, gAmount);
             send(gSender, gAmount);
         }

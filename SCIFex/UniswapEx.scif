@@ -12,7 +12,7 @@ contract Uniswap[high] {
         uint yBought = tY.getBal(this) - yKept;
 
         // lock(high) {
-            assert tX.transfer(buyer, this, endorse(xSold, low->high));
+            assert tX.transfer(buyer, this, endorse(xSold, BOT->high));
             assert tY.transfer(this, buyer, yBought);
         // }
         return yBought;
