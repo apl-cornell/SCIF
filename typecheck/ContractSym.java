@@ -65,7 +65,7 @@ public class ContractSym extends TypeSym {
         if (astType == null) {
             return new BuiltinTypeSym("void");
         }
-        System.err.println("[in]toTypeSym: " + astType.x);
+        // System.err.println("[in]toTypeSym: " + astType.x);
 
         Sym s = symTab.lookup(astType.x);
         TypeSym typeSym = null;
@@ -82,7 +82,7 @@ public class ContractSym extends TypeSym {
             }
 
         }
-        System.err.println("[out]toTypeSym: " + typeSym.name);
+        // System.err.println("[out]toTypeSym: " + typeSym.name);
         return typeSym;
     }
 

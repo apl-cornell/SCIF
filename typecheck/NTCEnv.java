@@ -39,7 +39,7 @@ public class NTCEnv {
     public TypeSym toTypeSym(ast.Type astType) {
         TypeSym typeSym = null;
         if (astType == null) return new BuiltinTypeSym(Utils.BuiltinType2ID(BuiltInT.VOID));
-        System.err.println("[in]toTypeSym: " + astType.x);
+        // System.err.println("[in]toTypeSym: " + astType.x);
 
         Sym s = getCurSym(astType.x);
         if (s instanceof TypeSym)//Utils.isPrimitiveType(astType.x))
@@ -57,7 +57,7 @@ public class NTCEnv {
                 // typeSym = new BuiltinTypeSym(lt.x);
             }
         }
-        System.err.println("[out]toTypeSym: " + typeSym.name);
+        // System.err.println("[out]toTypeSym: " + typeSym.name);
         return typeSym;
     }
 

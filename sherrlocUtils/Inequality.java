@@ -11,7 +11,7 @@ public class Inequality {
     Relation relation;
     public Inequality(String lhs, Relation relation, String rhs) {
         if (lhs.equals("") || rhs.equals("")) {
-            System.err.println(lhs + " | " + rhs);
+            // System.err.println(lhs + " | " + rhs);
             int a = 1/0;
         }
         this.lhs = lhs;
@@ -20,7 +20,7 @@ public class Inequality {
     }
     public Inequality(String lhs, CompareOperator co, String rhs) {
         if (lhs.equals("") || rhs.equals("")) {
-            System.err.println(lhs + " | " + rhs);
+            // System.err.println(lhs + " | " + rhs);
             int a = 1/0;
         }
         this.lhs = lhs;
@@ -35,7 +35,7 @@ public class Inequality {
 
     public Inequality(String lhs, String rhs) {
         if (lhs.equals("") || rhs.equals("")) {
-            System.err.println(lhs + " | " + rhs);
+            // System.err.println(lhs + " | " + rhs);
             int a = 1/0;
         }
         this.lhs = lhs;

@@ -21,17 +21,17 @@ public class SymTab {
     }
 
     public Sym lookup(String id) {
-        System.out.println("sym lookup: " + id + " @" + this);
+        // System.out.println("sym lookup: " + id + " @" + this);
         if (table.get(id) != null) {
-            System.out.println("SUCC");
+            // System.out.println("SUCC");
 
             return table.get(id);
         }
         return parent == null ? null : parent.lookup(id);
     }
     public void add(String id, Sym sym) {
-        System.out.println("sym add: " + id + " @" + this);
-        System.out.println(sym.name);
+        // System.out.println("sym add: " + id + " @" + this);
+        // System.out.println(sym.name);
         table.put(id, sym);
     }
 
