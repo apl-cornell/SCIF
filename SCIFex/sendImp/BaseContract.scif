@@ -1,0 +1,39 @@
+contract BaseContract[high] {
+    {high => low}
+    address{high} this;
+    uint{high} balance;
+    uint{high} payment;
+    address{high} caller;
+    address{high} EMPTY_ADDR;
+
+    bool payBeforeCall{low >> high; high}(uint{low} amount, address{low} callee) {
+        uint hAmount = endorse(amount, low->high);
+        BaseContract gCallee = BaseContract(endorse(callee, low->high));
+
+        if {high} (balance < hAmount) {
+            return false;
+        }
+
+        balance = balance + hAmount;
+        gCallee.receive(hAmount, this);
+        return true;
+    }
+    
+    void receive{high >> high; high}(uint{high} amount, address{high} newCaller) {
+        balance = balance + amount;
+        payment = amount;
+        caller = newCaller;
+    }
+
+    void clear{low >> high; high}() {
+        payment = 0;
+        caller = EMPTY_ADDR;
+    }
+
+    void alertSend{low >> low; low}(address x, uint amount) {
+	// ...
+    }
+    void alertReceive{low >> low; low}(address x, uint amount) {
+	// ...
+    }
+}
