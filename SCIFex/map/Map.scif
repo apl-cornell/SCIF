@@ -1,0 +1,31 @@
+import Array;
+import MappingFunction;
+
+contract Map[high] {
+    {high => low}
+    Array{high} mappings;
+
+    uint{high} getOrCompute{low >> high; high}(uint k, MappingFunction computeF) {
+        uint i = endorse(getIndex(k), low->high);
+        if {high} (isMapped(i)) {
+            uint v;
+            lock(high) {
+                v = computeF.execute();
+            }
+            mappings.set(i, endorse(v, low->high));
+        }
+        return mappings.get(i);
+    }
+
+    void clear{low >> high; high}() {
+        // ...
+    }
+
+    uint getIndex{high >> high; high}(uint k) {
+        return 0;
+    }
+
+    bool isMapped{high >> high; high}(uint i) {
+        return true;
+    }
+}

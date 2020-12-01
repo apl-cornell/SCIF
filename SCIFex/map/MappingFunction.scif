@@ -1,0 +1,5 @@
+contract MappingFunction[low] {
+    uint execute{low >> low; low}() {
+        return 0;
+    }
+}
