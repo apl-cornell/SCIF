@@ -132,11 +132,11 @@ contract TownCrier[high] extends BaseContract {
         fees[requestId] = DELEVERERED_FEE_FLAG;
         unrespondedCnt = unrespondedCnt - 1;
         
-        payBeforeCall(0, callbacks[requestId]);
-        Callback cb = Callback(callbacks[requestId]);
-        cb.call(data);
-        
         if {high} (error < 2) {
+            payBeforeCall(0, callbacks[requestId]);
+            Callback cb = Callback(callbacks[requestId]);
+            cb.call(data);
+            
             trustedSend(SGX_ADDR, fee);
         } else {
             send(requesters[requestId], fee);
