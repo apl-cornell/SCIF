@@ -134,23 +134,21 @@ contract TownCrier[high] extends BaseContract {
         
         if {high} (error < 2) {
             trustedSend(SGX_ADDR, fee);
+            
+            payBeforeCall(0, callbacks[requestId]);
+            Callback cb = Callback(callbacks[requestId]);
+            cb.call(data);
         } else {
-            lock(high) {
-                send(requesters[requestId], fee);
-            }
+            send(requesters[requestId], fee);
         }
-        
-        payBeforeCall(0, callbacks[requestId]);
-        Callback cb = Callback(callbacks[requestId]);
-        cb.call(data);
     }
     
-    uint cancel{BOT >> high; BOT}(uint{BOT} requestId) {
+    bool cancel{BOT >> high; BOT}(uint{BOT} requestId) {
         address sender = caller;
         clear();
         
         if {high} (killswitch) {
-            return 0;
+            return false;
         }
         
         uint id = endorse(requestId, BOT->high);
@@ -158,12 +156,9 @@ contract TownCrier[high] extends BaseContract {
         
         if {high} (requesters[id] == sender && fee >= CANCEL_FEE) {
             fees[id] = CANCELLED_FEE_FLAG;
-            lock(high) {
-                send(sender, fee - CANCEL_FEE);
-            }
-            return SUCC_FLAG;
+            return send(sender, fee - CANCEL_FEE);
         } else {
-            return FAIL_FLAG;
+            return false;
         }
     }
 }
