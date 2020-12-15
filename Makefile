@@ -1,5 +1,5 @@
 LIBPATH=lib
-CUP=java-cup-11b.jar
+CUP=polyglot-cup.jar
 
 default: Wyvern
 	
