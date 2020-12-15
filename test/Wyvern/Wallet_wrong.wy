@@ -3,15 +3,15 @@ contract Wallet :
     {this => sender}
     {sender => BOT}
     owner : address{this}
-    balance : int{this}
+    balance : uint{this}
 
     @public
-    def deposit{sender, sender -> sender}(value : int{sender}) :
+    def deposit{sender, sender -> sender}(value : uint{sender}) :
         endorse{sender -> this} :
             balance = balance + endorse(value, sender, this)
 
     @public
-    def withdraw{sender, sender -> sender}(amount : int{sender}, sender : address{sender}) :
+    def withdraw{sender, sender -> sender}(amount : uint{sender}, sender : address{sender}) :
         if balance < amount or sender != owner :
             return
 

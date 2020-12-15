@@ -8,8 +8,8 @@ contract DistributedBank [high] {
 
         // ... check if this is the sender and the amount is paid
 
-        address{high} gSender = endorse(sender, BOT->high);
-        uint{high} gAmount = endorse(amount, BOT->high);
+        address gSender = endorse(sender, BOT->high);
+        uint gAmount = endorse(amount, BOT->high);
 
         if{high} (balances[gSender] >= gAmount && balance >= gAmount) {
             balances[gSender] = balances[gSender] + gAmount;
@@ -22,8 +22,8 @@ contract DistributedBank [high] {
 
         // ... check if this is the sender
 
-        address{high} gSender = endorse(sender, BOT->high);
-        uint{high} gAmount = endorse(amount, BOT->high);
+        address gSender = endorse(sender, BOT->high);
+        uint gAmount = endorse(amount, BOT->high);
 
         if{high} (balances[gSender] >= gAmount && balance >= gAmount) {
             balances[gSender] = balances[gSender] - gAmount;

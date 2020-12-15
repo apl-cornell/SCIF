@@ -1,4 +1,5 @@
 contract Callback[BOT] {
+    address addr;
     void call{BOT >> BOT; BOT}(bytes data) {
         // ...
     }
