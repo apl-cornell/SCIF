@@ -1,1 +1,5 @@
 *.class
+Lexer.java
+Parser.java
+sym.java
+.*.sw?
