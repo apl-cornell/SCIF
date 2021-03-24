@@ -1,5 +1,5 @@
 package ast;
 
-public class Variable extends Expression {
+public abstract class Variable extends Expression {
 
 }

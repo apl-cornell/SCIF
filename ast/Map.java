@@ -1,13 +1,37 @@
 package ast;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 public class Map extends LabeledType {
-    LabeledType keyType;
-    LabeledType valueType;
-    public Map(LabeledType keyType, LabeledType valueType, IfLabel ifl) {
+    public Type keyType;
+    public Type valueType;
+    public Map(Type keyType, Type valueType, IfLabel ifl) {
         super("map", ifl);
         this.keyType = keyType;
         this.valueType = valueType;
+    }
+
+    @Override
+    public String toSolCode() {
+        String rtn = "mapping";
+        String k = keyType.toSolCode(), v = valueType.toSolCode();
+        rtn += "(" + k + " => " + v + ")";
+        return rtn;
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(keyType);
+        rtn.add(valueType);
+        return rtn;
+    }
+
+    @Override
+    public boolean typeMatch(Type annotation) {
+        return annotation instanceof Map &&
+                super.typeMatch(annotation) &&
+                keyType.typeMatch(((Map) annotation).keyType) &&
+                valueType.typeMatch(((Map) annotation).valueType);
     }
 }

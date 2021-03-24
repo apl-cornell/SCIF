@@ -9,4 +9,11 @@ public class IfExp extends Expression {
     }
 
 
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof IfExp &&
+                test.typeMatch(((IfExp) expression).test) &&
+                body.typeMatch(((IfExp) expression).body) &&
+                orelse.typeMatch(((IfExp) expression).orelse);
+    }
 }

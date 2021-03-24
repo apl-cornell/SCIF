@@ -1,8 +1,6 @@
 package ast;
 
-import typecheck.ContractInfo;
-import typecheck.FuncInfo;
-import typecheck.VarInfo;
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,9 +31,21 @@ public class FunctionSig extends Statement {
     }
 
     @Override
-    public void globalInfoVisit(ContractInfo contractInfo) {
-        ArrayList<VarInfo> argsInfo = args.parseArgs(contractInfo);
-        contractInfo.funcMap.put(name, new FuncInfo(name, funcLabels, argsInfo, contractInfo.toTypeInfo(rtn, false), location));
+    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
+        ArrayList<VarSym> argsInfo = args.parseArgs(env, now);
+        env.addSym(name, new FuncSym(name, funcLabels, argsInfo, env.toTypeSym(rtn), null, scopeContext, location));
+        return true;
+
+    }
+
+    @Override
+    public void globalInfoVisit(ContractSym contractSym) {
+        ArrayList<VarSym> argsInfo = args.parseArgs(contractSym);
+        IfLabel ifl = null;
+        if (rtn instanceof LabeledType)
+            ifl = ((LabeledType) rtn).ifl;
+        contractSym.symTab.add(name, new FuncSym(name, funcLabels, argsInfo, contractSym.toTypeSym(rtn), ifl, scopeContext, location));
     }
     public void findPrincipal(HashSet<String> principalSet) {
         if (funcLabels != null) {
@@ -50,5 +60,48 @@ public class FunctionSig extends Statement {
                 ((LabeledType) rtn).ifl.findPrincipal(principalSet);
             }
         }
+    }
+
+    public String rtnToSHErrLocFmt() {
+        return toSHErrLocFmt() + ".RTN";
+    }
+    @Override
+    public void passScopeContext(ScopeContext parent) {
+        scopeContext = new ScopeContext(this, parent);
+        for (Node node : children())
+            node.passScopeContext(scopeContext);
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        if (funcLabels != null)
+            rtn.add(funcLabels);
+        rtn.add(args);
+        if (this.rtn != null)
+            rtn.add(this.rtn);
+        return rtn;
+    }
+
+    public boolean typeMatch(FunctionSig f) {
+        if (!f.name.equals(name))
+            return false;
+        if (!f.funcLabels.typeMatch(funcLabels))
+            return false;
+        if (!f.args.typeMatch(args))
+            return false;
+
+        if (!(decoratorList == null && f.decoratorList == null)) {
+            if (decoratorList == null || f.decoratorList == null || decoratorList.size() != f.decoratorList.size())
+                return false;
+            int index = 0;
+            while (index < decoratorList.size()) {
+                if (!decoratorList.get(index).equals(f.decoratorList.get(index)))
+                    return false;
+                ++index;
+            }
+        }
+        if (!f.rtn.typeMatch(rtn))
+            return false;
+        return true;
     }
 }

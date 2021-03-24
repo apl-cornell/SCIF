@@ -2,7 +2,7 @@ package ast;
 
 import java.util.ArrayList;
 
-public class For extends Statement {
+public class For extends NonFirstLayerStatement {
     Variable target;
     Expression iter;
     ArrayList<Statement> body;

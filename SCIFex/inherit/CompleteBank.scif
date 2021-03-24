@@ -1,0 +1,9 @@
+contract CompleteBank[high] extends BrokenBank {
+    address owner;
+
+    void withdraw(address sender, uint amount) {
+        if{high} (owner == sender && balance >= amount) {
+            send(sender, amount);
+        }
+    }
+}

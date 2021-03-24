@@ -1,0 +1,8 @@
+contract BrokenBank[high] {
+    {high => this}
+    uint{high} balance;
+
+    void deposit(uint amount) {
+        balance = balance + amount;
+    }
+}

@@ -1,7 +1,5 @@
 package ast;
 
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -28,7 +26,7 @@ public class PolyFunctionSig extends FunctionSig {
 
 
     @Override
-    public void globalInfoVisit(ContractInfo contractInfo) {
+    public void globalInfoVisit(ContractSym contractSym) {
         String funcId = name;
         //IfLabel callLabel = null, returnLabel = null;
         /*if (name instanceof LabeledType) {
@@ -40,9 +38,12 @@ public class PolyFunctionSig extends FunctionSig {
         if (rnt instanceof LabeledType) {
             returnLabel = ((LabeledType) rnt).ifl;
         }*/
-        ArrayList<VarInfo> argsInfo = args.parseArgs(contractInfo);
+        ArrayList<VarSym> argsInfo = args.parseArgs(contractSym);
         logger.debug("creating polyFuncInfo with polyarg size: " + polyArgs.size());
-        contractInfo.funcMap.put(funcId, new PolyFuncInfo(funcId, funcLabels, polyArgs, argsInfo, contractInfo.toTypeInfo(rtn, false), location));
+        IfLabel ifl = null;
+        if (rtn instanceof LabeledType)
+            ifl = ((LabeledType) rtn).ifl;
+        contractSym.addFunc(funcId, new PolyFuncSym(funcId, funcLabels, polyArgs, argsInfo, contractSym.toTypeSym(rtn), ifl, scopeContext, location));
     }
 
 

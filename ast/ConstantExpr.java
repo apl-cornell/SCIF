@@ -1,9 +1,9 @@
 package ast;
 
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class ConstantExpr extends Expression {
     Constant value;
@@ -12,9 +12,27 @@ public class ConstantExpr extends Expression {
     }
 
     @Override
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        //TODO: Constant are boolean
+        ScopeContext now = new ScopeContext(this, parent);
+        env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        return now;
+    }
+    @Override
     public Context genConsVisit(VisitEnv env) {
 
-        String ifNameRnt = Utils.getLabelNamePc(env.ctxt);
+        String ifNameRnt = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         return new Context(ifNameRnt, env.prevContext.lockName);
+    }
+
+    @Override
+    public String toSolCode() {
+        return compile.Utils.toConstant(value);
+    }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof ConstantExpr &&
+                value.equals(((ConstantExpr) expression).value);
     }
 }

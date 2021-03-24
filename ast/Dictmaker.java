@@ -8,6 +8,7 @@ import typecheck.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+//TODO: incomplete
 public class Dictmaker extends Expression {
     ArrayList<Expression> keys, values;
     public Dictmaker(ArrayList<Expression> keys, ArrayList<Expression> values) {
@@ -24,7 +25,7 @@ public class Dictmaker extends Expression {
     }
     @Override
     public Context genConsVisit(VisitEnv env) {
-        String ifNameRtn = env.ctxt + "." + "dictmaker" + location.toString();
+        String ifNameRtn = scopeContext.getSHErrLocName() + "." + "dictmaker" + location.toString();
         String prevLock = env.prevContext.lockName;
         Context lasttmp = null;
         for (Expression value: values) {
@@ -38,5 +39,12 @@ public class Dictmaker extends Expression {
             lasttmp = tmp;
         }
         return lasttmp;
+    }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Dictmaker &&
+                Utils.arrayExpressionTypeMatch(keys, ((Dictmaker) expression).keys) &&
+                Utils.arrayExpressionTypeMatch(values, ((Dictmaker) expression).values);
     }
 }

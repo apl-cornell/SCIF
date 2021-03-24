@@ -1,0 +1,39 @@
+import Holder;
+contract Token [high] extends BaseContract {
+    {high => low}
+  map(address, uint){high} balances;
+  map(address, bool){high} isAdmin;
+
+  bool{high} transfer{high >> high; high}(address frm, address to, uint amount) {
+      address sender = caller;
+      clear();
+      if{high} (frm != sender && isAdmin[frm] != true) {
+            return false;
+      }
+      
+      if{high}	 (balances[frm] < amount) {
+      	  return false;
+      }
+      
+      balances[frm] = balances[frm] - amount;
+      balances[to] = balances[to] + amount;
+
+      Holder _frm = Holder(frm);
+      Holder _to = Holder(to);
+
+      payBeforeCall(0, to);
+      lock(high) {
+          _frm.alertSend(to, amount);
+      }
+      payBeforeCall(0, frm);
+      lock(high) {
+          _to.alertReceive(frm, amount);
+      }
+      return true;
+  }
+
+  uint{high} getBal{low >> high; high}(address user) {
+      clear();
+      return balances[user];
+  }
+}

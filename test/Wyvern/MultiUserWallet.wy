@@ -1,26 +1,21 @@
-import BuiltIn
-
 contract MultiUserWallet :
     {TOP => this}
     {this => sender}
     {sender => BOT}
-    struct Message :
-        sender : address{this}
-        value : int{this}
 
-    msg : Message{TOP}
-    builtinAddress : address{TOP} = 0
-    builtin : BuiltIn{this} = BuiltIn(builtinAddress)
+    balance : map(address{BOT}, uint{this}){this}
 
-    balance : map(address{BOT}, int{this}){this}
-
+    @public
+    @payable
     def deposit{sender, sender -> sender}() :
         endorse{sender -> this} :
             balance[msg.sender] = balance[msg.sender] + endorse(msg.value, sender, this)
 
-    def withdraw{sender, sender -> sender}(amount : int{sender}) :
+    @public
+    def withdraw{sender, sender -> sender}(amount : uint{sender}) :
+        if balance[msg.sender] < amount :
+            return
+
         endorse{sender -> this} :
-            if balance[msg.sender] < amount :
-                return
             balance[msg.sender] = balance[msg.sender] - endorse(amount, sender, this)
-            builtin.send(msg.sender, endorse(amount, sender, this))
+            send(msg.sender, endorse(amount, sender, this))

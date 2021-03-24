@@ -1,0 +1,5 @@
+contract Crypto [high] {
+    bytes{high} keccak256{high >> high; high}(bytes{high} data) {
+        // ...
+    }
+}

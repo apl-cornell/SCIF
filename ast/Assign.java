@@ -1,13 +1,15 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
-public class Assign extends Statement {
+public class Assign extends NonFirstLayerStatement {
+    //TODO: assuming targets only contains 1 element now
     ArrayList<Expression> targets;
     Expression value;
     public Assign(ArrayList<Expression> targets, Expression value) {
@@ -15,10 +17,22 @@ public class Assign extends Statement {
         this.value = value;
     }
 
+    @Override
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
+        ScopeContext tgt = targets.get(0).NTCgenCons(env, now);
+        ScopeContext v = value.NTCgenCons(env, now);
+        // con: tgt should be a supertype of v
+        logger.debug(v);
+        logger.debug(env);
+        logger.debug(location);
+        env.cons.add(tgt.genCons(v, Relation.LEQ, env, location));
+        return now;
+    }
 
     @Override
     public Context genConsVisit(VisitEnv env) {
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
+        String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         String prevLockName = env.prevContext.lockName;
         String rtnLockName = "";
         Context valueContext = value.genConsVisit(env);
@@ -28,7 +42,8 @@ public class Assign extends Statement {
         for (Expression target : targets) {
             if (target instanceof Name) {
                 //Assuming target is Name
-                ifNameTgt = env.varNameMap.getName(((Name) target).id) + "..lbl";
+                // ifNameTgt = env.varNameMap.getName(((Name) target).id) + "..lbl";
+                ifNameTgt = env.getVar(((Name) target).id).labelToSherrlocFmt();
                 rtnLockName = valueContext.lockName;
                 /*VarInfo varInfo = env.varNameMap.getInfo(((Name) target).id);
                 if (varInfo instanceof TestableVarInfo) {
@@ -52,5 +67,16 @@ public class Assign extends Statement {
 
         }
         return new Context(ifNameTgt, rtnLockName);
+    }
+
+    public void SolCodeGen(SolCode code) {
+        code.addAssign(targets.get(0).toSolCode(), value.toSolCode());
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.addAll(targets);
+        rtn.add(value);
+        return rtn;
     }
 }

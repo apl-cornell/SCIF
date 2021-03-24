@@ -137,7 +137,7 @@ nonterminal Call arglist;
 nonterminal Keyword keyword;
 nonterminal LabeledType labeledType;
 nonterminal IfLabel ifLabel, unitIfLabel;
-nonterminal Type type;
+nonterminal Type typeSym;
 nonterminal Autoendorse autoendorse;
 nonterminal IfLabel maybeAutoendorseIfLabel;
 nonterminal ArrayList<String> polyDescription;
@@ -250,7 +250,7 @@ funcSig ::= r_funcSig:a NEWLINE {: RESULT = a;
     | NEWLINE funcSig:x {:RESULT = x;:};
 
 r_funcSig ::=
-    DEF:x NAME:funcName tFuncLabels:funclabels parameters:b RARROW type:c {:
+    DEF:x NAME:funcName tFuncLabels:funclabels parameters:b RARROW typeSym:c {:
         logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
@@ -268,7 +268,7 @@ r_funcSig ::=
         RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
-    | DEF:x NAME:a polyDescription:p tFuncLabels:funclabels parameters:b RARROW type:c {:
+    | DEF:x NAME:a polyDescription:p tFuncLabels:funclabels parameters:b RARROW typeSym:c {:
         logger.debug("Finished parsing the poly func");
         String funId = (String) a;
         RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, c);
@@ -309,7 +309,7 @@ contract ::= CONTRACT NAME:x COLON NEWLINE INDENT file_input:list DEDENT {:
     :};
 
 //Information flow specific modification
-endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from COMMA ifLabel:to RPAR {:
+endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from RARROW ifLabel:to RPAR {:
         RESULT = new Endorse(a, from, to);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
@@ -418,7 +418,7 @@ funcdef ::=
         RESULT.setLoc(new CodeLocation(funcSigleft, funcSigright));
     :};
 /*
-    DEF:x NAME:funcName tFuncLabels:funcLabels parameters:b RARROW type:c COLON suite:d {:
+    DEF:x NAME:funcName tFuncLabels:funcLabels parameters:b RARROW typeSym:c COLON suite:d {:
         RESULT = new FunctionDef((String) funcName, funcLabels, b, d, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
         //makeNode("funcdef", a, b, c, d);
@@ -441,14 +441,14 @@ funcdef ::=
         RESULT = new PolyFunctionDef(funId, funcLabels, p, b, c, null, null);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}
-    | DEF:x NAME:a  polyDescription:p tFuncLabels:funcLabels parameters:b RARROW type:c COLON suite:d {:
+    | DEF:x NAME:a  polyDescription:p tFuncLabels:funcLabels parameters:b RARROW typeSym:c COLON suite:d {:
         logger.debug("Finished parsing the poly func");
         String funId = (String)a;
         RESULT = new PolyFunctionDef(funId, funcLabels, p, b, d, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :};
 */
-type ::=
+typeSym ::=
     NAME:a {:
         RESULT = new Type((String)a);
         RESULT.setLoc(new CodeLocation(aleft, aright));
@@ -458,7 +458,7 @@ type ::=
         name.setLoc(new CodeLocation(aleft, aright));*/
         RESULT = a;
         RESULT.setLoc(new CodeLocation(aleft, aright));
-        logger.debug("finished labeled type parsing");
+        logger.debug("finished labeled typeSym parsing");
     :};
 polyDescription ::=
     LSQB nameList:l RSQB {:
@@ -514,7 +514,7 @@ probinittfpdef ::=
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :};
 tfpdef ::= 
-    NAME:a COLON type:b {:
+    NAME:a COLON typeSym:b {:
         String name = (String)a;
         RESULT = new Arg(name, b);
         RESULT.setLoc(new CodeLocation(aleft, aright));
@@ -576,19 +576,19 @@ expr_stmt ::=
 //augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
 //            '<<=' | '>>=' | '**=' | '//=')
 annassign ::=
-    COLON CONST type:a EQUAL expr:b {:
+    COLON CONST typeSym:a EQUAL expr:b {:
         //System.out.println("Annassign case 1 parsing");
         AnnAssign rnt = new AnnAssign(null, a, b, true, true);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | COLON type:a EQUAL expr:b {:
+    | COLON typeSym:a EQUAL expr:b {:
         //System.out.println("Annassign case 1 parsing");
         AnnAssign rnt = new AnnAssign(null, a, b, true, false);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
-    | COLON type:a {:
+    | COLON typeSym:a {:
         //System.out.println("Annassign case 2 parsing");
         AnnAssign rnt = new AnnAssign(null, a, null, true, false);
         RESULT = rnt;

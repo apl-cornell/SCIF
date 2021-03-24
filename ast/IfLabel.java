@@ -2,21 +2,16 @@ package ast;
 
 import java.util.HashSet;
 
-public class IfLabel extends Expression {
-    public String toSherrlocFmt() {
-        return null;
-    }
-    public String toSherrlocFmt(String k, String v) {
-        return null;
-    }
-    public String toSherrlocFmtApply(HashSet<String> strSet, int no) {
-        return null;
-    }
-    public void replace(String k, String v) {
+public abstract class IfLabel extends Expression {
+    public abstract String toSherrlocFmt();
+    public abstract String toSherrlocFmt(String k, String v);
+    public abstract String toSherrlocFmtApply(HashSet<String> strSet, int no);
+    public abstract void replace(String k, String v);
 
-    }
+    public abstract void findPrincipal(HashSet<String> principalSet, String getRidOf);
 
+    @Override
+    public abstract void findPrincipal(HashSet<String> principalSet);
 
-    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
-    }
+    public abstract boolean typeMatch(IfLabel begin_pc);
 }

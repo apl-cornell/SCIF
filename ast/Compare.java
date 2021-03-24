@@ -1,11 +1,13 @@
 package ast;
 
+import compile.SolCode;
+import compile.Utils;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Compare extends Expression {
     Expression left;
@@ -18,6 +20,22 @@ public class Compare extends Expression {
     }
 
     @Override
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        //TODO: not included: Is, NotIs, In, NotIn
+        ScopeContext now = new ScopeContext(this, parent);
+        ScopeContext l = left.NTCgenCons(env, now), r = right.NTCgenCons(env, now);
+
+        env.addCons(l.genCons(r, Relation.EQ, env, location));
+        if (op == CompareOperator.Eq || op == CompareOperator.NotEq) {
+            //env.addCons(l.genCons(r, Relation.EQ, env, location));
+        } else if (op == CompareOperator.Lt || op == CompareOperator.LtE
+                || op == CompareOperator.Gt || op == CompareOperator.GtE) {
+            env.addCons(l.genCons(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
+        }
+        env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        return now;
+    }
+    @Override
     public Context genConsVisit(VisitEnv env) {
         String prevLockName = env.prevContext.lockName;
 
@@ -28,10 +46,31 @@ public class Compare extends Expression {
         env.prevContext.lockName = leftContext.lockName;
         Context rightContext = right.genConsVisit(env);
         String ifNameRight = rightContext.valueLabelName;
-        String ifNameRtn = env.ctxt + "." + "cmp" + location.toString();
+        String ifNameRtn = scopeContext.getSHErrLocName() + "." + "cmp" + location.toString();
         env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location));
         env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location));
 
         return new Context(ifNameRtn, rightContext.lockName);
+    }
+
+    public String toSolCode() {
+        return SolCode.toCompareOp(left.toSolCode(), Utils.toCompareOp(op), right.toSolCode());
+
+    }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Compare &&
+                left.typeMatch(((Compare) expression).left) &&
+                op == ((Compare) expression).op &&
+                right.typeMatch(((Compare) expression).right);
+    }
+
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(left);
+        rtn.add(right);
+        return rtn;
     }
 }

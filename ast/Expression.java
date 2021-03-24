@@ -1,13 +1,28 @@
 package ast;
 
+import compile.SolCode;
 import typecheck.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 
-public class Expression extends Statement {
-    public VarInfo getVarInfo(VisitEnv env) {
-        return new VarInfo();
+public abstract class Expression extends Statement {
+    public VarSym getVarInfo(VisitEnv env) {
+        return new VarSym();
+    }
+    public VarSym getVarInfo(NTCEnv env) {
+        return new VarSym();
     }
 
+    public String toSolCode() { return "unknown exp"; }
+
+    @Override
+    public void SolCodeGen(SolCode code) {
+        code.addLine(toSolCode());
+    }
+
+    @Override
+    public void findPrincipal(HashSet<String> principalSet) {
+
+    }
+    public abstract boolean typeMatch(Expression expression);
 }

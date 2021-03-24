@@ -1,15 +1,14 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
-import javax.swing.text.Utilities;
 import java.util.ArrayList;
-import java.util.HashMap;
 
-public class If extends Statement {
+public class If extends NonFirstLayerStatement {
     Expression test;
     ArrayList<Statement> body;
     ArrayList<Statement> orelse;
@@ -24,9 +23,30 @@ public class If extends Statement {
         this.orelse = new ArrayList<>();
     }
 
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        // consider to be a new scope
+        // must contain at least one Statement
+        ScopeContext now = new ScopeContext(this, parent);
+        env.curSymTab = new SymTab(env.curSymTab);
+        ScopeContext rtn = null;
+
+        rtn = test.NTCgenCons(env, now);
+        env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
+
+        for (Statement s : body) {
+            rtn = s.NTCgenCons(env, now);
+        }
+        for (Statement s : orelse) {
+            rtn = s.NTCgenCons(env, now);
+        }
+        env.curSymTab = env.curSymTab.getParent();
+        env.addCons(now.genCons(rtn, Relation.EQ, env, location));
+        return now;
+    }
+
     @Override
     public Context genConsVisit(VisitEnv env) {
-        String originalCtxt = env.ctxt;
+        // String originalCtxt = env.ctxt;
 
         String prevLockLabel = env.prevContext.lockName;
         String rtnValueLabel;
@@ -34,10 +54,10 @@ public class If extends Statement {
         Context curContext = test.genConsVisit(env);
         rtnValueLabel = curContext.valueLabelName;
         String IfNameTest = curContext.valueLabelName;
-        String IfNamePcBefore = Utils.getLabelNamePc(env.ctxt);
-        env.ctxt += ".If" + location.toString();
-        String IfNamePcAfter = Utils.getLabelNamePc(env.ctxt);
-        String IfNameLock = Utils.getLabelNameLock(env.ctxt);
+        String IfNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
+        // env.ctxt += ".If" + location.toString();
+        String IfNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
+        String IfNameLock = Utils.getLabelNameLock(scopeContext.getSHErrLocName());
 
 
         boolean createdHypo = false;
@@ -49,16 +69,16 @@ public class If extends Statement {
             if ((bo.op == CompareOperator.Eq || bo.op == CompareOperator.GtE || bo.op == CompareOperator.LtE) &&
                 bo.left instanceof Name && bo.right instanceof Name) {
                 Name left = (Name) bo.left, right = (Name) bo.right;
-                if (env.varNameMap.exists(left.id) && env.varNameMap.exists(right.id)) {
+                if (env.containsVar(left.id) && env.containsVar(right.id)) {
 
                     logger.debug("if both exists");
                     //System.err.println("if both exists");
-                    VarInfo l = env.varNameMap.getInfo(left.id), r = env.varNameMap.getInfo(right.id);
+                    VarSym l = env.getVar(left.id), r = env.getVar(right.id);
                     logger.debug(l.toString());
                     logger.debug(r.toString());
                     //System.err.println(l.toString());
                     //System.err.println(r.toString());
-                    if (l.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE) && r.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
+                    if (l.typeSym.name.equals(Utils.ADDRESSTYPE) && r.typeSym.name.equals(Utils.ADDRESSTYPE)) {
                         /*testedVar = ((TestableVarInfo) l);
                         beforeTestedLabel = testedVar.testedLabel;
                         tested = testedVar.tested;
@@ -80,21 +100,21 @@ public class If extends Statement {
         env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location));
 
         if (body.size() > 0 || orelse.size() > 0) {
-            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.EQ, curContext.lockName), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.REQ, curContext.lockName), env.hypothesis, location));
         }
-        env.varNameMap.incLayer();
+        env.incScopeLayer();
 
         Context leftContext = new Context(curContext), rightContext = new Context(curContext), prev2 = null;
         for (Statement stmt : body) {
             if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(leftContext.lockName, Relation.EQ, prev2.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(leftContext.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, location));
             }
             Context tmp = stmt.genConsVisit(env);
             env.prevContext = tmp;
             prev2 = leftContext;
             leftContext = new Context(tmp);
         }
-        env.varNameMap.decLayer();
+        env.decScopeLayer();
 
         if (createdHypo) {
             env.hypothesis.remove();
@@ -103,20 +123,54 @@ public class If extends Statement {
         logger.debug("finished if branch");
         //System.err.println("finished if branch");
         env.prevContext.lockName = curContext.lockName;
-        env.varNameMap.incLayer();
+        env.incScopeLayer();
         for (Statement stmt : orelse) {
             rightContext = stmt.genConsVisit(env);
             env.prevContext.lockName = rightContext.lockName;
         }
-        env.varNameMap.decLayer();
+        env.decScopeLayer();
 
+        // env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, Utils.joinLabels(leftContext.lockName, rightContext.lockName)), env.hypothesis, location));
 
-        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.EQ, Utils.joinLabels(leftContext.lockName, rightContext.lockName)), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, leftContext.lockName), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, rightContext.lockName), env.hypothesis, location));
 
         logger.debug("finished orelse branch");
         //System.err.println("finished orelse branch");
 
-        env.ctxt = originalCtxt;
+        // env.ctxt = originalCtxt;
         return new Context(null, IfNameLock);
+    }
+
+    @Override
+    public void SolCodeGen(SolCode code) {
+        String cond = test.toSolCode();
+        code.enterIf(cond);
+        for (Statement stmt : body) {
+            stmt.SolCodeGen(code);
+        }
+        code.leaveIf();
+        if (!orelse.isEmpty()) {
+            code.enterElse();
+            for (Statement stmt : orelse) {
+                stmt.SolCodeGen(code);
+            }
+            code.leaveElse();
+        }
+    }
+    @Override
+    public void passScopeContext(ScopeContext parent) {
+        scopeContext = new ScopeContext(this, parent);
+        for (Node node : children()) {
+            node.passScopeContext(scopeContext);
+        }
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(test);
+        rtn.addAll(body);
+        rtn.addAll(orelse);
+        return rtn;
     }
 }

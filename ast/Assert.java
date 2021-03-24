@@ -5,7 +5,7 @@ import typecheck.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Assert extends Statement {
+public class Assert extends NonFirstLayerStatement {
     Expression test;
     Expression msg;
     public Assert(Expression test, Expression msg) {
@@ -17,5 +17,13 @@ public class Assert extends Statement {
     public Context genConsVisit(VisitEnv env) {
         Context tmp = test.genConsVisit(env);
         return tmp;
+    }
+
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(test);
+        rtn.add(msg);
+        return rtn;
     }
 }

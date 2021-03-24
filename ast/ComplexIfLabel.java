@@ -58,13 +58,35 @@ public class ComplexIfLabel extends IfLabel {
         return rnt;
     }
 
+    @Override
     public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
         left.findPrincipal(principalSet, getRidOf);
         right.findPrincipal(principalSet, getRidOf);
     }
 
+    @Override
+    public void findPrincipal(HashSet<String> principalSet) {
+        left.findPrincipal(principalSet);
+        right.findPrincipal(principalSet);
+    }
+
+    @Override
+    public boolean typeMatch(IfLabel begin_pc) {
+        if (!(begin_pc instanceof ComplexIfLabel))
+            return false;
+
+        ComplexIfLabel cil = (ComplexIfLabel) begin_pc;
+        return op == cil.op && left.typeMatch(cil.left) && right.typeMatch(cil.right);
+    }
+
     public void replace(String k, String v) {
         left.replace(k, v);
         right.replace(k, v);
+    }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof ComplexIfLabel &&
+                typeMatch((IfLabel) expression);
     }
 }

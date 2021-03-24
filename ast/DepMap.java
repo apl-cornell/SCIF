@@ -21,4 +21,12 @@ public class DepMap extends LabeledType {
         keyType.findPrincipal(principalSet, x);
         valueType.findPrincipal(principalSet, x);
     }
+
+    @Override
+    public boolean typeMatch(Type annotation) {
+        return annotation instanceof Map &&
+                super.typeMatch(annotation) &&
+                keyType.typeMatch(((Map) annotation).keyType) &&
+                valueType.typeMatch(((Map) annotation).valueType);
+    }
 }

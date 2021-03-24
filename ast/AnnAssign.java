@@ -1,11 +1,12 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
+import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class AnnAssign extends Statement {
@@ -23,22 +24,55 @@ public class AnnAssign extends Statement {
         this.isConst = isConst;
     }
 
+    public void setType(Type type) { this.annotation = type; }
     public void setTarget(Expression target) {
         this.target = target;
     }
     public void setSimple(boolean simple) {
         this.simple = simple;
     }
-    public VarInfo toVarInfo(ContractInfo contractInfo) {
-        return contractInfo.toVarInfo("", ((Name)target).id, annotation, isConst, location);
+    public VarSym toVarInfo(ContractSym contractSym) {
+        IfLabel ifl = null;
+        if (annotation instanceof LabeledType)
+            ifl = ((LabeledType) annotation).ifl;
+        return contractSym.toVarSym(((Name)target).id, annotation, isConst, location, scopeContext);
+    }
+
+    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
+        if (!(target instanceof Name)) return false;
+        ScopeContext now = new ScopeContext(this, parent);
+        ScopeContext tgt = new ScopeContext(target, now);
+
+        String name = ((Name) target).id;
+        env.globalSymTab.add(name, env.toVarSym(name, annotation, isConst, location, tgt));
+        return true;
     }
 
     @Override
-    public void globalInfoVisit(ContractInfo contractInfo) {
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
+        if (!parent.isContractLevel()) {
+            String name = ((Name) target).id;
+            env.addSym(name, new VarSym(env.toVarSym(name, annotation, isConst, location, now)));
+        }
+        ScopeContext type = annotation.NTCgenCons(env, now);
+        ScopeContext tgt = target.NTCgenCons(env, now);
+
+        logger.debug("1: \n" + env + "\n2: " + target.toSolCode() + "\n" + tgt);
+        env.cons.add(type.genCons(tgt, Relation.EQ, env, location));
+        if (value != null) {
+            ScopeContext v = value.NTCgenCons(env, now);
+            env.cons.add(tgt.genCons(v, Relation.LEQ, env, location));
+        }
+        return null;
+    }
+
+    @Override
+    public void globalInfoVisit(ContractSym contractSym) {
         if (simple) {
             String id = ((Name) target).id;
             CodeLocation loc = location;
-            contractInfo.varMap.put(id, contractInfo.toVarInfo(id, id, annotation, isConst, loc));
+            contractSym.addVar(id, contractSym.toVarSym(id, annotation, isConst, loc, scopeContext));
         } else {
             //TODO
         }
@@ -47,30 +81,37 @@ public class AnnAssign extends Statement {
     @Override
     public Context genConsVisit(VisitEnv env) {
         logger.debug("entering AnnAssign: \n");
-        logger.debug(this.toString() + "\n");
+        // logger.debug(this.toString() + "\n");
         if (!simple) {
             //TODO
         }
-        String ifNameTgt;
-        VarInfo varInfo;
-        if (!env.ctxt.isEmpty()) {
-            ifNameTgt = (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
-            String id = ((Name) target).id;
+        String SLCNameVar, SLCNameVarLbl;
+        VarSym varSym;
+        String id = ((Name) target).id;
+        logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
+        if (!scopeContext.isContractLevel()) {
             CodeLocation loc = location;
-            varInfo = env.contractInfo.toVarInfo(ifNameTgt, id, annotation, isConst, loc);
-            env.varNameMap.add(((Name) target).id, ifNameTgt, varInfo);
+            varSym = env.curContractSym.toVarSym(id, annotation, isConst, loc, scopeContext);
+            // ifNameTgt = varSym.toSherrlocFmt();
+                    // (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
+            // varSym = env.contractInfo.toVarInfo(id, annotation, isConst, loc);
+            env.addVar(id, varSym);
+            // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
-                env.cons.add(new Constraint(new Inequality(ifLabel, ifNameTgt + "..lbl"), env.hypothesis, location));
-                env.cons.add(new Constraint(new Inequality(ifNameTgt + "..lbl", ifLabel), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifLabel, varSym.labelToSherrlocFmt()), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(varSym.labelToSherrlocFmt(), ifLabel), env.hypothesis, location));
             }
         } else {
-            ifNameTgt = ((Name) target).id;
-            varInfo = env.varNameMap.getInfo(ifNameTgt);
+            // ifNameTgt = ((Name) target).id;
+            varSym = env.getVar(id);
         }
-        logger.debug(varInfo.typeInfo.toString());
-        if (varInfo.typeInfo.type.typeName.equals(Utils.ADDRESSTYPE)) {
-            env.principalSet.add(varInfo.toSherrlocFmt());
+        logger.debug(varSym.name);
+        SLCNameVar = varSym.toSherrlocFmt();
+        SLCNameVarLbl = varSym.labelToSherrlocFmt();
+        logger.debug(varSym.typeSym.name);
+        if (varSym.typeSym.name.equals(Utils.ADDRESSTYPE)) {
+            env.principalSet.add(varSym.toSherrlocFmt());
         }
 
         if (annotation instanceof LabeledType) {
@@ -80,23 +121,22 @@ public class AnnAssign extends Statement {
                 ((LabeledType) annotation).ifl.findPrincipal(env.principalSet);
             }
         }
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
-        String ifNameTgtLbl = ifNameTgt + "..lbl";
+        String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
+        // String ifNameTgtLbl = ifNameTgt + "..lbl";
         Context prevContext = env.prevContext;
 
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgtLbl), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis, location));
         if (value != null) {
             Context tmp = value.genConsVisit(env);
             String ifNameValue = tmp.valueLabelName;
-            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgtLbl), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameValue, SLCNameVarLbl), env.hypothesis, location));
             if (prevContext != null && prevContext.lockName != null) {
                 env.cons.add(new Constraint(new Inequality(tmp.lockName, CompareOperator.Eq, prevContext.lockName), env.hypothesis, location));
             }
             env.prevContext.lockName = tmp.lockName;
         }
 
-        Context rtn = new Context(ifNameTgtLbl, env.prevContext.lockName);
-        return rtn;
+        return new Context(SLCNameVarLbl, env.prevContext.lockName);
     }
 
     public void findPrincipal(HashSet<String> principalSet) {
@@ -104,4 +144,29 @@ public class AnnAssign extends Statement {
             ((LabeledType) annotation).ifl.findPrincipal(principalSet);
         }
     }
+
+    public void SolCodeGen(SolCode code) {
+        if (value != null)
+            code.addVarDef(annotation.toSolCode(), target.toSolCode(), isConst, value.toSolCode());
+        else
+            code.addVarDef(annotation.toSolCode(), target.toSolCode(), isConst);
+    }
+
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(target);
+        rtn.add(annotation);
+        if (value != null)
+            rtn.add(value);
+        return rtn;
+    }
+
+    /*public boolean typeMatch(AnnAssign a) {
+        return target.typeMatch(a.target) &&
+                annotation.typeMatch(a.annotation) &&
+                value.typeMatch(a.value) &&
+                isConst == a.isConst &&
+                simple == a.simple;
+    }*/
 }

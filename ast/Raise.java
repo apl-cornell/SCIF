@@ -1,6 +1,6 @@
 package ast;
 
-public class Raise extends Statement {
+public class Raise extends NonFirstLayerStatement {
     Expression exception;
     Expression from;
     public Raise(Expression exception, Expression from) {

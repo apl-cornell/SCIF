@@ -4,13 +4,14 @@ import ast.Compare;
 import ast.CompareOperator;
 
 // a <= b means a flows to b
-// that is, a > b in terms of integrity level
+// that is, a >= b in terms of integrity level
+// in case of regular typechecking, a <= b means a is supertype of b
 public class Inequality {
     String lhs, rhs;
     Relation relation;
     public Inequality(String lhs, Relation relation, String rhs) {
         if (lhs.equals("") || rhs.equals("")) {
-            System.err.println(lhs + " | " + rhs);
+            // System.err.println(lhs + " | " + rhs);
             int a = 1/0;
         }
         this.lhs = lhs;
@@ -19,7 +20,7 @@ public class Inequality {
     }
     public Inequality(String lhs, CompareOperator co, String rhs) {
         if (lhs.equals("") || rhs.equals("")) {
-            System.err.println(lhs + " | " + rhs);
+            // System.err.println(lhs + " | " + rhs);
             int a = 1/0;
         }
         this.lhs = lhs;
@@ -34,7 +35,7 @@ public class Inequality {
 
     public Inequality(String lhs, String rhs) {
         if (lhs.equals("") || rhs.equals("")) {
-            System.err.println(lhs + " | " + rhs);
+            // System.err.println(lhs + " | " + rhs);
             int a = 1/0;
         }
         this.lhs = lhs;

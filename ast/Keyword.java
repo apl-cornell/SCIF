@@ -8,4 +8,7 @@ public class Keyword extends Node {
         value = y;
     }
 
+    public boolean typeMatch(Keyword keyword) {
+        return arg.equals(keyword.arg) && value.typeMatch(keyword.value);
+    }
 }

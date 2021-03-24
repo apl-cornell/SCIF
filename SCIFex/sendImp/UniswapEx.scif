@@ -1,0 +1,29 @@
+import Token;
+
+contract Uniswap[high] extends BaseContract {
+    {high => low}
+    Token{high} tX;
+    Token{high} tY;
+
+    uint{high} exchangeXForY{low >> high; high}(uint{low} xSold) {
+        address buyer = caller;
+        clear();
+        uint tXSold = endorse(xSold, low->high);
+
+        uint prod = getBal(tX, this) * getBal(tY, this);
+        uint yKept = prod / (getBal(tX, this) + tXSold);
+        uint yBought = getBal(tY, this) - yKept;
+
+        payBeforeCall(0, tX);
+        assert tX.transfer(buyer, this, tXSold);
+        payBeforeCall(0, tY);
+        assert tY.transfer(this, buyer, yBought);
+        return yBought;
+    }
+
+    uint{high} getBal{high >> high; high}(Token token, address k) {
+        payBeforeCall(0, token);
+        return token.getBal(k);
+    } 
+}
+

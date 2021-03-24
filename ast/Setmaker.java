@@ -21,7 +21,7 @@ public class Setmaker extends Expression {
     }
     @Override
     public Context genConsVisit(VisitEnv env) {
-        String ifNameRtn = env.ctxt + "." + "setmaker" + location.toString();
+        String ifNameRtn = scopeContext.getSHErrLocName() + "." + "setmaker" + location.toString();
         String prevLock = env.prevContext.lockName;
         Context lasttmp = null;
         for (Expression value: elements) {
@@ -35,5 +35,11 @@ public class Setmaker extends Expression {
             lasttmp = tmp;
         }
         return lasttmp;
+    }
+
+    @Override
+    public boolean typeMatch(Expression expression) {
+        return expression instanceof Setmaker &&
+                Utils.arrayExpressionTypeMatch(elements, ((Setmaker) expression).elements);
     }
 }

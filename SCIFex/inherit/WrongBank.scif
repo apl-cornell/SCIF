@@ -1,0 +1,5 @@
+contract WrongBank[high] extends CompleteBank {
+    void deposit(uint amount) {
+        balance = balance + amount * 2;
+    }
+}

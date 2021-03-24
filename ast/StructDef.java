@@ -1,11 +1,10 @@
 package ast;
 
-import typecheck.CodeLocation;
-import typecheck.ContractInfo;
+import typecheck.ContractSym;
 
 import java.util.ArrayList;
 
-public class StructDef extends Statement {
+public class StructDef extends NonFirstLayerStatement {
     String structName;
     ArrayList<AnnAssign> members;
     public StructDef(String structName, ArrayList<AnnAssign> members) {
@@ -13,12 +12,20 @@ public class StructDef extends Statement {
         this.structName = structName;
     }
 
+    //TODO: struct def NTCgenCons
+
     @Override
-    public void globalInfoVisit(ContractInfo contractInfo) {
+    public void globalInfoVisit(ContractSym contractSym) {
         // assuming there is no double declaration
 
-        contractInfo.typeMap.put(structName, contractInfo.toStructType(structName, members));
+        contractSym.addType(structName, contractSym.toStructType(structName, members));
 
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.addAll(members);
+        return rtn;
     }
 
 }

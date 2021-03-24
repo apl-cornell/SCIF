@@ -1,56 +1,111 @@
 package typecheck;
 
-import ast.TrustConstraint;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Hypothesis;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 
 public class VisitEnv {
-    public String ctxt;
+    // public ScopeContext ctxt;
     public Context prevContext;
-    public HashMap<String, FuncInfo> funcMap;
+    // public HashMap<String, FuncInfo> funcMap;
     public ArrayList<Constraint> cons;
     public ArrayList<Constraint> trustCons;
-    public LookupMaps varNameMap;
+    // public LookupMaps varNameMap;
+    public SymTab globalSymTab;
+    public SymTab curSymTab;
     public Hypothesis hypothesis;
-    public HashSet<String> principalSet;
-    public ContractInfo contractInfo;
-    public HashMap<String, ContractInfo> contractMap;
+    public HashSet<String> principalSet; // TODO: better imp
+    public ContractSym curContractSym;
+    // public HashMap<String, ContractInfo> contractMap;
 
 
-    public VisitEnv(String ctxt, Context prevContext,
-                    HashMap<String, FuncInfo> funcMap,
+    public VisitEnv(ScopeContext ctxt, Context prevContext,
+                    // HashMap<String, FuncInfo> funcMap,
                     ArrayList<Constraint> cons,
                     ArrayList<Constraint> trustCons,
-                    LookupMaps varNameMap, Hypothesis hypothesis,
+                    // LookupMaps varNameMap,
+                    SymTab globalSymTab,
+                    SymTab curSymTab,
+                    Hypothesis hypothesis,
                     HashSet<String> principalSet,
-                    ContractInfo contractInfo, HashMap<String, ContractInfo> contractMap) {
-        this.ctxt = ctxt;
+                    ContractSym curContractSym
+                    /*HashMap<String, ContractInfo> contractMap*/) {
+        // this.ctxt = ctxt;
         this.prevContext = prevContext;
-        this.funcMap = funcMap;
+        // this.funcMap = funcMap;
         this.cons = cons;
         this.trustCons = trustCons;
-        this.varNameMap = varNameMap;
+        // this.varNameMap = varNameMap;
+        this.globalSymTab = globalSymTab;
+        this.curSymTab = curSymTab;
         this.hypothesis = hypothesis;
         this.principalSet = principalSet;
-        this.contractInfo = contractInfo;
-        this.contractMap = contractMap;
+        this.curContractSym = curContractSym;
+        // this.contractMap = contractMap;
     }
 
     public VisitEnv() {
-        ctxt = "";
+        // ctxt = null;
         prevContext = new Context();
-        funcMap = new HashMap<>();
+        // funcMap = new HashMap<>();
         cons = new ArrayList<>();
         trustCons = new ArrayList<>();
-        varNameMap = new LookupMaps();
+        globalSymTab = new SymTab();
+        curSymTab = globalSymTab;
+        // varNameMap = new LookupMaps();
         hypothesis = new Hypothesis();
         principalSet = new HashSet<>();
-        contractInfo = null;
-        contractMap = new HashMap<>();
+        curContractSym = null;
+        // contractMap = new HashMap<>();
+    }
+
+    public void addVar(String id, VarSym varSym) {
+        curContractSym.addVar(id, varSym);
+    }
+
+    public VarSym getVar(String id) {
+        Sym sym = curSymTab.lookup(id);
+        if (sym instanceof VarSym)
+            return (VarSym) sym;
+        else
+            return null;
+    }
+
+    public ContractSym getContract(String id) {
+        Sym sym = curSymTab.lookup(id);
+        if (sym instanceof ContractSym)
+            return (ContractSym) sym;
+        else
+            return null;
+    }
+
+    public FuncSym getFunc(String id) {
+        Sym sym = curSymTab.lookup(id);
+        if (sym instanceof FuncSym)
+            return (FuncSym) sym;
+        else
+            return null;
+    }
+
+    public boolean containsFunc(String id) {
+        return getFunc(id) != null;
+    }
+
+    public boolean containsContract(String funcName) {
+        return getContract(funcName) != null;
+    }
+
+    public void incScopeLayer() {
+        curSymTab = new SymTab(curSymTab);
+    }
+
+    public void decScopeLayer() {
+        curSymTab = curSymTab.getParent();
+    }
+
+    public boolean containsVar(String id) {
+        return getVar(id) != null;
     }
 }

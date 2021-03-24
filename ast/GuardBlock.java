@@ -1,15 +1,14 @@
 package ast;
 
+import compile.SolCode;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
-import typecheck.Context;
-import typecheck.Utils;
-import typecheck.VisitEnv;
+import typecheck.*;
 
 import java.util.ArrayList;
 
-public class GuardBlock extends Statement {
+public class GuardBlock extends NonFirstLayerStatement {
     IfLabel l;
     ArrayList<Statement> body;
     Expression target;
@@ -20,24 +19,36 @@ public class GuardBlock extends Statement {
         this.target = target;
     }
 
+    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+        // consider to be a new scope
+        // must contain at least one Statement
+        env.curSymTab = new SymTab(env.curSymTab);
+        ScopeContext rtn = null;
+        for (Statement s : body) {
+            rtn = s.NTCgenCons(env, parent);
+        }
+        env.curSymTab = env.curSymTab.getParent();
+        return rtn;
+    }
+
     public Context genConsVisit(VisitEnv env) {
-        String originalCtxt = env.ctxt;
+        // String originalCtxt = env.ctxt;
         String prevLockLabel = env.prevContext.lockName;
 
-        String ifNamePc = Utils.getLabelNamePc(env.ctxt);
-        env.ctxt += ".guardBlock" + location.toString();
-        String newLockLabel = Utils.getLabelNameLock(env.ctxt);
+        String ifNamePc = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
+        // env.ctxt += ".guardBlock" + location.toString();
+        String newLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName());
         env.prevContext.lockName = newLockLabel;
 
         String guardLabel = l.toSherrlocFmt();
 
         env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, newLockLabel), prevLockLabel), env.hypothesis, location));
-        String newAfterLockLabel = Utils.getLabelNameLock(env.ctxt + ".after");
+        String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
         Context lastContext = new Context(env.prevContext), prev2 = null;
         for (Statement stmt : body) {
             if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.EQ, prev2.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, location));
             }
             Context tmp = stmt.genConsVisit(env);
             env.prevContext = tmp;
@@ -48,7 +59,7 @@ public class GuardBlock extends Statement {
         env.prevContext.lockName = newAfterLockLabel;
 
 
-        env.ctxt = originalCtxt;
+        // env.ctxt = originalCtxt;
 
         if (target == null) {
             return new Context(lastContext.valueLabelName, newAfterLockLabel);
@@ -57,7 +68,7 @@ public class GuardBlock extends Statement {
             String rtnLockName = "";
             if (target instanceof Name) {
                 //Assuming target is Name
-                ifNameTgt = env.varNameMap.getName(((Name) target).id);
+                ifNameTgt = env.getVar(((Name) target).id).toSherrlocFmt();
                 rtnLockName = lastContext.lockName;
                 /*VarInfo varInfo = env.varNameMap.getInfo(((Name) target).id);
                 if (varInfo instanceof TestableVarInfo) {
@@ -82,5 +93,35 @@ public class GuardBlock extends Statement {
         }
 
 
+    }
+
+    @Override
+    public void SolCodeGen(SolCode code) {
+        /*
+            guard{l}
+            lock(l)
+         */
+        code.enterGuard(l);
+        for (Statement stmt : body) {
+            stmt.SolCodeGen(code);
+        }
+        /*
+            unlock(l);
+         */
+        code.exitGuard();
+    }
+    @Override
+    public void passScopeContext(ScopeContext parent) {
+        scopeContext = new ScopeContext(this, parent);
+        for (Node node : children())
+            node.passScopeContext(scopeContext);
+    }
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(l);
+        rtn.addAll(body);
+        if (target != null) rtn.add(target);
+        return rtn;
     }
 }
