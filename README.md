@@ -2,7 +2,10 @@
 
 ## Prerequisite
 
-[JFlex](https://jflex.de/)
+* [JFlex](https://jflex.de/)
+* Java 15
+* Ant
+
 
 ## Usage
 ```make all``` to compile all files including sherrloc
