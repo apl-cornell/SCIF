@@ -3,9 +3,11 @@
 ## Prerequisite
 
 * [JFlex](https://jflex.de/)
+* Java 15
+* Ant
 
 ## Usage
-```make all``` to compile all files including sherrloc
+`make all` to compile all files including sherrloc
 
 ```console
 ~/G/Wyvern ❯❯❯ ./wyvern
@@ -34,7 +36,7 @@ Parser:
 ```bash
 java -cp "lib/*":. Parser test/parser/case1.py  2>| ast.err
 ```
-```ast.err``` stores a json type ast
+`ast.err` stores a json type ast
 
 TypeChecker:
 
@@ -42,7 +44,7 @@ TypeChecker:
 java -cp "lib/*":. TypeChecker test/Wyvern/case2.wy ./tmp.cons
 sherrloc/sherrloc -c tmp.cons 
 ```
-```tmp.cons``` stores the constrains generated
+`tmp.cons` stores the constrains generated
 
 ## TODO List
 
