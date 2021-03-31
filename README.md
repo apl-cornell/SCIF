@@ -2,7 +2,7 @@
 
 ## Prerequisite
 
-[JFlex](https://jflex.de/)
+* [JFlex](https://jflex.de/)
 
 ## Usage
 ```make all``` to compile all files including sherrloc
@@ -44,12 +44,11 @@ sherrloc/sherrloc -c tmp.cons
 ```
 ```tmp.cons``` stores the constrains generated
 
-## Known Issues
+## TODO List
 
-* same name functions (vyper doesn't support)
-* for 
-* with (vyper doesn't support)
+* `struct`
+* all built-in functions/variables 
+* reentrancy static checking
+* target language generation (including dynamic mechanism support)
 * augassign 
 * exception related
-* only support top-level functions (vyper doesn't support)
-* compact if (vyper doesn't support)
