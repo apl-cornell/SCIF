@@ -16,12 +16,10 @@ abstract contract BaseContract {
         trustees.push(trustee);
         trusteeIndex[trustee] = trustees.length;
     }
-    function provokeLocalTrust(address trustee) internal {
-        uint ind = trusteeIndex[trustee] - 1;
-        while (ind < trustees.length) {
-            trustees[ind] = trustees[ind + 1];
-            ind += 1;
-        }
+    function revokeLocalTrust(address trustee) internal {
+        uint ind = trusteeIndex[trustee] - 1, lastTrustee = trustees[trustees.length -1];
+        trustess[ind] = lastTrustee;
+        trusteeIndex[lastTrustee] = ind + 1;
         trustees.pop();
         trusteeIndex[trustee] = 0;
     }
