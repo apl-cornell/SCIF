@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.3 <0.9.0;
 
-import "LabelLib.sol";
+import "./LabelLib.sol";
 
 abstract contract BaseContract {
 
@@ -26,7 +26,7 @@ abstract contract BaseContract {
         trusteeIndex[trustee] = 0;
     }
 
-    function ifTrust(address a, address b) public view virtual returns (bool);
+    function ifTrust(address a, address b) public virtual returns (bool);
     function ifDTrust(address trustee) public view virtual returns (bool);
     function getDTrustList() public view virtual returns (address[] memory);
 

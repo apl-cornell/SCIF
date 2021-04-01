@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.3 <0.9.0;
 
-import "BaseContract.sol";
-import "TrustOracle.sol";
-import 'LockOracle.sol';
+import "./BaseContract.sol";
+import "./TrustOracle.sol";
+import "./LockOracle.sol";
 
 contract BaseContractCentralized is BaseContract {
     TrustOracle trustOracle;
@@ -17,7 +17,6 @@ contract BaseContractCentralized is BaseContract {
     function ifTrust(address a, address b) 
         override
         public
-        view
         returns (bool) {
         if (a == address(this) && ifDTrust(b)) {
             return true;

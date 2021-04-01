@@ -8,10 +8,14 @@ contract TrustOracle {
     mapping (address => mapping (address => uint)) trusteeIndex;
     mapping (address => address[]) trustees;
 
-    function ifTrust(address a, address b) public view returns (bool) {
+    mapping (uint => mapping (uint => bool)) matrix;
+
+    function ifTrust(address a, address b) public returns (bool) {
         assert (memberIndex[a] != 0 && memberIndex[b] != 0);
-        mapping (uint => mapping (uint => bool)) memory matrix;
         for (uint i = 0; i < members.length; ++i) {
+            for (uint j = 0; j < members.length; ++j) {
+                matrix[i][j] = false;
+            }
             matrix[i][i] = true;
             for (uint j = 0; j < trustees[members[i]].length; ++j) {
                 matrix[i][memberIndex[trustees[members[i]][j]] - 1] = true;
@@ -22,7 +26,6 @@ contract TrustOracle {
                 for (uint j = 0; j < members.length; ++j)
                     if (matrix[i][k] && matrix[k][j])
                         matrix[i][j] = true;
-
     
         return matrix[memberIndex[a] - 1][memberIndex[b] - 1];
     }

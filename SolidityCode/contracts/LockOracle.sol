@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.3 <0.9.0;
 
-import "LabelLib.sol";
+import "./LabelLib.sol";
 
 contract LockOracle {
     Label[] locks;
@@ -31,7 +31,7 @@ contract LockOracle {
         return true;
     }
 
-    function exists(Label memory l) private returns (bool) {
+    function exists(Label memory l) private view returns (bool) {
         for (uint i = 0; i < locks.length; ++i) {
             if (LabelLib.equals(locks[i], l))
                 return true;
