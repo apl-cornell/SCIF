@@ -17,19 +17,21 @@ abstract contract BaseContract {
         trusteeIndex[trustee] = trustees.length;
     }
     function revokeLocalTrust(address trustee) internal {
-        uint ind = trusteeIndex[trustee] - 1, lastTrustee = trustees[trustees.length -1];
-        trustess[ind] = lastTrustee;
+        uint ind = trusteeIndex[trustee] - 1;
+        address lastTrustee = trustees[trustees.length - 1];
+        trustees[ind] = lastTrustee;
         trusteeIndex[lastTrustee] = ind + 1;
         trustees.pop();
         trusteeIndex[trustee] = 0;
     }
 
     function ifTrust(address a, address b) public virtual returns (bool);
+    function ifTrust(address a, address b, address[] calldata proof) public virtual returns (bool);
     function ifDTrust(address trustee) public view virtual returns (bool);
     function getDTrustList() public view virtual returns (address[] memory);
 
     function setTrust(address trustee) public virtual;
-    function provokeTrust(address trustee) public virtual;
+    function revokeTrust(address trustee) public virtual;
 
     function lock(Label calldata l) public virtual returns (bool);
     function unlock(Label calldata l) public virtual returns (bool);

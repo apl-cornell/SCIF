@@ -24,6 +24,16 @@ contract BaseContractCentralized is BaseContract {
         return trustOracle.ifTrust(a, b);
     }
 
+    function ifTrust(address a, address b, address[] calldata proof)
+        override
+        public
+        returns (bool) {
+        if (a == address(this) && ifDTrust(b)) {
+            return true;
+        }
+        return trustOracle.ifTrust(a, b, proof);
+    }
+
     function ifDTrust(address trustee)
         override
         public
@@ -48,12 +58,12 @@ contract BaseContractCentralized is BaseContract {
         trustOracle.setTrust(trustee);
     }
 
-    function provokeTrust(address trustee) override public {
+    function revokeTrust(address trustee) override public {
         if (!ifDTrust(trustee)) {
             return;
         }
-        super.provokeLocalTrust(trustee);
-        trustOracle.provokeTrust(trustee);
+        super.revokeLocalTrust(trustee);
+        trustOracle.revokeTrust(trustee);
     }
 
     function lock(Label calldata l) override public returns (bool) {

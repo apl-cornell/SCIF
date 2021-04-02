@@ -30,6 +30,21 @@ contract TrustOracle {
         return matrix[memberIndex[a] - 1][memberIndex[b] - 1];
     }
 
+    function ifTrust(address a, address b, address[] calldata proof) public returns (bool) {
+        if (!ifDTrust(a, proof[0]))
+            return false;
+        for (uint i = 0; i + 1 < proof.length; ++i) {
+            if (!ifDTrust(proof[i], proof[i + 1])) {
+                return false;
+            }
+        }
+        return ifDTrust(proof[proof.length - 1], b);
+    }
+
+    function ifDTrust(address a, address b) private view returns (bool) {
+        return trusteeIndex[a][b] != 0;
+    }
+
     function setTrust(address trustee) public {
         address sender = msg.sender;
         assert (memberIndex[sender] != 0);
@@ -39,7 +54,7 @@ contract TrustOracle {
         trusteeIndex[sender][trustee] = trustees[sender].length;
     }
 
-    function provokeTrust(address trustee) public {
+    function revokeTrust(address trustee) public {
         address sender = msg.sender;
         assert (memberIndex[sender] != 0);
         if (trusteeIndex[sender][trustee] == 0)
