@@ -8,6 +8,17 @@ contract TrustOracle {
     mapping (address => mapping (address => uint)) trusteeIndex;
     mapping (address => address[]) trustees;
 
+    function isMember(address x) internal view returns (bool) {
+        return memberIndex[x] != 0;
+    }
+
+    function register() public {
+        if (isMember(msg.sender))
+            return;
+        members.push(msg.sender);
+        memberIndex[msg.sender] = members.length;
+    }
+
     mapping (uint => mapping (uint => bool)) matrix;
 
     function ifTrust(address a, address b) public returns (bool) {
@@ -60,10 +71,9 @@ contract TrustOracle {
         if (trusteeIndex[sender][trustee] == 0)
             return;
         uint i = trusteeIndex[sender][trustee] - 1;
-        while (i < trustees[sender].length) {
-            trustees[sender][i] = trustees[sender][i + 1];
-            i += 1;
-        }
+        address lastTrustee = trustees[sender][trustees[sender].length - 1];
+        trustees[sender][i] = lastTrustee;
+        trusteeIndex[sender][lastTrustee] = i + 1;
         trustees[sender].pop();
         trusteeIndex[sender][trustee] = 0;
     }

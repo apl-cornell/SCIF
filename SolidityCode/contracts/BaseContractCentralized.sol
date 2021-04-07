@@ -12,6 +12,8 @@ contract BaseContractCentralized is BaseContract {
     constructor(address trustOracleAddr, address lockOracleAddr) {
         trustOracle = TrustOracle(trustOracleAddr);
         lockOracle = LockOracle(lockOracleAddr);
+        trustOracle.register();
+        setTrust(address(this));
     }
 
     function ifTrust(address a, address b) 

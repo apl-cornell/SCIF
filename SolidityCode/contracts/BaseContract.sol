@@ -8,14 +8,17 @@ abstract contract BaseContract {
     address[] trustees; 
     mapping (address=>uint) trusteeIndex;
 
-    constructor() {
-
-    }
-
+    /*
+    ** assume trustee to not be trusted by this beforehand
+     */
     function setLocalTrust(address trustee) internal {
         trustees.push(trustee);
         trusteeIndex[trustee] = trustees.length;
     }
+
+    /*
+    ** assume trustee to be trusted by this beforehand
+     */
     function revokeLocalTrust(address trustee) internal {
         uint ind = trusteeIndex[trustee] - 1;
         address lastTrustee = trustees[trustees.length - 1];
