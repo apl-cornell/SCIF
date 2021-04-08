@@ -12,6 +12,7 @@ contract TestTrust1 {
     BaseContractCentralized alice;
     BaseContractCentralized bob;
     BaseContractCentralized carl;
+    BaseContractCentralized dan;
 
 
     function testInitialization() public {
@@ -42,5 +43,21 @@ contract TestTrust1 {
 
         Assert.isFalse(alice.ifTrust(address(alice), address(bob)), "Revoke should take effect.");
         Assert.isFalse(alice.ifTrust(address(alice), address(carl)), "Transitive relation should also be revoked.");
+    }
+
+    function testProof() public {
+        dan = new BaseContractCentralized(address(trustOracle), address(lockOracle));
+        alice.setTrust(address(dan));
+        dan.setTrust(address(bob));
+
+        address[] memory proofF = new address[](1);
+        proofF[0] = address(bob);
+
+        address[] memory proofT = new address[](2);
+        proofT[0] = address(dan);
+        proofT[1] = address(bob);
+
+        Assert.isFalse(alice.ifTrust(address(alice), address(carl), proofF), "A wrong proof path should not pass.");
+        Assert.isTrue(alice.ifTrust(address(alice), address(carl), proofT), "A correct prrof path should pass.");
     }
 }
