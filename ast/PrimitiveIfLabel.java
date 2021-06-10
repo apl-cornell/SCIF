@@ -106,4 +106,8 @@ public class PrimitiveIfLabel extends IfLabel {
         return expression instanceof PrimitiveIfLabel &&
                 typeMatch((IfLabel) expression);
     }
+
+    public String toString() {
+        return value.id;
+    }
 }

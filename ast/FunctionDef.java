@@ -132,7 +132,7 @@ public class FunctionDef extends FunctionSig {
             f{pc}(x_i{l_i}) from sender
             assert sender => pc, l_i
          */
-        code.enterFuncCheck(name);
+        code.enterFuncCheck(funcLabels, args);
         for (Statement stmt : body) {
             stmt.SolCodeGen(code);
         }

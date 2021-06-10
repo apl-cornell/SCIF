@@ -108,7 +108,7 @@ public class GuardBlock extends NonFirstLayerStatement {
         /*
             unlock(l);
          */
-        code.exitGuard();
+        code.exitGuard(l);
     }
     @Override
     public void passScopeContext(ScopeContext parent) {

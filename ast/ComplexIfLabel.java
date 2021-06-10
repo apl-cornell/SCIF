@@ -3,8 +3,8 @@ package ast;
 import java.util.HashSet;
 
 public class ComplexIfLabel extends IfLabel {
-    IfOperator op;
-    IfLabel left, right;
+    public IfOperator op;
+    public IfLabel left, right;
     public ComplexIfLabel(IfLabel left, IfOperator op, IfLabel right) {
         this.left = left;
         this.op = op;

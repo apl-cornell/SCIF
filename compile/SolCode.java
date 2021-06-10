@@ -1,6 +1,6 @@
 package compile;
 
-import ast.IfLabel;
+import ast.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -8,6 +8,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class SolCode {
     int indentWidth;
@@ -15,9 +16,11 @@ public class SolCode {
     String unitIndent;
     String currentIndent;
     public ArrayList<String> code; //each line with no newline char
+    public HashMap<String, String> labelTable; // map label names to on-chain addresses
 
     public SolCode() {
         code = new ArrayList<>();
+        labelTable = new HashMap<>();
         indentWidth = 4;
         indentLevel = 0;
         unitIndent = "";
@@ -165,11 +168,51 @@ public class SolCode {
         }
     }
 
-    public void enterFuncCheck(String funcName) {
+    public void enterFuncCheck(FuncLabels funcLabels, Arguments args) {
         /*
-            f{pc}(x_i{l_i}) from sender
+            f{pc_f->pc_t, lambda}(x_i{l_i}) from sender
+            assert for any l in lock set, pc_f => pc_t join l
+            TODO: check the correctness to simplify it to pc_f => l in L
             assert sender => pc, l_i
+            TODO: add constaints to limit every arguments' label to be no more trusted than sender/pc
          */
+        // TODO: make labels unique
+
+        if (!funcLabels.begin_pc.equals(funcLabels.to_pc)) {
+            addLine(assertExp(checkIfLocked(funcLabels.begin_pc)) + ";");
+                    //"ifLocked(" + funcLabels.begin_pc + ")") + ";");
+        }
+        addLine(assertExp(checkIfTrustSender(funcLabels.begin_pc)) + ";");
+                // "ifTrust(" + funcLabels.begin_pc + ", " + "msg.sender)") + ";");
+
+    }
+
+    private String checkIfTrustSender(IfLabel l) {
+        if (l instanceof PrimitiveIfLabel) {
+            // TODO: error report when missing this entry
+            String name = ((PrimitiveIfLabel) l).toString();
+            String addr = labelTable.get(name);
+            return "ifTrust(" + addr + ", msg.sender)";
+        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.JOIN) {
+            return "(" + checkIfTrustSender(((ComplexIfLabel) l).left) + " || " + checkIfTrustSender(((ComplexIfLabel) l).right) + ")";
+        } else {
+            // TODO: error report;
+            return "NaL";
+        }
+    }
+
+    private String checkIfLocked(IfLabel l) {
+        if (l instanceof PrimitiveIfLabel) {
+            // TODO: error report when missing this entry
+            String name = ((PrimitiveIfLabel) l).toString();
+            String addr = labelTable.get(name);
+            return "ifLocked(" + addr + ")";
+        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.JOIN) {
+            return "(" + checkIfLocked(((ComplexIfLabel) l).left) + " && " + checkIfLocked(((ComplexIfLabel) l).right) + ")";
+        } else {
+            // TODO: error report;
+            return "NaL";
+        }
     }
 
     public void enterEndorseBlock(IfLabel l_from, IfLabel l_to) {
@@ -184,11 +227,47 @@ public class SolCode {
         /*
             lock(l)
          */
+        addLine(assertExp(lock(l)) + ";");
+                // "lock(" + l + ")") + ";");
     }
 
-    public void exitGuard() {
+    private String lock(IfLabel l) {
+        if (l instanceof PrimitiveIfLabel) {
+            // TODO: error report when missing this entry
+            String name = ((PrimitiveIfLabel) l).toString();
+            String addr = labelTable.get(name);
+            return "lock(" + addr + ")";
+        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.MEET) {
+            return "(" + lock(((ComplexIfLabel) l).left) + " && " + lock(((ComplexIfLabel) l).right) + ")";
+        } else {
+            // TODO: error report;
+            return "NaL";
+        }
+    }
+
+    private String unlock(IfLabel l) {
+        if (l instanceof PrimitiveIfLabel) {
+            // TODO: error report when missing this entry
+            String name = ((PrimitiveIfLabel) l).toString();
+            String addr = labelTable.get(name);
+            return "unlock(" + addr + ")";
+        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.MEET) {
+            return "(" + unlock(((ComplexIfLabel) l).left) + " && " + unlock(((ComplexIfLabel) l).right) + ")";
+        } else {
+            // TODO: error report;
+            return "NaL";
+        }
+    }
+
+    public void exitGuard(IfLabel l) {
         /*
             unlock(l);
          */
+        addLine(assertExp(unlock(l)) + ";");
+                // "unlock(" + l + ")") + ";");
+    }
+
+    private String assertExp(String arguments) {
+        return "assert(" + arguments + ")";
     }
 }
