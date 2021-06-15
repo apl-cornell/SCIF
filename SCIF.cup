@@ -65,9 +65,10 @@ parser code {:
     }
 :};
 
+terminal String NAME;
 terminal ERROR;
 terminal NUMBER, STRING;
-terminal FALSE, TRUE, NONE, NAME, ELLIPSIS;
+terminal FALSE, TRUE, NONE, ELLIPSIS;
 terminal AND, AS, ASSERT, ASYNC, AWAIT;
 terminal BREAK, CLASS, CONTINUE, DEF, DEL;
 terminal ELIF, ELSE, EXCEPT, FINALLY, FOR, FROM;
@@ -300,7 +301,13 @@ contracts ::= contract:a {:
     :};
 
 
-contract ::= CONTRACT NAME:x LSQB ifLabel:ifl RSQB LBRACE file_input:list RBRACE {:
+contract ::= CONTRACT NAME:x LBRACE file_input:list RBRACE {:
+                     ArrayList<TrustConstraint> trust_list = new ArrayList<>();
+                     RESULT = new Contract((String) x, trust_list, list, null);
+                     RESULT.setLoc(new CodeLocation(xleft, xright));
+                     //System.err.println(RESULT);
+                 :}
+    | CONTRACT NAME:x LSQB ifLabel:ifl RSQB LBRACE file_input:list RBRACE {:
         ArrayList<TrustConstraint> trust_list = new ArrayList<>();
         RESULT = new Contract((String) x, trust_list, list, ifl);
         RESULT.setLoc(new CodeLocation(xleft, xright));
@@ -444,6 +451,7 @@ funcdef ::=
 */
 typeSym ::=
     NAME:a {:
+        logger.debug("a name");
         RESULT = new Type((String)a);
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}
@@ -522,6 +530,7 @@ tfpdef ::=
 //expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
 //                     ('=' (yield_expr|testlist_star_expr))*)
 stmt ::= typeSym:a annassign:b SEMI {://testlist_star_expr:a expr_rest_stmt:b {:
+                logger.debug("variable declaration");
             ArrayList<Statement> rnt = new ArrayList<Statement>();
                  b.setType(a);
                  /*if (a instanceof Name) {

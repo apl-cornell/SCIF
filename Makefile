@@ -3,21 +3,15 @@ CUP=polyglot-cup.jar
 
 CLASSPATH = .:$(LIBPATH)/genson-1.5.jar:$(LIBPATH)/log4j-api-2.12.1.jar:$(LIBPATH)/log4j-core-2.12.1.jar:$(LIBPATH)/picocli-4.0.0-beta-1b.jar:$(LIBPATH)/polyglot-cup.jar
 
-default: STC
-	
-all: STC sherrloc-build
+default: SCIF
 
-SCIF: Parser.class TypeChecker.java
+all: SCIF sherrloc-build
 
-STC: TypeChecker.class LexerTest.class Parser.class STC.java 
-	javac -cp .:${LIBPATH}/* STC.java
+SCIF: TypeChecker.class LexerTest.class Parser.class SCIF.java
+	javac -cp ${CLASSPATH} SCIF.java
 
 TypeChecker.class: Parser.class Lexer.class TypeChecker.java ${wildcard ast/*.java} ${wildcard typecheck/*.java} ${wildcard sherrlocUtils/*.java}
-	javac -cp .:${LIBPATH}/* TypeChecker.java ast/*.java typecheck/*.java sherrlocUtils/*.java
-
-SCIFParser: SCIF.jflex SCIF.cup
-	jflex SCIF.jflex
-	java -jar ${LIBPATH}/${CUP} -expect 1000 -interface -parser Parser SCIF.cup
+	javac -Xlint:deprecation -cp ${CLASSPATH} TypeChecker.java ast/*.java typecheck/*.java sherrlocUtils/*.java
 
 LexerTest.class: Lexer.java LexerTest.java
 	javac -cp ${CLASSPATH} LexerTest.java 

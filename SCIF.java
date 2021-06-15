@@ -1,7 +1,6 @@
 // the main class of STC
 
 import ast.Node;
-import ast.Str;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
@@ -12,9 +11,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
-@Command(name = "STC", version = "STC 0.1.0", mixinStandardHelpOptions = true,
-        description = "A set of tools for a new smart contract language with information flow control, SCIF-core.")
-public class STC implements Callable<Integer> {
+@Command(name = "SCIF", version = "SCIF 0.1.0", mixinStandardHelpOptions = true,
+        description = "A set of tools for a new smart contract language with information flow control, SCIF.")
+public class SCIF implements Callable<Integer> {
     @Option(names = "-i", arity = "1..*", required = true, description = "The source code file(s).")
     File[] inputFiles;
 
@@ -31,10 +30,12 @@ public class STC implements Callable<Integer> {
         boolean parse;
         @Option(names = {"-l", "--lexer"}, required = true, description = "Tokenize")
         boolean tokenize;
+        @Option(names = {"-c", "--compiler"}, required = true, description = "Compile to Solidity")
+        boolean compile;
     }
 
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new STC()).execute(args);
+        int exitCode = new CommandLine(new SCIF()).execute(args);
         System.exit(exitCode);
     }
 
@@ -69,7 +70,7 @@ public class STC implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        logger.trace("STC starts");
+        logger.trace("SCIF starts");
         if (funcRequest.typecheck) {
             typecheck(outputFileNames);
         } else if (funcRequest.parse) {
@@ -77,18 +78,35 @@ public class STC implements Callable<Integer> {
             Parser.parse(inputFiles[0], astOutputFile);
         } else if (funcRequest.tokenize) {
             LexerTest.tokenize(inputFiles[0]);
+        } else if (funcRequest.compile) {
+            ArrayList<Node> roots = typecheck(null);
+            logger.debug("finished typecheck, compiling...");
+            if (roots == null) {
+                return 1;
+            }
+            String outputFileName;
+            File outputFile;
+            if (outputFileNames == null) {
+                outputFile = File.createTempFile("tmp", "sol");
+                outputFileName = outputFile.getAbsolutePath();
+                outputFile.deleteOnExit();
+            } else {
+                outputFileName = outputFileNames[0];
+                outputFile = new File(outputFileName);
+            }
+            SolCompiler.compile(roots, outputFile);
         } else {
                 logger.error("No funcRequest specified, this should never happen!");
                 //System.out.println("No funcRequest specified, this should never happen!");
         }
 
-        logger.trace("STC finishes");
+        logger.trace("SCIF finishes");
         return 0;
     }
 
     boolean runSLC(String outputFileName) throws Exception {
 
-        String classDirectoryPath = new File(STC.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+        String classDirectoryPath = new File(SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
         String[] sherrlocResult = Utils.runSherrloc(classDirectoryPath, outputFileName);
         logger.debug(sherrlocResult);
         if (sherrlocResult.length < 1) {
