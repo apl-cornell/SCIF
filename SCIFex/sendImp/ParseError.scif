@@ -1,0 +1,7 @@
+import Callback;
+
+contract TownCrier[high] extends BaseContract {
+    {trustedSend = high}
+    {high => this}
+    address{high} SGX_ADDR;
+}

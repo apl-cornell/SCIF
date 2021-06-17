@@ -261,6 +261,13 @@ r_funcSig ::=
         RESULT.setLoc(new CodeLocation(cleft, cright));
         //makeNode("funcdef", a, b, c, d);
     :}
+    | decorators:d typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b  {:
+        System.out.println("parsing function");
+        // logger.debug("parsing func sig");
+        RESULT = new FunctionSig((String) funcName, funclabels, b, d, c);
+        RESULT.setLoc(new CodeLocation(cleft, cright));
+        //makeNode("funcdef", a, b, c, d);
+    :}
     /*| DEF:x NAME:funcName tFuncLabels:funclabels parameters:b {:
         logger.debug("parsing function");
         //System.err.println("parsing function");
@@ -279,6 +286,20 @@ r_funcSig ::=
         RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, c);
         RESULT.setLoc(new CodeLocation(xleft, xright));
     :}*/;
+
+decorator ::= AT:x NAME:a {:
+        RESULT = (String)a;
+    :};
+decorators ::=
+    decorator:a {:
+        ArrayList<String> rnt = new ArrayList<String>();
+        rnt.add(a);
+        RESULT = rnt;
+    :}
+    | decorators:list decorator:a {:
+        list.add(a);
+        RESULT = list;
+    :};
 
 program ::= ipt_stmts:a contracts:b {:
         RESULT = new Program(a, b);
