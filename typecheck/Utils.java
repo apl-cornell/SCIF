@@ -18,12 +18,12 @@ public class Utils {
     public static final HashSet<String> BUILTIN_TYPES = new HashSet<>(Arrays.asList(BUILTIN_TYPE_NAMES));
 
     //public static final String ENDORCE_FUNC_NAME = "endorce";
-    public static final String TOP = "TOP";
-    public static final String BOTTOM = "BOT";
+    public static final String LABEL_TOP = "TOP";
+    public static final String LABEL_BOTTOM = "BOT";
     public static final String DEAD = "---DEAD---";
     public static final String KEY = "KEY";
-    public static final String SHERRLOC_TOP = "TOP";
-    public static final String SHERRLOC_BOTTOM = "BOT";
+    public static final String SHERRLOC_TOP = LABEL_TOP;
+    public static final String SHERRLOC_BOTTOM = LABEL_BOTTOM;
 
     public static final String SHERRLOC_PASS_INDICATOR = "No errors";
     public static final String SHERRLOC_ERROR_INDICATOR = "wrong";

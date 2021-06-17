@@ -16,9 +16,9 @@ public class PrimitiveIfLabel extends IfLabel {
         String rnt = "";
         if (value instanceof Name) {
             String name = ((Name) value).id;
-            if (name.equals(Utils.BOTTOM)) {
+            if (name.equals(Utils.LABEL_BOTTOM)) {
                 rnt = Utils.SHERRLOC_BOTTOM;
-            } else if (name.equals(Utils.TOP)) {
+            } else if (name.equals(Utils.LABEL_TOP)) {
                 rnt = Utils.SHERRLOC_TOP;
             } else {
                 rnt = name;
@@ -31,9 +31,9 @@ public class PrimitiveIfLabel extends IfLabel {
         String rnt = "";
         if (value instanceof Name) {
             String name = ((Name) value).id;
-            if (name.equals(Utils.BOTTOM)) {
+            if (name.equals(Utils.LABEL_BOTTOM)) {
                 rnt = Utils.SHERRLOC_BOTTOM;
-            } else if (name.equals(Utils.TOP)) {
+            } else if (name.equals(Utils.LABEL_TOP)) {
                 rnt = Utils.SHERRLOC_TOP;
             } else if (name.equals(k)) {
                 rnt = v;
@@ -48,9 +48,9 @@ public class PrimitiveIfLabel extends IfLabel {
         String rnt = "";
         if (value instanceof Name) {
             String name = ((Name) value).id;
-            if (name.equals(Utils.BOTTOM)) {
+            if (name.equals(Utils.LABEL_BOTTOM)) {
                 rnt = Utils.SHERRLOC_BOTTOM;
-            } else if (name.equals(Utils.TOP)) {
+            } else if (name.equals(Utils.LABEL_TOP)) {
                 rnt = Utils.SHERRLOC_TOP;
             } else if (strSet.contains(name)) {
                 rnt = name + ".apply" + no;
@@ -65,7 +65,7 @@ public class PrimitiveIfLabel extends IfLabel {
     public void findPrincipal(HashSet<String> principalSet) {
         if (value instanceof Name) {
             String name = ((Name) value).id;
-            if (!name.equals(Utils.TOP) && !name.equals(Utils.BOTTOM)) {
+            if (!name.equals(Utils.LABEL_TOP) && !name.equals(Utils.LABEL_BOTTOM)) {
                 principalSet.add(name);
             }
         }
@@ -74,7 +74,7 @@ public class PrimitiveIfLabel extends IfLabel {
     public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
         if (value instanceof Name) {
             String name = ((Name) value).id;
-            if (!name.equals(Utils.TOP) && !name.equals(Utils.BOTTOM) && !name.equals(getRidOf)) {
+            if (!name.equals(Utils.LABEL_TOP) && !name.equals(Utils.LABEL_BOTTOM) && !name.equals(getRidOf)) {
                 principalSet.add(name);
             }
         }

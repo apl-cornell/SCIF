@@ -1,14 +1,14 @@
 package compile;
 
 import ast.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import typecheck.*;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 public class SolCode {
     int indentWidth;
@@ -21,6 +21,7 @@ public class SolCode {
     public SolCode() {
         code = new ArrayList<>();
         labelTable = new HashMap<>();
+        labelTable.put("this", "this");
         indentWidth = 4;
         indentLevel = 0;
         unitIndent = "";
@@ -179,7 +180,7 @@ public class SolCode {
         // TODO: make labels unique
 
         if (!funcLabels.begin_pc.equals(funcLabels.to_pc)) {
-            addLine(assertExp(checkIfLocked(funcLabels.begin_pc)) + ";");
+            addLine(assertExp("!" + checkIfLocked(funcLabels.begin_pc)) + ";");
                     //"ifLocked(" + funcLabels.begin_pc + ")") + ";");
         }
         addLine(assertExp(checkIfTrustSender(funcLabels.begin_pc)) + ";");
@@ -191,6 +192,7 @@ public class SolCode {
         if (l instanceof PrimitiveIfLabel) {
             // TODO: error report when missing this entry
             String name = ((PrimitiveIfLabel) l).toString();
+            if (name.equals(typecheck.Utils.LABEL_BOTTOM)) return "true"; //TODO
             String addr = labelTable.get(name);
             return "ifTrust(" + addr + ", msg.sender)";
         } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.JOIN) {
@@ -205,8 +207,10 @@ public class SolCode {
         if (l instanceof PrimitiveIfLabel) {
             // TODO: error report when missing this entry
             String name = ((PrimitiveIfLabel) l).toString();
+
+            if (name.equals(typecheck.Utils.LABEL_BOTTOM)) return "false"; //TODO
             String addr = labelTable.get(name);
-            return "ifLocked(" + addr + ")";
+            return "ifLocked(" + addr + ")";// + name;
         } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.JOIN) {
             return "(" + checkIfLocked(((ComplexIfLabel) l).left) + " && " + checkIfLocked(((ComplexIfLabel) l).right) + ")";
         } else {
@@ -235,6 +239,7 @@ public class SolCode {
         if (l instanceof PrimitiveIfLabel) {
             // TODO: error report when missing this entry
             String name = ((PrimitiveIfLabel) l).toString();
+            if (name.equals(typecheck.Utils.LABEL_BOTTOM)) return "false";//TODO: should make a nop statement
             String addr = labelTable.get(name);
             return "lock(" + addr + ")";
         } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.MEET) {
@@ -249,6 +254,7 @@ public class SolCode {
         if (l instanceof PrimitiveIfLabel) {
             // TODO: error report when missing this entry
             String name = ((PrimitiveIfLabel) l).toString();
+            if (name.equals(typecheck.Utils.LABEL_BOTTOM)) return "false";//TODO: should make a nop statement
             String addr = labelTable.get(name);
             return "unlock(" + addr + ")";
         } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.MEET) {
