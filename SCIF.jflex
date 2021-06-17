@@ -95,7 +95,7 @@ import java.util.HashMap;
     }
 
     Symbol id() {
-        return new Symbol(sym.NAME, yyline + 1, yycolumn + 1, yytext());
+        return new Symbol(sym.NAME, yyline + 1, yycolumn + 1, new String(yytext()));
     }
    
     Symbol key(int symbolId) {

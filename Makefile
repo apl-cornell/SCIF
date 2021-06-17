@@ -1,7 +1,7 @@
 LIBPATH=lib
-CUP=polyglot-cup.jar
+CUP=java-cup-11b.jar#polyglot-cup.jar
 
-CLASSPATH = .:$(LIBPATH)/genson-1.5.jar:$(LIBPATH)/log4j-api-2.12.1.jar:$(LIBPATH)/log4j-core-2.12.1.jar:$(LIBPATH)/picocli-4.0.0-beta-1b.jar:$(LIBPATH)/polyglot-cup.jar
+CLASSPATH = .:$(LIBPATH)/genson-1.5.jar:$(LIBPATH)/log4j-api-2.12.1.jar:$(LIBPATH)/log4j-core-2.12.1.jar:$(LIBPATH)/picocli-4.0.0-beta-1b.jar:$(LIBPATH)/${CUP}
 
 default: SCIF
 
