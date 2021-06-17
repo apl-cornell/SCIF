@@ -123,7 +123,7 @@ public class FunctionDef extends FunctionSig {
                 payable = true;
         }
         String rtnTypeCode = "";
-        if (rtn != null)
+        if (rtn != null && !this.rtn.isVoid())
             rtnTypeCode = rtn.toSolCode();
 
         code.enterFunctionDef(name, args.toSolCode(), rtnTypeCode, pub, payable);

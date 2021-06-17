@@ -44,4 +44,8 @@ public class Type extends Expression {
         return expression instanceof Type &&
                 x.equals(((Type) expression).x);
     }
+
+    public boolean isVoid() {
+        return x.equals("void");
+    }
 }

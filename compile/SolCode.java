@@ -65,7 +65,7 @@ public class SolCode {
     }
 
     public void enterContractDef(String contractName) {
-        addLine("contract " + contractName + " {");
+        addLine("contract " + contractName + " is BaseContract {");
         addIndent();
     }
 
