@@ -255,14 +255,14 @@ funcSig ::= r_funcSig:a NEWLINE {: RESULT = a;
 
 r_funcSig ::=
     typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b  {:
-        System.out.println("parsing function");
+        // System.out.println("parsing function");
         // logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, c);
         RESULT.setLoc(new CodeLocation(cleft, cright));
         //makeNode("funcdef", a, b, c, d);
     :}
     | decorators:d typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b  {:
-        System.out.println("parsing function");
+        // System.out.println("parsing function");
         // logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, d, c);
         RESULT.setLoc(new CodeLocation(cleft, cright));
@@ -613,7 +613,7 @@ annassign ::=
         RESULT.setLoc(new CodeLocation(aleft, aright));
     :}*/
     NAME:a EQUAL expr:b {:
-        System.out.println("Annassign case 1 parsing");
+        //System.out.println("Annassign case 1 parsing");
         Name x = new Name((String)a);
         x.setLoc(new CodeLocation(aleft, aright));
         AnnAssign rnt = new AnnAssign(x, null, b, true, false);
@@ -622,7 +622,7 @@ annassign ::=
     :}
     |
     NAME:a {:
-        System.out.println("Annassign case 2 parsing");
+        //System.out.println("Annassign case 2 parsing");
         Name x = new Name((String)a);
         x.setLoc(new CodeLocation(aleft, aright));
         AnnAssign rnt = new AnnAssign(x, null, null, true, false);
@@ -759,7 +759,7 @@ let_stmt ::=
     :};
 // , ref_stmt, new_stmt, deref_stmt;
 suite ::= LBRACE small_stmts:a RBRACE {:
-        System.out.println("parsing suite");
+        // System.out.println("parsing suite");
         RESULT = a;
     :}
     | LBRACE RBRACE {:

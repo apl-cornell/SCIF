@@ -40,7 +40,7 @@ public class SolCode {
     }
 
     public void addLine(String line) {
-        System.err.println("ADDING: " + currentIndent + line);
+        // System.err.println("ADDING: " + currentIndent + line);
         code.add(currentIndent + line);
     }
 
@@ -65,7 +65,7 @@ public class SolCode {
     }
 
     public void enterContractDef(String contractName) {
-        addLine("contract " + contractName + " is BaseContract {");
+        addLine("contract " + contractName + " is BaseContractCentralized {");
         addIndent();
     }
 

@@ -18,6 +18,7 @@ public class SolCompiler {
         roots.get(0).SolCodeGen(code);
 
         code.output(outputFile);
+        System.out.println("\nCompiled Solidity code:");
         code.display();
 
         logger.trace("compile finished");

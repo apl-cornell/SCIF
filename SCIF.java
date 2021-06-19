@@ -59,9 +59,10 @@ public class SCIF implements Callable<Integer> {
         boolean passNTC = true;
         if (!Utils.emptyFile(outputFileName))
             passNTC = runSLC(outputFileName);
-        System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking:");
+        // System.out.println("["+ outputFileName + "]");
+        System.out.println("\nInformation Flow Typechecking:");
         TypeChecker.ifcTypecheck(roots, outputFile);
-        System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
+        // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
         logger.debug("running SHErrLoc...");
         boolean passIFC = runSLC(outputFileName);
 
