@@ -5,13 +5,20 @@ import "./LabelLib.sol";
 
 contract LockOracle {
     Label[] locks;
-    function lock(Label calldata l) public returns (bool) {
+    function lock(Label memory l) public returns (bool) {
         if (exists(l))
             return false;
         locks.push(l);
         return true;
     }
-    function unlock(Label calldata l) public returns (bool) {
+
+    function lock(address l) public returns (bool) {
+        address[] memory x = new address[](1);
+        x[0] = l;
+        return lock(Label({values : x}));
+    }
+
+    function unlock(Label memory l) public returns (bool) {
         if (!exists(l))
             return false;
         uint i = 0;
@@ -23,12 +30,15 @@ contract LockOracle {
             }
             i += 1;
         }
-        while (ind < locks.length) {
-            locks[ind] = locks[ind + 1];
-            ind += 1;
-        }
+        locks[ind] = locks[locks.length - 1];
         locks.pop();
         return true;
+    }
+
+    function unlock(address l) public returns (bool) {
+        address[] memory x = new address[](1);
+        x[0] = l;
+        return unlock(Label({values : x}));
     }
 
     function exists(Label memory l) private view returns (bool) {

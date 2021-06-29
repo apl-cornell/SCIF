@@ -68,11 +68,11 @@ contract BaseContractCentralized is BaseContract {
         trustOracle.revokeTrust(trustee);
     }
 
-    function lock(Label calldata l) override public returns (bool) {
+    function lock(address l) override public returns (bool) {
         return lockOracle.lock(l);
     }
 
-    function unlock(Label calldata l) override public returns (bool) {
+    function unlock(address l) override public returns (bool) {
         return lockOracle.unlock(l);
     }
 }

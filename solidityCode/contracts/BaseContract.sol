@@ -36,8 +36,10 @@ abstract contract BaseContract {
     function setTrust(address trustee) public virtual;
     function revokeTrust(address trustee) public virtual;
 
-    function lock(Label calldata l) public virtual returns (bool);
-    function unlock(Label calldata l) public virtual returns (bool);
+    // function lock(Label calldata l) public virtual returns (bool);
+    // function unlock(Label calldata l) public virtual returns (bool);
+    function lock(address l) public virtual returns (bool);
+    function unlock(address l) public virtual returns (bool);
 
     
     function ifTrust(Label memory a, Label memory b) 
