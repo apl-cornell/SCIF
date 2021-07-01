@@ -11,12 +11,13 @@ public class ContractSym extends TypeSym {
     public HashMap<String, FuncInfo> funcMap;*/
     public SymTab symTab;
     public IfLabel ifl;
-    public ArrayList<TrustConstraint> trustCons;
+    // public ArrayList<TrustConstraint> trustCons;
+    public TrustSetting trustSetting;
 
     public ContractSym(String name,
                        SymTab symTab,
                        // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
-                       ArrayList<TrustConstraint> trustCons,
+                       TrustSetting trustSetting,
                        IfLabel ifl) {
         this.name = name;
         /*this.iptContracts = iptContracts;
@@ -24,7 +25,7 @@ public class ContractSym extends TypeSym {
         this.varMap = varMap;
         this.funcMap = funcMap;*/
         this.symTab = symTab;
-        this.trustCons = trustCons;
+        this.trustSetting = trustSetting;
         this.ifl = ifl;
     }
 
@@ -35,7 +36,7 @@ public class ContractSym extends TypeSym {
         varMap = new HashMap<>();
         funcMap = new HashMap<>();*/
         symTab = new SymTab();
-        trustCons = new ArrayList<>();
+        trustSetting = new TrustSetting();
     }
 
     public TypeSym toType(String typeName) {

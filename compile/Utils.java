@@ -3,11 +3,11 @@ package compile;
 import ast.*;
 
 public class Utils {
-    public static final String SOLITIDY_VERSION = "0.6.4";
+    public static final String SOLITIDY_VERSION = "0.8.3";
     public static final String PUBLIC_DECORATOR = "public";
     public static final String PAYABLE_DECORATOR = "payable";
     public static final String PRIVATE_DECORATOR = "private";
-    public static final String CONSTRUCTOR_NAME = "init";
+    public static final String CONSTRUCTOR_NAME = "constructor";
 
     public static String toBinOp(BinaryOperator op) {
         if (op == BinaryOperator.Add)

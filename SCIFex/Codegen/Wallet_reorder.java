@@ -1,0 +1,26 @@
+contract Wallet [this] {
+    {{
+        BaseContractCentralized
+    }}
+    map(address, uint){this} balances;
+
+    Wallet constructor(address{this} trustOracle, address{this} lockOracle) {
+        @BaseContractCentralized(trustOracle, lockOracle);
+    }
+
+    @public
+    void withdraw{BOT >> this; BOT}(uint{BOT} amount) {
+        uint{this} gAmount = endorse(amount, BOT->this);
+
+            if{this} (balances[msg.sender] >= gAmount) {
+                balances[msg.sender] = balances[msg.sender] - gAmount;
+                send(msg.sender, gAmount);
+            }
+    }
+
+    @public
+    @payable
+    void deposit{BOT >> this; this}() {
+        balances[msg.sender] = balances[msg.sender] + msg.value;
+    }
+}

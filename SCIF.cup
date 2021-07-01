@@ -153,10 +153,13 @@ nonterminal ArrayList<AnnAssign> annassigns;
 nonterminal FuncLabels tFuncLabels;
 nonterminal IfLabel ifLabelOrNull;
 nonterminal GuardBlock guard_block;
+nonterminal TrustSetting trust_setting;
 nonterminal ArrayList<TrustConstraint> trust_decs;
 nonterminal TrustConstraint trust_dec;
 nonterminal Relation trust_operator;
 nonterminal let_stmt;//, ref_stmt, new_stmt, deref_stmt;
+nonterminal HashMap<String, String> label_table;
+nonterminal DynamicStatement dynamic_stmt;
 
 precedence left OR;
 precedence left AND;
@@ -176,13 +179,40 @@ sourceCode ::= program:a {: RESULT = a; :}
     | interface:a {:RESULT = a; :}
     | {: logger.debug("empty program"); RESULT = null;:};
 
+trust_setting ::= LBRACE LBRACE NAME:dynamicOption RBRACE RBRACE {:
+        ArrayList<TrustConstraint> list = new ArrayList<>();
+        HashMap<String, String> tmp = new HashMap<String, String>();
+        TrustSetting trustSetting = new TrustSetting((String)dynamicOption, list, tmp);
+        RESULT = trustSetting;
+    :}
+    | LBRACE LBRACE NAME:dynamicOption SEMI trust_decs: trust_list RBRACE RBRACE {:
+        HashMap<String, String> tmp = new HashMap<String, String>();
+        TrustSetting trustSetting = new TrustSetting((String)dynamicOption, trust_list, tmp);
+        RESULT = trustSetting;
+    :}
+    | LBRACE LBRACE NAME:dynamicOption SEMI trust_decs: trust_list SEMI label_table:l RBRACE RBRACE {:
+            TrustSetting trustSetting = new TrustSetting((String)dynamicOption, trust_list, l);
+            RESULT = trustSetting;
+    :};
+
+label_table ::= NAME:a COLON NAME:b {:
+        HashMap<String, String> table = new HashMap<>();
+        table.put((String)a, (String)b);
+        RESULT = table;
+    :}
+    | label_table:table COMMA NAME:a COLON NAME:b {:
+        table.put((String)a, (String)b);
+        RESULT = table;
+    :};
+
+
 // version: trust dec
 trust_decs ::= trust_dec:x {:
         ArrayList<TrustConstraint> list = new ArrayList<>();
         list.add(x);
         RESULT = list;
     :}
-    /*| trust_decs:list NEWLINE {:
+    /*| trust_setting:list NEWLINE {:
         RESULT = list;
     :}*/
     | trust_decs:list trust_dec:a {:
@@ -223,16 +253,16 @@ ifLabelOrNull ::= ifLabel:x {:
 // ---
 
 //TODO: not usable for now; since the core calculus is not surppoting interface
-interface ::= INTERFACE:i NAME:x COLON NEWLINE  funcSigs:a  {:
+/*interface ::= INTERFACE:i NAME:x COLON NEWLINE  funcSigs:a  {:
         ArrayList<TrustConstraint> trust_list = new ArrayList<>();
         RESULT = new Interface((String)x, trust_list, a);
         RESULT.setLoc(new CodeLocation(ileft, iright));
     :}
-    | INTERFACE:i NAME:x COLON NEWLINE  trust_decs:trust_list funcSigs:a  {:
+    | INTERFACE:i NAME:x COLON NEWLINE  trust_setting:trust_list funcSigs:a  {:
             RESULT = new Interface((String)x, trust_list, a);
             RESULT.setLoc(new CodeLocation(ileft, iright));
     :};
-
+*/
 funcSigs ::=
     funcSig:a {:
         ArrayList<FunctionSig> list = new ArrayList<>();
@@ -323,30 +353,30 @@ contracts ::= contract:a {:
 
 
 contract ::= CONTRACT NAME:x LBRACE file_input:list RBRACE {:
-                     ArrayList<TrustConstraint> trust_list = new ArrayList<>();
-                     RESULT = new Contract((String) x, trust_list, list, null);
+                    TrustSetting trustSetting = new TrustSetting();
+                     RESULT = new Contract((String) x, trustSetting, list, null);
                      RESULT.setLoc(new CodeLocation(xleft, xright));
                      //System.err.println(RESULT);
                  :}
     | CONTRACT NAME:x LSQB ifLabel:ifl RSQB LBRACE file_input:list RBRACE {:
-        ArrayList<TrustConstraint> trust_list = new ArrayList<>();
-        RESULT = new Contract((String) x, trust_list, list, ifl);
+                    TrustSetting trustSetting = new TrustSetting();
+        RESULT = new Contract((String) x, trustSetting, list, ifl);
         RESULT.setLoc(new CodeLocation(xleft, xright));
         //System.err.println(RESULT);
     :}
     | CONTRACT NAME:x LSQB ifLabel:ifl RSQB EXTENDS NAME:y LBRACE file_input:list RBRACE {:
-        ArrayList<TrustConstraint> trust_list = new ArrayList<>();
-        RESULT = new Contract((String) x, (String) y, trust_list, list, ifl);
+                    TrustSetting trustSetting = new TrustSetting();
+        RESULT = new Contract((String) x, (String) y, trustSetting, list, ifl);
         RESULT.setLoc(new CodeLocation(xleft, xright));
         //System.err.println(RESULT);
     :}
-    | CONTRACT NAME:x LSQB ifLabel:ifl RSQB LBRACE trust_decs:trust_list file_input:list RBRACE {:
-            RESULT = new Contract((String) x, trust_list, list, ifl);
+    | CONTRACT NAME:x LSQB ifLabel:ifl RSQB LBRACE trust_setting:trustSetting file_input:list RBRACE {:
+            RESULT = new Contract((String) x, trustSetting, list, ifl);
             RESULT.setLoc(new CodeLocation(xleft, xright));
             //System.err.println(RESULT);
     :}
-    | CONTRACT NAME:x LSQB ifLabel:ifl RSQB EXTENDS NAME:y LBRACE trust_decs:trust_list file_input:list RBRACE {:
-            RESULT = new Contract((String) x, (String) y, trust_list, list, ifl);
+    | CONTRACT NAME:x LSQB ifLabel:ifl RSQB EXTENDS NAME:y LBRACE trust_setting:trustSetting file_input:list RBRACE {:
+            RESULT = new Contract((String) x, (String) y, trustSetting, list, ifl);
             RESULT.setLoc(new CodeLocation(xleft, xright));
             //System.err.println(RESULT);
     :};
@@ -583,7 +613,22 @@ small_stmt ::= expr_stmt:a {: RESULT = a; :}
     //| ipt_stmt:a {: RESULT = a; :}
     | assert_stmt:a {: RESULT = a; :}
     | guard_block:a {: RESULT = a; :}
-    | if_stmt:a {:RESULT = a;:};
+    | if_stmt:a {:RESULT = a;:}
+    | dynamic_stmt:a {: RESULT = a; :};
+
+dynamic_stmt ::= AT:x NAME:a trailer:b SEMI {:
+    if (!(b instanceof Call)) {
+        return null;
+    }
+
+    Name name = new Name((String)a);
+    name.setLoc(new CodeLocation(aleft, aright));
+    b.setValue(name);
+    DynamicStatement rtn = new DynamicStatement((Call) b);
+    rtn.setLoc(new CodeLocation(xleft, xright));
+    RESULT = rtn;
+:};
+
 expr_stmt ::= 
     expr:a SEMI {:RESULT = a;:}
     | typeSym:a annassign:b SEMI {://testlist_star_expr:a expr_rest_stmt:b {:

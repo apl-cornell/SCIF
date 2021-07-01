@@ -1,5 +1,6 @@
 package ast;
 
+import compile.Utils;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -11,12 +12,17 @@ public class FunctionSig extends Statement {
     public Arguments args;
     public ArrayList<String> decoratorList;
     public Type rtn;
+    public boolean isConstructor;
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args, ArrayList<String> decoratorList, Type rtn) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
         this.decoratorList = decoratorList;
         this.rtn = rtn;
+        if (name.equals(Utils.CONSTRUCTOR_NAME)) {
+            isConstructor = true;
+        }
+
     }
     public FunctionSig(FunctionSig funcSig) {
         this.name = funcSig.name;
@@ -24,6 +30,7 @@ public class FunctionSig extends Statement {
         this.args = funcSig.args;
         this.decoratorList = funcSig.decoratorList;
         this.rtn = funcSig.rtn;
+        this.isConstructor = funcSig.isConstructor;
     }
 
     public void setDecoratorList(ArrayList<String> decoratorList) {
@@ -68,8 +75,10 @@ public class FunctionSig extends Statement {
     @Override
     public void passScopeContext(ScopeContext parent) {
         scopeContext = new ScopeContext(this, parent);
-        for (Node node : children())
-            node.passScopeContext(scopeContext);
+        for (Node node : children()) {
+            if (node != null) //TODO: remove null check
+                node.passScopeContext(scopeContext);
+        }
     }
     @Override
     public ArrayList<Node> children() {

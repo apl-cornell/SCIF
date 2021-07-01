@@ -121,6 +121,10 @@ public class Program extends Node {
 
     public void SolCodeGen(SolCode code) {
         code.addVersion(compile.Utils.SOLITIDY_VERSION);
+
+        //TODO: deal with baseContract imports
+        code.addImport(Utils.PATH_TO_BASECONTRACTCENTRALIZED);
+
         /*for (String contractName : iptContracts) {
             code.addImport(contractName);
         }*/

@@ -38,6 +38,7 @@ public class Utils {
 
     public static final String TRUSTCENTER_NAME = "trustCenter";
     public static final String SET_CONTRACT_NAME = "Set";
+    public static final String PATH_TO_BASECONTRACTCENTRALIZED = "\"./BaseContractCentralized\"";
 
 
     public static final boolean isPrimitiveType(String x) {
@@ -276,7 +277,7 @@ public class Utils {
         if (funcName.equals("send")) {
             String recipient = call.args.get(0).toSolCode();
             String value = call.args.get(1).toSolCode();
-            return recipient + ".send(" + value + ");";
+            return recipient + ".call{value: " + value + "}(\"\");";
         }
         else
             return "unknown built-in function";
@@ -306,5 +307,14 @@ public class Utils {
         return name + "." + "codeLbl";
     }
 
+    public static DynamicSystemOption resolveDynamicOption(String dynamicOption) {
+        switch (dynamicOption) {
+            case "BaseContractCentralized" :
+                return DynamicSystemOption.BaseContractCentralized;
+            case "Decentralized" :
+                return DynamicSystemOption.Decentralized;
+        }
+        return null; //TODO error report
+    }
 }
 

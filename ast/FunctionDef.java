@@ -36,6 +36,7 @@ public class FunctionDef extends FunctionSig {
 
         env.setCurSymTab(new SymTab(env.curSymTab));
         for (Statement stmt : body) {
+            // logger.debug("stmt: " + stmt);
             stmt.NTCgenCons(env, now);
         }
         env.curSymTab = env.curSymTab.getParent();
@@ -76,6 +77,10 @@ public class FunctionDef extends FunctionSig {
         Context prev = new Context(env.prevContext), prev2 = null;
         CodeLocation loc = null;
         for (Statement stmt : body) {
+            if (stmt instanceof DynamicStatement) {
+                //TODO: ifc check for dynamic statement
+                continue;
+            }
             if (prev2 != null) {
                 env.cons.add(new Constraint(new Inequality(prev.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, loc));
             }
@@ -126,14 +131,24 @@ public class FunctionDef extends FunctionSig {
         if (rtn != null && !this.rtn.isVoid())
             rtnTypeCode = rtn.toSolCode();
 
-        code.enterFunctionDef(name, args.toSolCode(), rtnTypeCode, pub, payable);
+        if (isConstructor) {
+            code.enterConstructorDef(args.toSolCode(), body);
+        }
+        else {
+            code.enterFunctionDef(name, args.toSolCode(), rtnTypeCode, pub, payable);
+        }
 
         /*
             f{pc}(x_i{l_i}) from sender
             assert sender => pc, l_i
          */
-        code.enterFuncCheck(funcLabels, args);
+        if (!isConstructor) {
+            code.enterFuncCheck(funcLabels, args);
+        }
         for (Statement stmt : body) {
+            if (stmt instanceof DynamicStatement) {
+                continue;
+            }
             stmt.SolCodeGen(code);
         }
 

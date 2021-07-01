@@ -17,6 +17,7 @@ public class SolCode {
     String currentIndent;
     public ArrayList<String> code; //each line with no newline char
     public HashMap<String, String> labelTable; // map label names to on-chain addresses
+    public DynamicSystemOption dynamicSystemOption;
 
     public SolCode() {
         code = new ArrayList<>();
@@ -45,7 +46,7 @@ public class SolCode {
     }
 
     public void addVersion(String version) {
-        addLine("pragma solidity ^" + version + ";");
+        addLine("pragma solidity >=" + version + ";");
     }
 
     public void addImport(String contractName) {
@@ -86,6 +87,29 @@ public class SolCode {
         if (!returnType.isEmpty())
             addLine("returns (" + returnType + ")");
         decIndent();
+        addLine("{");
+        addIndent();
+    }
+
+    public void enterConstructorDef(String args, ArrayList<Statement> body) {
+        addLine("constructor (" + args + ")");
+        if (dynamicSystemOption == DynamicSystemOption.BaseContractCentralized) {
+            boolean foundOption = false;
+            addIndent();
+            for (Statement stmt : body) {
+                if (stmt instanceof DynamicStatement) {
+                    String inherit = ((DynamicStatement) stmt).toSolCode();
+                    addLine(inherit);
+                    foundOption = true;
+                    break; //TODO: handle duplicate calls
+                }
+            }
+            if (!foundOption) {
+                //TODO: error report
+                addLine("No constructor for Dynamic System setting found");
+            }
+            decIndent();
+        }
         addLine("{");
         addIndent();
     }
@@ -275,5 +299,10 @@ public class SolCode {
 
     private String assertExp(String arguments) {
         return "assert(" + arguments + ")";
+    }
+
+    public void setDynamicOption(TrustSetting trustSetting) {
+        dynamicSystemOption = trustSetting.dynamicSystemOption;
+        labelTable = trustSetting.labelTable;
     }
 }

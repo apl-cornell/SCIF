@@ -10,19 +10,20 @@ import java.util.HashSet;
 public class Contract extends Node {
     public String contractName;
     public String superContractName = "";
-    public ArrayList<TrustConstraint> trustCons;
+    public TrustSetting trustSetting;
+    // public ArrayList<TrustConstraint> trustCons;
     public IfLabel ifl;
     ArrayList<Statement> body;
-    public Contract(String contractName, ArrayList<TrustConstraint> trustCons, ArrayList<Statement> body, IfLabel ifl) {
+    public Contract(String contractName, TrustSetting trustSetting, ArrayList<Statement> body, IfLabel ifl) {
         this.contractName = contractName;
-        this.trustCons = trustCons;
+        this.trustSetting = trustSetting;
         this.body = body;
         this.ifl = ifl;
     }
-    public Contract(String contractName, String superContractName, ArrayList<TrustConstraint> trustCons, ArrayList<Statement> body, IfLabel ifl) {
+    public Contract(String contractName, String superContractName, TrustSetting trustSetting, ArrayList<Statement> body, IfLabel ifl) {
         this.contractName = contractName;
         this.superContractName = superContractName;
-        this.trustCons = trustCons;
+        this.trustSetting = trustSetting;
         this.body = body;
         this.ifl = ifl;
     }
@@ -38,7 +39,7 @@ public class Contract extends Node {
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         env.setCurSymTab(new SymTab(env.curSymTab));
-        ContractSym contractSym = new ContractSym(contractName, env.curSymTab, trustCons, ifl);
+        ContractSym contractSym = new ContractSym(contractName, env.curSymTab, trustSetting, ifl);
         env.addGlobalSym(contractName, contractSym);
 
         for (Statement stmt : body) {
@@ -60,7 +61,7 @@ public class Contract extends Node {
     @Override
     public void globalInfoVisit(ContractSym contractSym) {
         contractSym.name = contractName;
-        contractSym.trustCons = trustCons;
+        contractSym.trustSetting = trustSetting;
         contractSym.ifl = ifl;
         contractSym.addContract(contractName, contractSym);
         for (Statement stmt : body) {
@@ -79,7 +80,7 @@ public class Contract extends Node {
     }
 
     public void findPrincipal(HashSet<String> principalSet) {
-        for (TrustConstraint trustConstraint : trustCons) {
+        for (TrustConstraint trustConstraint : trustSetting.trust_list) {
             trustConstraint.findPrincipal(principalSet);
         }
         ifl.findPrincipal(principalSet);
@@ -89,6 +90,7 @@ public class Contract extends Node {
     }
 
     public void SolCodeGen(SolCode code) {
+        code.setDynamicOption(trustSetting);
         code.enterContractDef(contractName);
         for (Statement stmt : body) {
             stmt.SolCodeGen(code);
@@ -107,7 +109,7 @@ public class Contract extends Node {
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        rtn.addAll(trustCons);
+        rtn.addAll(trustSetting.trust_list);
         rtn.addAll(body);
         return rtn;
     }
@@ -129,9 +131,9 @@ public class Contract extends Node {
 
         // trust_list
         ArrayList<TrustConstraint> newTrustCons = new ArrayList<>();
-        newTrustCons.addAll(superContract.trustCons);
-        newTrustCons.addAll(trustCons);
-        trustCons = newTrustCons;
+        newTrustCons.addAll(superContract.trustSetting.trust_list);
+        newTrustCons.addAll(trustSetting.trust_list);
+        trustSetting.trust_list = newTrustCons;
 
         // Statement
         HashMap<String, AnnAssign> varNames = new HashMap<>();

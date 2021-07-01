@@ -160,7 +160,7 @@ public class TypeChecker {
             String ifContract = contractSym.getLabelContract();
             env.cons.add(new Constraint(new Inequality(ifNameContract, Relation.EQ, ifContract), contractSym.ifl.location));
 
-            for (TrustConstraint trustConstraint : contractSym.trustCons) {
+            for (TrustConstraint trustConstraint : contractSym.trustSetting.trust_list) {
                 env.trustCons.add(new Constraint(new Inequality(trustConstraint.lhs.toSherrlocFmt(), trustConstraint.optor,trustConstraint.rhs.toSherrlocFmt()), trustConstraint.location));
             }
 
