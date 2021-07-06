@@ -22,7 +22,7 @@ public class SolCode {
     public SolCode() {
         code = new ArrayList<>();
         labelTable = new HashMap<>();
-        labelTable.put("this", "this");
+        labelTable.put("this", "address(this)");
         indentWidth = 4;
         indentLevel = 0;
         unitIndent = "";
@@ -204,7 +204,7 @@ public class SolCode {
         // TODO: make labels unique
 
         if (!funcLabels.begin_pc.equals(funcLabels.to_pc)) {
-            addLine(assertExp("!" + checkIfLocked(funcLabels.begin_pc)) + ";");
+            addLine(assertExp("!" + checkIfLocked(funcLabels.begin_pc, funcLabels.to_pc)) + ";");
                     //"ifLocked(" + funcLabels.begin_pc + ")") + ";");
         }
         addLine(assertExp(checkIfTrustSender(funcLabels.begin_pc)) + ";");
@@ -227,16 +227,28 @@ public class SolCode {
         }
     }
 
-    private String checkIfLocked(IfLabel l) {
-        if (l instanceof PrimitiveIfLabel) {
+    private String checkIfLocked(IfLabel l_1, IfLabel l_2) {
+        // check if l_1 => l_2 join l
+        String name_1, name_2;
+        if (!(l_2 instanceof  PrimitiveIfLabel)) {
+            //TODO: error report
+            return null;
+        } else {
+            name_2 = ((PrimitiveIfLabel) l_2).toString();
+        }
+        if (l_1 instanceof PrimitiveIfLabel) {
             // TODO: error report when missing this entry
-            String name = ((PrimitiveIfLabel) l).toString();
+            name_1 = ((PrimitiveIfLabel) l_1).toString();
 
-            if (name.equals(typecheck.Utils.LABEL_BOTTOM)) return "false"; //TODO
-            String addr = labelTable.get(name);
-            return "ifLocked(" + addr + ")";// + name;
-        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.JOIN) {
-            return "(" + checkIfLocked(((ComplexIfLabel) l).left) + " && " + checkIfLocked(((ComplexIfLabel) l).right) + ")";
+            if (name_2.equals(typecheck.Utils.LABEL_BOTTOM)) return "false";
+            String addr_2 = labelTable.get(name_2);
+
+            if (name_1.equals(typecheck.Utils.LABEL_BOTTOM))
+                return "ifLocked(" + addr_2 + ")";
+            String addr_1 = labelTable.get(name_1);
+            return "ifLocked(" + addr_1 + ", " + addr_2 + ")";// + name;
+        } else if (l_1 instanceof ComplexIfLabel && ((ComplexIfLabel) l_1).op == IfOperator.JOIN) {
+            return "(" + checkIfLocked(((ComplexIfLabel) l_1).left, l_2) + " && " + checkIfLocked(((ComplexIfLabel) l_1).right, l_2) + ")";
         } else {
             // TODO: error report;
             return "NaL";

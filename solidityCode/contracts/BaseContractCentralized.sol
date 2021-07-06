@@ -75,4 +75,12 @@ contract BaseContractCentralized is BaseContract {
     function unlock(address l) override public returns (bool) {
         return lockOracle.unlock(l);
     }
+
+    function ifLocked(address l) override public returns (bool) {
+        return lockOracle.ifLocked(l);
+    }
+
+    function ifLocked(address l_1, address l_2) override public returns (bool) {
+        return lockOracle.ifLocked(l_1, l_2);
+    }
 }

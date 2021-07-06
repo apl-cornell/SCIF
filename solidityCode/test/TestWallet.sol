@@ -50,7 +50,8 @@ contract TestWallet {
     }
 
     function testSteal() public {
-        Assert.isTrue(badUser.withdraw(4 ether), "A bad user to steal 8 ethers");
+        Assert.isTrue(badUser.withdraw(4 ether), "A bad user to steal 8 ether");
         emit Show(address(wallet).balance);
+        Assert.isTrue(address(wallet).balance >= 6 ether, "A bad user should not be able to steal any ether");
     }
 }

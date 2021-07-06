@@ -40,6 +40,8 @@ abstract contract BaseContract {
     // function unlock(Label calldata l) public virtual returns (bool);
     function lock(address l) public virtual returns (bool);
     function unlock(address l) public virtual returns (bool);
+    function ifLocked(address l) public virtual returns (bool);
+    function ifLocked(address l_1, address l_2) public virtual returns (bool);
 
     
     function ifTrust(Label memory a, Label memory b) 

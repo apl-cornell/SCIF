@@ -17,6 +17,7 @@ public class Contract extends Node {
     public Contract(String contractName, TrustSetting trustSetting, ArrayList<Statement> body, IfLabel ifl) {
         this.contractName = contractName;
         this.trustSetting = trustSetting;
+        this.trustSetting.labelTable.put("this", "address(this)");
         this.body = body;
         this.ifl = ifl;
     }
@@ -24,6 +25,7 @@ public class Contract extends Node {
         this.contractName = contractName;
         this.superContractName = superContractName;
         this.trustSetting = trustSetting;
+        this.trustSetting.labelTable.put("this", "address(this)");
         this.body = body;
         this.ifl = ifl;
     }

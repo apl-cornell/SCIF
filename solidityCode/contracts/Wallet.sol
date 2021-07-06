@@ -25,7 +25,7 @@ contract Wallet is BaseContractCentralized {
         public
     {
         emit Withdraw(msg.sender, balances[msg.sender], amount);
-        assert(!false);
+        assert(!ifLocked(address(this)));
         assert(true);
         uint gAmount = amount;
         assert(lock(address(this)));
@@ -43,7 +43,7 @@ contract Wallet is BaseContractCentralized {
         payable
     {
         emit Deposit(msg.sender, balances[msg.sender], msg.value);
-        assert(!false);
+        assert(!ifLocked(address(this)));
         assert(true);
         balances[msg.sender] = (balances[msg.sender] + msg.value);
     }
