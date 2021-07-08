@@ -14,12 +14,14 @@ public class SolCompiler {
         //TODO: assuming only one contract for now
         logger.trace("compile starts");
 
-        SolCode code = new SolCode();
-        roots.get(0).SolCodeGen(code);
-
-        code.output(outputFile);
         System.out.println("\nCompiled Solidity code:");
-        code.display();
+        for (Node root : roots) {
+            SolCode code = new SolCode();
+            root.SolCodeGen(code);
+
+            code.output(outputFile);
+            code.display();
+        }
 
         logger.trace("compile finished");
     }

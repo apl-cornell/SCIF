@@ -240,7 +240,9 @@ public class SolCode {
             // TODO: error report when missing this entry
             name_1 = ((PrimitiveIfLabel) l_1).toString();
 
-            if (name_2.equals(typecheck.Utils.LABEL_BOTTOM)) return "false";
+            if (name_2.equals(typecheck.Utils.LABEL_BOTTOM)
+            || name_1.equals(name_2))
+                return "false";
             String addr_2 = labelTable.get(name_2);
 
             if (name_1.equals(typecheck.Utils.LABEL_BOTTOM))

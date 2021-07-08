@@ -43,6 +43,7 @@ public class Name extends Variable {
     @Override
     public Context genConsVisit(VisitEnv env) {
         // assuming the name would be a variable name
+        logger.debug("Name: " + id);
         String ifNameRnt = env.getVar(id).labelToSherrlocFmt();
         return new Context(ifNameRnt, env.prevContext.lockName);
     }

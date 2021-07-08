@@ -207,13 +207,15 @@ public class Utils {
                 ((TypeSym) s.lookup(typeName)), new PrimitiveIfLabel(new Name("this")), null, context, false);
     }
 
-    public static void addBuiltInSyms(SymTab globalSymTab) {
+    public static void addBuiltInSyms(SymTab globalSymTab, TrustSetting trustSetting) {
         for (BuiltInT t : BuiltInT.values()) {
             String typeName = Utils.BuiltinType2ID(t);
             TypeSym s = new BuiltinTypeSym(typeName);
             globalSymTab.add(typeName, s);
         }
         ArrayList<VarSym> members = new ArrayList<>();
+
+
         /*
             add address type as a contract type
          */
@@ -265,10 +267,24 @@ public class Utils {
         funcLabels = new FuncLabels(trustedSendLabel, trustedSendLabel, trustedSendLabel);
         FuncSym trustedSendFuncSym = new FuncSym("trustedSend", funcLabels, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel,  new ScopeContext("trustedSend"), null);
         globalSymTab.add("trustedSend", trustedSendFuncSym);
+
+        /* built-in for dynamic options */
+        // TODO: change to importing style
+        //if (trustSetting != null) {
+            //if (trustSetting.dynamicSystemOption == DynamicSystemOption.BaseContractCentralized) {
+                // setTrust(address trustee)
+                members = new ArrayList<>();
+                VarSym trustee = createBuiltInVarInfo("trustee", "address", emptyContext, globalSymTab);
+                members.add(trustee);
+                funcLabels = new FuncLabels(thisLabel, thisLabel, botLabel);
+                FuncSym setTrustSym = new FuncSym("setTrust", funcLabels, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel, new ScopeContext("setTrust"), null);
+                globalSymTab.add("setTrust", setTrustSym);
+            //}
+        //}
     }
 
     public static boolean isBuiltinFunc(String funcName) {
-        if (funcName.equals("send"))
+        if (funcName.equals("send") || funcName.equals("setTrust"))
             return true;
         return false;
     }
@@ -278,6 +294,10 @@ public class Utils {
             String recipient = call.args.get(0).toSolCode();
             String value = call.args.get(1).toSolCode();
             return recipient + ".call{value: " + value + "}(\"\");";
+        }
+        else if (funcName.equals("setTrust")) {
+            String trustee = call.args.get(0).toSolCode();
+            return funcName + "(" + trustee + ");";
         }
         else
             return "unknown built-in function";

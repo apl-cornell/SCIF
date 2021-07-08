@@ -70,7 +70,7 @@ public class Call extends TrailerExpr {
                 return null;
             }
             if (!(s instanceof FuncSym)) {
-                if (s instanceof ContractSym) {
+                if (s instanceof ContractSym || s instanceof BuiltinTypeSym) {
                     env.addCons(now.genCons(s.name, Relation.EQ, env, location));
                     return now;
                 }
@@ -141,7 +141,7 @@ public class Call extends TrailerExpr {
         }
         else*/
             if (!env.containsFunc(funcName)) {
-                if (env.containsContract(funcName)) { //init contract
+                if (env.containsContract(funcName) || Utils.isPrimitiveType(funcName)) { //type cast
                     if (args.size() != 1) return null;
                     Context tmp = args.get(0).genConsVisit(env);
                     String ifNameArgValue = tmp.valueLabelName;

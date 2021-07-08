@@ -80,7 +80,7 @@ public class Program extends Node {
         for (Contract contract : contracts) {
             // env.setGlobalSymTab(new SymTab());
             env.setCurSymTab(env.globalSymTab);
-            Utils.addBuiltInSyms(env.globalSymTab);
+            // Utils.addBuiltInSyms(env.globalSymTab, contract.trustSetting);
             if (!contract.NTCGlobalInfo(env, parent)) {
                 logger.debug("GlobalInfo failed with: " + contract);
                 return false;
@@ -91,7 +91,7 @@ public class Program extends Node {
 
     @Override
     public void globalInfoVisit(ContractSym contractSym) {
-        Utils.addBuiltInSyms(contractSym.symTab);
+        Utils.addBuiltInSyms(contractSym.symTab, null);
         if (contracts.size() < 1) return;
         for (Contract contract : contracts) {
             if (!iptContracts.contains(contract.contractName)) {
