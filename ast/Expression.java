@@ -20,6 +20,11 @@ public abstract class Expression extends Statement {
         code.addLine(toSolCode());
     }
 
+    public void SolCodeGenStmt(SolCode code) {
+        logger.debug("SolCodeGenStmt: Being Called");
+        code.addLine(toSolCode() + ";");
+    }
+
     @Override
     public void findPrincipal(HashSet<String> principalSet) {
 

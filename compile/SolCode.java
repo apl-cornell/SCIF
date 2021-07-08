@@ -50,7 +50,7 @@ public class SolCode {
     }
 
     public void addImport(String contractName) {
-        addLine("import " + contractName + ";");
+        addLine("import \"./" + contractName + ".sol\";");
     }
 
     public void addAssign(String target, String value) {

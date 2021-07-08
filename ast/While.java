@@ -87,7 +87,11 @@ public class While extends NonFirstLayerStatement {
     public void SolCodeGen(SolCode code) {
         code.enterWhile(test.toSolCode());
         for (Statement stmt : body) {
-            stmt.SolCodeGen(code);
+            if (stmt instanceof Expression) {
+                ((Expression) stmt).SolCodeGenStmt(code);
+            } else {
+                stmt.SolCodeGen(code);
+            }
         }
         code.leaveWhile();
     }

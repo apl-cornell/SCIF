@@ -149,7 +149,12 @@ public class FunctionDef extends FunctionSig {
             if (stmt instanceof DynamicStatement) {
                 continue;
             }
-            stmt.SolCodeGen(code);
+            if (stmt instanceof Expression) {
+                ((Expression) stmt).SolCodeGenStmt(code);
+            }
+            else {
+                stmt.SolCodeGen(code);
+            }
         }
 
         code.leaveFunctionDef();

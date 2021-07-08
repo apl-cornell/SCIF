@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -17,6 +18,11 @@ public class Assert extends NonFirstLayerStatement {
     public Context genConsVisit(VisitEnv env) {
         Context tmp = test.genConsVisit(env);
         return tmp;
+    }
+
+    @Override
+    public void SolCodeGen(SolCode code) {
+        code.addLine("assert(" + test.toSolCode() + ");");
     }
 
     @Override

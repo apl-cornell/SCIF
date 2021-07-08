@@ -125,9 +125,17 @@ public class Program extends Node {
         //TODO: deal with baseContract imports
         code.addImport(Utils.PATH_TO_BASECONTRACTCENTRALIZED);
 
-        /*for (String contractName : iptContracts) {
-            code.addImport(contractName);
-        }*/
+        for (String contractName : iptContracts) {
+            boolean exists = false;
+            for (Contract contract : contracts) {
+                if (contract.contractName.equals(contractName)) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists)
+                code.addImport(contractName);
+        }
         for (Contract contract : contracts) {
             contract.SolCodeGen(code);
         }

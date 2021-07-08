@@ -103,7 +103,11 @@ public class GuardBlock extends NonFirstLayerStatement {
          */
         code.enterGuard(l);
         for (Statement stmt : body) {
-            stmt.SolCodeGen(code);
+            if (stmt instanceof Expression) {
+                ((Expression) stmt).SolCodeGenStmt(code);
+            } else {
+                stmt.SolCodeGen(code);
+            }
         }
         /*
             unlock(l);

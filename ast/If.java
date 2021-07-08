@@ -147,13 +147,21 @@ public class If extends NonFirstLayerStatement {
         String cond = test.toSolCode();
         code.enterIf(cond);
         for (Statement stmt : body) {
-            stmt.SolCodeGen(code);
+            if (stmt instanceof Expression) {
+                ((Expression) stmt).SolCodeGenStmt(code);
+            } else {
+                stmt.SolCodeGen(code);
+            }
         }
         code.leaveIf();
         if (!orelse.isEmpty()) {
             code.enterElse();
             for (Statement stmt : orelse) {
-                stmt.SolCodeGen(code);
+                if (stmt instanceof Expression) {
+                    ((Expression) stmt).SolCodeGenStmt(code);
+                } else {
+                    stmt.SolCodeGen(code);
+                }
             }
             code.leaveElse();
         }
