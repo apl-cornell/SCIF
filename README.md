@@ -6,6 +6,12 @@
 * Java 15
 * Ant
 
+## Installation
+```console
+git clone --recurse-submodules  https://github.com/Neroysq/Wyvern.git
+make all
+```
+
 ## Usage
 `make all` to compile all files including sherrloc
 
