@@ -1,6 +1,9 @@
 #!/bin/sh
 
 JAVA=java
-CLASSPATH=".:lib/*"
+ROOT=`dirname $0`
+jars=(lib/*)
+libs=$(printf ":%s" "${jars[@]}")
+CLASSPATH=${ROOT}${libs}
 
 ${JAVA} -cp ${CLASSPATH} SCIF "$@"
