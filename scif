@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 JAVA=java
 ROOT=`dirname $0`
