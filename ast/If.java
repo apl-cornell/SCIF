@@ -138,7 +138,7 @@ public class If extends NonFirstLayerStatement {
         // env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, Utils.joinLabels(leftContext.lockName, rightContext.lockName)), env.hypothesis, location));
 
         env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, leftContext.lockName), env.hypothesis, location, env.curContractSym.name,
-                "Lock of if branch contributes to lock of this if statement"));
+                "Lock of then branch contributes to lock of this if statement"));
         env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, rightContext.lockName), env.hypothesis, location, env.curContractSym.name,
                 "Lock of else branch contributes to lock of this if statement"));
 

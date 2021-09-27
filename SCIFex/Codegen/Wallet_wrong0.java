@@ -13,8 +13,8 @@ contract Wallet [this] {
         uint{this} gAmount = endorse(amount, BOT->this);
 
         if (balances[msg.sender] >= gAmount) {
-            send(msg.sender, gAmount);
             balances[msg.sender] = balances[msg.sender] - gAmount;
+            send(msg.sender, gAmount);
         }
     }
 

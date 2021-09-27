@@ -6,9 +6,8 @@ contract Uniswap[this] {
     }}
     Token{this} tX;
     Token{this} tY;
-    Uniswap{this} this;
 
-    Uniswap constructor(address tO, address lO, address tokenX, address tokenY) {
+    Uniswap constructor{this >> this; this}(address tO, address lO, address tokenX, address tokenY) {
         @BaseContractCentralized(tO, lO);
 
         tX = Token(tokenX);

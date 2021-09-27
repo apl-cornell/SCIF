@@ -2,19 +2,19 @@ contract Wallet [this] {
     {{
         BaseContractCentralized
     }}
-    map(address, uint){this} balances;
+    map(address, uint){BOT} balances;
 
     Wallet constructor{this >> this; this}(address{this} trustOracle, address{this} lockOracle) {
         @BaseContractCentralized(trustOracle, lockOracle);
     }
 
     @public
-    void withdraw{BOT >> this; this}(uint{BOT} amount) {
+    void withdraw{BOT >> this; BOT}(uint{BOT} amount) {
         uint{this} gAmount = endorse(amount, BOT->this);
 
         if (balances[msg.sender] >= gAmount) {
-            send(msg.sender, gAmount);
             balances[msg.sender] = balances[msg.sender] - gAmount;
+            send(msg.sender, gAmount);
         }
     }
 

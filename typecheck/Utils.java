@@ -41,7 +41,7 @@ public class Utils {
     public static final String SET_CONTRACT_NAME = "Set";
     public static final String PATH_TO_BASECONTRACTCENTRALIZED = "BaseContractCentralized";
 
-    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Lock should be maintained before execution of this operation";
+    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Lock should be maintained except the last operation";
 
 
     public static final boolean isPrimitiveType(String x) {
@@ -343,7 +343,7 @@ public class Utils {
 
     public static String translateSLCSuggestion(Program p, String s) {
         if (s.charAt(0) != '-') return null;
-        // System.out.println(s);
+        System.out.println(s);
         int l = s.indexOf('['), r = s.indexOf(']');
         if (l == -1 || s.charAt(l + 1) != '\"') return  null;
         ++l;
@@ -375,6 +375,17 @@ public class Utils {
         rtn += '^';
 
         return rtn;
+    }
+
+    public static String ordNumString(int i) {
+        if (i == 1)
+            return "1st";
+        else if (i == 2)
+            return "2nd";
+        else if (i == 3)
+            return "3rd";
+        else
+            return i + "th";
     }
 }
 

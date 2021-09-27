@@ -7,19 +7,18 @@ contract Token [this] {
     map(address, uint){this} balances;
     map(address, bool){this} isAdmin;
 
-    Token constructor(address tO, address lO, address uniswapAddr) {
+    Token constructor{this >> this; this}(address tO, address lO) {
         @BaseContractCentralized(tO, lO);
-        setTrust(uniswapAddr);
     }
 
     @public
     bool{this} transfer{this >> this; this}(address frm, address to, uint amount) {
         address sender = msg.sender;
-        if{high} (frm != sender && isAdmin[frm] != true) {
+        if (frm != sender && isAdmin[frm] != true) {
             return false;
         }
       
-        if{high}	 (balances[frm] < amount) {
+        if (balances[frm] < amount) {
       	    return false;
         }
       
@@ -29,10 +28,10 @@ contract Token [this] {
         Holder _frm = Holder(frm);
         Holder _to = Holder(to);
 
-        lock(this) {
+        // lock(this) {
             _frm.alertSend(to, amount);
             _to.alertReceive(frm, amount);
-        }
+        // }
         return true;
     }
 

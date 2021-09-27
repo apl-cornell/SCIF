@@ -171,10 +171,10 @@ public class Call extends TrailerExpr {
                 String ifNameArgValue = tmp.valueLabelName;
                 String ifNameArgLabel = funcSym.getLabelNameArg(i);
                 env.cons.add(new Constraint(new Inequality(ifNameArgValue, Relation.LEQ, ifNameArgLabel), env.hypothesis, arg.location, env.curContractSym.name,
-                        "the " + i + "-th argument value must be trusted enough"));
+                        "Input to the " + Utils.ordNumString(i + 1) + " argument must be trusted enough"));
 
                 env.cons.add(new Constraint(new Inequality(ifNamePc, Relation.LEQ, ifNameArgLabel), env.hypothesis, arg.location, env.curContractSym.name,
-                        "Current control flow must be trusted to feed the " + i + "-th argument value"));
+                        "Current control flow must be trusted to feed the " + Utils.ordNumString(i + 1) + "-th argument value"));
 
                 env.cons.add(new Constraint(new Inequality(prevLockName, Relation.LEQ, tmp.lockName), env.hypothesis, arg.location, env.curContractSym.name,
                         Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));

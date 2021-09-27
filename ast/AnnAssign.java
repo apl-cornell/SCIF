@@ -105,10 +105,8 @@ public class AnnAssign extends Statement {
             // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
-                env.cons.add(new Constraint(new Inequality(ifLabel, varSym.labelToSherrlocFmt()), env.hypothesis, location, env.curContractSym.name,
-                        "Variable " + varSym.name + " must be no less trustworthy than label " + '{' + varSym.labelToSherrlocFmt() + '}'));
-                env.cons.add(new Constraint(new Inequality(varSym.labelToSherrlocFmt(), ifLabel), env.hypothesis, location, env.curContractSym.name,
-                        "Variable " + varSym.name + " must be no less trustworthy than label " + '{' + varSym.labelToSherrlocFmt() + '}'));
+                env.cons.add(new Constraint(new Inequality(ifLabel, Relation.EQ, varSym.labelToSherrlocFmt()), env.hypothesis, location, env.curContractSym.name,
+                        "Variable " + varSym.name + " is as trustworthy as label " + '{' + ((LabeledType) annotation).ifl + '}'));
             }
         } else {
             // ifNameTgt = ((Name) target).id;

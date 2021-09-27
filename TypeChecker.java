@@ -286,7 +286,7 @@ public class TypeChecker {
                 String ifArgLabel = arg.getLabel();
                 if (ifArgLabel != null) {
                     cons.add(new Constraint(new Inequality(ifNameArgLabel, Relation.EQ, ifArgLabel), arg.location, contractName,
-                            "Argument " + arg.name + " must be no less trustworthy than label " + '{' + ifArgLabel + '}'));
+                            "Argument " + arg.name + " is as trustworthy as label " + '{' + ifArgLabel + '}'));
 
                     //env.cons.add(new Constraint(new Inequality(ifArgLabel, ifNameArgLabel), arg.location));
 
@@ -316,7 +316,7 @@ public class TypeChecker {
             String ifLabel = var.getLabel();
             if (ifLabel != null) {
                 env.cons.add(new Constraint(new Inequality(varName, Relation.EQ, ifLabel), var.location, contractName,
-                        "Variable " + var.name + " must be no less trustworthy than its label"));
+                        "Variable " + var.name + " is as trustworthy as its label " + '{' + ifLabel + '}'));
 
                 //env.cons.add(new Constraint(new Inequality(if Label, varName), var.location));
 

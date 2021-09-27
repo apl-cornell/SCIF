@@ -9,12 +9,12 @@ contract Wallet [this] {
     }
 
     @public
-    void withdraw{BOT >> this; this}(uint{BOT} amount) {
-        uint{this} gAmount = endorse(amount, BOT->this);
+    void withdraw{BOT >> this; BOT}(uint{BOT} amount) {
+        uint{this} gAmount = amount;
 
         if (balances[msg.sender] >= gAmount) {
-            send(msg.sender, gAmount);
             balances[msg.sender] = balances[msg.sender] - gAmount;
+            send(msg.sender, gAmount);
         }
     }
 
