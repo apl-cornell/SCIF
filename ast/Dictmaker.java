@@ -30,12 +30,14 @@ public class Dictmaker extends Expression {
         Context lasttmp = null;
         for (Expression value: values) {
             if (lasttmp != null) {
-                env.cons.add(new Constraint(new Inequality(prevLock, Relation.EQ, lasttmp.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(prevLock, Relation.EQ, lasttmp.lockName), env.hypothesis, location, env.curContractSym.name,
+                        Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
                 env.prevContext.lockName = prevLock;
             }
             Context tmp = value.genConsVisit(env);
             String ifNameValue = tmp.valueLabelName;
-            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
+                    ""));
             lasttmp = tmp;
         }
         return lasttmp;

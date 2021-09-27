@@ -39,16 +39,20 @@ public class Return extends NonFirstLayerStatement {
         String ifNameRtnLock = funcSym.getLabelNameRtnLock();
         String ifNameRtnValue = funcSym.getLabelNameRtnValue();
         if (value == null) {
-            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
+                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
             return new Context(null, prevLock);
         }
 
         Context expContext = value.genConsVisit(env);
         String ifNameValue = expContext.valueLabelName;
-        env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtnValue), env.hypothesis, location));
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
+                "Value must be trusted to be returned"));
+        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
+                "Control flow must be trusted to return"));
 
-        env.cons.add(new Constraint(new Inequality(expContext.lockName, ifNameRtnLock), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(expContext.lockName, ifNameRtnLock), env.hypothesis, location, env.curContractSym.name,
+                "Lock must be respected to return"));
         return new Context(null, prevLock);
     }
 

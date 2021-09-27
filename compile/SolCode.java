@@ -42,6 +42,8 @@ public class SolCode {
 
     public void addLine(String line) {
         // System.err.println("ADDING: " + currentIndent + line);
+        if (line.equals("assert(true);") || line.equals("assert(!false);"))
+            line = "//" + line;
         code.add(currentIndent + line);
     }
 

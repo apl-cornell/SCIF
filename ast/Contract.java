@@ -49,6 +49,7 @@ public class Contract extends Node {
         //env.globalSymTab.add(name, new VarSym(env.toVarSym(name, new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, new CodeLocation(), now)));
         ContractSym contractSym = new ContractSym(contractName, env.curSymTab, trustSetting, ifl);
         env.addGlobalSym(contractName, contractSym);
+        env.setCurContractSym(contractSym);
 
         for (Statement stmt : body) {
             if (!stmt.NTCGlobalInfo(env, now)) return false;
@@ -60,7 +61,7 @@ public class Contract extends Node {
     @Override
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-
+    env.setCurContractSym(env.getContract(contractName));
 
 
         for (Statement stmt : body) {
@@ -76,7 +77,7 @@ public class Contract extends Node {
         contractSym.ifl = ifl;
         contractSym.addContract(contractName, contractSym);
         String name = "this";
-        contractSym.addVar(name, contractSym.toVarSym(name, new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, null, scopeContext));
+        contractSym.addVar(name, contractSym.toVarSym(name, new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, false, null, scopeContext));
         for (Statement stmt : body) {
             stmt.globalInfoVisit(contractSym);
         }

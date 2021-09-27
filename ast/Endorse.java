@@ -29,9 +29,11 @@ public class Endorse extends Expression {
         String fromLabel = from.toSherrlocFmt();
         String toLabel = to.toSherrlocFmt();
 
-        env.cons.add(new Constraint(new Inequality(ifNameValue, fromLabel), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNameValue, fromLabel), env.hypothesis, location, env.curContractSym.name,
+                "The expression must be trusted to be endorsed"));
 
-        env.cons.add(new Constraint(new Inequality(ifNameRtn, toLabel), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNameRtn, toLabel), env.hypothesis, location, env.curContractSym.name,
+                "The integrity level of this expression would be endorsed"));
 
         return new Context(ifNameRtn, tmp.lockName);
     }

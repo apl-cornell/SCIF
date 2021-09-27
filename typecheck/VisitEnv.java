@@ -4,6 +4,7 @@ import sherrlocUtils.Constraint;
 import sherrlocUtils.Hypothesis;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class VisitEnv {
@@ -19,6 +20,7 @@ public class VisitEnv {
     public HashSet<String> principalSet; // TODO: better imp
     public ContractSym curContractSym;
     // public HashMap<String, ContractInfo> contractMap;
+    public HashMap<String, SigCons> sigConsMap;
 
 
     public VisitEnv(ScopeContext ctxt, Context prevContext,
@@ -30,7 +32,8 @@ public class VisitEnv {
                     SymTab curSymTab,
                     Hypothesis hypothesis,
                     HashSet<String> principalSet,
-                    ContractSym curContractSym
+                    ContractSym curContractSym,
+                    HashMap<String, SigCons> sigConsMap
                     /*HashMap<String, ContractInfo> contractMap*/) {
         // this.ctxt = ctxt;
         this.prevContext = prevContext;
@@ -44,6 +47,7 @@ public class VisitEnv {
         this.principalSet = principalSet;
         this.curContractSym = curContractSym;
         // this.contractMap = contractMap;
+        this.sigConsMap = sigConsMap;
     }
 
     public VisitEnv() {
@@ -59,6 +63,7 @@ public class VisitEnv {
         principalSet = new HashSet<>();
         curContractSym = null;
         // contractMap = new HashMap<>();
+        sigConsMap = new HashMap<>();
     }
 
     public void addVar(String id, VarSym varSym) {
@@ -107,5 +112,14 @@ public class VisitEnv {
 
     public boolean containsVar(String id) {
         return getVar(id) != null;
+    }
+
+    public void addSigCons(String contractName, ArrayList<Constraint> trustCons, ArrayList<Constraint> cons) {
+        SigCons sigCons = new SigCons(contractName, trustCons, cons);
+        sigConsMap.put(contractName, sigCons);
+    }
+
+    public SigCons getSigCons(String contractName) {
+        return sigConsMap.get(contractName);
     }
 }

@@ -56,10 +56,10 @@ public class ScopeContext {
 
     public Constraint genCons(ScopeContext rhs, Relation op, NTCEnv env, CodeLocation location) {
 
-        return new Constraint(new Inequality(getSHErrLocName(), op, rhs.getSHErrLocName()), env.globalHypothesis, location);
+        return new Constraint(new Inequality(getSHErrLocName(), op, rhs.getSHErrLocName()), env.globalHypothesis, location, env.curContractSym.name, "");
     }
     public Constraint genCons(String rhs, Relation op, NTCEnv env, CodeLocation location) {
-        return new Constraint(new Inequality(getSHErrLocName(), op, rhs), env.globalHypothesis, location);
+        return new Constraint(new Inequality(getSHErrLocName(), op, rhs), env.globalHypothesis, location, env.curContractSym.name, "");
     }
 
     public boolean isContractLevel() {

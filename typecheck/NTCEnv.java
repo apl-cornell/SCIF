@@ -17,6 +17,7 @@ public class NTCEnv {
     // external contracts will be added to the global SymTab
     public ArrayList<Constraint> cons;
     public Hypothesis globalHypothesis;
+    public ContractSym curContractSym;
     public NTCEnv() {
         globalSymTab = new SymTab();
         // externalSymTab = new HashMap<>();
@@ -24,16 +25,18 @@ public class NTCEnv {
         //globalSymTab = null; //TODO
         curSymTab = globalSymTab;
         globalHypothesis = new Hypothesis();
+        curContractSym = new ContractSym();
     }
 
     public void setGlobalSymTab(SymTab curSymTab) {
         globalSymTab = curSymTab;
     }
     public void setCurSymTab(SymTab curSymTab) { this.curSymTab = curSymTab; }
+    public void setCurContractSym(ContractSym curContractSym) { this.curContractSym = curContractSym; }
 
-    public VarSym toVarSym(String varName, ast.Type astType, boolean isConst, CodeLocation location, ScopeContext context) {
+    public VarSym toVarSym(String varName, ast.Type astType, boolean isConst, boolean isFinal, CodeLocation location, ScopeContext context) {
         TypeSym typeSym = toTypeSym(astType);
-        return new VarSym(varName, typeSym, null, location, context, isConst);
+        return new VarSym(varName, typeSym, null, location, context, isConst, isFinal);
     }
 
     public TypeSym toTypeSym(ast.Type astType) {

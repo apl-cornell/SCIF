@@ -52,18 +52,22 @@ public class Assign extends NonFirstLayerStatement {
                 }*/
             } else if (target instanceof Subscript || target instanceof Attribute) {
                 env.prevContext = valueContext;
-                env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, valueContext.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, valueContext.lockName), env.hypothesis, value.location, env.curContractSym.name,
+                        "Lock should be maintained before execution of this operation"));
                 Context tmp = target.genConsVisit(env);
                 ifNameTgt = tmp.valueLabelName;
                 rtnLockName = tmp.lockName;
             } else {
                 //TODO: error handling
             }
-            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis, location, env.curContractSym.name,
+                    "Integrity of the value being assigned must be trusted to allow this assignment"));
 
-            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, location, env.curContractSym.name,
+                    "Integrity of control flow must be trusted to allow this assignment"));
 
-            env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, rtnLockName), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, rtnLockName), env.hypothesis, location, env.curContractSym.name,
+                    "Lock should be maintained before execution of this operation"));
 
         }
         return new Context(ifNameTgt, rtnLockName);

@@ -8,10 +8,12 @@ import com.owlike.genson.GensonBuilder;
 import typecheck.CodeLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import typecheck.Utils;
 
 parser code {:
     //public boolean DEBUG = true;
     protected static final Logger logger = LogManager.getLogger();
+    public static String filename;
 
     public void syntax_error(Symbol cur_token) {
         logger.error("Syntax error at {}", cur_token);
@@ -34,6 +36,7 @@ parser code {:
 
     public static void main(String args[]) {
         File inputFile = new File(args[0]);
+        filename = inputFile.getAbsolutePath();
         parse(inputFile, null);
     }
 
@@ -87,15 +90,16 @@ terminal INT;
 terminal UNARY, COMP, BIT, ADDISH, MULISH;
 terminal ENDORSE, AUTOENDORSE, GUARD;
 terminal MAP;
-terminal CONST, KEY;
+terminal KEY;
 terminal CONTRACT;
 terminal INTERFACE;
 terminal STRUCT;
 terminal EQUALGREATER;
 terminal NEWLINE, EXTENDS, LET;
 terminal REF, SUPER, THEN, NEW;
+terminal FINAL, STATIC;
 
-nonterminal Node sourceCode;
+nonterminal Program sourceCode;
 nonterminal Interface interface;
 nonterminal Program program;
 nonterminal HashSet<String> ipt_stmts;
@@ -110,7 +114,7 @@ nonterminal Arguments parameters, typedarglist, probinittfpdef;
 nonterminal Arg tfpdef;
 nonterminal ArrayList<Statement> stmt, simple_stmt, small_stmts;
 nonterminal Statement small_stmt, expr_stmt;
-nonterminal AnnAssign annassign;
+nonterminal AnnAssign varDec, annassign;
 nonterminal Statement del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt;
 nonterminal String ipt_stmt;
 nonterminal String ipt_name;
@@ -176,7 +180,7 @@ precedence right DOUBLESTAR;
 start with sourceCode;
 
 sourceCode ::= program:a {: RESULT = a; :}
-    | interface:a {:RESULT = a; :}
+    // | interface:a {:RESULT = a; :}
     | {: logger.debug("empty program"); RESULT = null;:};
 
 trust_setting ::= LBRACE LBRACE NAME:dynamicOption RBRACE RBRACE {:
@@ -223,7 +227,7 @@ trust_decs ::= trust_dec:x {:
 trust_dec ::= LBRACE:x ifLabel:lhs trust_operator:optor ifLabel:rhs RBRACE {:
         TrustConstraint cons = new TrustConstraint(lhs, optor, rhs);
         RESULT = cons;
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     /*| NEWLINE trust_dec:x {:
         RESULT = x;
@@ -235,9 +239,9 @@ trust_operator ::= EQUAL {: RESULT = Relation.EQ; :}
 
 // version: static lock
 tFuncLabels ::= LBRACE:x ifLabelOrNull:a RIGHTSHIFT ifLabelOrNull:b SEMI ifLabelOrNull:c RBRACE {:
-        logger.debug("parsing func begin labels");
+        logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
         RESULT = new FuncLabels(a, b, c);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | {:
         logger.debug("parsing empty funclabels");
@@ -288,33 +292,33 @@ r_funcSig ::=
         // System.out.println("parsing function");
         // logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, c);
-        RESULT.setLoc(new CodeLocation(cleft, cright));
+        RESULT.setLoc(new CodeLocation(cleft, cright, filename));
         //makeNode("funcdef", a, b, c, d);
     :}
     | decorators:d typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b  {:
         // System.out.println("parsing function");
         // logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, d, c);
-        RESULT.setLoc(new CodeLocation(cleft, cright));
+        RESULT.setLoc(new CodeLocation(cleft, cright, filename));
         //makeNode("funcdef", a, b, c, d);
     :}
     /*| DEF:x NAME:funcName tFuncLabels:funclabels parameters:b {:
         logger.debug("parsing function");
         //System.err.println("parsing function");
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | DEF:x NAME:a  polyDescription:p tFuncLabels:funclabels parameters:b {:
         logger.debug("Finished parsing the poly func");
         String funId = (String) a;
         RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | DEF:x NAME:a polyDescription:p tFuncLabels:funclabels parameters:b RARROW typeSym:c {:
         logger.debug("Finished parsing the poly func");
         String funId = (String) a;
         RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, c);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}*/;
 
 decorator ::= AT:x NAME:a {:
@@ -331,71 +335,62 @@ decorators ::=
         RESULT = list;
     :};
 
-program ::= ipt_stmts:a contracts:b {:
+program ::= ipt_stmts:a contract:b {:
         RESULT = new Program(a, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
         logger.debug(RESULT);
     :}
-    | contracts:list {:
-        RESULT = new Program(list);
-        RESULT.setLoc(new CodeLocation(listleft, listright));
+    | contract:a {:
+        RESULT = new Program(a);
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
         logger.debug(RESULT);
-    :};
-
-contracts ::= contract:a {:
-        RESULT = new ArrayList<Contract>();
-        RESULT.add(a);
-    :}
-    | contracts:list contract:a {:
-        RESULT = list;
-        list.add(a);
     :};
 
 
 contract ::= CONTRACT NAME:x LBRACE file_input:list RBRACE {:
                     TrustSetting trustSetting = new TrustSetting();
-                     RESULT = new Contract((String) x, trustSetting, list, null);
-                     RESULT.setLoc(new CodeLocation(xleft, xright));
+                     RESULT = new Contract((String) x, trustSetting, list, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+                     RESULT.setLoc(new CodeLocation(xleft, xright, filename));
                      //System.err.println(RESULT);
                  :}
     | CONTRACT NAME:x LSQB ifLabel:ifl RSQB LBRACE file_input:list RBRACE {:
                     TrustSetting trustSetting = new TrustSetting();
         RESULT = new Contract((String) x, trustSetting, list, ifl);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
         //System.err.println(RESULT);
     :}
     | CONTRACT NAME:x LSQB ifLabel:ifl RSQB EXTENDS NAME:y LBRACE file_input:list RBRACE {:
                     TrustSetting trustSetting = new TrustSetting();
         RESULT = new Contract((String) x, (String) y, trustSetting, list, ifl);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
         //System.err.println(RESULT);
     :}
     | CONTRACT NAME:x LSQB ifLabel:ifl RSQB LBRACE trust_setting:trustSetting file_input:list RBRACE {:
             RESULT = new Contract((String) x, trustSetting, list, ifl);
-            RESULT.setLoc(new CodeLocation(xleft, xright));
+            RESULT.setLoc(new CodeLocation(xleft, xright, filename));
             //System.err.println(RESULT);
     :}
     | CONTRACT NAME:x LSQB ifLabel:ifl RSQB EXTENDS NAME:y LBRACE trust_setting:trustSetting file_input:list RBRACE {:
             RESULT = new Contract((String) x, (String) y, trustSetting, list, ifl);
-            RESULT.setLoc(new CodeLocation(xleft, xright));
+            RESULT.setLoc(new CodeLocation(xleft, xright, filename));
             //System.err.println(RESULT);
     :};
 
 //Information flow specific modification
 endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from RARROW ifLabel:to RPAR {:
         RESULT = new Endorse(a, from, to);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
 labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
         //System.out.println("parsed labeledType with label: \n" + b.toString());
         String name = (String)a;
         RESULT = new LabeledType(name, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | MAP:x LPAR typeSym:keyType COMMA typeSym:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
         RESULT = new ast.Map(keyType, valueType, mapLabel);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | depMap:a {:
         RESULT = a;
@@ -405,7 +400,7 @@ depMap ::=
     MAP:x LPAR NAME:keyName COLON labeledType:keyType COMMA labeledType:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
         String name = (String)keyName;
         RESULT = new DepMap(name, keyType, valueType, mapLabel);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
 /*maybeAutoendorseIfLabel ::= autoendorse:a {:
@@ -418,26 +413,26 @@ depMap ::=
 
 /*autoendorse ::= AUTOENDORSE:x LPAR ifLabel:from COMMA ifLabel:to RPAR {:
         RESULT = new Autoendorse(from, to);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};*/
 
 ifLabel ::= unitIfLabel:a {:
         RESULT = a;
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :} 
     | ifLabel:a AND ifLabel:b {:
         RESULT = new ComplexIfLabel(a, IfOperator.MEET, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | ifLabel:a OR ifLabel:b {:
         RESULT = new ComplexIfLabel(a, IfOperator.JOIN, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 unitIfLabel ::= NAME:a {:
         Name name = new Name((String)a);
-        name.setLoc(new CodeLocation(aleft, aright));
+        name.setLoc(new CodeLocation(aleft, aright, filename));
         RESULT = new PrimitiveIfLabel(name);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | LPAR ifLabel:a RPAR {:
         RESULT = a;
@@ -467,50 +462,50 @@ funcdef ::=
     r_funcSig:funcSig suite:d {:
         // System.err.println("parsing function");
         RESULT = new FunctionDef(funcSig, d);
-        RESULT.setLoc(new CodeLocation(funcSigleft, funcSigright));
+        RESULT.setLoc(new CodeLocation(funcSigleft, funcSigright, filename));
     :};
 /*
     DEF:x NAME:funcName tFuncLabels:funcLabels parameters:b RARROW typeSym:c COLON suite:d {:
         RESULT = new FunctionDef((String) funcName, funcLabels, b, d, null, c);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
         //makeNode("funcdef", a, b, c, d);
     :}
     | DEF:x NAME:funcName tFuncLabels:funcLabels parameters:b COLON suite:c {:
         logger.debug("parsing function");
         //System.err.println("parsing function");
         RESULT = new FunctionDef((String) funcName, funcLabels, b, c, null, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | DEF:x NAME:funcName parameters:b COLON suite:c {:
         logger.debug("parsing function");
         //System.err.println("parsing function");
         RESULT = new FunctionDef((String) funcName, new FuncLabels(), b, c, null, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | DEF:x NAME:a polyDescription:p tFuncLabels:funcLabels  parameters:b COLON suite:c {:
         logger.debug("Finished parsing the poly func");
         String funId = (String)a;
         RESULT = new PolyFunctionDef(funId, funcLabels, p, b, c, null, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | DEF:x NAME:a  polyDescription:p tFuncLabels:funcLabels parameters:b RARROW typeSym:c COLON suite:d {:
         logger.debug("Finished parsing the poly func");
         String funId = (String)a;
         RESULT = new PolyFunctionDef(funId, funcLabels, p, b, d, null, c);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 */
 typeSym ::=
     NAME:a {:
         logger.debug("a name");
         RESULT = new Type((String)a);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | labeledType:a {:
         /*Name name = new Name((String)a);
-        name.setLoc(new CodeLocation(aleft, aright));*/
+        name.setLoc(new CodeLocation(aleft, aright, filename));*/
         RESULT = a;
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
         logger.debug("finished labeled typeSym parsing");
     :};
 polyDescription ::=
@@ -543,7 +538,7 @@ parameters ::=
     :}
     | LPAR:a RPAR {:
         RESULT = new Arguments();
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 typedarglist ::=
     probinittfpdef:a {:RESULT = a; :}
@@ -556,7 +551,7 @@ probinittfpdef ::=
         ArrayList<Arg> args = new ArrayList<Arg>();
         args.add(a);
         RESULT = new Arguments(args, null);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | tfpdef:a EQUAL expr:b {:
         ArrayList<Arg> args = new ArrayList<Arg>();
@@ -564,14 +559,14 @@ probinittfpdef ::=
         args.add(a);
         defaults.add(b);
         RESULT = new Arguments(args, defaults);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 tfpdef ::= 
      typeSym:b NAME:a{:
         // System.err.println("pair (" + b + " " + a + ")");
         String name = (String)a;
         RESULT = new Arg(name, b);
-        RESULT.setLoc(new CodeLocation(bleft, bright));
+        RESULT.setLoc(new CodeLocation(bleft, bright, filename));
     :};
 
 //stmt: simple_stmt | compound_stmt
@@ -580,21 +575,38 @@ tfpdef ::=
 //             import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
 //expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
 //                     ('=' (yield_expr|testlist_star_expr))*)
-stmt ::= typeSym:a annassign:b SEMI {://testlist_star_expr:a expr_rest_stmt:b {:
-                logger.debug("variable declaration");
-            ArrayList<Statement> rnt = new ArrayList<Statement>();
-                 b.setType(a);
-                 /*if (a instanceof Name) {
-                     b.setSimple(true);
-                 }*/
-                 rnt.add(b);
-                 RESULT = rnt;
-             :}
+stmt ::= varDec:a SEMI {:
+        ArrayList<Statement> rnt = new ArrayList<Statement>();
+        rnt.add(a);
+        RESULT = rnt;
+    :}
     | funcdef:a {:
         ArrayList<Statement> rnt = new ArrayList<Statement>();
         rnt.add(a);
         RESULT = rnt;
     :};
+
+varDec ::= typeSym:a annassign:b {:
+        logger.debug("variable declaration");
+        b.setType(a);
+        b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+        RESULT = b;
+    :}
+    | FINAL typeSym:a annassign:b {:
+        logger.debug("variable declaration");
+        b.setType(a);
+        b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+        b.setFinal(true);
+        RESULT = b;
+    :}
+    | STATIC typeSym:a annassign:b {:
+        logger.debug("variable declaration");
+        b.setType(a);
+        b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+        b.setStatic(true);
+        RESULT = b;
+    :};
+
 simple_stmt ::= small_stmts:a {: RESULT = a; :};
 small_stmts ::=
     small_stmt:a {:
@@ -622,10 +634,10 @@ dynamic_stmt ::= AT:x NAME:a trailer:b SEMI {:
     }
 
     Name name = new Name((String)a);
-    name.setLoc(new CodeLocation(aleft, aright));
+    name.setLoc(new CodeLocation(aleft, aright, filename));
     b.setValue(name);
     DynamicStatement rtn = new DynamicStatement((Call) b);
-    rtn.setLoc(new CodeLocation(xleft, xright));
+    rtn.setLoc(new CodeLocation(xleft, xright, filename));
     RESULT = rtn;
 :};
 
@@ -643,7 +655,7 @@ expr_stmt ::=
         list.add(a);
         Assign rnt = new Assign(list, b);
         RESULT = rnt;
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 
 //annassign: ':' test ['=' test]
@@ -655,24 +667,24 @@ annassign ::=
         //System.out.println("Annassign case 1 parsing");
         AnnAssign rnt = new AnnAssign(null, a, b, true, true);
         RESULT = rnt;
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}*/
     NAME:a EQUAL expr:b {:
         //System.out.println("Annassign case 1 parsing");
         Name x = new Name((String)a);
-        x.setLoc(new CodeLocation(aleft, aright));
-        AnnAssign rnt = new AnnAssign(x, null, b, true, false);
+        x.setLoc(new CodeLocation(aleft, aright, filename));
+        AnnAssign rnt = new AnnAssign(x, null, b, true, false, false);
         RESULT = rnt;
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     |
     NAME:a {:
         //System.out.println("Annassign case 2 parsing");
         Name x = new Name((String)a);
-        x.setLoc(new CodeLocation(aleft, aright));
-        AnnAssign rnt = new AnnAssign(x, null, null, true, false);
+        x.setLoc(new CodeLocation(aleft, aright, filename));
+        AnnAssign rnt = new AnnAssign(x, null, null, true, false, false);
         RESULT = rnt;
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 
 //# For normal and annotated assignments, additional restrictions enforced by the interpreter
@@ -688,11 +700,11 @@ annassign ::=
 // import_name: 'import' dotted_as_names
 del_stmt ::= DEL:x exprlist:a SEMI {:
             RESULT = new Delete(a);
-            RESULT.setLoc(new CodeLocation(xleft, xright));
+            RESULT.setLoc(new CodeLocation(xleft, xright, filename));
         :};
 pass_stmt ::= PASS:a SEMI {:
         RESULT = new Pass();
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 flow_stmt ::= break_stmt:a {: RESULT = a;:}
         | continue_stmt:a {: RESULT = a;:}
@@ -700,31 +712,31 @@ flow_stmt ::= break_stmt:a {: RESULT = a;:}
         | raise_stmt:a {: RESULT = a;:};
 break_stmt ::= BREAK:a SEMI {:
         RESULT = new Break();
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 continue_stmt ::= CONTINUE:a SEMI {:
         RESULT = new Continue();
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 return_stmt ::= RETURN:a SEMI {:
         RESULT = new Return();
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | RETURN:x expr:a SEMI {:
         RESULT = new Return(a);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 raise_stmt ::= RAISE:a SEMI {:
         RESULT = new Raise();
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | RAISE:x expr:a SEMI {:
         RESULT = new Raise(a);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | RAISE:x expr:a FROM expr:b SEMI {:
         RESULT = new Raise(a, b);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 ipt_stmts ::=
     ipt_stmts:s  ipt_stmt:a {:
@@ -744,7 +756,7 @@ ipt_stmt ::= ipt_name:a SEMI {:RESULT = a; :};
 
 ipt_name ::= IMPORT:x ipt_as_names:a {:
         RESULT = a;//new Import();
-        //RESULT.setLoc(new CodeLocation(xleft, xright));
+        //RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
 
@@ -754,19 +766,19 @@ ipt_name ::= IMPORT:x ipt_as_names:a {:
 ipt_as_names ::= 
     NAME:a {:
         RESULT = (String) a;//new Name((String)a);
-        //RESULT.setLoc(new CodeLocation(aleft, aright));
+        //RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | NAME:a AS NAME:b {:
         RESULT = (String) a;//new Name((String)a); //TODO
-        //RESULT.setLoc(new CodeLocation(aleft, aright));
+        //RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 assert_stmt ::= ASSERT:x expr:a COMMA expr:b SEMI {:
         RESULT = new Assert(a, b);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | ASSERT:x expr:a SEMI {:
         RESULT = new Assert(a, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
 
@@ -785,22 +797,22 @@ compound_stmt ::= if_stmt:a {:RESULT = a;:}
 guard_block ::=
     GUARD:x LPAR ifLabel:l RPAR suite:body {:
         RESULT = new GuardBlock(l, body, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 if_stmt ::= 
-    IF:x LBRACE ifLabel RBRACE LPAR expr:a RPAR suite:b {:
+    IF:x LPAR expr:a RPAR suite:b {:
         RESULT = new If(a, b);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
-    | IF:x LBRACE ifLabel RBRACE LPAR expr:a RPAR suite:b ELSE suite:c {:
+    | IF:x LPAR expr:a RPAR suite:b ELSE suite:c {:
         RESULT = new If(a, b, c);
-        RESULT.setLoc(new CodeLocation(xleft, xright));
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 let_stmt ::=
     LET:x NAME:a EQEQUAL expr:b IN suite:c {:
         // TODO: let exp
         // RESULT = new Let(a, b, c);
-        // RESULT.setLoc(new CodeLocation(xleft, xright));
+        // RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 // , ref_stmt, new_stmt, deref_stmt;
 suite ::= LBRACE small_stmts:a RBRACE {:
@@ -822,40 +834,40 @@ stmts ::=
 expr ::=
     expr:a OR:o expr:b {:
         RESULT = new BoolOp(a, BoolOperator.Or, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | expr:a AND:o expr:b {:
         RESULT = new BoolOp(a, BoolOperator.And, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | NOT:o expr:a {:
         RESULT = new UnaryOp(UnaryOperator.Not, a);
-        RESULT.setLoc(new CodeLocation(oleft, oright));
+        RESULT.setLoc(new CodeLocation(oleft, oright, filename));
     :}
     | expr:a comp_op:o expr:b {:
         //System.out.println("compare expr parsed");
         RESULT = new Compare(a, o, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :} %prec COMP
     | expr:a bit_op:o expr:b {:
         RESULT = new BinOp(a, o, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :} %prec BIT
     | expr:a addish_op:o expr:b {:
         RESULT = new BinOp(a, o, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :} %prec ADDISH
     | expr:a mulish_op:o expr:b {:
         RESULT = new BinOp(a, o, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :} %prec MULISH
     | unary_op:o expr:a {:
         RESULT = new UnaryOp(o, a);
-        RESULT.setLoc(new CodeLocation(oleft, oright));
+        RESULT.setLoc(new CodeLocation(oleft, oright, filename));
     :} %prec UNARY
     | expr:a DOUBLESTAR:o expr:b {:
         RESULT = new BinOp(a, BinaryOperator.Pow, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | trailer_expr:a {:RESULT = a; :}
     | atom:a {:
@@ -916,10 +928,12 @@ trailer_expr ::=
     atom:a trailer:b {:
         b.setValue(a);
         RESULT = b;
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | trailer_expr:a trailer:b {:
         b.setValue(a);
         RESULT = b;
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 /*trailers ::=
     trailer:a {:
@@ -935,37 +949,37 @@ trailer_expr ::=
 atom ::= 
     /*LPAR:a RPAR {:
         RESULT = new Expression();
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | */LPAR expr:a RPAR {:RESULT = a; :}
     /*| LBRACE:a RBRACE {:
         RESULT = new Expression();
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}*/
     | LBRACE dictmaker:a RBRACE {:RESULT = a;:}
     | LBRACE setmaker:a RBRACE {:RESULT = a;:}
     | NAME:a {:
         RESULT = new Name((String)a);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | labeledType:a {: RESULT = a; :}
     | NUMBER:a {:
         RESULT = new Num<Integer>(Integer.valueOf((String)a));
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | strings:a {:RESULT = a;:}
     | ELLIPSIS:o {:RESULT = null;:}
     | NONE:k {:
         RESULT = new ConstantExpr(Constant.NONE);
-        RESULT.setLoc(new CodeLocation(kleft, kright));
+        RESULT.setLoc(new CodeLocation(kleft, kright, filename));
     :}
     | TRUE:k {:
         RESULT = new ConstantExpr(Constant.TRUE);
-        RESULT.setLoc(new CodeLocation(kleft, kright));
+        RESULT.setLoc(new CodeLocation(kleft, kright, filename));
     :}
     | FALSE:k {:
         RESULT = new ConstantExpr(Constant.FALSE);
-        RESULT.setLoc(new CodeLocation(kleft, kright));
+        RESULT.setLoc(new CodeLocation(kleft, kright, filename));
     :}
     | endorseExpression:a {:
         RESULT = a;
@@ -973,7 +987,7 @@ atom ::=
 strings ::=
     STRING:a {:
         RESULT = new Str((String)a);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     /*| strings:a STRING:b {:
         RESULT = null; //TODO
@@ -990,34 +1004,34 @@ trailer ::=
     LPAR:a RPAR {:
         //TODO: distinguish calls and initialization
         RESULT = new Call();
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | LPAR arglist:a RPAR {:
         RESULT = a;
     :}
     | LSQB expr:a RSQB {:
         RESULT = new Subscript(null, a, null);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | DOT NAME:a {:
         Name name = new Name((String)a);
-        name.setLoc(new CodeLocation(aleft, aright));
+        name.setLoc(new CodeLocation(aleft, aright, filename));
         RESULT = new Attribute(null, name);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 arglist ::=
     keyword:a {:
         Call rnt = new Call();
         rnt.addKeyword(a);
         RESULT = rnt;
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | expr:a {:
         //System.out.println("parsing first arg for arglist");
         Call rnt = new Call();
         rnt.addArg(a);
         RESULT = rnt;
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | arglist:list COMMA keyword:a {:
         list.addKeyword(a);
@@ -1046,7 +1060,7 @@ exprlist_sub ::=
 keyword ::=
     NAME:a EQUAL expr:b {:
         RESULT = new Keyword((String)a, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright));
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 
 

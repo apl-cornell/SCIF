@@ -120,7 +120,8 @@ public class Call extends TrailerExpr {
                 }
                 ifNameFuncCallPc = funcSym.getLabelNameCallPcBefore();
                 ifNameFuncCallLock = funcSym.getLabelNameCallLock();
-                env.cons.add(new Constraint(new Inequality(ifContRtn, ifNameFuncCallPc), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifContRtn, ifNameFuncCallPc), env.hypothesis, location, env.curContractSym.name,
+                        "Argument value must be trusted to call this method"));
             } else {
                 return null;
             }
@@ -157,8 +158,10 @@ public class Call extends TrailerExpr {
             ifNameFuncCallPc = funcSym.getLabelNameCallPcBefore();
             ifNameFuncCallLock = funcSym.getLabelNameCallLock();
         }
-            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCallPc), env.hypothesis, location));
-            env.cons.add(new Constraint(new Inequality(ifNameFuncCallLock, prevLockName), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCallPc), env.hypothesis, location, env.curContractSym.name,
+                    "Current control flow must be trusted to call this method"));
+            env.cons.add(new Constraint(new Inequality(ifNameFuncCallLock, prevLockName), env.hypothesis, location, env.curContractSym.name,
+                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
 
 
             //TODO: keywords style arg assign
@@ -167,11 +170,14 @@ public class Call extends TrailerExpr {
                 Context tmp = arg.genConsVisit(env);
                 String ifNameArgValue = tmp.valueLabelName;
                 String ifNameArgLabel = funcSym.getLabelNameArg(i);
-                env.cons.add(new Constraint(new Inequality(ifNameArgValue, Relation.LEQ, ifNameArgLabel), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifNameArgValue, Relation.LEQ, ifNameArgLabel), env.hypothesis, arg.location, env.curContractSym.name,
+                        "the " + i + "-th argument value must be trusted enough"));
 
-                env.cons.add(new Constraint(new Inequality(ifNamePc, Relation.LEQ, ifNameArgLabel), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifNamePc, Relation.LEQ, ifNameArgLabel), env.hypothesis, arg.location, env.curContractSym.name,
+                        "Current control flow must be trusted to feed the " + i + "-th argument value"));
 
-                env.cons.add(new Constraint(new Inequality(prevLockName, Relation.LEQ, tmp.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(prevLockName, Relation.LEQ, tmp.lockName), env.hypothesis, arg.location, env.curContractSym.name,
+                        Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
 
             }
             if (funcSym instanceof PolyFuncSym) {

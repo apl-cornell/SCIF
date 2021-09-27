@@ -13,29 +13,35 @@ public class AnnAssign extends Statement {
     public Expression target;
     public Type annotation;
     public Expression value;
-    public boolean isConst;
+    public boolean isStatic;
+    public boolean isFinal;
     public boolean simple; //if the target is a pure name or an expression
 
-    public AnnAssign(Expression target, Type annotation, Expression value, boolean simple, boolean isConst) {
+    public AnnAssign(Expression target, Type annotation, Expression value, boolean simple, boolean isConst, boolean isFinal) {
         this.target = target;
         this.annotation = annotation;
         this.value = value;
         this.simple = simple;
-        this.isConst = isConst;
+        this.isStatic = isConst;
+        this.isFinal = isFinal;
     }
 
     public void setType(Type type) { this.annotation = type; }
+    public void setToDefault(IfLabel lbl) { annotation.setToDefault(lbl); }
     public void setTarget(Expression target) {
         this.target = target;
     }
     public void setSimple(boolean simple) {
         this.simple = simple;
     }
+    public void setFinal(boolean isFinal) { this.isFinal = isFinal;}
+    public void setStatic(boolean isStatic) {this.isStatic = isStatic;}
+
     public VarSym toVarInfo(ContractSym contractSym) {
         IfLabel ifl = null;
         if (annotation instanceof LabeledType)
             ifl = ((LabeledType) annotation).ifl;
-        return contractSym.toVarSym(((Name)target).id, annotation, isConst, location, scopeContext);
+        return contractSym.toVarSym(((Name)target).id, annotation, isStatic, isFinal, location, scopeContext);
     }
 
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
@@ -44,7 +50,7 @@ public class AnnAssign extends Statement {
         ScopeContext tgt = new ScopeContext(target, now);
 
         String name = ((Name) target).id;
-        env.globalSymTab.add(name, env.toVarSym(name, annotation, isConst, location, tgt));
+        env.globalSymTab.add(name, env.toVarSym(name, annotation, isStatic, isFinal, location, tgt));
         return true;
     }
 
@@ -53,7 +59,7 @@ public class AnnAssign extends Statement {
         ScopeContext now = new ScopeContext(this, parent);
         if (!parent.isContractLevel()) {
             String name = ((Name) target).id;
-            env.addSym(name, new VarSym(env.toVarSym(name, annotation, isConst, location, now)));
+            env.addSym(name, new VarSym(env.toVarSym(name, annotation, isStatic, isFinal, location, now)));
         }
         ScopeContext type = annotation.NTCgenCons(env, now);
         ScopeContext tgt = target.NTCgenCons(env, now);
@@ -72,7 +78,7 @@ public class AnnAssign extends Statement {
         if (simple) {
             String id = ((Name) target).id;
             CodeLocation loc = location;
-            contractSym.addVar(id, contractSym.toVarSym(id, annotation, isConst, loc, scopeContext));
+            contractSym.addVar(id, contractSym.toVarSym(id, annotation, isStatic, isFinal, loc, scopeContext));
         } else {
             //TODO
         }
@@ -91,7 +97,7 @@ public class AnnAssign extends Statement {
         logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
         if (!scopeContext.isContractLevel()) {
             CodeLocation loc = location;
-            varSym = env.curContractSym.toVarSym(id, annotation, isConst, loc, scopeContext);
+            varSym = env.curContractSym.toVarSym(id, annotation, isStatic, isFinal, loc, scopeContext);
             // ifNameTgt = varSym.toSherrlocFmt();
                     // (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
             // varSym = env.contractInfo.toVarInfo(id, annotation, isConst, loc);
@@ -99,8 +105,10 @@ public class AnnAssign extends Statement {
             // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
-                env.cons.add(new Constraint(new Inequality(ifLabel, varSym.labelToSherrlocFmt()), env.hypothesis, location));
-                env.cons.add(new Constraint(new Inequality(varSym.labelToSherrlocFmt(), ifLabel), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifLabel, varSym.labelToSherrlocFmt()), env.hypothesis, location, env.curContractSym.name,
+                        "Variable " + varSym.name + " must be no less trustworthy than label " + '{' + varSym.labelToSherrlocFmt() + '}'));
+                env.cons.add(new Constraint(new Inequality(varSym.labelToSherrlocFmt(), ifLabel), env.hypothesis, location, env.curContractSym.name,
+                        "Variable " + varSym.name + " must be no less trustworthy than label " + '{' + varSym.labelToSherrlocFmt() + '}'));
             }
         } else {
             // ifNameTgt = ((Name) target).id;
@@ -125,13 +133,16 @@ public class AnnAssign extends Statement {
         // String ifNameTgtLbl = ifNameTgt + "..lbl";
         Context prevContext = env.prevContext;
 
-        env.cons.add(new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis, location, env.curContractSym.name,
+                "Integrity of control flow must be trusted to allow this assignment"));
         if (value != null) {
             Context tmp = value.genConsVisit(env);
             String ifNameValue = tmp.valueLabelName;
-            env.cons.add(new Constraint(new Inequality(ifNameValue, SLCNameVarLbl), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameValue, SLCNameVarLbl), env.hypothesis, location, env.curContractSym.name,
+                    "Integrity of the value being assigned must be trusted to allow this assignment"));
             if (prevContext != null && prevContext.lockName != null) {
-                env.cons.add(new Constraint(new Inequality(tmp.lockName, CompareOperator.Eq, prevContext.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(tmp.lockName, CompareOperator.Eq, prevContext.lockName), env.hypothesis, location, env.curContractSym.name,
+                        "Lock should be maintained before execution of this operation"));
             }
             env.prevContext.lockName = tmp.lockName;
         }
@@ -147,9 +158,9 @@ public class AnnAssign extends Statement {
 
     public void SolCodeGen(SolCode code) {
         if (value != null)
-            code.addVarDef(annotation.toSolCode(), target.toSolCode(), isConst, value.toSolCode());
+            code.addVarDef(annotation.toSolCode(), target.toSolCode(), isStatic, value.toSolCode());
         else
-            code.addVarDef(annotation.toSolCode(), target.toSolCode(), isConst);
+            code.addVarDef(annotation.toSolCode(), target.toSolCode(), isStatic);
     }
 
     @Override

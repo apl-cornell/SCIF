@@ -20,6 +20,7 @@ public class Utils {
     //public static final String ENDORCE_FUNC_NAME = "endorce";
     public static final String LABEL_TOP = "TOP";
     public static final String LABEL_BOTTOM = "BOT";
+    public static final String LABEL_THIS = "this";
     public static final String DEAD = "---DEAD---";
     public static final String KEY = "KEY";
     public static final String SHERRLOC_TOP = LABEL_TOP;
@@ -39,6 +40,8 @@ public class Utils {
     public static final String TRUSTCENTER_NAME = "trustCenter";
     public static final String SET_CONTRACT_NAME = "Set";
     public static final String PATH_TO_BASECONTRACTCENTRALIZED = "BaseContractCentralized";
+
+    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Lock should be maintained before execution of this operation";
 
 
     public static final boolean isPrimitiveType(String x) {
@@ -140,6 +143,7 @@ public class Utils {
 
     public static void writeCons2File(HashSet<String> constructors, ArrayList<Constraint> assumptions, ArrayList<Constraint> constraints, File outputFile, boolean isIFC) {
         try {
+            // transform every "this" to "contractName.this"
             BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
             logger.debug("Writing the constraints of size {}", constraints.size());
             //System.err.println("Writing the constraints of size " + env.cons.size());
@@ -204,7 +208,7 @@ public class Utils {
     public static VarSym createBuiltInVarInfo(String localName, String typeName, ScopeContext context, SymTab s) {
         return new VarSym(
                 localName,
-                ((TypeSym) s.lookup(typeName)), new PrimitiveIfLabel(new Name("this")), null, context, false);
+                ((TypeSym) s.lookup(typeName)), new PrimitiveIfLabel(new Name("this")), null, context, false, false);
     }
 
     public static void addBuiltInSyms(SymTab globalSymTab, TrustSetting trustSetting) {
@@ -241,7 +245,7 @@ public class Utils {
         StructTypeSym msgT = new StructTypeSym("msgT", members);
         VarSym msg = new VarSym("msg",
                 msgT, null,
-                null, universalContext, false);
+                null, universalContext, false, false);
         globalSymTab.add("msg", new VarSym(msg));
 
         /* send(address, value) */
@@ -276,7 +280,7 @@ public class Utils {
                 members = new ArrayList<>();
                 VarSym trustee = createBuiltInVarInfo("trustee", "address", emptyContext, globalSymTab);
                 members.add(trustee);
-                funcLabels = new FuncLabels(thisLabel, thisLabel, botLabel);
+                funcLabels = new FuncLabels(thisLabel, thisLabel, thisLabel);
                 FuncSym setTrustSym = new FuncSym("setTrust", funcLabels, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel, new ScopeContext("setTrust"), null);
                 globalSymTab.add("setTrust", setTrustSym);
             //}
@@ -335,6 +339,42 @@ public class Utils {
                 return DynamicSystemOption.Decentralized;
         }
         return null; //TODO error report
+    }
+
+    public static String translateSLCSuggestion(Program p, String s) {
+        if (s.charAt(0) != '-') return null;
+        // System.out.println(s);
+        int l = s.indexOf('['), r = s.indexOf(']');
+        if (l == -1 || s.charAt(l + 1) != '\"') return  null;
+        ++l;
+        String explanation = "";
+        while (s.charAt(l + 1) != '\"') {
+            ++l;
+            explanation += s.charAt(l);
+        }
+        l += 2;
+
+        if (!Character.isDigit(s.charAt(l + 1)))
+            return null;
+        String slin = "", scol = "";
+        while (s.charAt(l + 1) != ',') {
+            ++l;
+            slin = slin + s.charAt(l);
+        }
+        ++l;
+        while (s.charAt(l + 1) != '-') {
+            ++l;
+            scol = scol + s.charAt(l);
+        }
+        int lin = Integer.parseInt(slin), col = Integer.parseInt(scol);
+
+        String rtn = p.getProgramName() + "(" + slin + "," + scol + "): " + explanation + ".\n";
+        rtn += p.getSourceCodeLine(lin - 1) + "\n";
+        for (int i = 1; i < col; ++i)
+            rtn += " ";
+        rtn += '^';
+
+        return rtn;
     }
 }
 

@@ -31,7 +31,8 @@ public class FunctionDef extends FunctionSig {
             arg.NTCgenCons(env, now);
         }
         if (funcSym.returnType != null) {
-            env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ, env.getSymName(funcSym.returnType.name)), env.globalHypothesis, location));
+            env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ, env.getSymName(funcSym.returnType.name)), env.globalHypothesis, location, env.curContractSym.name,
+                    "Label of this method's return value"));
         }
 
         env.setCurSymTab(new SymTab(env.curSymTab));
@@ -57,14 +58,16 @@ public class FunctionDef extends FunctionSig {
 
 
         String ifNameCall = funcSym.getLabelNameCallPcAfter();
-        env.cons.add(new Constraint(new Inequality(ifNameCall, ifNamePc), env.hypothesis, location));
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameCall), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis, funcLabels.location, env.curContractSym.name,
+                "Control flow of this method start with its call-after(second) label"));
+        // env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameCall), env.hypothesis, funcLabels.location, env.curContractSym.name));
 
-        String ifNameRtn = funcSym.getLabelNameRtnValue();
-        env.cons.add(new Constraint(new Inequality(ifNameCall, ifNameRtn), env.hypothesis, location));
+        // String ifNameRtn = funcSym.getLabelNameRtnValue();
+        // env.cons.add(new Constraint(new Inequality(ifNameCall, ifNameRtn), env.hypothesis, location, env.curContractSym.name));
 
         String ifNameContract = env.curContractSym.getLabelNameContract();
-        env.cons.add(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis, location, env.curContractSym.name,
+                "This contract should be trusted enough to call this method"));
 
         String ifNameCallLock = funcSym.getLabelNameCallLock();
 
@@ -82,7 +85,8 @@ public class FunctionDef extends FunctionSig {
                 continue;
             }
             if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(prev.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, loc));
+                env.cons.add(new Constraint(new Inequality(prev.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, loc, env.curContractSym.name,
+                        Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
             }
             Context tmp = stmt.genConsVisit(env);
             env.prevContext = tmp;
@@ -93,7 +97,8 @@ public class FunctionDef extends FunctionSig {
         env.decScopeLayer();
 
         String ifNameGammaLock = funcSym.getLabelNameCallGamma();
-        env.cons.add(new Constraint(new Inequality(prev.lockName, ifNameGammaLock), env.hypothesis, loc));
+        env.cons.add(new Constraint(new Inequality(prev.lockName, ifNameGammaLock), env.hypothesis, loc, env.curContractSym.name,
+                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
 
         /*if (rtn instanceof LabeledType) {
             if (rtn instanceof DepMap) {

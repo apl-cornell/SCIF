@@ -11,31 +11,37 @@ import java.util.HashSet;
 public class Program extends Node {
     public String programName;
     HashSet<String> iptContracts; // imported contracts
-    ArrayList<Contract> contracts;
+    Contract contract;
     String contractName;
-    public Program(HashSet<String> iptContracts, ArrayList<Contract> contracts) {
+    String filePath;
+    ArrayList<String> sourceCode;
+    public Program(HashSet<String> iptContracts, Contract contract) {
         programName = "anonymous";
         contractName = "UNKNOWN";
-        if (!contracts.isEmpty())
-            contractName = contracts.get(0).contractName;
+        if (contract != null)
+            contractName = contract.contractName;
         this.iptContracts = iptContracts;
-        this.contracts = contracts;
+        this.contract = contract;
+        sourceCode = null;
     }
-    public Program(ArrayList<Contract> contracts) {
+    public Program(Contract contract) {
         programName = "anonymous";
         contractName = "UNKNOWN";
-        if (!contracts.isEmpty())
-            contractName = contracts.get(0).contractName;
+        if (contract != null)
+            contractName = contract.contractName;
         this.iptContracts = new HashSet<>();
-        this.contracts = contracts;
+        this.contract = contract;
+        this.sourceCode = null;
     }
 
-    public String getFirstContractName() { return contractName; }
+    public String getContractName() { return contractName; }
+    public void setSourceCode(ArrayList<String> sourceCode) { this.sourceCode = sourceCode; }
+    public String getSourceCodeLine(int i) {
+        return sourceCode.get(i);
+    }
     public Contract findContract(String name) {
-        for (Contract contract : contracts) {
-            if (contract.contractName.equals(name))
-                return contract;
-        }
+        if (contract.contractName.equals(name))
+            return contract;
         return null;
     }
     public boolean containContract(String name) {
@@ -52,21 +58,15 @@ public class Program extends Node {
     }
 
     public boolean NTCinherit(InheritGraph graph) {
-        for (Contract contract : contracts) {
-            if (!contract.NTCinherit(graph))
-                return false;
-        }
-        return true;
+        return contract.NTCinherit(graph);
     }
 
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        for (Contract contract : contracts) {
-            logger.debug("contract: " + contract.contractName + "\n" + env.getContract(contract.contractName));
-            env.setGlobalSymTab(env.getContract(contract.contractName).symTab);
-            env.setCurSymTab(env.globalSymTab);
-            contract.NTCgenCons(env, now);
-        }
+        logger.debug("contract: " + contract.contractName + "\n" + env.getContract(contract.contractName));
+        env.setGlobalSymTab(env.getContract(contract.contractName).symTab);
+        env.setCurSymTab(env.globalSymTab);
+        contract.NTCgenCons(env, now);
         return now;
     }
 
@@ -77,14 +77,12 @@ public class Program extends Node {
                 logger.debug("not containing imported contract: " + iptContract);
                 return false;
             }
-        for (Contract contract : contracts) {
-            // env.setGlobalSymTab(new SymTab());
-            env.setCurSymTab(env.globalSymTab);
-            // Utils.addBuiltInSyms(env.globalSymTab, contract.trustSetting);
-            if (!contract.NTCGlobalInfo(env, parent)) {
-                logger.debug("GlobalInfo failed with: " + contract);
-                return false;
-            }
+        // env.setGlobalSymTab(new SymTab());
+        env.setCurSymTab(env.globalSymTab);
+        // Utils.addBuiltInSyms(env.globalSymTab, contract.trustSetting);
+        if (!contract.NTCGlobalInfo(env, parent)) {
+            logger.debug("GlobalInfo failed with: " + contract);
+            return false;
         }
         return true;
     }
@@ -92,31 +90,23 @@ public class Program extends Node {
     @Override
     public void globalInfoVisit(ContractSym contractSym) {
         Utils.addBuiltInSyms(contractSym.symTab, null);
-        if (contracts.size() < 1) return;
-        for (Contract contract : contracts) {
-            if (!iptContracts.contains(contract.contractName)) {
-                iptContracts.add(contract.contractName);
-            }
+        if (contract == null) return;
+        if (!iptContracts.contains(contract.contractName)) {
+            iptContracts.add(contract.contractName);
         }
         // contractSym.iptContracts = iptContracts;
-        for (Contract contract : contracts) {
-            logger.debug("visit Contract: " + contract.contractName + "\n" + contractSym.symTab.getTypeSet());
-            contract.globalInfoVisit(contractSym);
-        }
+        logger.debug("visit Contract: " + contract.contractName + "\n" + contractSym.symTab.getTypeSet());
+        contract.globalInfoVisit(contractSym);
     }
 
     @Override
     public Context genConsVisit(VisitEnv env) {
-        for (Contract contract : contracts) {
-            contract.genConsVisit(env);
-        }
+        contract.genConsVisit(env);
         return null;
     }
 
     public void findPrincipal(HashSet<String> principalSet) {
-        for (Contract contract : contracts) {
-            contract.findPrincipal(principalSet);
-        }
+        contract.findPrincipal(principalSet);
     }
 
     public void SolCodeGen(SolCode code) {
@@ -127,27 +117,27 @@ public class Program extends Node {
 
         for (String contractName : iptContracts) {
             boolean exists = false;
-            for (Contract contract : contracts) {
-                if (contract.contractName.equals(contractName)) {
-                    exists = true;
-                    break;
-                }
+            if (contract.contractName.equals(contractName)) {
+                exists = true;
+                break;
             }
             if (!exists)
                 code.addImport(contractName);
         }
-        for (Contract contract : contracts) {
-            contract.SolCodeGen(code);
-        }
+        contract.SolCodeGen(code);
     }
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        rtn.addAll(contracts);
+        rtn.add(contract);
         return rtn;
     }
 
-    public ArrayList<Contract> getAllContracts() {
-        return contracts;
+    public Contract getContract() {
+        return contract;
+    }
+
+    public String getProgramName() {
+        return programName;
     }
 }

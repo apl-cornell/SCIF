@@ -42,20 +42,23 @@ public class GuardBlock extends NonFirstLayerStatement {
 
         String guardLabel = l.toSherrlocFmt();
 
-        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, newLockLabel), prevLockLabel), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, newLockLabel), prevLockLabel), env.hypothesis, location, env.curContractSym.name,
+                "Put a dynamic lock"));
         String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
         Context lastContext = new Context(env.prevContext), prev2 = null;
         for (Statement stmt : body) {
             if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, location, env.curContractSym.name,
+                        Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
             }
             Context tmp = stmt.genConsVisit(env);
             env.prevContext = tmp;
             prev2 = lastContext;
             lastContext = new Context(tmp);
         }
-        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(lastContext.lockName, guardLabel), newAfterLockLabel), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(lastContext.lockName, guardLabel), newAfterLockLabel), env.hypothesis, location, env.curContractSym.name,
+                "Release a dynamic lock"));
         env.prevContext.lockName = newAfterLockLabel;
 
 
@@ -77,18 +80,22 @@ public class GuardBlock extends NonFirstLayerStatement {
                 }*/
             } else if (target instanceof Subscript) {
                 env.prevContext = lastContext;
-                env.cons.add(new Constraint(new Inequality(prevLockLabel, CompareOperator.Eq, lastContext.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(prevLockLabel, CompareOperator.Eq, lastContext.lockName), env.hypothesis, location, env.curContractSym.name,
+                        Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
                 Context tmp = target.genConsVisit(env);
                 ifNameTgt = tmp.valueLabelName;
                 rtnLockName = tmp.lockName;
             } else {
                 //TODO: error handling
             }
-            env.cons.add(new Constraint(new Inequality(lastContext.valueLabelName, ifNameTgt), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(lastContext.valueLabelName, ifNameTgt), env.hypothesis, location, env.curContractSym.name,
+                    "Value must be trusted enough for this assignment"));
 
-            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, location, env.curContractSym.name,
+                    "Control flow must allow this assignment"));
 
-            env.cons.add(new Constraint(new Inequality(prevLockLabel, CompareOperator.Eq, rtnLockName), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(prevLockLabel, CompareOperator.Eq, rtnLockName), env.hypothesis, location, env.curContractSym.name,
+                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
             return new Context(ifNameTgt, rtnLockName);
         }
 

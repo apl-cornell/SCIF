@@ -48,4 +48,8 @@ public class Type extends Expression {
     public boolean isVoid() {
         return x.equals("void");
     }
+
+    public void setToDefault(IfLabel lbl) {
+
+    }
 }

@@ -53,23 +53,29 @@ public class While extends NonFirstLayerStatement {
         String IfNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".While" + location.toString();
         String IfNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location, env.curContractSym.name,
+                "Control flow before this while statement contributes to the one in its scope"));
 
-        env.cons.add(new Constraint(new Inequality(IfNameTestValue, IfNamePcAfter), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(IfNameTestValue, IfNamePcAfter), env.hypothesis, location, env.curContractSym.name,
+                "Integrity of the test condition contributes to control flow of this while statement"));
 
         env.incScopeLayer();
         Context lastContext = new Context(testContext), prev2 = null;
+        CodeLocation loc = null;
         for (Statement stmt : body) {
             Context tmp = stmt.genConsVisit(env);
             if (lastContext != null) {
-                env.cons.add(new Constraint(new Inequality(tmp.lockName, Relation.LEQ, lastContext.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(tmp.lockName, Relation.LEQ, lastContext.lockName), env.hypothesis, loc, env.curContractSym.name,
+                        Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
             }
             env.prevContext = tmp;
             prev2 = lastContext;
+            loc = stmt.location;
             lastContext = new Context(tmp);
         }
         env.decScopeLayer();
-        env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.LEQ, prevLock), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.LEQ, prevLock), env.hypothesis, location, env.curContractSym.name,
+                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
 
         // env.ctxt = originalCtxt;
         return lastContext;

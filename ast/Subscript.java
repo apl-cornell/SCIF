@@ -60,7 +60,8 @@ public class Subscript extends TrailerExpr {
                 String ifDepMapValue = (valueVarSym).ifl.toSherrlocFmt(valueVarSym.typeSym.name, ifNameIndex);
                 // env.cons.add(new Constraint(new Inequality(ifNameIndex + "..lbl", ifDepMapIndexReq), env.hypothesis, location));
 
-                env.cons.add(new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
+                        "Label of the subscript value"));
 
                 ifNameRtnLock = env.prevContext.lockName;
             } else {
@@ -72,7 +73,8 @@ public class Subscript extends TrailerExpr {
             Context indexContext = index.genConsVisit(env);
             String ifNameIndex = indexContext.valueLabelName;
             ifNameRtnValue = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
-            env.cons.add(new Constraint(new Inequality(ifNameValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
+                    "Label of the subscript variable"));
 
             // env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
             ifNameRtnLock = indexContext.lockName;
@@ -91,7 +93,7 @@ public class Subscript extends TrailerExpr {
             if (indexVarSym.typeSym.name.equals(Utils.ADDRESSTYPE)) {
 
                 TypeSym rtnTypeSym = ((DepMapTypeSym) valueVarSym.typeSym).valueType;
-                rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location, valueVarSym.defContext, false);
+                rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location, valueVarSym.defContext, false, false);
                 //assert rtnVarSym != null;
                 rtnVarSym.replace(valueVarSym.typeSym.name, ifNameIndex);
 
@@ -99,7 +101,8 @@ public class Subscript extends TrailerExpr {
                 String ifDepMapValue = (valueVarSym).ifl.toSherrlocFmt(valueVarSym.typeSym.name, ifNameIndex);
                 // env.cons.add(new Constraint(new Inequality(ifNameIndex + "..lbl", ifDepMapIndexReq), env.hypothesis, location));
 
-                env.cons.add(new Constraint(new Inequality(ifDepMapValue, ifNameRtn), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(ifDepMapValue, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
+                        "Label of the subscript variable"));
 
             } else {
                 logger.error("non-address type variable as index to access DEPMAP @{}", locToString());
@@ -109,13 +112,15 @@ public class Subscript extends TrailerExpr {
         } else {
             String ifNameIndex = index.genConsVisit(env).valueLabelName;
             ifNameRtn = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
-            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
+                    "Label of the subscript variable"));
 
-            env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtn), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
+                    "Label of the subscript index value"));
 
             TypeSym rtnTypeSym = new BuiltinTypeSym(ifNameRtn);
             //TODO: more careful thoughts
-            rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location, valueVarSym.defContext, false);
+            rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location, valueVarSym.defContext, false, false);
         }
         return rtnVarSym;
     }

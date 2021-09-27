@@ -41,7 +41,8 @@ public class BinOp extends Expression {
 
         Context leftContext = left.genConsVisit(env);
         String ifNameLeft = leftContext.valueLabelName;
-        env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, leftContext.lockName), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, leftContext.lockName), env.hypothesis, location, env.curContractSym.name,
+                typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
 
         env.prevContext.lockName = leftContext.lockName;
         // logger.debug("binOp/right:\n");
@@ -49,8 +50,10 @@ public class BinOp extends Expression {
         Context rightContext = right.genConsVisit(env);
         String ifNameRight = rightContext.valueLabelName;
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bin" + location.toString();
-        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location));
-        env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
+                "Integrity of left hand expression flows to value of this binary operation"));
+        env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
+                "Integrity of right hand expression flows to value of this binary operation"));
 
         return new Context(ifNameRtn, rightContext.lockName);
     }

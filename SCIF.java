@@ -1,6 +1,7 @@
 // the main class of STC
 
 import ast.Node;
+import ast.Program;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
@@ -39,38 +40,51 @@ public class SCIF implements Callable<Integer> {
         System.exit(exitCode);
     }
 
-    ArrayList<Node> typecheck(String[] outputFileNames) throws Exception {
-        String outputFileName;
-        File outputFile;
-        if (outputFileNames == null) {
-            outputFile = File.createTempFile("cons", "tmp");
-            outputFileName = outputFile.getAbsolutePath();
+    ArrayList<Program> typecheck(String[] outputFileNames) throws Exception {
+        File NTCConsFile;
+        if (outputFileNames.length <= 0) {
+            NTCConsFile = File.createTempFile("cons", "tmp");
             // outputFile.deleteOnExit();
         } else {
-            outputFileName = outputFileNames[0];
-            outputFile = new File(outputFileName);
+            NTCConsFile = new File(outputFileNames[0]);
         }
         ArrayList<File> files = new ArrayList<>();
         for (File file : inputFiles) {
             files.add(file);
         }
-        ArrayList<Node> roots = TypeChecker.regularTypecheck(files, outputFile);
         System.out.println("Regular Typechecking:");
+        ArrayList<Program> roots = TypeChecker.regularTypecheck(files, NTCConsFile);
         boolean passNTC = true;
-        if (!Utils.emptyFile(outputFileName))
-            passNTC = runSLC(outputFileName);
+        //if (!Utils.emptyFile(outputFileName))
+        //    passNTC = runSLC(outputFileName);
+        if (roots == null)
+            passNTC = false;
+
+        if (!passNTC) return null;
         // System.out.println("["+ outputFileName + "]");
+        ArrayList<File> IFCConsFiles = new ArrayList<>();
+        for (int i = 0; i < roots.size(); ++i) {
+            File IFCConsFile;
+            if (outputFileNames.length <= i + 1) {
+                IFCConsFile = File.createTempFile("cons", "tmp");
+            } else {
+                IFCConsFile = new File(outputFileNames[i + 1]);
+            }
+            IFCConsFiles.add(IFCConsFile);
+        }
+
         System.out.println("\nInformation Flow Typechecking:");
-        TypeChecker.ifcTypecheck(roots, outputFile);
+        boolean passIFC = TypeChecker.ifcTypecheck(roots, IFCConsFiles);
         // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
-        logger.debug("running SHErrLoc...");
-        boolean passIFC = runSLC(outputFileName);
+        // logger.debug("running SHErrLoc...");
+        // boolean passIFC = runSLC(outputFileName);
 
         return (passNTC && passIFC) ? roots : null;
     }
 
     @Override
     public Integer call() throws Exception {
+
         logger.trace("SCIF starts");
         if (funcRequest.typecheck) {
             typecheck(outputFileNames);
@@ -80,7 +94,7 @@ public class SCIF implements Callable<Integer> {
         } else if (funcRequest.tokenize) {
             LexerTest.tokenize(inputFiles[0]);
         } else if (funcRequest.compile) {
-            ArrayList<Node> roots = typecheck(null);
+            ArrayList<Program> roots = typecheck(new String[0]);
             logger.debug("finished typecheck, compiling...");
             if (roots == null) {
                 return 1;
@@ -103,30 +117,6 @@ public class SCIF implements Callable<Integer> {
 
         logger.trace("SCIF finishes");
         return 0;
-    }
-
-    boolean runSLC(String outputFileName) throws Exception {
-
-        String classDirectoryPath = new File(SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
-        String[] sherrlocResult = Utils.runSherrloc(classDirectoryPath, outputFileName);
-        logger.debug(sherrlocResult);
-        if (sherrlocResult.length < 1) {
-            System.out.println(Utils.TYPECHECK_NORESULT_MSG);
-            return false;
-        } else if (sherrlocResult[sherrlocResult.length - 1].contains(Utils.SHERRLOC_PASS_INDICATOR)) {
-            System.out.println(Utils.TYPECHECK_PASS_MSG);
-        } else {
-            System.out.println(Utils.TYPECHECK_ERROR_MSG);
-            for (int i = 0; i < sherrlocResult.length; ++i)
-                if (sherrlocResult[i].contains(Utils.SHERRLOC_ERROR_INDICATOR)) {
-                    for (int j = i; j < sherrlocResult.length; ++j) {
-                        System.out.println(sherrlocResult[j]);
-                    }
-                    break;
-                }
-            return false;
-        }
-        return true;
     }
 
     protected static final Logger logger = LogManager.getLogger();

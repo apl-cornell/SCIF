@@ -8,7 +8,8 @@ import com.owlike.genson.GensonBuilder;
 // each variable has a defContext
 public class VarSym extends Sym {
     //public String fullName;
-    public boolean isConst;
+    public boolean isStatic;
+    public boolean isFinal;
     public TypeSym typeSym;
     public IfLabel ifl;
 
@@ -20,17 +21,19 @@ public class VarSym extends Sym {
         this.typeSym = null;
         this.location = new CodeLocation();
         defContext = null;
-        this.isConst = false;
+        this.isStatic = false;
+        this.isFinal = false;
         this.ifl = null;
     }
 
-    public VarSym(String localName, TypeSym type, IfLabel ifl, CodeLocation location, ScopeContext context, boolean isConst) {
+    public VarSym(String localName, TypeSym type, IfLabel ifl, CodeLocation location, ScopeContext context, boolean isConst, boolean isFinal) {
         this.name = localName;
         this.typeSym = type;
         this.ifl = ifl;
         this.location = location;
         this.defContext = context;
-        this.isConst = isConst;
+        this.isStatic = isConst;
+        this.isFinal = isFinal;
     }
 
     /*public VarInfo(String localName, TypeInfo type, CodeLocation location, boolean isConst) {
@@ -47,7 +50,8 @@ public class VarSym extends Sym {
         this.ifl = varSym.ifl;
         this.location = varSym.location;
         this.defContext = varSym.defContext;
-        this.isConst = varSym.isConst;
+        this.isStatic = varSym.isStatic;
+        this.isFinal = varSym.isFinal;
     }
 
     public String getLabel() {
@@ -74,7 +78,7 @@ public class VarSym extends Sym {
     static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();
     @Override
     public String toString() {
-        return name + "|" + isConst + "|" +
+        return name + "|" + isStatic + "|" + isFinal + "|" +
                 genson.serialize(typeSym) + "|" +
                 (ifl != null ? ifl.toSherrlocFmt() + "|" : "") +
                 (location != null ? location.toString() : "");

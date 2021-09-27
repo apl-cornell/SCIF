@@ -140,7 +140,7 @@ import java.util.HashMap;
         keywords.put("yield",   Integer.valueOf(sym.YIELD));
         keywords.put("endorse", Integer.valueOf(sym.ENDORSE));
         keywords.put("autoendorse", Integer.valueOf(sym.AUTOENDORSE));
-        keywords.put("const", Integer.valueOf(sym.CONST));
+        // keywords.put("const", Integer.valueOf(sym.CONST));
         keywords.put("map", Integer.valueOf(sym.MAP));
         keywords.put("key", Integer.valueOf(sym.KEY));
         keywords.put("contract", Integer.valueOf(sym.CONTRACT));
@@ -155,6 +155,8 @@ import java.util.HashMap;
         keywords.put("then", Integer.valueOf(sym.THEN));
         keywords.put("else", Integer.valueOf(sym.ELSE));
         keywords.put("new", Integer.valueOf(sym.NEW));
+        keywords.put("final", Integer.valueOf(sym.FINAL));
+        keywords.put("static", Integer.valueOf(sym.STATIC));
     }
 
 
@@ -178,7 +180,7 @@ comment_body = .*
 comment         = "//"{comment_body}
 whitespace      = [ \n\t]
 // encodingDeclaration = ""[^\n]*"coding"[:=][^\n]*
-indent = \t | "    "
+indent = \t
 
 unicodeescape = "\\u"[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]
 unicodeescape32 = "\\u"[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]

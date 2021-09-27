@@ -96,22 +96,27 @@ public class If extends NonFirstLayerStatement {
                 }
             }
         }
-        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location));
-        env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location, env.curContractSym.name,
+                "Control flow integrity before this if condition flows to the one after this condition"));
+        env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location, env.curContractSym.name,
+                "Integrity of this condition flows to the control flow in this if branch"));
 
         if (body.size() > 0 || orelse.size() > 0) {
-            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.REQ, curContext.lockName), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.REQ, curContext.lockName), env.hypothesis, location, env.curContractSym.name,
+                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
         env.incScopeLayer();
 
         Context leftContext = new Context(curContext), rightContext = new Context(curContext), prev2 = null;
+        CodeLocation loc = null;
         for (Statement stmt : body) {
             if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(leftContext.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, location));
+                env.cons.add(new Constraint(new Inequality(leftContext.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, loc, env.curContractSym.name, "Every statement must maintain the lock except the last one in a method"));
             }
             Context tmp = stmt.genConsVisit(env);
             env.prevContext = tmp;
             prev2 = leftContext;
+            loc = stmt.location;
             leftContext = new Context(tmp);
         }
         env.decScopeLayer();
@@ -132,8 +137,10 @@ public class If extends NonFirstLayerStatement {
 
         // env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, Utils.joinLabels(leftContext.lockName, rightContext.lockName)), env.hypothesis, location));
 
-        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, leftContext.lockName), env.hypothesis, location));
-        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, rightContext.lockName), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, leftContext.lockName), env.hypothesis, location, env.curContractSym.name,
+                "Lock of if branch contributes to lock of this if statement"));
+        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, rightContext.lockName), env.hypothesis, location, env.curContractSym.name,
+                "Lock of else branch contributes to lock of this if statement"));
 
         logger.debug("finished orelse branch");
         //System.err.println("finished orelse branch");

@@ -7,23 +7,37 @@ public class Constraint {
     Inequality inequality;
     Hypothesis hypothesis;
     Position position;
+    String contractName;
+    String explanation = "";
 
-    public Constraint(Inequality inequality, Hypothesis hypothesis, Position position) {
-        this.inequality = inequality;
-        this.hypothesis = new Hypothesis(hypothesis);
-        this.position = position;
-    }
-
-    public Constraint(Inequality inequality, Hypothesis hypothesis, CodeLocation location) {
+    /*public Constraint(Inequality inequality, Hypothesis hypothesis, CodeLocation location, String contractName) {
         this.inequality = inequality;
         this.hypothesis = new Hypothesis(hypothesis);
         this.position = location == null ? null : new Position(location);
+        this.contractName = contractName;
+    }*/
+
+    public Constraint(Inequality inequality, Hypothesis hypothesis, CodeLocation location, String contractName, String explanation) {
+        this.inequality = inequality;
+        this.hypothesis = new Hypothesis(hypothesis);
+        this.position = location == null ? null : new Position(location);
+        this.contractName = contractName;
+        this.explanation = explanation;
     }
 
-    public Constraint(Inequality inequality, CodeLocation location) {
+    /*public Constraint(Inequality inequality, CodeLocation location, String contractName) {
         this.inequality = inequality;
         this.hypothesis = new Hypothesis();
         this.position = location == null ? null : new Position(location);
+        this.contractName = contractName;
+    }*/
+
+    public Constraint(Inequality inequality, CodeLocation location, String contractName, String explanation) {
+        this.inequality = inequality;
+        this.hypothesis = new Hypothesis();
+        this.position = location == null ? null : new Position(location);
+        this.contractName = contractName;
+        this.explanation = explanation;
     }
 
     public Constraint() {
@@ -37,6 +51,6 @@ public class Constraint {
             return "";
         }
         return inequality.toSherrlocFmt() + " " + hypothesis.toSherrlocFmt()  + ";"
-                + (withPosition && position != null ? position.toSherrlocFmt() : "");
+                + (withPosition && position != null ? position.toSherrlocFmt(explanation) : "");
     }
 }

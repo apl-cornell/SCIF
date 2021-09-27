@@ -10,7 +10,7 @@ all: SCIF sherrloc-build
 SCIF: TypeChecker.class LexerTest.class Parser.class SCIF.java
 	javac -cp ${CLASSPATH} SCIF.java
 
-TypeChecker.class: Parser.class Lexer.class TypeChecker.java ${wildcard ast/*.java} ${wildcard typecheck/*.java} ${wildcard sherrlocUtils/*.java}
+TypeChecker.class: Parser.class Lexer.class TypeChecker.java ${wildcard ast/*.java} ${wildcard typecheck/*.java} ${wildcard sherrlocUtils/*.java} ${wildcard compile/*.java}
 	javac -Xlint:deprecation -cp ${CLASSPATH} TypeChecker.java ast/*.java typecheck/*.java sherrlocUtils/*.java
 
 LexerTest.class: Lexer.java LexerTest.java

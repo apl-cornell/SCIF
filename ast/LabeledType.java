@@ -35,4 +35,9 @@ public class LabeledType extends Type {
                 super.typeMatch(annotation) &&
                 ifl.typeMatch(((LabeledType) annotation).ifl);
     }
+    public void setToDefault(IfLabel lbl) {
+        if (this.ifl == null) {
+            this.ifl = lbl;
+        }
+    }
 }

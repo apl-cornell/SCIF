@@ -23,6 +23,7 @@ public class FunctionSig extends Statement {
             isConstructor = true;
         }
 
+        funcLabels.setToDefault(isConstructor, decoratorList);
     }
     public FunctionSig(FunctionSig funcSig) {
         this.name = funcSig.name;

@@ -51,9 +51,11 @@ public class Attribute extends TrailerExpr {
         Context tmp = value.genConsVisit(env);
         String ifAttLabel = structType.getMemberLabel(attr.id);
         String ifNameRnt = scopeContext.getSHErrLocName() + ".struct" + location.toString();
-        env.cons.add(new Constraint(new Inequality(ifNameRnt, ifAttLabel), env.hypothesis, location));
+        env.cons.add(new Constraint(new Inequality(ifNameRnt, ifAttLabel), env.hypothesis, location, env.curContractSym.name,
+                "Integrity of the member"));
         if (!ifAttLabel.equals(tmp.valueLabelName)) {
-            env.cons.add(new Constraint(new Inequality(ifNameRnt, tmp.valueLabelName), env.hypothesis, location));
+            env.cons.add(new Constraint(new Inequality(ifNameRnt, tmp.valueLabelName), env.hypothesis, location, env.curContractSym.name,
+                    "Integrity of the index value must be trusted to indicate the attribute"));
         }
 
 

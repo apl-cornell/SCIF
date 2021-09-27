@@ -88,12 +88,12 @@ public class ContractSym extends TypeSym {
     }
 
 
-    public VarSym toVarSym(String localName, ast.Type astType, boolean isConst, CodeLocation loc, ScopeContext scopeContext) {
+    public VarSym toVarSym(String localName, ast.Type astType, boolean isConst, boolean isFinal, CodeLocation loc, ScopeContext scopeContext) {
         TypeSym typeSym = toTypeSym(astType);
         IfLabel ifl = null;
         if (astType instanceof LabeledType)
             ifl = ((LabeledType) astType).ifl;
-        return new VarSym(localName, typeSym, ifl, loc, scopeContext, isConst);
+        return new VarSym(localName, typeSym, ifl, loc, scopeContext, isConst, isFinal);
     }
 
     public void addVar(String varname, VarSym varSym) {

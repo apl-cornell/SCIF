@@ -1,5 +1,7 @@
 package ast;
 
+import typecheck.Utils;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -39,5 +41,34 @@ public class FuncLabels extends Node {
         return ((l1 && r1) || (!(l1 || r1) && begin_pc.typeMatch(funcLabels.begin_pc)))
                 && ((l2 && r2) || (!(l2 || r2) && to_pc.typeMatch(funcLabels.to_pc)))
                 && ((l3 && r3) || (!(l3 || r3) && gamma_label.typeMatch(funcLabels.gamma_label)));
+    }
+
+    public void setToDefault(boolean isConstructor, ArrayList<String> decoratorList) {
+        IfLabel thisLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
+        if (isConstructor) {
+            begin_pc = to_pc = gamma_label = thisLbl;
+        } else {
+            if (gamma_label != null) return;
+            else {
+                if (to_pc != null) {
+                    gamma_label = to_pc;
+                } else if (begin_pc != null) {
+                    gamma_label = to_pc = begin_pc;
+                } else {
+                    boolean isPublic = false;
+                    for (String decorator : decoratorList)
+                        if (decorator.equals(Utils.PUBLIC_DECORATOR)) {
+                            isPublic = true;
+                            break;
+                        }
+                    if (isPublic) {
+                        IfLabel botLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM));
+                        begin_pc = to_pc = gamma_label = botLbl;
+                    } else {
+                        begin_pc = to_pc = gamma_label = thisLbl;
+                    }
+                }
+            }
+        }
     }
 }
