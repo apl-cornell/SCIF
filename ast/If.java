@@ -102,7 +102,7 @@ public class If extends NonFirstLayerStatement {
                 "Integrity of this condition flows to the control flow in this if branch"));
 
         if (body.size() > 0 || orelse.size() > 0) {
-            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.REQ, curContext.lockName), env.hypothesis, location, env.curContractSym.name,
+            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.REQ, curContext.lockName), env.hypothesis, test.location, env.curContractSym.name,
                     Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
         env.incScopeLayer();

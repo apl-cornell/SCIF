@@ -225,24 +225,24 @@ public class TypeChecker {
             logger.debug(ifNameCallBeforeLabel + "\n" + ifNameCallAfterLabel + "\n" + ifNameCallLockLabel + "\n" + ifCallAfterLabel + "\n" +ifCallLockLabel);
             // String ifAfterCallLabel = func.getCallAfterLabel();
             if (ifCallBeforeLabel != null) {
-                cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), func.funcLabels.location, contractName,
+                cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), func.funcLabels.begin_pc.location, contractName,
                         "Integrity requirement to call this method"));
 
                 //env.cons.add(new Constraint(new Inequality(ifNameCallBeforeLabel, ifCallBeforeLabel), func.location));
 
             }
             if (ifCallAfterLabel != null) {
-                cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel), func.funcLabels.location, contractName,
+                cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel), func.funcLabels.to_pc.location, contractName,
                         "Integrity pc level autoendorsed to when call this method"));
 
                 //env.cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, ifCallAfterLabel), func.location));
                 // if (!ifCallAfterLabel.equals(ifCallBeforeLabel)) //TODO: deal with before and after are different
-                cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.REQ, ifNameCallLockLabel), func.funcLabels.location, contractName, "Calls to this function must respect lock level of " + '{' + ifCallAfterLabel + '}'));
+                cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, Relation.REQ, ifNameCallLockLabel), func.funcLabels.to_pc.location, contractName, "Calls to this function must respect lock level of " + '{' + ifCallAfterLabel + '}'));
             }
 
             if (ifCallLockLabel != null) {
-                cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.REQ, ifNameCallLockLabel), func.funcLabels.location, contractName, "Calls to this function must respect lock level of " + '{' + ifCallAfterLabel + '}'));
-                cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallGammaLabel), func.funcLabels.location, contractName,
+                // cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.REQ, ifNameCallLockLabel), func.funcLabels.gamma_label.location, contractName, "Calls to this function must respect lock level of " + '{' + ifCallAfterLabel + '}'));
+                cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallGammaLabel), func.funcLabels.gamma_label.location, contractName,
                         "Lock integrity label this method need to respect"));
 
             }
