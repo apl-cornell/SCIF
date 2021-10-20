@@ -32,7 +32,7 @@ public class Attribute extends TrailerExpr {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
         //TODO: assuming only one-level attribute access
         // to add support to multi-level access
         String varName = ((Name) value).id;
@@ -48,7 +48,7 @@ public class Attribute extends TrailerExpr {
 
         StructTypeSym structType = (StructTypeSym) varSym.typeSym;
         //String prevLockName = env.prevContext.lockName;
-        Context tmp = value.genConsVisit(env);
+        Context tmp = value.genConsVisit(env, tail_position);
         String ifAttLabel = structType.getMemberLabel(attr.id);
         String ifNameRnt = scopeContext.getSHErrLocName() + ".struct" + location.toString();
         env.cons.add(new Constraint(new Inequality(ifNameRnt, ifAttLabel), env.hypothesis, location, env.curContractSym.name,
@@ -60,11 +60,11 @@ public class Attribute extends TrailerExpr {
 
 
         //env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, tmp.lockName), env.hypothesis, location));
-        return new Context(ifNameRnt, tmp.lockName);
+        return new Context(ifNameRnt, tmp.lockName, tmp.inLockName);
     }
-    public VarSym getVarInfo(VisitEnv env) {
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
         VarSym rtnVarSym;
-        VarSym parentVarSym = value.getVarInfo(env);
+        VarSym parentVarSym = value.getVarInfo(env, tail_position);
         StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;
         rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSherrlocFmt(), attr.id);
         return rtnVarSym;

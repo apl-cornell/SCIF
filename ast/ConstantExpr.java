@@ -3,8 +3,6 @@ package ast;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
-import java.util.ArrayList;
-
 public class ConstantExpr extends Expression {
     Constant value;
     public ConstantExpr(Constant value) {
@@ -19,10 +17,10 @@ public class ConstantExpr extends Expression {
         return now;
     }
     @Override
-    public Context genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
 
         String ifNameRnt = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        return new Context(ifNameRnt, env.prevContext.lockName);
+        return new Context(ifNameRnt, env.context.lockName, env.context.inLockName);
     }
 
     @Override

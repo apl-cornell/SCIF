@@ -8,8 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class VisitEnv {
-    // public ScopeContext ctxt;
-    public Context prevContext;
+    public Context context;
     // public HashMap<String, FuncInfo> funcMap;
     public ArrayList<Constraint> cons;
     public ArrayList<Constraint> trustCons;
@@ -23,7 +22,7 @@ public class VisitEnv {
     public HashMap<String, SigCons> sigConsMap;
 
 
-    public VisitEnv(ScopeContext ctxt, Context prevContext,
+    public VisitEnv(Context context,
                     // HashMap<String, FuncInfo> funcMap,
                     ArrayList<Constraint> cons,
                     ArrayList<Constraint> trustCons,
@@ -36,7 +35,7 @@ public class VisitEnv {
                     HashMap<String, SigCons> sigConsMap
                     /*HashMap<String, ContractInfo> contractMap*/) {
         // this.ctxt = ctxt;
-        this.prevContext = prevContext;
+        this.context = context;
         // this.funcMap = funcMap;
         this.cons = cons;
         this.trustCons = trustCons;
@@ -52,7 +51,7 @@ public class VisitEnv {
 
     public VisitEnv() {
         // ctxt = null;
-        prevContext = new Context();
+        context = new Context();
         // funcMap = new HashMap<>();
         cons = new ArrayList<>();
         trustCons = new ArrayList<>();

@@ -1,6 +1,5 @@
 package sherrlocUtils;
 
-import ast.Compare;
 import ast.CompareOperator;
 
 // a <= b means a flows to b
@@ -28,7 +27,7 @@ public class Inequality {
         if (co == CompareOperator.Eq)
             this.relation = Relation.EQ;
         else if (co == CompareOperator.GtE)
-            this.relation = Relation.REQ;
+            this.relation = Relation.GEQ;
         else if (co == CompareOperator.LtE)
             this.relation = Relation.LEQ;
     }
@@ -48,7 +47,7 @@ public class Inequality {
             return lhs + " == " + rhs;
         } else if (relation == Relation.LEQ) {
             return lhs + " <= " + rhs;
-        } else if (relation == Relation.REQ) {
+        } else if (relation == Relation.GEQ) {
             return lhs + " >= " + rhs;
         } else {
             //TODO: error

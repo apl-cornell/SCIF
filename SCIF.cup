@@ -234,7 +234,7 @@ trust_dec ::= LBRACE:x ifLabel:lhs trust_operator:optor ifLabel:rhs RBRACE {:
     :}*/;
 
 trust_operator ::= EQUAL {: RESULT = Relation.EQ; :}
-    | LESSEQUAL {: RESULT = Relation.REQ; :}
+    | LESSEQUAL {: RESULT = Relation.GEQ; :}
     | EQUALGREATER {: RESULT = Relation.LEQ; :};
 
 // version: static lock
@@ -651,9 +651,9 @@ expr_stmt ::=
                        RESULT = b;
     :}
     | expr:a EQUAL expr:b SEMI {:
-        ArrayList<Expression> list = new ArrayList<Expression>();
-        list.add(a);
-        Assign rnt = new Assign(list, b);
+        /*ArrayList<Expression> list = new ArrayList<Expression>();
+        list.add(a);*/
+        Assign rnt = new Assign(a, b);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};

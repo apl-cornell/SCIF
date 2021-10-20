@@ -84,11 +84,11 @@ public class Contract extends Node {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
         //env.prevContext = new Context()
         findPrincipal(env.principalSet);
         for (Statement stmt : body) {
-            stmt.genConsVisit(env);
+            stmt.genConsVisit(env, tail_position);
         }
         return null;
     }

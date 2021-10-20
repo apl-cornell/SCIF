@@ -26,8 +26,8 @@ public class UnaryOp extends Expression {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
-        return operand.genConsVisit(env);
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        return operand.genConsVisit(env, tail_position);
     }
 
     @Override

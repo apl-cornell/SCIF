@@ -36,26 +36,39 @@ public class BinOp extends Expression {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
-        String prevLockName = env.prevContext.lockName;
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
 
-        Context leftContext = left.genConsVisit(env);
+        Context context = env.context;
+        Context curContext = new Context(context.valueLabelName, typecheck.Utils.getLabelNameLock(location), context.inLockName);
+
+        Context leftContext = left.genConsVisit(env, false);
         String ifNameLeft = leftContext.valueLabelName;
-        env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, leftContext.lockName), env.hypothesis, location, env.curContractSym.name,
-                typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        // env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, leftContext.lockName), env.hypothesis, location, env.curContractSym.name, typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
 
-        env.prevContext.lockName = leftContext.lockName;
+        // env.prevContext = leftContext;
         // logger.debug("binOp/right:\n");
         // logger.debug(right.toString());
-        Context rightContext = right.genConsVisit(env);
+        env.context = context;
+        Context rightContext = right.genConsVisit(env, false);
         String ifNameRight = rightContext.valueLabelName;
+
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bin" + location.toString();
+
         env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
                 "Integrity of left hand expression flows to value of this binary operation"));
         env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
                 "Integrity of right hand expression flows to value of this binary operation"));
 
-        return new Context(ifNameRtn, rightContext.lockName);
+        // Context prevContext = rightContext;
+        if (!tail_position) {
+            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.inLockName), env.hypothesis, location, env.curContractSym.name,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        } else {
+            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.lockName), env.hypothesis, location, env.curContractSym.name,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_LAST_OPERATION));
+        }
+
+        return new Context(ifNameRtn, curContext.lockName, curContext.inLockName);
     }
 
     public String toSolCode() {

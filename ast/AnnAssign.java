@@ -85,7 +85,10 @@ public class AnnAssign extends Statement {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        Context context = env.context;
+        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
+
         logger.debug("entering AnnAssign: \n");
         // logger.debug(this.toString() + "\n");
         if (!simple) {
@@ -129,23 +132,33 @@ public class AnnAssign extends Statement {
         }
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         // String ifNameTgtLbl = ifNameTgt + "..lbl";
-        Context prevContext = env.prevContext;
+        // Context prevContext = env.prevContext;
 
         env.cons.add(new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis, location, env.curContractSym.name,
                 "Integrity of control flow must be trusted to allow this assignment"));
         if (value != null) {
-            Context tmp = value.genConsVisit(env);
+            env.context = curContext;
+            Context tmp = value.genConsVisit(env, scopeContext.isContractLevel());
             String ifNameValue = tmp.valueLabelName;
             env.cons.add(new Constraint(new Inequality(ifNameValue, SLCNameVarLbl), env.hypothesis, location, env.curContractSym.name,
                     "Integrity of the value being assigned must be trusted to allow this assignment"));
-            if (prevContext != null && prevContext.lockName != null) {
-                env.cons.add(new Constraint(new Inequality(tmp.lockName, CompareOperator.Eq, prevContext.lockName), env.hypothesis, location, env.curContractSym.name,
-                        "Lock should be maintained before execution of this operation"));
-            }
-            env.prevContext.lockName = tmp.lockName;
+            /*if (prevContext != null && prevContext.inLockName != null) {
+                env.cons.add(new Constraint(new Inequality(tmp.lockName, tmp.inLockName), env.hypothesis, value.location, env.curContractSym.name,
+                        "Lock should be maintained after execution of this operation"));
+                // env.cons.add(new Constraint(new Inequality(tmp.lockName, CompareOperator.Eq, prevContext.lockName), env.hypothesis, location, env.curContractSym.name, "Lock should be maintained before execution of this operation"));
+            }*/
+            // prevContext = tmp;
+            // env.prevContext.lockName = tmp.lockName;
+        }
+        if (!tail_position) {
+            env.cons.add(new Constraint(new Inequality(curContext.lockName, curContext.inLockName), env.hypothesis, location, env.curContractSym.name,
+                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        } else if (!scopeContext.isContractLevel()) {
+            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.lockName), env.hypothesis, location, env.curContractSym.name,
+                    Utils.ERROR_MESSAGE_LOCK_IN_LAST_OPERATION));
         }
 
-        return new Context(SLCNameVarLbl, env.prevContext.lockName);
+        return new Context(SLCNameVarLbl, curContext.lockName, curContext.inLockName);
     }
 
     public void findPrincipal(HashSet<String> principalSet) {

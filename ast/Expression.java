@@ -6,7 +6,7 @@ import typecheck.*;
 import java.util.HashSet;
 
 public abstract class Expression extends Statement {
-    public VarSym getVarInfo(VisitEnv env) {
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
         return new VarSym();
     }
     public VarSym getVarInfo(NTCEnv env) {

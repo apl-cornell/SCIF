@@ -4,7 +4,6 @@ import compile.SolCode;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Assert extends NonFirstLayerStatement {
     Expression test;
@@ -15,8 +14,8 @@ public class Assert extends NonFirstLayerStatement {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
-        Context tmp = test.genConsVisit(env);
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        Context tmp = test.genConsVisit(env, tail_position);
         return tmp;
     }
 

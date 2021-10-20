@@ -41,14 +41,14 @@ public class Name extends Variable {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
         // assuming the name would be a variable name
         logger.debug("Name: " + id);
         String ifNameRnt = env.getVar(id).labelToSherrlocFmt();
-        return new Context(ifNameRnt, env.prevContext.lockName);
+        return new Context(ifNameRnt, env.context.lockName, env.context.inLockName);
     }
 
-    public VarSym getVarInfo(VisitEnv env) {
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
         VarSym rnt = env.getVar(id);
         return rnt;
     }

@@ -44,11 +44,14 @@ public class While extends NonFirstLayerStatement {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
         // String originalCtxt = env.ctxt;
+        Context context = env.context;
+        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
 
-        String prevLock = env.prevContext.lockName;
-        Context testContext = test.genConsVisit(env);
+        // String prevLock = env.prevContext.lockName;
+
+        Context testContext = test.genConsVisit(env, tail_position && body.size() == 0);
         String IfNameTestValue = testContext.valueLabelName;
         String IfNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".While" + location.toString();
@@ -60,25 +63,26 @@ public class While extends NonFirstLayerStatement {
                 "Integrity of the test condition contributes to control flow of this while statement"));
 
         env.incScopeLayer();
-        Context lastContext = new Context(testContext), prev2 = null;
+        // Context lastContext = new Context(testContext), prev2 = null;
         CodeLocation loc = null;
         for (Statement stmt : body) {
-            Context tmp = stmt.genConsVisit(env);
-            if (lastContext != null) {
+            env.context = curContext;
+            Context tmp = stmt.genConsVisit(env, false);
+            /*if (lastContext != null) {
                 env.cons.add(new Constraint(new Inequality(tmp.lockName, Relation.LEQ, lastContext.lockName), env.hypothesis, loc, env.curContractSym.name,
                         Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-            }
-            env.prevContext = tmp;
-            prev2 = lastContext;
+            }*/
+            // env.prevContext = tmp;
+            // prev2 = lastContext;
             loc = stmt.location;
-            lastContext = new Context(tmp);
+            // lastContext = new Context(tmp);
         }
         env.decScopeLayer();
-        env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.LEQ, prevLock), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(curContext.lockName, curContext.inLockName), env.hypothesis, location, env.curContractSym.name,
                 Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
 
         // env.ctxt = originalCtxt;
-        return lastContext;
+        return curContext;
     }
     public void findPrincipal(HashSet<String> principalSet) {
         for (Statement stmt : body) {

@@ -31,7 +31,7 @@ public class Node {
         //Do nothing
     }
 
-    public Context genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
         return null;
     }
     public void findPrincipal(HashSet<String> principalSet) {

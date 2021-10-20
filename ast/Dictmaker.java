@@ -6,7 +6,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 //TODO: incomplete
 public class Dictmaker extends Expression {
@@ -24,8 +23,10 @@ public class Dictmaker extends Expression {
         this.values.add(value);
     }
     @Override
-    public Context genConsVisit(VisitEnv env) {
-        String ifNameRtn = scopeContext.getSHErrLocName() + "." + "dictmaker" + location.toString();
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        //TODO
+        return null;
+        /*String ifNameRtn = scopeContext.getSHErrLocName() + "." + "dictmaker" + location.toString();
         String prevLock = env.prevContext.lockName;
         Context lasttmp = null;
         for (Expression value: values) {
@@ -34,13 +35,13 @@ public class Dictmaker extends Expression {
                         Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
                 env.prevContext.lockName = prevLock;
             }
-            Context tmp = value.genConsVisit(env);
+            Context tmp = value.genConsVisit(env, );
             String ifNameValue = tmp.valueLabelName;
             env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
                     ""));
             lasttmp = tmp;
         }
-        return lasttmp;
+        return lasttmp;*/
     }
 
     @Override

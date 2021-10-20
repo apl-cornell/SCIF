@@ -5,7 +5,6 @@ import sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class Endorse extends Expression {
     Expression value;
@@ -21,8 +20,8 @@ public class Endorse extends Expression {
         return value.NTCgenCons(env, parent);
     }
     @Override
-    public Context genConsVisit(VisitEnv env) {
-        Context tmp = value.genConsVisit(env);
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        Context tmp = value.genConsVisit(env, tail_position);
         String ifNameValue = tmp.valueLabelName;
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "endorse" + location.toString();
 
@@ -35,7 +34,7 @@ public class Endorse extends Expression {
         env.cons.add(new Constraint(new Inequality(ifNameRtn, toLabel), env.hypothesis, location, env.curContractSym.name,
                 "The integrity level of this expression would be endorsed"));
 
-        return new Context(ifNameRtn, tmp.lockName);
+        return new Context(ifNameRtn, tmp.lockName, tmp.inLockName);
     }
 
     @Override

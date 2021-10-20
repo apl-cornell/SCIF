@@ -44,10 +44,13 @@ public class Arguments extends Node {
         return rnt;
     }
     @Override
-    public Context genConsVisit(VisitEnv env) {
-
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        Context context = env.context;
+        int index = 0;
         for (Arg arg : args) {
-            arg.genConsVisit(env);
+            ++index;
+            env.context = context;
+            arg.genConsVisit(env, index == args.size() && tail_position);
         }
         return null;
     }

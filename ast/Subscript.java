@@ -41,13 +41,15 @@ public class Subscript extends TrailerExpr {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
-        VarSym valueVarSym = value.getVarInfo(env);
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        Context context = env.context;
+        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
+        VarSym valueVarSym = value.getVarInfo(env, false);
         String ifNameValue = valueVarSym.labelToSherrlocFmt();
         String ifNameRtnValue = ifNameValue + "." + "Subscript" + location.toString();
-        String ifNameRtnLock = "";
+        // String ifNameRtnLock = "";
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
-            VarSym indexVarSym = index.getVarInfo(env);
+            VarSym indexVarSym = index.getVarInfo(env, tail_position);
             logger.debug("subscript/DepMap:");
             logger.debug("lookup at: " + index.toString());
             logger.debug(indexVarSym.toString());
@@ -63,32 +65,32 @@ public class Subscript extends TrailerExpr {
                 env.cons.add(new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                         "Label of the subscript value"));
 
-                ifNameRtnLock = env.prevContext.lockName;
+                // ifNameRtnLock = env.prevContext.lockName;
             } else {
                 logger.error("non-address type variable as index to access DEPMAP @{}", locToString());
                 //System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());
                 return null;
             }
         } else {
-            Context indexContext = index.genConsVisit(env);
+            Context indexContext = index.genConsVisit(env, tail_position);
             String ifNameIndex = indexContext.valueLabelName;
             ifNameRtnValue = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
             env.cons.add(new Constraint(new Inequality(ifNameValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                     "Label of the subscript variable"));
 
             // env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
-            ifNameRtnLock = indexContext.lockName;
+            // ifNameRtnLock = indexContext.lockName;
         }
-        return new Context(ifNameRtnValue, ifNameRtnLock);
+        return new Context(ifNameRtnValue, curContext.lockName, curContext.inLockName);
     }
 
-    public VarSym getVarInfo(VisitEnv env) {
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
         VarSym rtnVarSym = null;
-        VarSym valueVarSym = value.getVarInfo(env);
+        VarSym valueVarSym = value.getVarInfo(env, false);
         String ifNameValue = valueVarSym.labelToSherrlocFmt();
         String ifNameRtn = ifNameValue + "." + "Subscript" + location.toString();
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
-            VarSym indexVarSym = index.getVarInfo(env);
+            VarSym indexVarSym = index.getVarInfo(env, tail_position);
             String ifNameIndex = indexVarSym.toSherrlocFmt();
             if (indexVarSym.typeSym.name.equals(Utils.ADDRESSTYPE)) {
 
@@ -110,7 +112,7 @@ public class Subscript extends TrailerExpr {
                 return null;
             }
         } else {
-            String ifNameIndex = index.genConsVisit(env).valueLabelName;
+            String ifNameIndex = index.genConsVisit(env, tail_position).valueLabelName;
             ifNameRtn = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
             env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
                     "Label of the subscript variable"));

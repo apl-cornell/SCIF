@@ -29,31 +29,34 @@ public class Return extends NonFirstLayerStatement {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
-        String prevLock = env.prevContext.lockName;
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        Context context = env.context;
+        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
+        // String prevLock = env.prevContext.lockName;
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
+        env.context = curContext;
         // int occur = env.ctxt.indexOf(".");
         String funcName = scopeContext.getFuncName();
         FuncSym funcSym = env.getFunc(funcName);
-        String ifNameRtnLock = funcSym.getLabelNameRtnLock();
+        // String ifNameRtnLock = funcSym.getLabelNameRtnLock();
         String ifNameRtnValue = funcSym.getLabelNameRtnValue();
         if (value == null) {
             env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                     Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-            return new Context(null, prevLock);
+            return new Context(null, context.lockName, context.inLockName);
         }
 
-        Context expContext = value.genConsVisit(env);
+        Context expContext = value.genConsVisit(env, true);
         String ifNameValue = expContext.valueLabelName;
         env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                 "Value must be trusted to be returned"));
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                 "Control flow must be trusted to return"));
 
-        env.cons.add(new Constraint(new Inequality(expContext.lockName, ifNameRtnLock), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(curContext.lockName, context.inLockName), env.hypothesis, location, env.curContractSym.name,
                 "Lock must be respected to return"));
-        return new Context(null, prevLock);
+        return new Context(null, curContext.lockName, curContext.inLockName);
     }
 
     @Override

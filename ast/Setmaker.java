@@ -6,7 +6,6 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Setmaker extends Expression {
     ArrayList<Expression> elements;
@@ -20,23 +19,29 @@ public class Setmaker extends Expression {
         this.elements.add(element);
     }
     @Override
-    public Context genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        Context context = env.context;
+        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
+
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "setmaker" + location.toString();
-        String prevLock = env.prevContext.lockName;
-        Context lasttmp = null;
+        // String prevLock = env.prevContext.lockName;
+        // Context lasttmp = null;
+        int index = 0;
         for (Expression value: elements) {
-            if (lasttmp != null) {
+            ++index;
+            /*if (lasttmp != null) {
                 env.cons.add(new Constraint(new Inequality(prevLock, Relation.EQ, lasttmp.lockName), env.hypothesis, location, env.curContractSym.name,
                         Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
                 env.prevContext.lockName = prevLock;
-            }
-            Context tmp = value.genConsVisit(env);
+            }*/
+            env.context = curContext;
+            Context tmp = value.genConsVisit(env, tail_position && index == elements.size());
             String ifNameValue = tmp.valueLabelName;
             env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
                     "Value must be trusted to make a set"));
-            lasttmp = tmp;
+            // lasttmp = tmp;
         }
-        return lasttmp;
+        return curContext;
     }
 
     @Override

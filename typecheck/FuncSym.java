@@ -45,9 +45,9 @@ public class FuncSym extends Sym {
     public String getLabelNameRtnValue() {
         return Utils.getLabelNameFuncRtnValue(scopeContext.getSHErrLocName());
     }
-    public String getLabelNameRtnLock() {
+    /*public String getLabelNameRtnLock() {
         return Utils.getLabelNameFuncRtnLock(scopeContext.getSHErrLocName());
-    }
+    }*/
     public String getLabelNameCallLock() {
         return Utils.getLabelNameFuncCallLock(scopeContext.getSHErrLocName());
     }

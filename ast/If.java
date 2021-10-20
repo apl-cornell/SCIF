@@ -45,19 +45,20 @@ public class If extends NonFirstLayerStatement {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        Context context = env.context;
+        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
         // String originalCtxt = env.ctxt;
 
-        String prevLockLabel = env.prevContext.lockName;
+        // curContext.lockName = env.prevContext.lockName;
         String rtnValueLabel;
 
-        Context curContext = test.genConsVisit(env);
-        rtnValueLabel = curContext.valueLabelName;
-        String IfNameTest = curContext.valueLabelName;
+        Context condContext = test.genConsVisit(env, body.size() == 0 && orelse.size() == 0 && tail_position);
+        rtnValueLabel = condContext.valueLabelName;
+        String IfNameTest = condContext.valueLabelName;
         String IfNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".If" + location.toString();
         String IfNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        String IfNameLock = Utils.getLabelNameLock(scopeContext.getSHErrLocName());
 
 
         boolean createdHypo = false;
@@ -101,23 +102,23 @@ public class If extends NonFirstLayerStatement {
         env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location, env.curContractSym.name,
                 "Integrity of this condition flows to the control flow in this if branch"));
 
-        if (body.size() > 0 || orelse.size() > 0) {
-            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.REQ, curContext.lockName), env.hypothesis, test.location, env.curContractSym.name,
+        /*if (body.size() > 0 || orelse.size() > 0) {
+            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.GEQ, curContext.lockName), env.hypothesis, test.location, env.curContractSym.name,
                     Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-        }
+        }*/
         env.incScopeLayer();
 
-        Context leftContext = new Context(curContext), rightContext = new Context(curContext), prev2 = null;
+        // Context leftContext = new Context(curContext), rightContext = new Context(curContext);
         CodeLocation loc = null;
+        int index = 0;
         for (Statement stmt : body) {
-            if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(leftContext.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, loc, env.curContractSym.name, "Every statement must maintain the lock except the last one in a method"));
-            }
-            Context tmp = stmt.genConsVisit(env);
-            env.prevContext = tmp;
-            prev2 = leftContext;
+            ++index;
+            Context tmp = stmt.genConsVisit(env, index == body.size() && tail_position);
+            // env.prevContext = tmp;
+            // prev2 = leftContext;
+            env.context = context;
             loc = stmt.location;
-            leftContext = new Context(tmp);
+            // leftContext = new Context(tmp);
         }
         env.decScopeLayer();
 
@@ -127,26 +128,29 @@ public class If extends NonFirstLayerStatement {
 
         logger.debug("finished if branch");
         //System.err.println("finished if branch");
-        env.prevContext.lockName = curContext.lockName;
+        // env.prevContext.lockName = curContext.lockName;
         env.incScopeLayer();
+        index = 0;
         for (Statement stmt : orelse) {
-            rightContext = stmt.genConsVisit(env);
-            env.prevContext.lockName = rightContext.lockName;
+            ++index;
+            stmt.genConsVisit(env, index == orelse.size() && tail_position);
+            env.context = context;
+            // env.prevContext.lockName = rightContext.lockName;
         }
         env.decScopeLayer();
 
         // env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, Utils.joinLabels(leftContext.lockName, rightContext.lockName)), env.hypothesis, location));
 
-        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, leftContext.lockName), env.hypothesis, location, env.curContractSym.name,
+        /*env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.GEQ, leftContext.lockName), env.hypothesis, location, env.curContractSym.name,
                 "Lock of then branch contributes to lock of this if statement"));
-        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, rightContext.lockName), env.hypothesis, location, env.curContractSym.name,
-                "Lock of else branch contributes to lock of this if statement"));
+        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.GEQ, rightContext.lockName), env.hypothesis, location, env.curContractSym.name,
+                "Lock of else branch contributes to lock of this if statement"));*/
 
         logger.debug("finished orelse branch");
         //System.err.println("finished orelse branch");
 
         // env.ctxt = originalCtxt;
-        return new Context(null, IfNameLock);
+        return new Context(null, curContext.lockName, curContext.inLockName);
     }
 
     @Override

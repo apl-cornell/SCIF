@@ -45,72 +45,50 @@ public class FunctionDef extends FunctionSig {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
-        // String originalCtxt = env.ctxt;
-        Context originalContext = env.prevContext;
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        Context context = env.context;
         String funcName = name;
-        // env.ctxt += funcName;// + location.toString();
-
-        args.genConsVisit(env);
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         FuncSym funcSym = env.getFunc(funcName);
+        Context curContext = new Context(ifNamePc, Utils.getLabelNameFuncRtnLock(funcName), Utils.getLabelNameInLock(location));
 
 
         String ifNameCall = funcSym.getLabelNameCallPcAfter();
         env.cons.add(new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis, funcLabels.location, env.curContractSym.name,
                 "Control flow of this method start with its call-after(second) label"));
-        // env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameCall), env.hypothesis, funcLabels.location, env.curContractSym.name));
-
-        // String ifNameRtn = funcSym.getLabelNameRtnValue();
-        // env.cons.add(new Constraint(new Inequality(ifNameCall, ifNameRtn), env.hypothesis, location, env.curContractSym.name));
 
         String ifNameContract = env.curContractSym.getLabelNameContract();
         env.cons.add(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis, location, env.curContractSym.name,
                 "This contract should be trusted enough to call this method"));
 
-        String ifNameCallLock = funcSym.getLabelNameCallLock();
+        String ifNameGamma = funcSym.getLabelNameCallGamma();
+        env.cons.add(new Constraint(new Inequality(curContext.inLockName, ifNameCall), env.hypothesis, location, env.curContractSym.name,
+                "The statically locked integrity level must be at least as trusted as initial control flow level"));
+        env.cons.add(new Constraint(new Inequality(Utils.makeJoin(curContext.inLockName, curContext.lockName), ifNameGamma), env.hypothesis, location, env.curContractSym.name,
+                "This function does not maintain locks as specified in signature"));
 
-        Context funcBeginContext = new Context(ifNamePc, ifNameCallLock);
-        env.prevContext = funcBeginContext;
+        Context funcBeginContext = new Context(curContext);
+        env.context = funcBeginContext;
 
 
         env.incScopeLayer();
-        args.genConsVisit(env);
-        Context prev = new Context(env.prevContext), prev2 = null;
+        args.genConsVisit(env, false);
+        // Context prev = new Context(env.prevContext);//, prev2 = null;
         CodeLocation loc = null;
+        int index = 0;
         for (Statement stmt : body) {
+            ++index;
             if (stmt instanceof DynamicStatement) {
                 //TODO: ifc check for dynamic statement
                 continue;
             }
-            if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(prev.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, loc, env.curContractSym.name,
-                        Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-            }
-            Context tmp = stmt.genConsVisit(env);
-            env.prevContext = tmp;
-            prev2 = prev;
-            loc = stmt.location;
-            prev = new Context(tmp);
+            Context tmp = stmt.genConsVisit(env, index == body.size() && tail_position);
+            env.context = funcBeginContext;
         }
         env.decScopeLayer();
 
-        String ifNameGammaLock = funcSym.getLabelNameCallGamma();
-        env.cons.add(new Constraint(new Inequality(prev.lockName, ifNameGammaLock), env.hypothesis, loc, env.curContractSym.name,
-                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-
-        /*if (rtn instanceof LabeledType) {
-            if (rtn instanceof DepMap) {
-                ((DepMap) rtn).findPrincipal(env.principalSet);
-            } else {
-                ((LabeledType) rtn).ifl.findPrincipal(env.principalSet);
-            }
-        }*/
-        // env.ctxt = originalCtxt;
-        // don't recover
-        // env.prevContext = originalContext;
-        return env.prevContext;
+        return curContext;
     }
     /*public void findPrincipal(HashSet<String> principalSet) {
         if (sig.name instanceof LabeledType) {

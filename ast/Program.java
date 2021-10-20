@@ -100,8 +100,8 @@ public class Program extends Node {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
-        contract.genConsVisit(env);
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+        contract.genConsVisit(env, tail_position);
         return null;
     }
 

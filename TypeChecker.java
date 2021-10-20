@@ -1,7 +1,6 @@
 import java.io.*;
 
 import ast.*;
-import java_cup.*;
 import java_cup.runtime.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -237,7 +236,7 @@ public class TypeChecker {
 
                 //env.cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, ifCallAfterLabel), func.location));
                 // if (!ifCallAfterLabel.equals(ifCallBeforeLabel)) //TODO: deal with before and after are different
-                cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, Relation.REQ, ifNameCallLockLabel), func.funcLabels.to_pc.location, contractName, "Calls to this function must respect lock level of " + '{' + ifCallAfterLabel + '}'));
+                // cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, Relation.GEQ, ifNameCallLockLabel), func.funcLabels.to_pc.location, contractName, "Calls to this function must respect lock level of " + '{' + ifCallAfterLabel + '}'));
             }
 
             if (ifCallLockLabel != null) {
@@ -249,7 +248,7 @@ public class TypeChecker {
 
             String ifNameReturnLabel = func.getLabelNameRtnValue();
             String ifReturnLabel = func.getRtnValueLabel();
-            String ifNameRtnLockLabel = func.getLabelNameRtnLock();
+            // String ifNameRtnLockLabel = func.getLabelNameRtnLock();
             // String ifAfterCallLabel = func.getCallAfterLabel();
             // String ifRtnLockLabel = func.getRtnLockLabel();
             if (ifReturnLabel != null) {
@@ -265,7 +264,7 @@ public class TypeChecker {
             if (ifAfterCallLabel != null) {
                 env.cons.add(new Constraint(new Inequality(ifNameRtnLockLabel, ifAfterCallLabel), func.location));
             }*/
-            if (ifCallLockLabel != null && ifCallAfterLabel != null && ifCallLockLabel.equals(ifCallAfterLabel)) {
+            /*if (ifCallLockLabel != null && ifCallAfterLabel != null && ifCallLockLabel.equals(ifCallAfterLabel)) {
                 cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameRtnLockLabel), func.funcLabels.location, contractName,
                         "Calls to this method must respect label " + '{' + ifCallLockLabel + '}'));
 
@@ -278,7 +277,7 @@ public class TypeChecker {
                     cons.add(new Constraint(new Inequality(ifCallAfterLabel, ifNameRtnLockLabel), func.funcLabels.location, contractName,
                             "Calls to this method must respect label " + '{' + ifCallAfterLabel + '}'));
                 }
-            }
+            }*/
 
             for (int i = 0; i < func.parameters.size(); ++i) {
                 VarSym arg = func.parameters.get(i);
@@ -343,7 +342,7 @@ public class TypeChecker {
             Program program = (Program) tmp;
             // env.varNameMap = new LookupMaps(varMap);
 
-            program.genConsVisit(env);
+            program.genConsVisit(env, true);
         }
 
         Utils.writeCons2File(env.principalSet, env.trustCons, env.cons, outputFile, true);

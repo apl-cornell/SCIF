@@ -37,7 +37,7 @@ public class Arg extends Node {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env) {
+    public Context genConsVisit(VisitEnv env, boolean tail_position) {
 
         if (annotation instanceof LabeledType) {
             if (annotation instanceof DepMap) {

@@ -41,7 +41,8 @@ public class Utils {
     public static final String SET_CONTRACT_NAME = "Set";
     public static final String PATH_TO_BASECONTRACTCENTRALIZED = "BaseContractCentralized";
 
-    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Lock should be maintained except the last operation";
+    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Lock should be maintained except after the last operation";
+    public static final String ERROR_MESSAGE_LOCK_IN_LAST_OPERATION = "Lock maintainance of the operation at tail position";
 
 
     public static final boolean isPrimitiveType(String x) {
@@ -63,11 +64,23 @@ public class Utils {
             return prefix + ".." + "PC";
         }
     }
-    public static String getLabelNameLock(String prefix) {
-        if (prefix.equals("")) {
+    public static String getLabelNameLock(CodeLocation location) {
+        if (location == null) {
+            return "LK";
+        } else {
+            return location.toString() + ".." + "LK";
+        }
+        /*if (prefix.equals("")) {
             return "LK";
         } else {
             return prefix + ".." + "LK";
+        }*/
+    }
+    public static String getLabelNameInLock(CodeLocation location) {
+        if (location == null) {
+            return "ILK";
+        } else {
+            return location.toString() + ".." + "ILK";
         }
     }
     public static String getLabelNameFuncCallPcBefore(String funcName) {
@@ -343,7 +356,8 @@ public class Utils {
 
     public static String translateSLCSuggestion(Program p, String s) {
         if (s.charAt(0) != '-') return null;
-        System.out.println(s);
+        //System.out.println(s);
+        if (true) return s;
         int l = s.indexOf('['), r = s.indexOf(']');
         if (l == -1 || s.charAt(l + 1) != '\"') return  null;
         ++l;
@@ -386,6 +400,10 @@ public class Utils {
             return "3rd";
         else
             return i + "th";
+    }
+
+    public static String makeJoin(String lhs, String rhs) {
+        return "(" + lhs + " ⊔ " + rhs + ")";
     }
 }
 
