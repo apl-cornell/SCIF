@@ -41,8 +41,8 @@ public class Utils {
     public static final String SET_CONTRACT_NAME = "Set";
     public static final String PATH_TO_BASECONTRACTCENTRALIZED = "BaseContractCentralized";
 
-    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Lock should be maintained except after the last operation";
-    public static final String ERROR_MESSAGE_LOCK_IN_LAST_OPERATION = "Lock maintainance of the operation at tail position";
+    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Lock should be maintained except during the last operation";
+    public static final String ERROR_MESSAGE_LOCK_IN_LAST_OPERATION = "The operation at tail position should respect the final lock label";
 
 
     public static final boolean isPrimitiveType(String x) {
@@ -356,8 +356,8 @@ public class Utils {
 
     public static String translateSLCSuggestion(Program p, String s) {
         if (s.charAt(0) != '-') return null;
-        //System.out.println(s);
-        if (true) return s;
+        System.out.println(s);
+        //if (true) return s;
         int l = s.indexOf('['), r = s.indexOf(']');
         if (l == -1 || s.charAt(l + 1) != '\"') return  null;
         ++l;

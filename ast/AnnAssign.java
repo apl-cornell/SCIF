@@ -109,7 +109,7 @@ public class AnnAssign extends Statement {
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
                 env.cons.add(new Constraint(new Inequality(ifLabel, Relation.EQ, varSym.labelToSherrlocFmt()), env.hypothesis, location, env.curContractSym.name,
-                        "Variable " + varSym.name + " is as trustworthy as label " + '{' + ((LabeledType) annotation).ifl + '}'));
+                        "Variable " + varSym.name + " is labeled incorrectly"));
             }
         } else {
             // ifNameTgt = ((Name) target).id;

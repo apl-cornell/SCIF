@@ -183,9 +183,9 @@ public class Call extends TrailerExpr {
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCallPcBefore), env.hypothesis, location, env.curContractSym.name,
                 "Current control flow must be trusted to call this method"));
         env.cons.add(new Constraint(new Inequality(ifNameFuncCallPcBefore, Utils.makeJoin(ifNameFuncCallPcAfter, curContext.inLockName)), env.hypothesis, location, env.curContractSym.name,
-                "TODO"));
+                "Calling this function does not respect current locks"));
         env.cons.add(new Constraint(new Inequality(Utils.makeJoin(ifNameFuncCallPcAfter, ifNameFuncGammaLock), curContext.lockName), env.hypothesis, location, env.curContractSym.name,
-                "TODO"));;
+                "Calling this function does not respect current locks"));;
 
 
         if (!tail_position) {

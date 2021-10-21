@@ -195,7 +195,7 @@ public class TypeChecker {
         String ifNameContract = contractSym.getLabelNameContract();
         String ifContract = contractSym.getLabelContract();
         cons.add(new Constraint(new Inequality(ifNameContract, Relation.EQ, ifContract), contractSym.ifl.location, contractName,
-                "Integrity label of contract " + ifNameContract));
+                "Integrity label of contract " + ifNameContract + " is incorrect"));
 
         for (TrustConstraint trustConstraint : contractSym.trustSetting.trust_list) {
             trustCons.add(new Constraint(new Inequality(trustConstraint.lhs.toSherrlocFmt(), trustConstraint.optor,trustConstraint.rhs.toSherrlocFmt()), trustConstraint.location, contractName,
@@ -225,14 +225,14 @@ public class TypeChecker {
             // String ifAfterCallLabel = func.getCallAfterLabel();
             if (ifCallBeforeLabel != null) {
                 cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), func.funcLabels.begin_pc.location, contractName,
-                        "Integrity requirement to call this method"));
+                        "Integrity requirement to call this method is incorrect"));
 
                 //env.cons.add(new Constraint(new Inequality(ifNameCallBeforeLabel, ifCallBeforeLabel), func.location));
 
             }
             if (ifCallAfterLabel != null) {
                 cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel), func.funcLabels.to_pc.location, contractName,
-                        "Integrity pc level autoendorsed to when call this method"));
+                        "Integrity pc level autoendorsed to when calling this method is incorrect"));
 
                 //env.cons.add(new Constraint(new Inequality(ifNameCallAfterLabel, ifCallAfterLabel), func.location));
                 // if (!ifCallAfterLabel.equals(ifCallBeforeLabel)) //TODO: deal with before and after are different
@@ -242,7 +242,7 @@ public class TypeChecker {
             if (ifCallLockLabel != null) {
                 // cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.REQ, ifNameCallLockLabel), func.funcLabels.gamma_label.location, contractName, "Calls to this function must respect lock level of " + '{' + ifCallAfterLabel + '}'));
                 cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallGammaLabel), func.funcLabels.gamma_label.location, contractName,
-                        "Lock integrity label this method need to respect"));
+                        "The final lock label is declared incorrectly"));
 
             }
 
@@ -253,7 +253,7 @@ public class TypeChecker {
             // String ifRtnLockLabel = func.getRtnLockLabel();
             if (ifReturnLabel != null) {
                 cons.add(new Constraint(new Inequality(ifReturnLabel, Relation.EQ, ifNameReturnLabel), func.location, contractName,
-                        "Integrity label of this method's return value"));
+                        "Integrity label of this method's return value is incorrect"));
 
                 //env.cons.add(new Constraint(new Inequality(ifNameReturnLabel, ifReturnLabel), func.location));
 
@@ -285,7 +285,7 @@ public class TypeChecker {
                 String ifArgLabel = arg.getLabel();
                 if (ifArgLabel != null) {
                     cons.add(new Constraint(new Inequality(ifNameArgLabel, Relation.EQ, ifArgLabel), arg.location, contractName,
-                            "Argument " + arg.name + " is as trustworthy as label " + '{' + ifArgLabel + '}'));
+                            "Argument " + arg.name + " is labeled incorrectly"));
 
                     //env.cons.add(new Constraint(new Inequality(ifArgLabel, ifNameArgLabel), arg.location));
 
@@ -315,7 +315,7 @@ public class TypeChecker {
             String ifLabel = var.getLabel();
             if (ifLabel != null) {
                 env.cons.add(new Constraint(new Inequality(varName, Relation.EQ, ifLabel), var.location, contractName,
-                        "Variable " + var.name + " is as trustworthy as its label " + '{' + ifLabel + '}'));
+                        "Variable " + var.name + " is labeled incorrectly"));
 
                 //env.cons.add(new Constraint(new Inequality(if Label, varName), var.location));
 
@@ -378,7 +378,7 @@ public class TypeChecker {
                         String s = Utils.translateSLCSuggestion(root, sherrlocResult[j]);
                         if (s != null) {
                             System.out.println(idx + ":");
-                            System.out.println(s);
+                            System.out.println(s + "\n");
                             idx += 1;
                         }
                     }

@@ -63,7 +63,7 @@ public class Subscript extends TrailerExpr {
                 // env.cons.add(new Constraint(new Inequality(ifNameIndex + "..lbl", ifDepMapIndexReq), env.hypothesis, location));
 
                 env.cons.add(new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
-                        "Label of the subscript value"));
+                        "Integrity level of the subscript value is not trustworthy enough"));
 
                 // ifNameRtnLock = env.prevContext.lockName;
             } else {
@@ -76,7 +76,7 @@ public class Subscript extends TrailerExpr {
             String ifNameIndex = indexContext.valueLabelName;
             ifNameRtnValue = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
             env.cons.add(new Constraint(new Inequality(ifNameValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
-                    "Label of the subscript variable"));
+                    "Integrity level of the subscript value is not trustworthy enough"));
 
             // env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
             // ifNameRtnLock = indexContext.lockName;

@@ -55,9 +55,9 @@ public class BinOp extends Expression {
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bin" + location.toString();
 
         env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
-                "Integrity of left hand expression flows to value of this binary operation"));
+                "Integrity of left hand expression doesn't flow to value of this binary operation"));
         env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
-                "Integrity of right hand expression flows to value of this binary operation"));
+                "Integrity of right hand expression doesn't flow to value of this binary operation"));
 
         // Context prevContext = rightContext;
         if (!tail_position) {

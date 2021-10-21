@@ -98,9 +98,9 @@ public class If extends NonFirstLayerStatement {
             }
         }
         env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location, env.curContractSym.name,
-                "Control flow integrity before this if condition flows to the one after this condition"));
+                "Control flow integrity before this if condition doesn't flow to the one after this condition"));
         env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location, env.curContractSym.name,
-                "Integrity of this condition flows to the control flow in this if branch"));
+                "Integrity of this condition doesn't flow to the control flow in this if branch"));
 
         /*if (body.size() > 0 || orelse.size() > 0) {
             env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.GEQ, curContext.lockName), env.hypothesis, test.location, env.curContractSym.name,

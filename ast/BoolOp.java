@@ -42,9 +42,9 @@ public class BoolOp extends Expression {
         String ifNameRight = rightContext.valueLabelName;
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bool" + location.toString();
         env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
-                "Integrity of left hand expression flows to value of this boolean operation"));
+                "Integrity of left hand expression doesn't flow to value of this boolean operation"));
         env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
-                "Integrity of right hand expression flows to value of this boolean operation"));
+                "Integrity of right hand expression doesn't flow to value of this boolean operation"));
 
         if (!tail_position) {
             env.cons.add(new Constraint(new Inequality(curContext.lockName, context.inLockName), env.hypothesis, location, env.curContractSym.name,

@@ -55,17 +55,17 @@ public class FunctionDef extends FunctionSig {
 
 
         String ifNameCall = funcSym.getLabelNameCallPcAfter();
-        env.cons.add(new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis, funcLabels.location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis, funcLabels.to_pc.location, env.curContractSym.name,
                 "Control flow of this method start with its call-after(second) label"));
 
         String ifNameContract = env.curContractSym.getLabelNameContract();
-        env.cons.add(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis, funcLabels.begin_pc.location, env.curContractSym.name,
                 "This contract should be trusted enough to call this method"));
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
-        env.cons.add(new Constraint(new Inequality(curContext.inLockName, ifNameCall), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(curContext.inLockName, ifNameCall), env.hypothesis, funcLabels.to_pc.location, env.curContractSym.name,
                 "The statically locked integrity level must be at least as trusted as initial control flow level"));
-        env.cons.add(new Constraint(new Inequality(Utils.makeJoin(curContext.inLockName, curContext.lockName), ifNameGamma), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(Utils.makeJoin(curContext.inLockName, curContext.lockName), ifNameGamma), env.hypothesis, funcLabels.gamma_label.location, env.curContractSym.name,
                 "This function does not maintain locks as specified in signature"));
 
         Context funcBeginContext = new Context(curContext);
