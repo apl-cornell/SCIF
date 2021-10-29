@@ -26,6 +26,22 @@ public class ComplexIfLabel extends IfLabel {
         }
         return rnt;
     }
+    public String toSherrlocFmt(String namespace) {
+        String l = left.toSherrlocFmt(namespace);
+        String r = right.toSherrlocFmt(namespace);
+        String rnt = "";
+        switch (op) {
+            case JOIN:
+                rnt = "(" + l + " ⊔ " + r + ")";
+                break;
+            case MEET:
+                rnt = "(" + l + " ⊓ " + r + ")";
+                break;
+
+        }
+        return rnt;
+    }
+
     public String toSherrlocFmt(String k, String v) {
         String l = left.toSherrlocFmt(k, v);
         String r = right.toSherrlocFmt(k, v);

@@ -103,6 +103,7 @@ public class Call extends TrailerExpr {
         String funcName;
         String ifNamePc;
         FuncSym funcSym;
+        String namespace = "";
         String ifNameFuncCallPcBefore, ifNameFuncCallPcAfter, ifNameFuncGammaLock;
 
         if (!(value instanceof Name)) {
@@ -117,16 +118,19 @@ public class Call extends TrailerExpr {
 
                 //TODO: assuming a's depth is 1
                 String varName = ((Name)att.value).id;
-                TypeSym conType = env.getVar(varName).typeSym;
+                VarSym var = env.getVar(varName);
+                namespace = var.toSherrlocFmt();
+                TypeSym conType = var.typeSym;
+                env.addSigReq(namespace, conType.name);
                 funcName = (att.attr).id;
                 ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
                 funcSym = env.getContract(conType.name).getFunc(funcName);
                 if (funcSym instanceof PolyFuncSym) {
                     ((PolyFuncSym) funcSym).apply();
                 }
-                ifNameFuncCallPcBefore = funcSym.getLabelNameCallPcBefore();
-                ifNameFuncCallPcAfter = funcSym.getLabelNameCallPcAfter();
-                ifNameFuncGammaLock = funcSym.getLabelNameCallGamma();
+                ifNameFuncCallPcBefore = funcSym.getLabelNameCallPcBefore(namespace);
+                ifNameFuncCallPcAfter = funcSym.getLabelNameCallPcAfter(namespace);
+                ifNameFuncGammaLock = funcSym.getLabelNameCallGamma(namespace);
                 env.cons.add(new Constraint(new Inequality(ifContRtn, ifNameFuncCallPcBefore), env.hypothesis, location, env.curContractSym.name,
                         "Argument value must be trusted to call this method"));
             } else {
@@ -183,9 +187,9 @@ public class Call extends TrailerExpr {
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCallPcBefore), env.hypothesis, location, env.curContractSym.name,
                 "Current control flow must be trusted to call this method"));
         env.cons.add(new Constraint(new Inequality(ifNameFuncCallPcBefore, Utils.makeJoin(ifNameFuncCallPcAfter, curContext.inLockName)), env.hypothesis, location, env.curContractSym.name,
-                "Calling this function does not respect current locks"));
+                "Calling this function does not respect statically locked integrity"));
         env.cons.add(new Constraint(new Inequality(Utils.makeJoin(ifNameFuncCallPcAfter, ifNameFuncGammaLock), curContext.lockName), env.hypothesis, location, env.curContractSym.name,
-                "Calling this function does not respect current locks"));;
+                "Calling this function does not respect statically locked integrity"));;
 
 
         if (!tail_position) {
@@ -196,7 +200,7 @@ public class Call extends TrailerExpr {
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_LAST_OPERATION));
         }
 
-        String ifNameFuncRtnValue = funcSym.getLabelNameRtnValue();
+        String ifNameFuncRtnValue = funcSym.getLabelNameRtnValue(namespace);
         // String ifNameFuncRtnLock = funcSym.getLabelNameRtnLock();
         return new Context(ifNameFuncRtnValue, curContext.lockName, curContext.inLockName);
     }

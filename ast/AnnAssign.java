@@ -109,7 +109,7 @@ public class AnnAssign extends Statement {
             if (annotation instanceof LabeledType) {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
                 env.cons.add(new Constraint(new Inequality(ifLabel, Relation.EQ, varSym.labelToSherrlocFmt()), env.hypothesis, location, env.curContractSym.name,
-                        "Variable " + varSym.name + " is labeled incorrectly"));
+                        "Variable " + varSym.name + " may be labeled incorrectly"));
             }
         } else {
             // ifNameTgt = ((Name) target).id;
@@ -140,7 +140,7 @@ public class AnnAssign extends Statement {
             env.context = curContext;
             Context tmp = value.genConsVisit(env, scopeContext.isContractLevel());
             String ifNameValue = tmp.valueLabelName;
-            env.cons.add(new Constraint(new Inequality(ifNameValue, SLCNameVarLbl), env.hypothesis, location, env.curContractSym.name,
+            env.cons.add(new Constraint(new Inequality(ifNameValue, SLCNameVarLbl), env.hypothesis, value.location, env.curContractSym.name,
                     "Integrity of the value being assigned must be trusted to allow this assignment"));
             /*if (prevContext != null && prevContext.inLockName != null) {
                 env.cons.add(new Constraint(new Inequality(tmp.lockName, tmp.inLockName), env.hypothesis, value.location, env.curContractSym.name,

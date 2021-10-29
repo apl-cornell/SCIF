@@ -2,7 +2,9 @@ import Token;
 
 contract Uniswap[this] {
     {{
-        BaseContractCentralized
+        BaseContractCentralized;
+        {@tX = this}
+        {@tY = this}
     }}
     Token{this} tX;
     Token{this} tY;
@@ -29,7 +31,7 @@ contract Uniswap[this] {
     }
 
     @public
-    uint{this} getBal{BOT >> this; this}(Token token, address k) {
+    uint{this} getBal{this >> this; this}(Token token, address k) {
         return token.getBal(k);
     } 
 }

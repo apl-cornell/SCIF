@@ -19,7 +19,8 @@ public class VisitEnv {
     public HashSet<String> principalSet; // TODO: better imp
     public ContractSym curContractSym;
     // public HashMap<String, ContractInfo> contractMap;
-    public HashMap<String, SigCons> sigConsMap;
+    //public HashMap<String, SigCons> sigConsMap;
+    public HashMap<String, String> sigReq = new HashMap<>();
 
 
     public VisitEnv(Context context,
@@ -31,8 +32,8 @@ public class VisitEnv {
                     SymTab curSymTab,
                     Hypothesis hypothesis,
                     HashSet<String> principalSet,
-                    ContractSym curContractSym,
-                    HashMap<String, SigCons> sigConsMap
+                    ContractSym curContractSym
+                    //HashMap<String, SigCons> sigConsMap
                     /*HashMap<String, ContractInfo> contractMap*/) {
         // this.ctxt = ctxt;
         this.context = context;
@@ -46,7 +47,7 @@ public class VisitEnv {
         this.principalSet = principalSet;
         this.curContractSym = curContractSym;
         // this.contractMap = contractMap;
-        this.sigConsMap = sigConsMap;
+        // this.sigConsMap = sigConsMap;
     }
 
     public VisitEnv() {
@@ -62,7 +63,7 @@ public class VisitEnv {
         principalSet = new HashSet<>();
         curContractSym = null;
         // contractMap = new HashMap<>();
-        sigConsMap = new HashMap<>();
+        //sigConsMap = new HashMap<>();
     }
 
     public void addVar(String id, VarSym varSym) {
@@ -113,12 +114,16 @@ public class VisitEnv {
         return getVar(id) != null;
     }
 
-    public void addSigCons(String contractName, ArrayList<Constraint> trustCons, ArrayList<Constraint> cons) {
+    /*public void addSigCons(String contractName, ArrayList<Constraint> trustCons, ArrayList<Constraint> cons) {
         SigCons sigCons = new SigCons(contractName, trustCons, cons);
         sigConsMap.put(contractName, sigCons);
-    }
+    }*/
 
-    public SigCons getSigCons(String contractName) {
+    /*public SigCons getSigCons(String contractName) {
         return sigConsMap.get(contractName);
+    }*/
+
+    public void addSigReq(String namespace, String name) {
+        sigReq.put(namespace, name);
     }
 }

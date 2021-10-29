@@ -64,7 +64,7 @@ public class FunctionDef extends FunctionSig {
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
         env.cons.add(new Constraint(new Inequality(curContext.inLockName, ifNameCall), env.hypothesis, funcLabels.to_pc.location, env.curContractSym.name,
-                "The statically locked integrity level must be at least as trusted as initial control flow level"));
+                "The statically locked integrity must be at least as trusted as initial pc integrity"));
         env.cons.add(new Constraint(new Inequality(Utils.makeJoin(curContext.inLockName, curContext.lockName), ifNameGamma), env.hypothesis, funcLabels.gamma_label.location, env.curContractSym.name,
                 "This function does not maintain locks as specified in signature"));
 

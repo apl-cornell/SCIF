@@ -41,7 +41,7 @@ public class Utils {
     public static final String SET_CONTRACT_NAME = "Set";
     public static final String PATH_TO_BASECONTRACTCENTRALIZED = "BaseContractCentralized";
 
-    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Lock should be maintained except during the last operation";
+    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "The statically locked integrity should be maintained except during the last operation";
     public static final String ERROR_MESSAGE_LOCK_IN_LAST_OPERATION = "The operation at tail position should respect the final lock label";
 
 

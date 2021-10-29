@@ -160,6 +160,7 @@ nonterminal GuardBlock guard_block;
 nonterminal TrustSetting trust_setting;
 nonterminal ArrayList<TrustConstraint> trust_decs;
 nonterminal TrustConstraint trust_dec;
+nonterminal TrustAtom ifLabelorAddr;
 nonterminal Relation trust_operator;
 nonterminal let_stmt;//, ref_stmt, new_stmt, deref_stmt;
 nonterminal HashMap<String, String> label_table;
@@ -224,14 +225,24 @@ trust_decs ::= trust_dec:x {:
         RESULT = list;
     :};
 
-trust_dec ::= LBRACE:x ifLabel:lhs trust_operator:optor ifLabel:rhs RBRACE {:
+trust_dec ::= LBRACE:x ifLabelorAddr:lhs trust_operator:optor ifLabelorAddr:rhs RBRACE {:
         TrustConstraint cons = new TrustConstraint(lhs, optor, rhs);
         RESULT = cons;
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
+    :};
     /*| NEWLINE trust_dec:x {:
         RESULT = x;
-    :}*/;
+    :}*/
+
+ifLabelorAddr ::= ifLabel:x {:
+        TrustAtom rtn = new TrustAtom(x);
+        RESULT = rtn;
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :} | AT NAME:x {:
+        TrustAtom rtn = new TrustAtom((String)x);
+        RESULT = rtn;
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :};
 
 trust_operator ::= EQUAL {: RESULT = Relation.EQ; :}
     | LESSEQUAL {: RESULT = Relation.GEQ; :}

@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class TrustConstraint extends Node {
-    public IfLabel lhs, rhs;
+    public TrustAtom lhs, rhs;
     public Relation optor;
-    public TrustConstraint(IfLabel lhs, Relation optor, IfLabel rhs) {
+    public TrustConstraint(TrustAtom lhs, Relation optor, TrustAtom rhs) {
         this.lhs = lhs;
         this.optor = optor;
         this.rhs = rhs;

@@ -61,6 +61,13 @@ public class VarSym extends Sym {
             return null;
         }
     }
+    public String getLabel(String namespace) {
+        if (ifl != null) {
+            return ifl.toSherrlocFmt(namespace);
+        } else {
+            return null;
+        }
+    }
     public boolean isLValue() {
         return true;
     }

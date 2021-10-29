@@ -26,6 +26,22 @@ public class PrimitiveIfLabel extends IfLabel {
         }
         return rnt;
     }
+    public String toSherrlocFmt(String namespace) {
+        String rnt = "";
+        if (value instanceof Name) {
+            String name = ((Name) value).id;
+            if (name.equals(Utils.LABEL_BOTTOM)) {
+                rnt = Utils.SHERRLOC_BOTTOM;
+            } else if (name.equals(Utils.LABEL_TOP)) {
+                rnt = Utils.SHERRLOC_TOP;
+            } else {
+                if (namespace != "")
+                    namespace += "..";
+                rnt = namespace + name;
+            }
+        }
+        return rnt;
+    }
 
     public String toSherrlocFmt(String k, String v) {
         String rnt = "";

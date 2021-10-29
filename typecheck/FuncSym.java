@@ -37,13 +37,29 @@ public class FuncSym extends Sym {
     public String getLabelNameCallPcBefore() {
         return Utils.getLabelNameFuncCallPcBefore(scopeContext.getSHErrLocName());
     }
+    public String getLabelNameCallPcBefore(String namespace) {
+        if (namespace != "")
+            namespace += "..";
+        return namespace + Utils.getLabelNameFuncCallPcBefore(scopeContext.getSHErrLocName());
+    }
 
     public String getLabelNameCallPcAfter() {
         return Utils.getLabelNameFuncCallPcAfter(scopeContext.getSHErrLocName());
     }
 
+    public String getLabelNameCallPcAfter(String namespace) {
+        if (namespace != "")
+            namespace += "..";
+        return namespace + Utils.getLabelNameFuncCallPcAfter(scopeContext.getSHErrLocName());
+    }
+
     public String getLabelNameRtnValue() {
         return Utils.getLabelNameFuncRtnValue(scopeContext.getSHErrLocName());
+    }
+    public String getLabelNameRtnValue(String namespace) {
+        if (namespace != "")
+            namespace += "..";
+        return namespace + Utils.getLabelNameFuncRtnValue(scopeContext.getSHErrLocName());
     }
     /*public String getLabelNameRtnLock() {
         return Utils.getLabelNameFuncRtnLock(scopeContext.getSHErrLocName());
@@ -56,6 +72,12 @@ public class FuncSym extends Sym {
         return Utils.getLabelNameArgLabel(scopeContext.getSHErrLocName(), parameters.get(index));
     }
 
+    public String getLabelNameArg(String namespace, int index) {
+        if (namespace != "")
+            namespace += "..";
+        return namespace + Utils.getLabelNameArgLabel(scopeContext.getSHErrLocName(), parameters.get(index));
+    }
+
     public String getCallPcLabel() {
         if (funcLabels != null && funcLabels.begin_pc != null) {
             return funcLabels.begin_pc.toSherrlocFmt();
@@ -63,8 +85,16 @@ public class FuncSym extends Sym {
         else {
             return null;
         }
-
     }
+    public String getCallPcLabel(String namespace) {
+        if (funcLabels != null && funcLabels.begin_pc != null) {
+            return funcLabels.begin_pc.toSherrlocFmt(namespace);
+        }
+        else {
+            return null;
+        }
+    }
+
     public String getCallLockLabel() {
         if (funcLabels != null && funcLabels.gamma_label != null) {
             return funcLabels.gamma_label.toSherrlocFmt();
@@ -72,7 +102,15 @@ public class FuncSym extends Sym {
         else {
             return null;
         }
+    }
 
+    public String getCallLockLabel(String namespace) {
+        if (funcLabels != null && funcLabels.gamma_label != null) {
+            return funcLabels.gamma_label.toSherrlocFmt(namespace);
+        }
+        else {
+            return null;
+        }
     }
 
 
@@ -108,6 +146,15 @@ public class FuncSym extends Sym {
         }
     }
 
+    public String getCallAfterLabel(String namespace) {
+        if (funcLabels != null && funcLabels.to_pc != null) {
+            return funcLabels.to_pc.toSherrlocFmt(namespace);
+        }
+        else {
+            return null;
+        }
+    }
+
     public String getRtnValueLabel() {
         if (returnLabel != null) {
             return returnLabel.toSherrlocFmt();
@@ -128,5 +175,10 @@ public class FuncSym extends Sym {
 
     public String getLabelNameCallGamma() {
         return Utils.getLabelNameFuncCallGamma(scopeContext.getSHErrLocName());
+    }
+    public String getLabelNameCallGamma(String namespace) {
+        if (namespace != "")
+            namespace += "..";
+        return namespace + Utils.getLabelNameFuncCallGamma(scopeContext.getSHErrLocName());
     }
 }

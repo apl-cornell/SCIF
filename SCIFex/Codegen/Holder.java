@@ -11,12 +11,12 @@ contract Holder[this] {
     }
 
     @public
-    void alertSend{BOT >> this; this}(address x, uint amount) {
+    void alertSend{BOT >> this; BOT}(address x, uint amount) {
 	// ...
     }
 
     @public
-    void alertReceive{BOT >> this; this}(address x, uint amount) {
+    void alertReceive{BOT >> this; BOT}(address x, uint amount) {
 	// ...
     }
 }

@@ -60,7 +60,7 @@ public class Assign extends NonFirstLayerStatement {
         env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis, location, env.curContractSym.name,
                 "Integrity of the value being assigned must be trusted to allow this assignment"));
 
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, value.location, env.curContractSym.name,
                 "Integrity of control flow must be trusted to allow this assignment"));
 
         if (!tail_position) {

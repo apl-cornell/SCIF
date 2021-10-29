@@ -28,15 +28,15 @@ contract Token [this] {
         Holder _frm = Holder(frm);
         Holder _to = Holder(to);
 
-        // lock(this) {
+//        lock(this) {
             _frm.alertSend(to, amount);
             _to.alertReceive(frm, amount);
-        // }
+//        }
         return true;
     }
 
     @public
-    uint{this} getBal{BOT >> this; this}(address user) {
+    uint{this} getBal{this >> this; this}(address user) {
         return balances[user];
     }
 }
