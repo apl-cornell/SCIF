@@ -51,10 +51,10 @@ public class Compare extends Expression {
         // env.prevContext = prevContext = rightContext;
 
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "cmp" + location.toString();
-        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, left.location, env.curContractSym.name,
                 "Integrity of left hand expression doesn't flow to value of this compare operation"));
-        env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
-                "Integrity of left hand expression doesn't flow to value of this compare operation"));
+        env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, right.location, env.curContractSym.name,
+                "Integrity of right hand expression doesn't flow to value of this compare operation"));
 
         if (!tail_position) {
             env.cons.add(new Constraint(new Inequality(curContext.lockName, context.inLockName), env.hypothesis, location, env.curContractSym.name,
