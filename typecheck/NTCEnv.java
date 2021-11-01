@@ -1,13 +1,11 @@
 package typecheck;
 
-import ast.DepMap;
-import ast.LabeledType;
-import ast.Map;
-import ast.Type;
+import ast.*;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Hypothesis;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class NTCEnv {
@@ -18,6 +16,7 @@ public class NTCEnv {
     public ArrayList<Constraint> cons;
     public Hypothesis globalHypothesis;
     public ContractSym curContractSym;
+    public HashMap<String, Program> programMap;
     public NTCEnv() {
         globalSymTab = new SymTab();
         // externalSymTab = new HashMap<>();
@@ -26,6 +25,7 @@ public class NTCEnv {
         curSymTab = globalSymTab;
         globalHypothesis = new Hypothesis();
         curContractSym = new ContractSym();
+        programMap = new HashMap<>();
     }
 
     public void setGlobalSymTab(SymTab curSymTab) {

@@ -90,7 +90,8 @@ public class TypeChecker {
 
         // Collect global info
         NTCEnv NTCenv = new NTCEnv();
-        for (Node root : roots) {
+        for (Program root : roots) {
+            NTCenv.programMap.put(root.getContractName(), root);
             root.passScopeContext(null);
             if (!root.NTCGlobalInfo(NTCenv, null)) {
                 // doesn't typecheck
@@ -115,7 +116,7 @@ public class TypeChecker {
         Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons, outputFile, false);
         boolean result = false;
         try {
-            result = runSLC(roots.get(0), outputFile.getAbsolutePath());
+            result = runSLC(NTCenv.programMap, outputFile.getAbsolutePath());
         } catch (Exception e) {
             // handle exceptions;
         }
@@ -141,6 +142,7 @@ public class TypeChecker {
         for (Program root : roots) {
             ContractSym contractSym = new ContractSym();
             contractSym.name = ((Program)root).getContractName();
+            contractSym.astNode = root;
             contractNames.add(contractSym.name);
             contractMap.add(contractSym.name, contractSym);
             //root.findPrincipal(principalSet);
@@ -173,6 +175,7 @@ public class TypeChecker {
         }*/
 
         for (Program root : roots) {
+            env.programMap.put(root.getContractName(), root);
             env.sigReq.clear();
             if (!ifcTypecheck(root, env, outputFileMap.get(root))) {
                 return false;
@@ -319,14 +322,14 @@ public class TypeChecker {
         Utils.writeCons2File(env.principalSet, env.trustCons, env.cons, outputFile, true);
         boolean result = false;
         try {
-            result = runSLC(root, outputFile.getAbsolutePath());
+            result = runSLC(env.programMap, outputFile.getAbsolutePath());
         } catch (Exception e) {
             // handle exceptions;
         }
         return result;
     }
 
-    static boolean runSLC(Program root, String outputFileName) throws Exception {
+    static boolean runSLC(HashMap<String, Program> programMap, String outputFileName) throws Exception {
 
         String classDirectoryPath = new File(SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
         String[] sherrlocResult = Utils.runSherrloc(classDirectoryPath, outputFileName);
@@ -346,7 +349,7 @@ public class TypeChecker {
                         // System.out.println(sherrlocResult[j]);
                         //if (true)
                           //  continue;
-                        String s = Utils.translateSLCSuggestion(root, sherrlocResult[j]);
+                        String s = Utils.translateSLCSuggestion(programMap, sherrlocResult[j]);
                         if (s != null) {
                             System.out.println(idx + ":");
                             System.out.println(s + "\n");

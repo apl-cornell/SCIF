@@ -22,7 +22,7 @@ public class Constraint {
         this.hypothesis = new Hypothesis(hypothesis);
         this.position = location == null ? null : new Position(location);
         this.contractName = contractName;
-        this.explanation = explanation;
+        this.explanation = explanation + "@" + contractName;
     }
 
     /*public Constraint(Inequality inequality, CodeLocation location, String contractName) {
@@ -37,7 +37,7 @@ public class Constraint {
         this.hypothesis = new Hypothesis();
         this.position = location == null ? null : new Position(location);
         this.contractName = contractName;
-        this.explanation = explanation;
+        this.explanation = explanation + "@" + contractName;
     }
 
     public Constraint() {

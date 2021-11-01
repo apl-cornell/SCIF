@@ -9,6 +9,7 @@ import sherrlocUtils.Inequality;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class Utils {
@@ -354,7 +355,7 @@ public class Utils {
         return null; //TODO error report
     }
 
-    public static String translateSLCSuggestion(Program p, String s) {
+    public static String translateSLCSuggestion(HashMap<String, Program> programMap, String s) {
         if (s.charAt(0) != '-') return null;
         System.out.println(s);
         //if (true) return s;
@@ -382,8 +383,14 @@ public class Utils {
         }
         int lin = Integer.parseInt(slin), col = Integer.parseInt(scol);
 
-        String rtn = p.getProgramName() + "(" + slin + "," + scol + "): " + explanation + ".\n";
-        rtn += p.getSourceCodeLine(lin - 1) + "\n";
+        int p = explanation.indexOf('@');
+        String contractName = explanation.substring(p + 1);
+        explanation = explanation.substring(0, p);
+        //System.out.println("position of @:" + p + " " + contractName);
+        Program program = programMap.get(contractName);
+
+        String rtn = program.getProgramName() + "(" + slin + "," + scol + "): " + explanation + ".\n";
+        rtn += program.getSourceCodeLine(lin - 1) + "\n";
         for (int i = 1; i < col; ++i)
             rtn += " ";
         rtn += '^';

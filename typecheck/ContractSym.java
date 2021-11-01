@@ -13,6 +13,7 @@ public class ContractSym extends TypeSym {
     public IfLabel ifl;
     // public ArrayList<TrustConstraint> trustCons;
     public TrustSetting trustSetting;
+    public Program astNode;
 
     public ContractSym(String name,
                        SymTab symTab,

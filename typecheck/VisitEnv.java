@@ -1,5 +1,6 @@
 package typecheck;
 
+import ast.Program;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Hypothesis;
 
@@ -21,6 +22,7 @@ public class VisitEnv {
     // public HashMap<String, ContractInfo> contractMap;
     //public HashMap<String, SigCons> sigConsMap;
     public HashMap<String, String> sigReq = new HashMap<>();
+    public HashMap<String, Program> programMap;
 
 
     public VisitEnv(Context context,
@@ -32,7 +34,8 @@ public class VisitEnv {
                     SymTab curSymTab,
                     Hypothesis hypothesis,
                     HashSet<String> principalSet,
-                    ContractSym curContractSym
+                    ContractSym curContractSym,
+                    HashMap<String, Program> programMap
                     //HashMap<String, SigCons> sigConsMap
                     /*HashMap<String, ContractInfo> contractMap*/) {
         // this.ctxt = ctxt;
@@ -46,6 +49,7 @@ public class VisitEnv {
         this.hypothesis = hypothesis;
         this.principalSet = principalSet;
         this.curContractSym = curContractSym;
+        this.programMap = programMap;
         // this.contractMap = contractMap;
         // this.sigConsMap = sigConsMap;
     }
@@ -62,6 +66,7 @@ public class VisitEnv {
         hypothesis = new Hypothesis();
         principalSet = new HashSet<>();
         curContractSym = null;
+        programMap = new HashMap<>();
         // contractMap = new HashMap<>();
         //sigConsMap = new HashMap<>();
     }
