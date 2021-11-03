@@ -28,10 +28,10 @@ contract Token [this] {
         Holder _frm = Holder(frm);
         Holder _to = Holder(to);
 
-//        lock(this) {
+        lock(this) {
             _frm.alertSend(to, amount);
             _to.alertReceive(frm, amount);
-//        }
+        }
         return true;
     }
 

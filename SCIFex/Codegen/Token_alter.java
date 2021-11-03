@@ -12,7 +12,7 @@ contract Token [this] {
     }
 
     @public
-    bool{this} transfer{this >> this; this}(address frm, address to, uint amount) {
+    bool{BOT} transfer{this >> this; BOT}(address frm, address to, uint amount) {
         address sender = msg.sender;
         if (frm != sender && isAdmin[frm] != true) {
             return false;
@@ -25,6 +25,16 @@ contract Token [this] {
         balances[frm] = balances[frm] - amount;
         balances[to] = balances[to] + amount;
 
+        return sendAlert(frm, to, amount);
+    }
+
+    @public
+    uint{this} getBal{this >> this; this}(address user) {
+        return balances[user];
+    }
+
+    bool{BOT} sendAlert{this >> BOT; BOT}(address frm, address to, uint amount) {
+
         Holder _frm = Holder(frm);
         Holder _to = Holder(to);
 
@@ -33,10 +43,5 @@ contract Token [this] {
             _to.alertReceive(frm, amount);
 //        }
         return true;
-    }
-
-    @public
-    uint{this} getBal{this >> this; this}(address user) {
-        return balances[user];
     }
 }

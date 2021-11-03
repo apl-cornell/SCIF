@@ -41,9 +41,12 @@ public class SCIF implements Callable<Integer> {
     }
 
     ArrayList<Program> typecheck(String[] outputFileNames) throws Exception {
+        File logDir = new File("./.scif");
+        logDir.mkdirs();
+
         File NTCConsFile;
         if (outputFileNames.length <= 0) {
-            NTCConsFile = File.createTempFile("cons", "tmp");
+            NTCConsFile = new File(logDir, "ntc.cons");
             // outputFile.deleteOnExit();
         } else {
             NTCConsFile = new File(outputFileNames[0]);
@@ -66,7 +69,7 @@ public class SCIF implements Callable<Integer> {
         for (int i = 0; i < roots.size(); ++i) {
             File IFCConsFile;
             if (outputFileNames.length <= i + 1) {
-                IFCConsFile = File.createTempFile("cons", "tmp");
+                IFCConsFile = new File(logDir, "ifc" + i + ".cons");
             } else {
                 IFCConsFile = new File(outputFileNames[i + 1]);
             }

@@ -41,6 +41,7 @@ public class Return extends NonFirstLayerStatement {
         FuncSym funcSym = env.getFunc(funcName);
         // String ifNameRtnLock = funcSym.getLabelNameRtnLock();
         String ifNameRtnValue = funcSym.getLabelNameRtnValue();
+        String ifRtnLockName = funcSym.getLabelNameCallGamma();
         if (value == null) {
             env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                     Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
@@ -54,7 +55,7 @@ public class Return extends NonFirstLayerStatement {
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                 "Control flow must be trusted to return"));
 
-        env.cons.add(new Constraint(new Inequality(curContext.lockName, context.inLockName), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(Utils.makeJoin(curContext.lockName, curContext.inLockName), ifRtnLockName), env.hypothesis, location, env.curContractSym.name,
                 "Lock must be respected to return"));
         return new Context(null, curContext.lockName, curContext.inLockName);
     }

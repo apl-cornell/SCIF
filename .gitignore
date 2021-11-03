@@ -5,3 +5,6 @@ sym.java
 .*.sw?
 *.tmp
 tmp.*
+logs
+.scif
+.idea
