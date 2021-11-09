@@ -355,9 +355,9 @@ public class Utils {
         return null; //TODO error report
     }
 
-    public static String translateSLCSuggestion(HashMap<String, Program> programMap, String s) {
+    public static String translateSLCSuggestion(HashMap<String, Program> programMap, String s, boolean DEBUG) {
         if (s.charAt(0) != '-') return null;
-        System.out.println(s);
+        if (DEBUG) System.out.println(s);
         //if (true) return s;
         int l = s.indexOf('['), r = s.indexOf(']');
         if (l == -1 || s.charAt(l + 1) != '\"') return  null;

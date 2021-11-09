@@ -15,13 +15,15 @@ import java.util.concurrent.Callable;
 @Command(name = "SCIF", version = "SCIF 0.1.0", mixinStandardHelpOptions = true,
         description = "A set of tools for a new smart contract language with information flow control, SCIF.")
 public class SCIF implements Callable<Integer> {
-    @Option(names = "-i", arity = "1..*", required = true, description = "The source code file(s).")
+    @Parameters(arity = "1..*", description = "The source code file(s).")
     File[] inputFiles;
+
+    @Option(names = "-debug") boolean DEBUG;
 
     @Option(names = "-lg", arity = "1..*", description = "The log file.")
     String[] outputFileNames;
 
-    @ArgGroup(exclusive = true, multiplicity = "1")
+    @ArgGroup(exclusive = true)
     FuncRequest funcRequest;
 
     static class FuncRequest {
@@ -31,7 +33,7 @@ public class SCIF implements Callable<Integer> {
         boolean parse;
         @Option(names = {"-l", "--lexer"}, required = true, description = "Tokenize")
         boolean tokenize;
-        @Option(names = {"-c", "--compiler"}, required = true, description = "Compile to Solidity")
+        @Option(names = {"-c", "--compiler"}, required = true, description = "Compile to Solidity (default)")
         boolean compile;
     }
 
@@ -40,12 +42,12 @@ public class SCIF implements Callable<Integer> {
         System.exit(exitCode);
     }
 
-    ArrayList<Program> typecheck(String[] outputFileNames) throws Exception {
+    ArrayList<Program> typecheck(String[] outputFileNames, boolean DEBUG) throws Exception {
         File logDir = new File("./.scif");
         logDir.mkdirs();
 
         File NTCConsFile;
-        if (outputFileNames.length <= 0) {
+        if (outputFileNames == null || outputFileNames.length <= 0) {
             NTCConsFile = new File(logDir, "ntc.cons");
             // outputFile.deleteOnExit();
         } else {
@@ -56,7 +58,7 @@ public class SCIF implements Callable<Integer> {
             files.add(file);
         }
         System.out.println("Regular Typechecking:");
-        ArrayList<Program> roots = TypeChecker.regularTypecheck(files, NTCConsFile);
+        ArrayList<Program> roots = TypeChecker.regularTypecheck(files, NTCConsFile, DEBUG);
         boolean passNTC = true;
         //if (!Utils.emptyFile(outputFileName))
         //    passNTC = runSLC(outputFileName);
@@ -68,7 +70,7 @@ public class SCIF implements Callable<Integer> {
         ArrayList<File> IFCConsFiles = new ArrayList<>();
         for (int i = 0; i < roots.size(); ++i) {
             File IFCConsFile;
-            if (outputFileNames.length <= i + 1) {
+            if (outputFileNames == null || outputFileNames.length <= i + 1) {
                 IFCConsFile = new File(logDir, "ifc" + i + ".cons");
             } else {
                 IFCConsFile = new File(outputFileNames[i + 1]);
@@ -77,7 +79,7 @@ public class SCIF implements Callable<Integer> {
         }
 
         System.out.println("\nInformation Flow Typechecking:");
-        boolean passIFC = TypeChecker.ifcTypecheck(roots, IFCConsFiles);
+        boolean passIFC = TypeChecker.ifcTypecheck(roots, IFCConsFiles, DEBUG);
         // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
         // logger.debug("running SHErrLoc...");
         // boolean passIFC = runSLC(outputFileName);
@@ -89,15 +91,8 @@ public class SCIF implements Callable<Integer> {
     public Integer call() throws Exception {
 
         logger.trace("SCIF starts");
-        if (funcRequest.typecheck) {
-            typecheck(outputFileNames);
-        } else if (funcRequest.parse) {
-            File astOutputFile = outputFileNames == null ? null : new File(outputFileNames[0]);
-            Parser.parse(inputFiles[0], astOutputFile);
-        } else if (funcRequest.tokenize) {
-            LexerTest.tokenize(inputFiles[0]);
-        } else if (funcRequest.compile) {
-            ArrayList<Program> roots = typecheck(new String[0]);
+        if (funcRequest == null || funcRequest.compile) {
+            ArrayList<Program> roots = typecheck(new String[0], DEBUG);
             logger.debug("finished typecheck, compiling...");
             if (roots == null) {
                 return 1;
@@ -113,7 +108,14 @@ public class SCIF implements Callable<Integer> {
                 outputFile = new File(outputFileName);
             }
             SolCompiler.compile(roots, outputFile);
-        } else {
+        } else if (funcRequest.typecheck) {
+            typecheck(outputFileNames, DEBUG);
+        } else if (funcRequest.parse) {
+            File astOutputFile = outputFileNames == null ? null : new File(outputFileNames[0]);
+            Parser.parse(inputFiles[0], astOutputFile);
+        } else if (funcRequest.tokenize) {
+            LexerTest.tokenize(inputFiles[0]);
+        }else {
                 logger.error("No funcRequest specified, this should never happen!");
                 //System.out.println("No funcRequest specified, this should never happen!");
         }

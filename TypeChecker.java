@@ -21,7 +21,7 @@ public class TypeChecker {
         //typecheck(inputFile, outputFile);
     }
 
-    public static ArrayList<Program> regularTypecheck(ArrayList<File> inputFiles, File outputFile) {
+    public static ArrayList<Program> regularTypecheck(ArrayList<File> inputFiles, File outputFile, boolean DEBUG) {
 
         logger.trace("typecheck starts");
 
@@ -116,7 +116,7 @@ public class TypeChecker {
         Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons, outputFile, false);
         boolean result = false;
         try {
-            result = runSLC(NTCenv.programMap, outputFile.getAbsolutePath());
+            result = runSLC(NTCenv.programMap, outputFile.getAbsolutePath(), DEBUG);
         } catch (Exception e) {
             // handle exceptions;
         }
@@ -124,7 +124,7 @@ public class TypeChecker {
         return result == true ? roots : null;
     }
 
-    public static boolean ifcTypecheck(ArrayList<Program> roots, ArrayList<File> outputFiles) {
+    public static boolean ifcTypecheck(ArrayList<Program> roots, ArrayList<File> outputFiles, boolean DEBUG) {
 
         HashMap<Program, File> outputFileMap = new HashMap<>();
         for (int i = 0; i < roots.size(); ++i) {
@@ -177,7 +177,7 @@ public class TypeChecker {
         for (Program root : roots) {
             env.programMap.put(root.getContractName(), root);
             env.sigReq.clear();
-            if (!ifcTypecheck(root, env, outputFileMap.get(root))) {
+            if (!ifcTypecheck(root, env, outputFileMap.get(root), DEBUG)) {
                 return false;
             }
         }
@@ -267,7 +267,7 @@ public class TypeChecker {
         // env.addSigCons(contractName, trustCons, cons);
     }
 
-    private static boolean ifcTypecheck(Program root, VisitEnv env, File outputFile) {
+    private static boolean ifcTypecheck(Program root, VisitEnv env, File outputFile, boolean DEBUG) {
         String contractName = root.getContractName();//contractNames.get(fileIdx);
         ContractSym contractSym = env.getContract(contractName);
         logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n" + env.curSymTab.getTypeSet());
@@ -322,14 +322,14 @@ public class TypeChecker {
         Utils.writeCons2File(env.principalSet, env.trustCons, env.cons, outputFile, true);
         boolean result = false;
         try {
-            result = runSLC(env.programMap, outputFile.getAbsolutePath());
+            result = runSLC(env.programMap, outputFile.getAbsolutePath(), DEBUG);
         } catch (Exception e) {
             // handle exceptions;
         }
         return result;
     }
 
-    static boolean runSLC(HashMap<String, Program> programMap, String outputFileName) throws Exception {
+    static boolean runSLC(HashMap<String, Program> programMap, String outputFileName, boolean DEBUG) throws Exception {
 
         String classDirectoryPath = new File(SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
         String[] sherrlocResult = Utils.runSherrloc(classDirectoryPath, outputFileName);
@@ -349,10 +349,10 @@ public class TypeChecker {
                         // System.out.println(sherrlocResult[j]);
                         //if (true)
                           //  continue;
-                        String s = Utils.translateSLCSuggestion(programMap, sherrlocResult[j]);
+                        String s = Utils.translateSLCSuggestion(programMap, sherrlocResult[j], DEBUG);
                         if (s != null) {
                             System.out.println(idx + ":");
-                            System.out.println(s + "\n");
+                            System.out.println(s);
                             idx += 1;
                         }
                     }
