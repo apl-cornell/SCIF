@@ -14,6 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
+import modules.sherrloc.GenErrorDiagnostic.src.sherrloc.diagnostic.*;
+
 public class TypeChecker {
     public static void main(String[] args) {
         File inputFile = new File(args[0]);
@@ -239,7 +241,7 @@ public class TypeChecker {
 
             if (ifCallLockLabel != null) {
                 cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallGammaLabel), func.funcLabels.gamma_label.location, contractName,
-                        "The final lock label may be declared incorrectly"));
+                        "The final reentrancy lock label may be declared incorrectly"));
 
             }
 

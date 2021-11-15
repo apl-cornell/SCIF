@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import modules.sherrloc.GenErrorDiagnostic.src.sherrloc.diagnostic.*;
+
 public class Utils {
     public static final String[] BUILTIN_TYPE_NAMES =
             new String[] {"bool", "address", "bytes", "string", "void", "uint"};
@@ -42,8 +44,8 @@ public class Utils {
     public static final String SET_CONTRACT_NAME = "Set";
     public static final String PATH_TO_BASECONTRACTCENTRALIZED = "BaseContractCentralized";
 
-    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "The statically locked integrity should be maintained except during the last operation";
-    public static final String ERROR_MESSAGE_LOCK_IN_LAST_OPERATION = "The operation at tail position should respect the final lock label";
+    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Static reentrancy locks should be maintained except during the last operation";
+    public static final String ERROR_MESSAGE_LOCK_IN_LAST_OPERATION = "The operation at tail position should respect the final reentrancy lock label";
 
 
     public static final boolean isPrimitiveType(String x) {
@@ -113,6 +115,7 @@ public class Utils {
     }
     public static String[] runSherrloc(String path, String consFilePath) throws Exception {
         logger.debug("runSherrloc()...");
+        //sherrloc.diagnostic.ErrorDiagnosis diagnosis = new sherrloc.diagnostic.ErrorDiagnosis();
         String[] command = new String[] {"bash", "-c", path + "/sherrloc/sherrloc -c " + consFilePath};
         ProcessBuilder pb = new ProcessBuilder(command);
         //pb.inheritIO();

@@ -56,7 +56,7 @@ public class Return extends NonFirstLayerStatement {
                 "Control flow must be trusted to return"));
 
         env.cons.add(new Constraint(new Inequality(Utils.makeJoin(curContext.lockName, curContext.inLockName), ifRtnLockName), env.hypothesis, location, env.curContractSym.name,
-                "Lock must be respected to return"));
+                "Reentrancy locks must be respected to return"));
         return new Context(null, curContext.lockName, curContext.inLockName);
     }
 

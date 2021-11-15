@@ -48,7 +48,7 @@ public class GuardBlock extends NonFirstLayerStatement {
         String guardLabel = l.toSherrlocFmt();
 
         env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, curContext.inLockName), context.inLockName), env.hypothesis, location, env.curContractSym.name,
-                "Put a dynamic lock"));
+                "Cannot put a dynamic reentrancy lock"));
         // String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
         Context lastContext = new Context(curContext);//, prev2 = null;
@@ -73,7 +73,7 @@ public class GuardBlock extends NonFirstLayerStatement {
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_LAST_OPERATION));
         }
         env.cons.add(new Constraint(new Inequality(Utils.meetLabels(curContext.lockName, guardLabel), context.lockName), env.hypothesis, location, env.curContractSym.name,
-                "Release a dynamic lock"));
+                "Cannot release a dynamic reentrancy lock"));
         // env.prevContext.lockName = newAfterLockLabel;
 
         // env.prevContext = prevContext;

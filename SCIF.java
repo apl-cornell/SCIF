@@ -12,6 +12,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
+
+
 @Command(name = "SCIF", version = "SCIF 0.1.0", mixinStandardHelpOptions = true,
         description = "A set of tools for a new smart contract language with information flow control, SCIF.")
 public class SCIF implements Callable<Integer> {
