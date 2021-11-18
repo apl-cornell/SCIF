@@ -343,8 +343,11 @@ public class TypeChecker {
             double best = Double.MAX_VALUE;
             boolean seced = false;
             System.out.println("Places most likely to be wrong:");
+            if (DEBUG) {
+                System.out.println("No of places: " + result.suggestions.size());
+            }
             int idx = 1;
-            for (int i = 1; i < result.suggestions.size(); ++i) {
+            for (int i = 0; i < result.suggestions.size(); ++i) {
                 double weight = result.suggestions.get(i).getWeight();
                 if (best > weight) {
                     best = weight;

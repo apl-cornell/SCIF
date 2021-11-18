@@ -20,7 +20,7 @@ public class Position {
         this(location.lineNo, location.columnNo, location.fileName);
     }
 
-    public String toSherrlocFmt(String explanation) {
+    public String toSherrlocFmt(String explanation, int weight) {
         String rtn = "[";
         //if (!snippet.equals("")) {
             rtn += "\"" + explanation + "\": ";
@@ -28,6 +28,7 @@ public class Position {
 
         rtn += beginLineNo + "," + beginColNo + "-" + endLineNo + "," + endColNo;
 
+        rtn += "#" + weight;
         rtn += "]";
 
         return rtn;

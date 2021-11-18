@@ -5,7 +5,7 @@ CLASSPATH = .:$(LIBPATH)/genson-1.5.jar:$(LIBPATH)/log4j-api-2.12.1.jar:$(LIBPAT
 
 default: all
 
-all: SCIF 
+all: slc SCIF 
 
 slc: sherrloc-build
 
@@ -31,7 +31,7 @@ Parser.java: SCIF.cup
 	java -jar ${LIBPATH}/${CUP} -expect 1000 -interface -parser Parser SCIF.cup
 
 sherrloc-build:
-	cd sherrloc; ant jar; mv lib/SHErrLoc.jar ../../../lib
+	cd sherrloc; ant jar; mv lib/SHErrLoc.jar ../../../lib; cd ../../..
 
 clean:
 	rm -f *.class
