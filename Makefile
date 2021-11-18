@@ -1,11 +1,13 @@
 LIBPATH=lib
 CUP=java-cup-11b.jar#polyglot-cup.jar
 
-CLASSPATH = .:$(LIBPATH)/genson-1.5.jar:$(LIBPATH)/log4j-api-2.12.1.jar:$(LIBPATH)/log4j-core-2.12.1.jar:$(LIBPATH)/picocli-4.0.0-beta-1b.jar:$(LIBPATH)/${CUP}
+CLASSPATH = .:$(LIBPATH)/genson-1.5.jar:$(LIBPATH)/log4j-api-2.12.1.jar:$(LIBPATH)/log4j-core-2.12.1.jar:$(LIBPATH)/picocli-4.0.0-beta-1b.jar:$(LIBPATH)/${CUP}:$(LIBPATH)/sherrloc.jar:$(LIBPATH)/commons-cli-1.2.jar
 
 default: all
 
-all: SCIF sherrloc-build
+all: SCIF 
+
+slc: sherrloc-build
 
 SCIF: TypeChecker.class LexerTest.class Parser.class SCIF.java
 	javac -cp ${CLASSPATH} SCIF.java
@@ -29,7 +31,7 @@ Parser.java: SCIF.cup
 	java -jar ${LIBPATH}/${CUP} -expect 1000 -interface -parser Parser SCIF.cup
 
 sherrloc-build:
-	cd sherrloc; ant
+	cd sherrloc; ant jar; mv lib/SHErrLoc.jar ../../../lib
 
 clean:
 	rm -f *.class

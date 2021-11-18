@@ -334,32 +334,32 @@ public class TypeChecker {
     static boolean runSLC(HashMap<String, Program> programMap, String outputFileName, boolean DEBUG) throws Exception {
 
         String classDirectoryPath = new File(SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
-        String[] sherrlocResult = Utils.runSherrloc(classDirectoryPath, outputFileName);
-        logger.debug(sherrlocResult);
-        if (sherrlocResult.length < 1) {
-            System.out.println(Utils.TYPECHECK_NORESULT_MSG);
-            return false;
-        } else if (sherrlocResult[sherrlocResult.length - 1].contains(Utils.SHERRLOC_PASS_INDICATOR)) {
+        sherrloc.diagnostic.DiagnosticConstraintResult result = Utils.runSherrloc(classDirectoryPath, outputFileName);
+        logger.debug(result);
+        if (result.succ) {
             System.out.println(Utils.TYPECHECK_PASS_MSG);
         } else {
             System.out.println(Utils.TYPECHECK_ERROR_MSG);
-            for (int i = 0; i < sherrlocResult.length; ++i)
-                if (sherrlocResult[i].contains(Utils.SHERRLOC_ERROR_INDICATOR)) {
-                    System.out.println("Places most likely to be wrong:");
-                    int idx = 1;
-                    for (int j = i + 1; j < sherrlocResult.length; ++j) {
-                        // System.out.println(sherrlocResult[j]);
-                        //if (true)
-                          //  continue;
-                        String s = Utils.translateSLCSuggestion(programMap, sherrlocResult[j], DEBUG);
-                        if (s != null) {
-                            System.out.println(idx + ":");
-                            System.out.println(s);
-                            idx += 1;
-                        }
-                    }
-                    break;
+            double best = Double.MAX_VALUE;
+            boolean seced = false;
+            System.out.println("Places most likely to be wrong:");
+            int idx = 1;
+            for (int i = 1; i < result.suggestions.size(); ++i) {
+                double weight = result.suggestions.get(i).getWeight();
+                if (best > weight) {
+                    best = weight;
                 }
+                if (!seced && best < weight) {
+                    seced = true;
+                    System.out.println("Some other possible places:");
+                }
+                String s = Utils.SLCSuggestionToString(programMap, result.suggestions.get(i), DEBUG);
+                if (s != null) {
+                    System.out.println(idx + ":");
+                    System.out.println(s);
+                    idx += 1;
+                }
+            }
             return false;
         }
         return true;

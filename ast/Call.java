@@ -189,7 +189,7 @@ public class Call extends TrailerExpr {
         env.cons.add(new Constraint(new Inequality(ifNameFuncCallPcBefore, Utils.makeJoin(ifNameFuncCallPcAfter, curContext.inLockName)), env.hypothesis, location, env.curContractSym.name,
                 "Calling this function does not respect static reentrancy locks"));
         env.cons.add(new Constraint(new Inequality(Utils.makeJoin(ifNameFuncCallPcAfter, ifNameFuncGammaLock), curContext.lockName), env.hypothesis, location, env.curContractSym.name,
-                "Calling this function does not respect statica reentrancy locks"));;
+                "Calling this function does not respect static reentrancy locks"));;
 
 
         if (!tail_position) {

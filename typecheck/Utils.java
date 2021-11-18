@@ -3,6 +3,8 @@ package typecheck;
 import ast.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sherrloc.diagnostic.DiagnosticOptions;
+import sherrloc.diagnostic.ErrorDiagnosis;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 
@@ -12,7 +14,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import modules.sherrloc.GenErrorDiagnostic.src.sherrloc.diagnostic.*;
 
 public class Utils {
     public static final String[] BUILTIN_TYPE_NAMES =
@@ -113,12 +114,19 @@ public class Utils {
     public static String getLabelNameArgLabel(String funcName, VarSym arg) {
         return funcName + "." + arg.name + "..lbl";
     }
-    public static String[] runSherrloc(String path, String consFilePath) throws Exception {
+    public static sherrloc.diagnostic.DiagnosticConstraintResult runSherrloc(String path, String consFilePath) throws Exception {
         logger.debug("runSherrloc()...");
+        String[] args = new String[] {"-c", consFilePath};
+        DiagnosticOptions options = new DiagnosticOptions(args);
+        ErrorDiagnosis ana = ErrorDiagnosis.getAnalysisInstance(options);
+
+        sherrloc.diagnostic.DiagnosticConstraintResult result = ana.getConstraintResult();
+        return result;
+
         //sherrloc.diagnostic.ErrorDiagnosis diagnosis = new sherrloc.diagnostic.ErrorDiagnosis();
-        String[] command = new String[] {"bash", "-c", path + "/sherrloc/sherrloc -c " + consFilePath};
+        /*String[] command = new String[] {"bash", "-c", path + "/sherrloc/sherrloc -c " + consFilePath};
         ProcessBuilder pb = new ProcessBuilder(command);
-        //pb.inheritIO();
+        pb.inheritIO();
         Process p = pb.start();
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
         ArrayList<String> list = new ArrayList<>();
@@ -131,7 +139,7 @@ public class Utils {
         logger.debug("finished run SLC, collecting output...");
         p.destroy();
         br.close();
-        return list.toArray(new String[0]);
+        return list.toArray(new String[0]);*/
     }
 
     public static String joinLabels(String lhs, String rhs) {
@@ -361,6 +369,51 @@ public class Utils {
     public static String translateSLCSuggestion(HashMap<String, Program> programMap, String s, boolean DEBUG) {
         if (s.charAt(0) != '-') return null;
         if (DEBUG) System.out.println(s);
+
+        //if (true) return s;
+        int l = s.indexOf('['), r = s.indexOf(']');
+        if (l == -1 || s.charAt(l + 1) != '\"') return  null;
+        ++l;
+        String explanation = "";
+        while (s.charAt(l + 1) != '\"') {
+            ++l;
+            explanation += s.charAt(l);
+        }
+        l += 2;
+
+        if (!Character.isDigit(s.charAt(l + 1)))
+            return null;
+        String slin = "", scol = "";
+        while (s.charAt(l + 1) != ',') {
+            ++l;
+            slin = slin + s.charAt(l);
+        }
+        ++l;
+        while (s.charAt(l + 1) != '-') {
+            ++l;
+            scol = scol + s.charAt(l);
+        }
+        int lin = Integer.parseInt(slin), col = Integer.parseInt(scol);
+
+        int p = explanation.indexOf('@');
+        String contractName = explanation.substring(p + 1);
+        explanation = explanation.substring(0, p);
+        //System.out.println("position of @:" + p + " " + contractName);
+        Program program = programMap.get(contractName);
+
+        String rtn = program.getProgramName() + "(" + slin + "," + scol + "): " + explanation + ".\n";
+        rtn += program.getSourceCodeLine(lin - 1) + "\n";
+        for (int i = 1; i < col; ++i)
+            rtn += " ";
+        rtn += '^';
+
+        return rtn;
+    }
+
+    public static String SLCSuggestionToString(HashMap<String, Program> programMap, sherrloc.diagnostic.explanation.Explanation exp, boolean DEBUG) {
+        String s = exp.toConsoleStringWithExp();
+        if (DEBUG) System.out.println(s + "@" + exp.getWeight());
+
         //if (true) return s;
         int l = s.indexOf('['), r = s.indexOf(']');
         if (l == -1 || s.charAt(l + 1) != '\"') return  null;
