@@ -412,11 +412,14 @@ public class Utils {
 
     public static String SLCSuggestionToString(HashMap<String, Program> programMap, sherrloc.diagnostic.explanation.Explanation exp, boolean DEBUG) {
         String s = exp.toConsoleStringWithExp();
-        if (DEBUG) System.out.println(s + "@" + exp.getWeight());
+        if (DEBUG) System.out.println(s + "#" + exp.getWeight());
 
         //if (true) return s;
         int l = s.indexOf('['), r = s.indexOf(']');
-        if (l == -1 || s.charAt(l + 1) != '\"') return  null;
+        if (l == -1 || s.charAt(l + 1) != '\"') {
+            // if (DEBUG) System.out.println("no explanation found");
+            return  null;
+        }
         ++l;
         String explanation = "";
         while (s.charAt(l + 1) != '\"') {
@@ -425,8 +428,11 @@ public class Utils {
         }
         l += 2;
 
-        if (!Character.isDigit(s.charAt(l + 1)))
+        // if (DEBUG) System.out.println(explanation);
+        if (!Character.isDigit(s.charAt(l + 1))) {
+            // if (DEBUG) System.out.println("no range digit found");
             return null;
+        }
         String slin = "", scol = "";
         while (s.charAt(l + 1) != ',') {
             ++l;
@@ -437,12 +443,13 @@ public class Utils {
             ++l;
             scol = scol + s.charAt(l);
         }
+
         int lin = Integer.parseInt(slin), col = Integer.parseInt(scol);
 
         int p = explanation.indexOf('@');
         String contractName = explanation.substring(p + 1);
         explanation = explanation.substring(0, p);
-        //System.out.println("position of @:" + p + " " + contractName);
+        // if (DEBUG) System.out.println("position of #:" + p + " " + contractName);
         Program program = programMap.get(contractName);
 
         String rtn = program.getProgramName() + "(" + slin + "," + scol + "): " + explanation + ".\n";

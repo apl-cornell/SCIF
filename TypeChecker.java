@@ -336,7 +336,7 @@ public class TypeChecker {
         String classDirectoryPath = new File(SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
         sherrloc.diagnostic.DiagnosticConstraintResult result = Utils.runSherrloc(classDirectoryPath, outputFileName);
         logger.debug(result);
-        if (result.succ) {
+        if (result.success()) {
             System.out.println(Utils.TYPECHECK_PASS_MSG);
         } else {
             System.out.println(Utils.TYPECHECK_ERROR_MSG);
@@ -344,11 +344,11 @@ public class TypeChecker {
             boolean seced = false;
             System.out.println("Places most likely to be wrong:");
             if (DEBUG) {
-                System.out.println("No of places: " + result.suggestions.size());
+                System.out.println("No of places: " + result.getSuggestions().size());
             }
             int idx = 1;
-            for (int i = 0; i < result.suggestions.size(); ++i) {
-                double weight = result.suggestions.get(i).getWeight();
+            for (int i = 0; i < result.getSuggestions().size(); ++i) {
+                double weight = result.getSuggestions().get(i).getWeight();
                 if (best > weight) {
                     best = weight;
                 }
@@ -356,7 +356,7 @@ public class TypeChecker {
                     seced = true;
                     System.out.println("Some other possible places:");
                 }
-                String s = Utils.SLCSuggestionToString(programMap, result.suggestions.get(i), DEBUG);
+                String s = Utils.SLCSuggestionToString(programMap, result.getSuggestions().get(i), DEBUG);
                 if (s != null) {
                     System.out.println(idx + ":");
                     System.out.println(s);
