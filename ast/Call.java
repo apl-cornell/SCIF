@@ -29,9 +29,11 @@ public class Call extends TrailerExpr {
         ScopeContext now = new ScopeContext(this, parent);
         String funcName;
         FuncSym funcSym;
+        boolean extern = false;
         if (!(value instanceof Name)) {
             if (value instanceof Attribute) {
                 // a.b(c), a must be a contract
+                extern = true;
                 Attribute att = (Attribute) value;
                 String varName = ((Name)att.value).id;
                 funcName = att.attr.id;
@@ -83,7 +85,7 @@ public class Call extends TrailerExpr {
         env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
 
         for (ExceptionTypeSym tl : funcSym.exceptions) {
-            if (!parent.isCheckedException(tl)) {
+            if (!parent.isCheckedException(tl, extern)) {
                 System.err.println("Unchecked exception: " + tl.name + " at " + location.toString());
                 throw new RuntimeException();
             }

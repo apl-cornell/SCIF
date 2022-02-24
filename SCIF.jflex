@@ -160,6 +160,7 @@ import java.util.HashMap;
         keywords.put("throw", Integer.valueOf(sym.THROW));
         keywords.put("catch", Integer.valueOf(sym.CATCH));
         keywords.put("exception", Integer.valueOf(sym.EXCEPTION));
+        keywords.put("extry", Integer.valueOf(sym.EXTRY));
     }
 
 

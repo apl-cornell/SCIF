@@ -97,7 +97,7 @@ terminal EQUALGREATER;
 terminal NEWLINE, EXTENDS, LET;
 terminal REF, SUPER, THEN, NEW;
 terminal FINAL, STATIC;
-terminal TRY, CATCH, EXCEPTION, THROW;
+terminal TRY, EXTRY, CATCH, EXCEPTION, THROW;
 terminal ERROR;
 
 nonterminal Program sourceCode;
@@ -121,7 +121,7 @@ nonterminal String ipt_stmt;
 nonterminal String ipt_name;
 nonterminal String ipt_as_names;
 nonterminal Statement assert_stmt, compound_stmt;
-nonterminal Statement if_stmt, while_stmt, try_stmt;
+nonterminal Statement if_stmt, while_stmt, try_stmt, extry_stmt;
 nonterminal Statement endorse_block;
 nonterminal ArrayList<Statement> elif_stmts;
 nonterminal ArrayList<ExceptHandler> except_stmts;
@@ -692,10 +692,15 @@ small_stmt ::= expr_stmt:a {: RESULT = a; :}
     | dynamic_stmt:a {: RESULT = a; :}
     | excborder_stmt:a {: RESULT = a; :}
     | try_stmt:a {: RESULT = a; :}
+    | extry_stmt:a {: RESULT = a; :}
     | throw_stmt:a {: RESULT = a;:};
 
 try_stmt ::= TRY:x suite:s except_stmts:es {:
         RESULT = new Try(s, es);
+    :};
+
+extry_stmt ::= EXTRY:x suite:s except_stmts:es {:
+        RESULT = new Extry(s, es);
     :};
 
 throw_stmt ::= THROW:x trailer_expr:e SEMI{:

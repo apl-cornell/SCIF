@@ -102,8 +102,8 @@ public class ScopeContext {
         return SHErrLocName;
     }
 
-    public boolean isCheckedException(ExceptionTypeSym t) {
-        return funcExceptionMap.containsKey(t);
+    public boolean isCheckedException(ExceptionTypeSym t, boolean extern) {
+        return funcExceptionMap.containsKey(t) && (extern || funcExceptionMap.get(t));
     }
 
     public void addException(ExceptionTypeSym t, boolean inTx) {
