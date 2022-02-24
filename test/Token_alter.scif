@@ -6,20 +6,22 @@ contract Token [this] {
     }}
     map(address, uint){this} balances;
     map(address, bool){this} isAdmin;
+    exception noSuchUser();
+    exception balanceNotEnough();
 
     Token constructor{this >> this; this}(address tO, address lO) {
         @BaseContractCentralized(tO, lO);
     }
 
     @public
-    bool{BOT} transfer{this >> this; BOT}(address frm, address to, uint amount) {
+    bool{BOT} transfer{this >> this; BOT}(address frm, address to, uint amount) throw (balanceNotEnough{this}) {
         address sender = msg.sender;
         if (frm != sender && isAdmin[frm] != true) {
             return false;
         }
       
         if (balances[frm] < amount) {
-      	    return false;
+            throw balanceNotEnough();
         }
       
         balances[frm] = balances[frm] - amount;

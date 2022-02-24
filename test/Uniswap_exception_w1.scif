@@ -1,0 +1,49 @@
+import Token;
+
+contract Uniswap[this] {
+    {{
+        BaseContractCentralized;
+        {@tX = this}
+        {@tY = this}
+    }}
+    Token{this} tX;
+    Token{this} tY;
+    exception transferFailure();
+    exception uncheckable();
+
+    Uniswap constructor{this >> this; this}(address tO, address lO, address tokenX, address tokenY) {
+        @BaseContractCentralized(tO, lO);
+
+        tX = Token(tokenX);
+        tY = Token(tokenY);
+    }
+
+    @public
+    uint{this} exchangeXForY{BOT >> this; this}(uint xSold) throw (transferFailure{BOT}) {
+        address buyer = msg.sender;
+        uint tXSold = endorse(xSold, BOT->high);
+
+        uint prod;
+        uint yKept;
+        uint yBought;
+        try {
+            prod = getBal(tX, address(this)) * getBal(tY, address(this));
+            yKept = prod / (getBal(tX, address(this)) + tXSold);
+            yBought = getBal(tY, address(this)) - yKept;
+            tX.transfer(buyer, address(this), tXSold);
+            tY.transfer(address(this), buyer, yBought);
+        } catch (Token.balanceNotEnough{BOT} e) {
+            throw transferFailure();
+            // throw uncheckable();
+        }
+
+        return yBought;
+    }
+
+    @public
+    uint{this} getBal{this >> this; this}(Token token, address k) throw (Token.balanceNotEnough{BOT}) {
+        // uint getBal(address x) throws noSuchUser();
+        return token.getBal(k);
+    } 
+}
+
