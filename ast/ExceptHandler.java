@@ -24,11 +24,15 @@ public class ExceptHandler extends NonFirstLayerStatement {
         ScopeContext now = new ScopeContext(this, parent);
         env.curSymTab = new SymTab(env.curSymTab);
 
-        env.addSym(name, new VarSym(env.toVarSym(name, type, true, true, location, now)));
+        VarSym var = env.toVarSym(name, type, true, true, location, now);
+        if (var == null) {
+            System.err.println("Exception type " + type.getName() + " not found");
+            throw new RuntimeException();
+        }
+        env.addSym(name, var);
 
         for (Statement s : body) {
             ScopeContext tmp = s.NTCgenCons(env, now);
-            now.mergeExceptions(tmp);
         }
         env.curSymTab = env.curSymTab.getParent();
         return now;

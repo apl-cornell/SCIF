@@ -23,8 +23,6 @@ public class Return extends NonFirstLayerStatement {
         if (value != null) {
             ScopeContext rtn = value.NTCgenCons(env, now);
             env.addCons(now.genCons(rtn, Relation.EQ, env, location));
-
-            now.mergeExceptions(rtn);
         }
 
 

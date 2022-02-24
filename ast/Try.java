@@ -28,19 +28,17 @@ public class Try extends NonFirstLayerStatement {
         // ScopeContext tryclause = new ScopeContext(this, now);
         ScopeContext tmp;
 
+        for (ExceptHandler h : handlers) {
+            now.addException(env.toExceptionTypeSym(h.type), false);
+        }
+
         for (Statement s : body) {
             tmp = s.NTCgenCons(env, now);
-            now.mergeExceptions(tmp);
         }
         env.curSymTab = env.curSymTab.getParent();
 
         for (ExceptHandler h : handlers) {
-            now.removeException(env.toExceptionTypeSym(h.type));
-        }
-
-        for (ExceptHandler h : handlers) {
-            tmp = h.NTCgenCons(env, now);
-            now.mergeExceptions(tmp);
+            tmp = h.NTCgenCons(env, parent);
         }
         return now;
     }

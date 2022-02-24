@@ -21,7 +21,6 @@ public class Subscript extends TrailerExpr {
         ScopeContext now = new ScopeContext(this, parent);
         VarSym valueVarSym = value.getVarInfo(env);
         ScopeContext idx = index.NTCgenCons(env, now);
-        now.mergeExceptions(idx);
         value.NTCgenCons(env, now);
         //TODO: support DepMap
 

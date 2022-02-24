@@ -16,7 +16,6 @@ public class UnaryOp extends Expression {
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         ScopeContext rtn = operand.NTCgenCons(env, now);
-        now.mergeExceptions(rtn);
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         if (op == UnaryOperator.USub || op == UnaryOperator.UAdd) {
             env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.EQ, env, location));

@@ -61,16 +61,16 @@ public class Throw extends Statement {
             Expression arg = exception.args.get(i);
             TypeSym paraInfo = exceptionSym.parameters.get(i).typeSym;
             ScopeContext argContext = arg.NTCgenCons(env, now);
-            now.mergeExceptions(argContext);
             String typeName = env.getSymName(paraInfo.name);
             env.addCons(argContext.genCons(typeName, Relation.GEQ, env, location));
         }
         // String rtnTypeName = exceptionSym.returnType.name;
         // env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
 
-        HashMap<ExceptionTypeSym, CodeLocation> callExceptionMap = new HashMap<>();
-        callExceptionMap.put(exceptionSym, location);
-        now.mergeExceptions(callExceptionMap);
+        if (!parent.isCheckedException(exceptionSym)) {
+            System.err.println("Unchecked exception " + exceptionSym.name + " at " + "lo" + location.toString());
+            throw new RuntimeException();
+        }
         return now;
     }
 }

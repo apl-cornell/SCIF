@@ -24,11 +24,9 @@ public class BinOp extends Expression {
         logger.debug("binOp:");
         ScopeContext now = new ScopeContext(this, parent);
         ScopeContext l = left.NTCgenCons(env, now);
-        now.mergeExceptions(l);
         // logger.debug("binOp/left:");
         // logger.debug(l.toString());
         ScopeContext r = right.NTCgenCons(env, now);
-        now.mergeExceptions(r);
         // logger.debug("binOp/right:");
         // logger.debug(r.toString());
         env.cons.add(now.genCons(l, Relation.LEQ, env, location));

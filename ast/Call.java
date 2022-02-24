@@ -76,19 +76,18 @@ public class Call extends TrailerExpr {
             Expression arg = args.get(i);
             TypeSym paraInfo = funcSym.parameters.get(i).typeSym;
             ScopeContext argContext = arg.NTCgenCons(env, now);
-            now.mergeExceptions(argContext);
             String typeName = env.getSymName(paraInfo.name);
             env.addCons(argContext.genCons(typeName, Relation.GEQ, env, location));
         }
         String rtnTypeName = funcSym.returnType.name;
         env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
 
-        HashMap<ExceptionTypeSym, CodeLocation> callExceptionMap = new HashMap<>();
         for (ExceptionTypeSym tl : funcSym.exceptions) {
-                callExceptionMap.put((ExceptionTypeSym) tl, location);
+            if (!parent.isCheckedException(tl)) {
+                System.err.println("Unchecked exception: " + tl.name + " at " + location.toString());
+                throw new RuntimeException();
+            }
         }
-        now.mergeExceptions(callExceptionMap);
-
         return now;
     }
 

@@ -7,6 +7,7 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class FunctionDef extends FunctionSig {
@@ -26,9 +27,9 @@ public class FunctionDef extends FunctionSig {
         String funcName = this.name;
         logger.debug("func: " + funcName);
         FuncSym funcSym = ((FuncSym) env.getCurSym(funcName));
-        HashSet<ExceptionTypeSym> exceptionTypeSyms = new HashSet<>();
+        HashMap<ExceptionTypeSym, Boolean> exceptionTypeSyms = new HashMap<>();
         for (ExceptionTypeSym t : funcSym.exceptions) {
-            exceptionTypeSyms.add(t);
+            exceptionTypeSyms.put(t, true);
             // System.err.println("func sig exp: " + t.name);
         }
 
@@ -46,14 +47,7 @@ public class FunctionDef extends FunctionSig {
         env.setCurSymTab(new SymTab(env.curSymTab));
         for (Statement stmt : body) {
             // logger.debug("stmt: " + stmt);
-            ScopeContext x = stmt.NTCgenCons(env, now);
-            CodeLocation tmp = null;
-            if (x != null)
-                tmp = x.noUncheckedExceptions();
-            if (tmp != null) {
-                System.err.println("Unchecked exception at " + tmp.toString());
-                throw new RuntimeException();
-            }
+            stmt.NTCgenCons(env, now);
         }
         env.curSymTab = env.curSymTab.getParent();
         return now;

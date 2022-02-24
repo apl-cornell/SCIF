@@ -35,6 +35,7 @@ public class NTCEnv {
 
     public VarSym toVarSym(String varName, ast.Type astType, boolean isConst, boolean isFinal, CodeLocation location, ScopeContext context) {
         TypeSym typeSym = toTypeSym(astType);
+        if (typeSym == null) return null;
         return new VarSym(varName, typeSym, null, location, context, isConst, isFinal);
     }
 

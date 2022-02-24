@@ -28,7 +28,6 @@ public class Arg extends Node {
         ScopeContext now = new ScopeContext(this, parent);
 
         ScopeContext type = annotation.NTCgenCons(env, now);
-        now.mergeExceptions(type);
 
         env.addSym(name, env.toVarSym(name, annotation, false, false, location, now));
 

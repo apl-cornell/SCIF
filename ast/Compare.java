@@ -24,8 +24,6 @@ public class Compare extends Expression {
         //TODO: not included: Is, NotIs, In, NotIn
         ScopeContext now = new ScopeContext(this, parent);
         ScopeContext l = left.NTCgenCons(env, now), r = right.NTCgenCons(env, now);
-        now.mergeExceptions(l);
-        now.mergeExceptions(r);
 
         env.addCons(l.genCons(r, Relation.EQ, env, location));
         if (op == CompareOperator.Eq || op == CompareOperator.NotEq) {

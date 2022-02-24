@@ -21,8 +21,6 @@ public class Assign extends NonFirstLayerStatement {
         ScopeContext now = new ScopeContext(this, parent);
         ScopeContext tgt = target.NTCgenCons(env, now);
         ScopeContext v = value.NTCgenCons(env, now);
-        now.mergeExceptions(tgt);
-        now.mergeExceptions(v);
         // con: tgt should be a supertype of v
         logger.debug(v);
         logger.debug(env);

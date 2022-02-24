@@ -26,7 +26,6 @@ public class GuardBlock extends NonFirstLayerStatement {
         ScopeContext rtn = null;
         for (Statement s : body) {
             rtn = s.NTCgenCons(env, now);
-            now.mergeExceptions(rtn);
         }
         env.curSymTab = env.curSymTab.getParent();
         return now;
