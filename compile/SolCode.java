@@ -17,7 +17,7 @@ public class SolCode {
     String currentIndent;
     public ArrayList<String> code; //each line with no newline char
     public HashMap<String, String> labelTable; // map label names to on-chain addresses
-    public DynamicSystemOption dynamicSystemOption;
+    public typecheck.DynamicSystemOption dynamicSystemOption;
 
     public SolCode() {
         code = new ArrayList<>();

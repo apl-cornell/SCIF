@@ -7,5 +7,13 @@ public abstract class Sym {
         return name;
     }
     public String getName() { return name; }
-
+    public int hashCode() {
+        return name.hashCode();
+    }
+    public boolean equals(Object o) {
+        if (!(o instanceof Sym))
+            return false;
+        Sym other = (Sym) o;
+        return this.hashCode() == other.hashCode();
+    }
 }

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 public class Attribute extends TrailerExpr {
     Name attr;
+    // value.attr
     public  Attribute(Expression v, Name a) {
         value = v;
         attr = a;

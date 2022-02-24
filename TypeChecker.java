@@ -334,7 +334,7 @@ public class TypeChecker {
     static boolean runSLC(HashMap<String, Program> programMap, String outputFileName, boolean DEBUG) throws Exception {
 
         String classDirectoryPath = new File(SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
-        sherrloc.diagnostic.DiagnosticConstraintResult result = Utils.runSherrloc(classDirectoryPath, outputFileName);
+        sherrloc.diagnostic.DiagnosticConstraintResult result = Utils.runSherrloc(outputFileName);
         logger.debug(result);
         if (result.success()) {
             System.out.println(Utils.TYPECHECK_PASS_MSG);

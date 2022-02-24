@@ -35,9 +35,11 @@ public class If extends NonFirstLayerStatement {
 
         for (Statement s : body) {
             rtn = s.NTCgenCons(env, now);
+            now.mergeExceptions(rtn);
         }
         for (Statement s : orelse) {
             rtn = s.NTCgenCons(env, now);
+            now.mergeExceptions(rtn);
         }
         env.curSymTab = env.curSymTab.getParent();
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));

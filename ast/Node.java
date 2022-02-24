@@ -69,7 +69,8 @@ public class Node {
     static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();
     @Override
     public String toString() {
-        return genson.serialize(this);
+        return "TODO";
+        //return genson.serialize(location);
     }
     protected static final Logger logger = LogManager.getLogger();
 

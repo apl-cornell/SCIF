@@ -209,4 +209,9 @@ public class Contract extends Node {
 
         return true;
     }
+
+    public String toString() {
+        return "TODO";
+        //return genson.serialize(body.get();
+    }
 }

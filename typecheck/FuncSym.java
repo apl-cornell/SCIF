@@ -1,11 +1,13 @@
 package typecheck;
 
+import ast.ExceptionType;
 import ast.FuncLabels;
 import ast.IfLabel;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class FuncSym extends Sym {
     public String funcName;
@@ -13,9 +15,29 @@ public class FuncSym extends Sym {
     public ArrayList<VarSym> parameters;
     public TypeSym returnType;
     public IfLabel returnLabel;
+    public ArrayList<ExceptionTypeSym> exceptions;
     public CodeLocation location;
     public ScopeContext scopeContext;
 
+    public FuncSym(String funcName,
+                   FuncLabels funcLabels,
+                   ArrayList<VarSym> parameters,
+                   TypeSym returnType,
+                   IfLabel returnLabel,
+                   ArrayList<ExceptionTypeSym> exceptions,
+                   ScopeContext scopeContext,
+                   CodeLocation location) {
+        // this.typeName = funcName;
+        this.funcName = funcName;
+        this.name = funcName;
+        this.funcLabels = funcLabels;
+        this.parameters = parameters;
+        this.returnType = returnType;
+        this.returnLabel = returnLabel;
+        this.exceptions = exceptions;
+        this.scopeContext = scopeContext;
+        this.location = location;
+    }
     public FuncSym(String funcName,
                    FuncLabels funcLabels,
                    ArrayList<VarSym> parameters,
@@ -30,6 +52,7 @@ public class FuncSym extends Sym {
         this.parameters = parameters;
         this.returnType = returnType;
         this.returnLabel = returnLabel;
+        this.exceptions = new ArrayList<>();
         this.scopeContext = scopeContext;
         this.location = location;
     }

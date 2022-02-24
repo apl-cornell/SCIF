@@ -30,13 +30,16 @@ public class While extends NonFirstLayerStatement {
         ScopeContext now = new ScopeContext(this, parent);
         env.curSymTab = new SymTab(env.curSymTab);
         ScopeContext rtn = test.NTCgenCons(env, now);
+        now.mergeExceptions(rtn);
         env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
 
         for (Statement s : body) {
-            s.NTCgenCons(env, now);
+            ScopeContext tmp = s.NTCgenCons(env, now);
+            now.mergeExceptions(tmp);
         }
         for (Statement s : orelse) {
-            s.NTCgenCons(env, now);
+            ScopeContext tmp = s.NTCgenCons(env, now);
+            now.mergeExceptions(tmp);
         }
         env.curSymTab = env.curSymTab.getParent();
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));

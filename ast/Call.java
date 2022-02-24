@@ -7,32 +7,23 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class Call extends TrailerExpr {
     public ArrayList<Expression> args;
-    ArrayList<Keyword> keywords;
     //TODO: starargs, kwargs
     public Call() {
         this.args = new ArrayList<>();
-        this.keywords = new ArrayList<>();
     }
     public Call(Expression x, ArrayList<Expression> ys) {
         value = x;
         args = ys;
-        keywords = null;
-    }
-    public Call(Expression x, ArrayList<Expression> ys, ArrayList<Keyword> zs) {
-        value = x;
-        args = ys;
-        keywords = zs;
     }
     public void addArg(Expression arg) {
         this.args.add(arg);
     }
     public void setArgs(ArrayList<Expression> args) { this.args = args; }
-    public void addKeyword(Keyword keyword) {
-        this.keywords.add(keyword);
-    }
 
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
@@ -85,11 +76,19 @@ public class Call extends TrailerExpr {
             Expression arg = args.get(i);
             TypeSym paraInfo = funcSym.parameters.get(i).typeSym;
             ScopeContext argContext = arg.NTCgenCons(env, now);
+            now.mergeExceptions(argContext);
             String typeName = env.getSymName(paraInfo.name);
             env.addCons(argContext.genCons(typeName, Relation.GEQ, env, location));
         }
         String rtnTypeName = funcSym.returnType.name;
         env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
+
+        HashMap<ExceptionTypeSym, CodeLocation> callExceptionMap = new HashMap<>();
+        for (ExceptionTypeSym tl : funcSym.exceptions) {
+                callExceptionMap.put((ExceptionTypeSym) tl, location);
+        }
+        now.mergeExceptions(callExceptionMap);
+
         return now;
     }
 
@@ -229,8 +228,6 @@ public class Call extends TrailerExpr {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(value);
         rtn.addAll(args);
-        if (keywords != null)
-            rtn.addAll(keywords);
         return rtn;
     }
 
@@ -244,7 +241,6 @@ public class Call extends TrailerExpr {
         Call c = (Call) expression;
 
         boolean bothArgsNull = c.args == null && args == null;
-        boolean bothkeywordsNull = keywords == null && c.keywords == null;
 
         if (!bothArgsNull) {
             if (args == null || c.args == null || args.size() != c.args.size())
@@ -252,17 +248,6 @@ public class Call extends TrailerExpr {
             int index = 0;
             while (index < args.size()) {
                 if (!args.get(index).typeMatch(c.args.get(index)))
-                    return false;
-                ++index;
-            }
-        }
-
-        if (!bothkeywordsNull) {
-            if (keywords == null || c.keywords == null || keywords.size() != c.keywords.size())
-                return false;
-            int index = 0;
-            while (index < keywords.size()) {
-                if (!keywords.get(index).typeMatch(c.keywords.get(index)))
                     return false;
                 ++index;
             }

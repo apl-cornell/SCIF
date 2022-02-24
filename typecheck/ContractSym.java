@@ -137,4 +137,21 @@ public class ContractSym extends TypeSym {
     public String getLabelContract() {
         return ifl.toSherrlocFmt();
     }
+
+    public TypeSym toExceptionType(String exceptionName, Arguments arguments) {
+        Sym sym = symTab.lookup(exceptionName);
+        if (sym != null)
+            if (sym instanceof TypeSym)
+                return (TypeSym) sym;
+            else
+                return null;
+        ArrayList<VarSym> memberList = arguments.parseArgs(this);
+        return new ExceptionTypeSym(exceptionName, memberList);
+    }
+
+    public ExceptionTypeSym getExceptionSym(String exceptionName) {
+        Sym sym = symTab.lookup(exceptionName);
+        if (sym == null || (!(sym instanceof  ExceptionTypeSym))) return null;
+        return (ExceptionTypeSym) sym;
+    }
 }

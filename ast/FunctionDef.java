@@ -7,6 +7,7 @@ import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class FunctionDef extends FunctionSig {
     ArrayList<Statement> body;
@@ -21,12 +22,19 @@ public class FunctionDef extends FunctionSig {
 
     @Override
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
-        ScopeContext now = new ScopeContext(this, parent);
-
         // add args to local sym;
         String funcName = this.name;
         logger.debug("func: " + funcName);
         FuncSym funcSym = ((FuncSym) env.getCurSym(funcName));
+        HashSet<ExceptionTypeSym> exceptionTypeSyms = new HashSet<>();
+        for (ExceptionTypeSym t : funcSym.exceptions) {
+            exceptionTypeSyms.add(t);
+            // System.err.println("func sig exp: " + t.name);
+        }
+
+        ScopeContext now = new ScopeContext(this, parent, exceptionTypeSyms);
+        // now.printExceptionSet();
+
         for (Arg arg : this.args.args) {
             arg.NTCgenCons(env, now);
         }
@@ -38,7 +46,14 @@ public class FunctionDef extends FunctionSig {
         env.setCurSymTab(new SymTab(env.curSymTab));
         for (Statement stmt : body) {
             // logger.debug("stmt: " + stmt);
-            stmt.NTCgenCons(env, now);
+            ScopeContext x = stmt.NTCgenCons(env, now);
+            CodeLocation tmp = null;
+            if (x != null)
+                tmp = x.noUncheckedExceptions();
+            if (tmp != null) {
+                System.err.println("Unchecked exception at " + tmp.toString());
+                throw new RuntimeException();
+            }
         }
         env.curSymTab = env.curSymTab.getParent();
         return now;

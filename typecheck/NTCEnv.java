@@ -19,7 +19,6 @@ public class NTCEnv {
     public HashMap<String, Program> programMap;
     public NTCEnv() {
         globalSymTab = new SymTab();
-        // externalSymTab = new HashMap<>();
         cons = new ArrayList<>();
         //globalSymTab = null; //TODO
         curSymTab = globalSymTab;
@@ -43,6 +42,10 @@ public class NTCEnv {
         TypeSym typeSym = null;
         if (astType == null) return new BuiltinTypeSym(Utils.BuiltinType2ID(BuiltInT.VOID));
         // System.err.println("[in]toTypeSym: " + astType.x);
+
+        if (astType instanceof ExceptionType exceptionType) {
+            return toExceptionTypeSym(exceptionType);
+        }
 
         Sym s = getCurSym(astType.x);
         if (s instanceof TypeSym)//Utils.isPrimitiveType(astType.x))
@@ -135,5 +138,24 @@ public class NTCEnv {
 
     public void addGlobalSym(String contractName, ContractSym contractSym) {
         globalSymTab.add(contractName, contractSym);
+    }
+
+    public Sym toExceptionType(String exceptionName, Arguments arguments, ScopeContext parent) {
+        Sym sym = curSymTab.lookup(exceptionName);
+        if (sym != null)
+            if (sym instanceof TypeSym)
+                return (TypeSym) sym;
+            else
+                return null;
+        ArrayList<VarSym> memberList = arguments.parseArgs(this, parent);
+        return new ExceptionTypeSym(exceptionName, memberList);
+    }
+
+    public ExceptionTypeSym toExceptionTypeSym(ExceptionType t) {
+        if (t.isLocal(curContractSym.name)) {
+            return (ExceptionTypeSym) getCurSym(t.getName());
+        } else {
+            return (ExceptionTypeSym) getExtSym(t.getContractName(), t.getName());
+        }
     }
 }

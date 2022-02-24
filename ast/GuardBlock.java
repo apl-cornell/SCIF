@@ -21,13 +21,15 @@ public class GuardBlock extends NonFirstLayerStatement {
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         // consider to be a new scope
         // must contain at least one Statement
+        ScopeContext now  = new ScopeContext(this, parent);
         env.curSymTab = new SymTab(env.curSymTab);
         ScopeContext rtn = null;
         for (Statement s : body) {
-            rtn = s.NTCgenCons(env, parent);
+            rtn = s.NTCgenCons(env, now);
+            now.mergeExceptions(rtn);
         }
         env.curSymTab = env.curSymTab.getParent();
-        return rtn;
+        return now;
     }
 
     public Context genConsVisit(VisitEnv env, boolean tail_position) {

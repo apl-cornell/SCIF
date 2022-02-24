@@ -157,6 +157,9 @@ import java.util.HashMap;
         keywords.put("new", Integer.valueOf(sym.NEW));
         keywords.put("final", Integer.valueOf(sym.FINAL));
         keywords.put("static", Integer.valueOf(sym.STATIC));
+        keywords.put("throw", Integer.valueOf(sym.THROW));
+        keywords.put("catch", Integer.valueOf(sym.CATCH));
+        keywords.put("exception", Integer.valueOf(sym.EXCEPTION));
     }
 
 

@@ -69,14 +69,13 @@ parser code {:
 :};
 
 terminal String NAME;
-terminal ERROR;
 terminal NUMBER, STRING;
 terminal FALSE, TRUE, NONE, ELLIPSIS;
 terminal AND, AS, ASSERT, ASYNC, AWAIT;
 terminal BREAK, CLASS, CONTINUE, DEF, DEL;
 terminal ELIF, ELSE, EXCEPT, FINALLY, FOR, FROM;
 terminal GLOBAL, IF, IMPORT, IN, IS, LAMBDA, NONLOCAL, NOT;
-terminal OR, PASS, RAISE, RETURN, TRY;
+terminal OR, PASS, RAISE, RETURN;
 terminal WHILE, WITH, YIELD;
 terminal LPAR, RPAR, LSQB, RSQB, COLON, COMMA, SEMI;
 terminal PLUS, MINUS, STAR, SLASH, VBAR, AMPER;
@@ -98,6 +97,8 @@ terminal EQUALGREATER;
 terminal NEWLINE, EXTENDS, LET;
 terminal REF, SUPER, THEN, NEW;
 terminal FINAL, STATIC;
+terminal TRY, CATCH, EXCEPTION, THROW;
+terminal ERROR;
 
 nonterminal Program sourceCode;
 nonterminal Interface interface;
@@ -115,7 +116,7 @@ nonterminal Arg tfpdef;
 nonterminal ArrayList<Statement> stmt, simple_stmt, small_stmts;
 nonterminal Statement small_stmt, expr_stmt;
 nonterminal AnnAssign varDec, annassign;
-nonterminal Statement del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt;
+nonterminal Statement del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt, excborder_stmt;
 nonterminal String ipt_stmt;
 nonterminal String ipt_name;
 nonterminal String ipt_as_names;
@@ -140,10 +141,10 @@ nonterminal Dictmaker dictmaker, dictmaker_sub;
 nonterminal Setmaker setmaker, setmaker_sub;
 nonterminal ClassDef classdef;
 nonterminal Call arglist;
-nonterminal Keyword keyword;
 nonterminal LabeledType labeledType;
 nonterminal IfLabel ifLabel, unitIfLabel;
 nonterminal Type typeSym;
+nonterminal ArrayList<Type> typeSyms;
 nonterminal Autoendorse autoendorse;
 nonterminal IfLabel maybeAutoendorseIfLabel;
 nonterminal ArrayList<String> polyDescription;
@@ -165,6 +166,10 @@ nonterminal Relation trust_operator;
 nonterminal let_stmt;//, ref_stmt, new_stmt, deref_stmt;
 nonterminal HashMap<String, String> label_table;
 nonterminal DynamicStatement dynamic_stmt;
+nonterminal ExceptionDef errorDef;
+nonterminal ExceptionType except_type;
+nonterminal ArrayList<ExceptionType> except_types;
+nonterminal Throw throw_stmt;
 
 precedence left OR;
 precedence left AND;
@@ -298,8 +303,15 @@ funcSig ::= r_funcSig:a NEWLINE {: RESULT = a;
     | r_funcSig:a SEMI NEWLINE {: RESULT = a; :}
     | NEWLINE funcSig:x {:RESULT = x;:};
 
+
+errorDef ::=
+    EXCEPTION:x NAME:a parameters:b {:
+        RESULT = new ExceptionDef((String) a, b);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :};
+
 r_funcSig ::=
-    typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b  {:
+    typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b {:
         // System.out.println("parsing function");
         // logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, c);
@@ -310,6 +322,20 @@ r_funcSig ::=
         // System.out.println("parsing function");
         // logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, d, c);
+        RESULT.setLoc(new CodeLocation(cleft, cright, filename));
+        //makeNode("funcdef", a, b, c, d);
+    :}
+    | typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b THROW LPAR except_types:t RPAR  {:
+        // System.out.println("parsing function");
+        // logger.debug("parsing func sig");
+        RESULT = new FunctionSig((String) funcName, funclabels, b, null, c, t);
+        RESULT.setLoc(new CodeLocation(cleft, cright, filename));
+        //makeNode("funcdef", a, b, c, d);
+    :}
+    | decorators:d typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b THROW LPAR except_types:t RPAR {:
+        // System.out.println("parsing function");
+        // logger.debug("parsing func sig");
+        RESULT = new FunctionSig((String) funcName, funclabels, b, d, c, t);
         RESULT.setLoc(new CodeLocation(cleft, cright, filename));
         //makeNode("funcdef", a, b, c, d);
     :}
@@ -519,6 +545,27 @@ typeSym ::=
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
         logger.debug("finished labeled typeSym parsing");
     :};
+
+typeSyms ::=
+    typeSym:a {:
+        RESULT = new ArrayList<Type>();
+        RESULT.add(a);
+    :}
+    | typeSyms:list typeSym:a {:
+        list.add(a);
+        RESULT = list;
+    :};
+
+except_types ::=
+    except_type:a {:
+        RESULT = new ArrayList<ExceptionType>();
+        RESULT.add(a);
+    :}
+    | except_types:list COMMA except_type:a {:
+        list.add(a);
+        RESULT = list;
+    :};
+
 polyDescription ::=
     LSQB nameList:l RSQB {:
         logger.debug("finished parsing polyDescription");
@@ -543,7 +590,7 @@ nameList ::=
 //  | '*' [tfpdef] (',' tfpdef ['=' test])* [',' ['**' tfpdef [',']]]
 //  | '**' tfpdef [','])
 //tfpdef: NAME [':' test]
-parameters ::= 
+parameters ::=
     LPAR typedarglist:a RPAR {:
         RESULT = a;
     :}
@@ -595,6 +642,11 @@ stmt ::= varDec:a SEMI {:
         ArrayList<Statement> rnt = new ArrayList<Statement>();
         rnt.add(a);
         RESULT = rnt;
+    :}
+    | errorDef:a SEMI {:
+        ArrayList<Statement> rnt = new ArrayList<Statement>();
+        rnt.add(a);
+        RESULT = rnt;
     :};
 
 varDec ::= typeSym:a annassign:b {:
@@ -637,7 +689,54 @@ small_stmt ::= expr_stmt:a {: RESULT = a; :}
     | assert_stmt:a {: RESULT = a; :}
     | guard_block:a {: RESULT = a; :}
     | if_stmt:a {:RESULT = a;:}
-    | dynamic_stmt:a {: RESULT = a; :};
+    | dynamic_stmt:a {: RESULT = a; :}
+    | excborder_stmt:a {: RESULT = a; :}
+    | try_stmt:a {: RESULT = a; :}
+    | throw_stmt:a {: RESULT = a;:};
+
+try_stmt ::= TRY:x suite:s except_stmts:es {:
+        RESULT = new Try(s, es);
+    :};
+
+throw_stmt ::= THROW:x trailer_expr:e SEMI{:
+        if (!(e instanceof Call)) {
+            return null;
+        }
+        RESULT = new Throw((Call)e);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :};
+
+except_stmts ::=
+    except_clause:e {:
+        ArrayList<ExceptHandler> rtn = new ArrayList<>();
+        rtn.add(e);
+        RESULT = rtn;
+    :}
+    | except_stmts:s except_clause:e {:
+        s.add(e);
+        RESULT = s;
+    :};
+
+except_clause ::=
+    CATCH:p LPAR except_type:t NAME:x RPAR suite:s {:
+        RESULT = new ExceptHandler(t, (String)x, s);
+        RESULT.setLoc(new CodeLocation(pleft, pright, filename));
+    :};
+
+except_type ::=
+    typeSym:t {:
+        RESULT = new ExceptionType(t);
+        RESULT.setLoc(new CodeLocation(tleft, tright, filename));
+    :}
+    | NAME:x DOT typeSym:t {:
+        RESULT = new ExceptionType(t, (String)x);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :};
+
+/*excborder_stmt ::= EXCBORDER:x suite:s {:
+        RESULT = new ExcBorder(s);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :};*/
 
 dynamic_stmt ::= AT:x NAME:a trailer:b SEMI {:
     if (!(b instanceof Call)) {
@@ -1031,22 +1130,12 @@ trailer ::=
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 arglist ::=
-    keyword:a {:
-        Call rnt = new Call();
-        rnt.addKeyword(a);
-        RESULT = rnt;
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}
-    | expr:a {:
+    expr:a {:
         //System.out.println("parsing first arg for arglist");
         Call rnt = new Call();
         rnt.addArg(a);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}
-    | arglist:list COMMA keyword:a {:
-        list.addKeyword(a);
-        RESULT = list;
     :}
     | arglist:list COMMA expr:a {:
         //System.out.println("parsing one more arg for arglist");
@@ -1066,12 +1155,6 @@ exprlist_sub ::=
     | exprlist_sub:list COMMA expr:a {:
         list.add(a);
         RESULT = list;
-    :};
-
-keyword ::=
-    NAME:a EQUAL expr:b {:
-        RESULT = new Keyword((String)a, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 
 

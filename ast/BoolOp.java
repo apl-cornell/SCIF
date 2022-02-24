@@ -22,6 +22,8 @@ public class BoolOp extends Expression {
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         ScopeContext l = left.NTCgenCons(env, now), r = right.NTCgenCons(env, now);
+        now.mergeExceptions(l);
+        now.mergeExceptions(r);
         env.cons.add(now.genCons(l, Relation.LEQ, env, location));
         env.cons.add(now.genCons(r, Relation.LEQ, env, location));
         env.cons.add(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));

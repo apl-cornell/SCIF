@@ -62,15 +62,18 @@ public class AnnAssign extends Statement {
             env.addSym(name, new VarSym(env.toVarSym(name, annotation, isStatic, isFinal, location, now)));
         }
         ScopeContext type = annotation.NTCgenCons(env, now);
+        now.mergeExceptions(type);
         ScopeContext tgt = target.NTCgenCons(env, now);
+        now.mergeExceptions(tgt);
 
         logger.debug("1: \n" + env + "\n2: " + target.toSolCode() + "\n" + tgt);
         env.cons.add(type.genCons(tgt, Relation.EQ, env, location));
         if (value != null) {
             ScopeContext v = value.NTCgenCons(env, now);
             env.cons.add(tgt.genCons(v, Relation.LEQ, env, location));
+            now.mergeExceptions(v);
         }
-        return null;
+        return now;
     }
 
     @Override

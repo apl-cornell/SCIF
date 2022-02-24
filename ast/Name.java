@@ -8,6 +8,7 @@ public class Name extends Variable {
     //Context ctx;
     public Name(String x) {
         id = x;
+        // id = new ScopedName(x, "");
         // ctx = null;
     }
     /*public Name(String x, Context y) {

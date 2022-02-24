@@ -3,16 +3,17 @@ package typecheck;
 import ast.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sherrloc.constraint.ast.Axiom;
+import sherrloc.constraint.ast.Constructor;
+import sherrloc.constraint.ast.Hypothesis;
 import sherrloc.diagnostic.DiagnosticOptions;
 import sherrloc.diagnostic.ErrorDiagnosis;
+import sherrloc.graph.Variance;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 
 public class Utils {
@@ -114,7 +115,7 @@ public class Utils {
     public static String getLabelNameArgLabel(String funcName, VarSym arg) {
         return funcName + "." + arg.name + "..lbl";
     }
-    public static sherrloc.diagnostic.DiagnosticConstraintResult runSherrloc(String path, String consFilePath) throws Exception {
+    public static sherrloc.diagnostic.DiagnosticConstraintResult runSherrloc(String consFilePath) throws Exception {
         logger.debug("runSherrloc()...");
         String[] args = new String[] {"-c", consFilePath};
         DiagnosticOptions options = new DiagnosticOptions(args);
@@ -210,6 +211,58 @@ public class Utils {
                 }
             }
             consFile.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public static void SLCinput(HashSet<String> constructors, ArrayList<Constraint> assumptions, ArrayList<Constraint> constraints, boolean isIFC) {
+        try {
+            sherrloc.constraint.ast.Hypothesis hypothesis = new Hypothesis();
+            ArrayList<sherrloc.constraint.ast.Axiom> axioms = new ArrayList<>();
+            Set<sherrloc.constraint.ast.Constraint> constraintSet = new HashSet<>();
+            // transform every "this" to "contractName.this"
+            //BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
+            logger.debug("Writing the constraints of size {}", constraints.size());
+            //System.err.println("Writing the constraints of size " + env.cons.size());
+            if (!constructors.contains("BOT") && isIFC) {
+                constructors.add("BOT");
+            }
+            if (!constructors.contains("TOP") && isIFC)
+                constructors.add("TOP");
+            if (!constructors.contains("this") && isIFC)
+                constructors.add("this");
+
+            if (!constructors.isEmpty()) {
+                for (String principal : constructors) {
+                    sherrloc.constraint.ast.Constructor constructor = new Constructor(principal, 0, 0, Variance.POS, sherrloc.constraint.ast.Position.EmptyPosition());
+                    // consFile.write("CONSTRUCTOR " + principal + " 0\n");
+                }
+            }
+            if (!assumptions.isEmpty() || isIFC) {
+                //consFile.write("%%\n");
+                if (isIFC) {
+                    for (String x : constructors) {
+                        if (!x.equals("BOT") && !x.equals("TOP")) {
+                  //          consFile.write("BOT" + " >= " + x + ";" + "\n");
+                        }
+                        if (!x.equals("TOP")) {
+                  //          consFile.write("TOP" + " <= " + x + ";" + "\n");
+                        }
+                    }
+                }
+                for (Constraint con : assumptions) {
+                  //  consFile.write(con.toSherrlocFmt(false) + "\n");
+                }
+                //consFile.write("%%\n");
+            } else {
+                // consFile.write("\n");
+            }
+            if (!constraints.isEmpty()) {
+                for (Constraint con : constraints) {
+                    //consFile.write(con.toSherrlocFmt(true) + "\n");
+                }
+            }
+            //consFile.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -475,5 +528,6 @@ public class Utils {
     public static String makeJoin(String lhs, String rhs) {
         return "(" + lhs + " ⊔ " + rhs + ")";
     }
+
 }
 

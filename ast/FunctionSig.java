@@ -12,6 +12,7 @@ public class FunctionSig extends Statement {
     public Arguments args;
     public ArrayList<String> decoratorList;
     public Type rtn;
+    public ArrayList<ExceptionType> exceptionList;
     public boolean isConstructor;
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args, ArrayList<String> decoratorList, Type rtn) {
         this.name = name;
@@ -19,6 +20,20 @@ public class FunctionSig extends Statement {
         this.args = args;
         this.decoratorList = decoratorList;
         this.rtn = rtn;
+        this.exceptionList = new ArrayList<>();
+        if (name.equals(Utils.CONSTRUCTOR_NAME)) {
+            isConstructor = true;
+        }
+
+        funcLabels.setToDefault(isConstructor, decoratorList);
+    }
+    public FunctionSig(String name, FuncLabels funcLabels, Arguments args, ArrayList<String> decoratorList, Type rtn, ArrayList<ExceptionType> exceptionList) {
+        this.name = name;
+        this.funcLabels = funcLabels;
+        this.args = args;
+        this.decoratorList = decoratorList;
+        this.rtn = rtn;
+        this.exceptionList = exceptionList;
         if (name.equals(Utils.CONSTRUCTOR_NAME)) {
             isConstructor = true;
         }
@@ -31,6 +46,7 @@ public class FunctionSig extends Statement {
         this.args = funcSig.args;
         this.decoratorList = funcSig.decoratorList;
         this.rtn = funcSig.rtn;
+        this.exceptionList = funcSig.exceptionList;
         this.isConstructor = funcSig.isConstructor;
     }
 
@@ -42,7 +58,15 @@ public class FunctionSig extends Statement {
     public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         ArrayList<VarSym> argsInfo = args.parseArgs(env, now);
-        env.addSym(name, new FuncSym(name, funcLabels, argsInfo, env.toTypeSym(rtn), null, scopeContext, location));
+        ArrayList<ExceptionTypeSym> exceptions = new ArrayList<>();
+        for (ExceptionType t : exceptionList) {
+            t.setContractName(env.curContractSym.name);
+            ExceptionTypeSym t1 = env.toExceptionTypeSym(t);
+            // System.err.println("add func exp: " +  t1.name);
+            // ExceptionTypeSym exceptionType = env.get(t);
+            exceptions.add(t1);
+        }
+        env.addSym(name, new FuncSym(name, funcLabels, argsInfo, env.toTypeSym(rtn), null, exceptions, scopeContext, location));
         return true;
 
     }
@@ -53,7 +77,15 @@ public class FunctionSig extends Statement {
         IfLabel ifl = null;
         if (rtn instanceof LabeledType)
             ifl = ((LabeledType) rtn).ifl;
-        contractSym.symTab.add(name, new FuncSym(name, funcLabels, argsInfo, contractSym.toTypeSym(rtn), ifl, scopeContext, location));
+        ArrayList<TypeWithLabel> exceptions = new ArrayList<>();
+        /*for ( t : exceptionList) {
+            IfLabel label = null;
+            if (t instanceof  LabeledType)
+                label = ((LabeledType) rtn).ifl;
+            TypeSym exceptionType = contractSym.toTypeSym(t);
+            exceptions.add(new TypeWithLabel(exceptionType, label));
+        }*/
+        //contractSym.symTab.add(name, new FuncSym(name, funcLabels, argsInfo, contractSym.toTypeSym(rtn), ifl, exceptions, scopeContext, location));
     }
     public void findPrincipal(HashSet<String> principalSet) {
         if (funcLabels != null) {
