@@ -26,13 +26,13 @@ contract Uniswap[this] {
         uint prod;
         uint yKept;
         uint yBought;
-        extry {
+        try {
             prod = getBal(tX, address(this)) * getBal(tY, address(this));
             yKept = prod / (getBal(tX, address(this)) + tXSold);
             yBought = getBal(tY, address(this)) - yKept;
             tX.transfer(buyer, address(this), tXSold);
             tY.transfer(address(this), buyer, yBought);
-        } catch (Token.balanceNotEnough{BOT} e) {
+        } catch all (Token.balanceNotEnough{BOT} e) {
             throw transferFailure();
             // throw uncheckable();
         }

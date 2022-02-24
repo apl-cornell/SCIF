@@ -30,9 +30,13 @@ public class TypeChecker {
         ArrayList<Program> roots = new ArrayList<>();
         for (File inputFile : inputFiles) {
             try {
-                Lexer lexer = new Lexer(new FileReader(inputFile));
-                Parser p = new Parser(lexer);
-                Symbol result = p.parse();
+
+
+
+                //Lexer lexer = new Lexer(new FileReader(inputFile));
+                //Parser p = new Parser(lexer);
+
+                Symbol result = Parser.parse(inputFile, null);//p.parse();
                 Program root = (Program) result.value;
                 root.setProgramName(inputFile.getName());
                 ArrayList<String> sourceCode = new ArrayList<String>(Files.readAllLines(Paths.get(inputFile.getAbsolutePath()), StandardCharsets.UTF_8));

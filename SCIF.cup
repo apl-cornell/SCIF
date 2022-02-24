@@ -36,12 +36,13 @@ parser code {:
 
     public static void main(String args[]) {
         File inputFile = new File(args[0]);
-        filename = inputFile.getAbsolutePath();
         parse(inputFile, null);
     }
 
-    public static void parse(File inputFile, File astFile) {
+    public static Symbol parse(File inputFile, File astFile) {
+        Symbol rtn = null;
         try {
+            filename = inputFile.getAbsolutePath();
             Lexer lexer = new Lexer(new FileReader(inputFile));
 
             if (astFile != null) {
@@ -50,10 +51,10 @@ parser code {:
             }
 
             Parser p = new Parser(lexer);
-            logger.trace("Parser init");
+            logger.trace("Parser init: " + filename);
             //System.err.println("Parser init\n");
 
-            p.parse();
+            rtn = p.parse();
             //p.debug_parse();
             logger.trace("Finish");
 
@@ -65,6 +66,7 @@ parser code {:
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return rtn;
     }
 :};
 
@@ -97,7 +99,7 @@ terminal EQUALGREATER;
 terminal NEWLINE, EXTENDS, LET;
 terminal REF, SUPER, THEN, NEW;
 terminal FINAL, STATIC;
-terminal TRY, EXTRY, CATCH, EXCEPTION, THROW;
+terminal TRY, CATCH, EXCEPTION, THROW, ALL;
 terminal ERROR;
 
 nonterminal Program sourceCode;
@@ -124,8 +126,8 @@ nonterminal Statement assert_stmt, compound_stmt;
 nonterminal Statement if_stmt, while_stmt, try_stmt, extry_stmt;
 nonterminal Statement endorse_block;
 nonterminal ArrayList<Statement> elif_stmts;
-nonterminal ArrayList<ExceptHandler> except_stmts;
-nonterminal ExceptHandler except_clause;
+nonterminal ArrayList<ExceptHandler> except_stmts, exceptall_stmts;
+nonterminal ExceptHandler except_clause, exceptall_clause;
 nonterminal ArrayList<Statement> suite, stmts;
 nonterminal Expression expr;
 nonterminal CompareOperator comp_op;
@@ -699,7 +701,7 @@ try_stmt ::= TRY:x suite:s except_stmts:es {:
         RESULT = new Try(s, es);
     :};
 
-extry_stmt ::= EXTRY:x suite:s except_stmts:es {:
+extry_stmt ::= TRY:x suite:s exceptall_stmts:es {:
         RESULT = new Extry(s, es);
     :};
 
@@ -722,8 +724,25 @@ except_stmts ::=
         RESULT = s;
     :};
 
+exceptall_stmts ::=
+    exceptall_clause:e {:
+        ArrayList<ExceptHandler> rtn = new ArrayList<>();
+        rtn.add(e);
+        RESULT = rtn;
+    :}
+    | exceptall_stmts:s exceptall_clause:e {:
+        s.add(e);
+        RESULT = s;
+    :};
+
 except_clause ::=
     CATCH:p LPAR except_type:t NAME:x RPAR suite:s {:
+        RESULT = new ExceptHandler(t, (String)x, s);
+        RESULT.setLoc(new CodeLocation(pleft, pright, filename));
+    :};
+
+exceptall_clause ::=
+    CATCH:p ALL LPAR except_type:t NAME:x RPAR suite:s {:
         RESULT = new ExceptHandler(t, (String)x, s);
         RESULT.setLoc(new CodeLocation(pleft, pright, filename));
     :};

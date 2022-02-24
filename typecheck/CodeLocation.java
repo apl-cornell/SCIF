@@ -7,6 +7,7 @@ public class CodeLocation {
     public CodeLocation(int lineNo, int columnNo, String fileName) {
         this.lineNo = lineNo;
         this.columnNo = columnNo;
+        this.fileName = fileName;
     }
 
     public CodeLocation() {
