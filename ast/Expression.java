@@ -5,7 +5,7 @@ import typecheck.*;
 
 import java.util.HashSet;
 
-public abstract class Expression extends Statement {
+public abstract class Expression extends Node {
     public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
         return new VarSym();
     }
@@ -14,6 +14,8 @@ public abstract class Expression extends Statement {
     }
 
     public String toSolCode() { return "unknown exp"; }
+
+    public abstract ExpOutcome genConsVisit(VisitEnv env, boolean tail_position);
 
     @Override
     public void SolCodeGen(SolCode code) {

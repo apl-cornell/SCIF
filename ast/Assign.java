@@ -30,31 +30,32 @@ public class Assign extends NonFirstLayerStatement {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        Context context = env.context;
-        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
         // Context prevContext = env.prevContext;
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
+        ExpOutcome to = null;
         String ifNameTgt = "";
         if (target instanceof Name) {
             //Assuming target is Name
             ifNameTgt = env.getVar(((Name) target).id).labelToSherrlocFmt();
         } else if (target instanceof Subscript || target instanceof Attribute) {
             // env.prevContext = valueContext;
-            /*env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, valueContext.lockName), env.hypothesis, value.location, env.curContractSym.name,
+            /*env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, valueContext.lambda), env.hypothesis, value.location, env.curContractSym.name,
                     "Lock should be maintained before execution of this operation"));*/
-            Context tmp = target.genConsVisit(env, false);
+            to = target.genConsVisit(env, false);
+            ifNameTgt = to.valueLabelName;
+            env.inContext = new Context(to.psi.getNormalPath().c.lambda, beginContext.lambda);
             // prevContext = tmp;
-            ifNameTgt = tmp.valueLabelName;
-            // rtnLockName = tmp.lockName;
+            // rtnLockName = tmp.lambda;
         } else {
             //TODO: error handling
         }
-        env.context = context;
-        Context valueContext = value.genConsVisit(env, false);
-        String ifNameValue = valueContext.valueLabelName;
+        ExpOutcome vo = value.genConsVisit(env, false);
+        String ifNameValue = vo.valueLabelName;
         // prevContext = valueContext;
 
         env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis, location, env.curContractSym.name,
@@ -63,16 +64,19 @@ public class Assign extends NonFirstLayerStatement {
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, value.location, env.curContractSym.name,
                 "Integrity of control flow must be trusted to allow this assignment"));
 
+        typecheck.Utils.contextFlow(env, vo.psi.getNormalPath().c, endContext, value.location);
+        // env.outContext = endContext;
+
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.inLockName), env.hypothesis, location, env.curContractSym.name,
-                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-        } else {
-            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.lockName), env.hypothesis, location, env.curContractSym.name,
-                    Utils.ERROR_MESSAGE_LOCK_IN_LAST_OPERATION));
+            env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 
-
-        return new Context(ifNameTgt, curContext.lockName, curContext.inLockName);
+        if (to != null) {
+            vo.psi.join(to.psi);
+        }
+        vo.psi.setNormalPath(endContext);
+        return vo.psi;
     }
 
     public void SolCodeGen(SolCode code) {

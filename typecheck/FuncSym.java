@@ -15,7 +15,7 @@ public class FuncSym extends Sym {
     public ArrayList<VarSym> parameters;
     public TypeSym returnType;
     public IfLabel returnLabel;
-    public ArrayList<ExceptionTypeSym> exceptions;
+    public HashMap<ExceptionTypeSym, String> exceptions;
     public CodeLocation location;
     public ScopeContext scopeContext;
 
@@ -24,7 +24,7 @@ public class FuncSym extends Sym {
                    ArrayList<VarSym> parameters,
                    TypeSym returnType,
                    IfLabel returnLabel,
-                   ArrayList<ExceptionTypeSym> exceptions,
+                   HashMap<ExceptionTypeSym, String> exceptions,
                    ScopeContext scopeContext,
                    CodeLocation location) {
         // this.typeName = funcName;
@@ -52,7 +52,7 @@ public class FuncSym extends Sym {
         this.parameters = parameters;
         this.returnType = returnType;
         this.returnLabel = returnLabel;
-        this.exceptions = new ArrayList<>();
+        this.exceptions = new HashMap<>();
         this.scopeContext = scopeContext;
         this.location = location;
     }
@@ -68,6 +68,10 @@ public class FuncSym extends Sym {
 
     public String getLabelNameCallPcAfter() {
         return Utils.getLabelNameFuncCallPcAfter(scopeContext.getSHErrLocName());
+    }
+
+    public String getLabelNameCallPcEnd() {
+        return Utils.getLabelNameCallPcEnd(scopeContext.getSHErrLocName());
     }
 
     public String getLabelNameCallPcAfter(String namespace) {
@@ -99,6 +103,10 @@ public class FuncSym extends Sym {
         if (namespace != "")
             namespace += "..";
         return namespace + Utils.getLabelNameArgLabel(scopeContext.getSHErrLocName(), parameters.get(index));
+    }
+
+    public String getLabelNameException(ExceptionTypeSym exp) {
+        return Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(), exp.name);
     }
 
     public String getCallPcLabel() {

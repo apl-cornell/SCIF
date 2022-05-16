@@ -1,5 +1,7 @@
 package ast;
 
+import sherrlocUtils.Constraint;
+import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -17,10 +19,18 @@ public class ConstantExpr extends Expression {
         return now;
     }
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
 
-        String ifNameRnt = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        return new Context(ifNameRnt, env.context.lockName, env.context.inLockName);
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
+        //env.outContext = endContext;
+        env.cons.add(new Constraint(new Inequality(beginContext.pc, endContext.pc), env.hypothesis, location, env.curContractSym.name,
+                "Integrity of the control flow doesn't flow to value of this constant"));
+        if (!tail_position) {
+            env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        }
+        return new ExpOutcome(endContext.pc, new PathOutcome(new PsiUnit(endContext)));
     }
 
     @Override

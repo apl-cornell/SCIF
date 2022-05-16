@@ -43,16 +43,13 @@ public class Arguments extends Node {
         }
         return rnt;
     }
-    @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        Context context = env.context;
+
+    public void genConsVisit(VisitEnv env, boolean tail_position) {
         int index = 0;
         for (Arg arg : args) {
             ++index;
-            env.context = context;
             arg.genConsVisit(env, index == args.size() && tail_position);
         }
-        return null;
     }
     public void findPrincipal(HashSet<String> principalSet) {
         for (Arg arg : args) {

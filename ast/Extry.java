@@ -1,10 +1,9 @@
 package ast;
 
-import typecheck.NTCEnv;
-import typecheck.ScopeContext;
-import typecheck.SymTab;
+import typecheck.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Extry extends Try {
 
@@ -16,6 +15,7 @@ public class Extry extends Try {
     public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
         // consider to be a new scope
         // must contain at least one Statement
+
         ScopeContext now = new ScopeContext(this, parent);
         env.curSymTab = new SymTab(env.curSymTab);
         ScopeContext rtn = null;

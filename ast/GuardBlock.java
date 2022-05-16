@@ -6,6 +6,7 @@ import sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GuardBlock extends NonFirstLayerStatement {
     IfLabel l;
@@ -31,71 +32,89 @@ public class GuardBlock extends NonFirstLayerStatement {
         return now;
     }
 
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        // String originalCtxt = env.ctxt;
-        // String prevLockLabel = env.prevContext.lockName;
-        Context context = env.context;
-        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), Utils.getLabelNameInLock(location));
-        // Context prevContext = env.prevContext;
+    @Override
+    public void globalInfoVisit(ContractSym contractSym) {
+
+    }
+
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        Context beginContext = env.inContext;
+        Context curContext = new Context(beginContext.pc, scopeContext.getSHErrLocName() + "." + "lockin" + location.toString());
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".guardBlock" + location.toString();
         /*Context lockedContext = new Context(prevContext);
-        lockedContext.lockName = lockName;
+        lockedContext.lambda = lambda;
         lockedContext.inLockName = newInLock;*/
 
-        // env.prevContext.lockName = newLockLabel;
+        // env.prevContext.lambda = newLockLabel;
 
         String guardLabel = l.toSherrlocFmt();
 
-        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, curContext.inLockName), context.inLockName), env.hypothesis, location, env.curContractSym.name,
-                "Cannot put a dynamic reentrancy lock"));
+        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, curContext.lambda), beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+                "Cannot grant a dynamic reentrancy lock"));
         // String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
-        Context lastContext = new Context(curContext);//, prev2 = null;
+        PathOutcome psi = new PathOutcome(new PsiUnit(curContext));
+
+        //Context lastContext = new Context(curContext);//, prev2 = null;
+        env.incScopeLayer();
+        PathOutcome so = null;
         int index = 0;
         for (Statement stmt : body) {
             ++index;
             /*if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(lastContext.lockName, Relation.LEQ, prev2.lockName), env.hypothesis, location, env.curContractSym.name,
+                env.cons.add(new Constraint(new Inequality(lastContext.lambda, Relation.LEQ, prev2.lambda), env.hypothesis, location, env.curContractSym.name,
                         Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
             }*/
-            env.context = lastContext;
-            Context tmp = stmt.genConsVisit(env, index == body.size() && tail_position);
+            env.inContext = psi.getNormalPath().c;
+            so = stmt.genConsVisit(env, index == body.size() && tail_position);
+            psi.joinExe(so);
             // env.prevContext = tmp;
             // prev2 = lastContext;
             // lastContext = tmp;
         }
-        if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.inLockName), env.hypothesis, location, env.curContractSym.name,
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-        } else {
-            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.lockName), env.hypothesis, location, env.curContractSym.name,
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_LAST_OPERATION));
+        env.decScopeLayer();
+
+        PathOutcome psiOutcome = new PathOutcome();
+
+        for (HashMap.Entry<ExceptionTypeSym, PsiUnit> entry: psi.psi.entrySet()) {
+            PsiUnit value = entry.getValue();
+            String newPathLabel = scopeContext.getSHErrLocName() + "." + "lock" + location.toString() + "." + entry.getKey().name;
+            env.cons.add(new Constraint(new Inequality(newPathLabel, CompareOperator.Eq, Utils.meetLabels(value.c.lambda, guardLabel)), env.hypothesis, location, env.curContractSym.name,
+                    "Operations inside lock clause does't respect locks"));
+            psiOutcome.set(entry.getKey(), new PsiUnit(new Context(value.c.pc, newPathLabel), value.catchable));
         }
-        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(curContext.lockName, guardLabel), context.lockName), env.hypothesis, location, env.curContractSym.name,
-                "Cannot release a dynamic reentrancy lock"));
-        // env.prevContext.lockName = newAfterLockLabel;
+
+        if (!tail_position) {
+            env.cons.add(new Constraint(new Inequality(psiOutcome.getNormalPath().c.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        }
+        /*env.cons.add(new Constraint(new Inequality(Utils.meetLabels(curContext.lockName, guardLabel), context.lockName), env.hypothesis, location, env.curContractSym.name,
+                "Cannot release a dynamic reentrancy lock"));*/
+        // env.prevContext.lambda = newAfterLockLabel;
 
         // env.prevContext = prevContext;
         // env.ctxt = originalCtxt;
 
         //if (target == null) {
-        return new Context(lastContext.valueLabelName, curContext.lockName, curContext.inLockName);
+        return  psiOutcome;
+                //new Context(lastContext.valueLabelName, curContext.lockName, curContext.inLockName);
         /*} else {
             String ifNameTgt = ""; //TODO: only support one argument now
             String rtnLockName = "";
             if (target instanceof Name) {
                 //Assuming target is Name
                 ifNameTgt = env.getVar(((Name) target).id).toSherrlocFmt();
-                rtnLockName = lastContext.lockName;
+                rtnLockName = lastContext.lambda;
             } else if (target instanceof Subscript) {
                 env.prevContext = lastContext;
-                env.cons.add(new Constraint(new Inequality(prevLockLabel, CompareOperator.Eq, lastContext.lockName), env.hypothesis, location, env.curContractSym.name,
+                env.cons.add(new Constraint(new Inequality(prevLockLabel, CompareOperator.Eq, lastContext.lambda), env.hypothesis, location, env.curContractSym.name,
                         Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
                 Context tmp = target.genConsVisit(env);
                 ifNameTgt = tmp.valueLabelName;
-                rtnLockName = tmp.lockName;
+                rtnLockName = tmp.lambda;
             } else {
                 //TODO: error handling
             }
@@ -120,11 +139,11 @@ public class GuardBlock extends NonFirstLayerStatement {
          */
         code.enterGuard(l);
         for (Statement stmt : body) {
-            if (stmt instanceof Expression) {
+            /*if (stmt instanceof Expression) {
                 ((Expression) stmt).SolCodeGenStmt(code);
-            } else {
+            } else {*/
                 stmt.SolCodeGen(code);
-            }
+            //}
         }
         /*
             unlock(l);

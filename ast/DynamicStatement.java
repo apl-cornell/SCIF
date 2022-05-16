@@ -20,4 +20,9 @@ public class DynamicStatement extends NonFirstLayerStatement {
         logger.debug("toSOl: DynamicStatement");
         return call.toSolCode();
     }
+
+    @Override
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        return null;
+    }
 }

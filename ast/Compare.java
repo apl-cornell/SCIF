@@ -36,35 +36,37 @@ public class Compare extends Expression {
         return now;
     }
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        Context context = env.context;
-        Context curContext = new Context(context.valueLabelName, typecheck.Utils.getLabelNameLock(location), context.inLockName);
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
 
-        Context leftContext = left.genConsVisit(env, false);
-        String ifNameLeft = leftContext.valueLabelName;
-        // env.prevContext = prevContext = leftContext;
+        env.inContext = beginContext;
+        ExpOutcome lo = left.genConsVisit(env, false);
+        String ifNameLeft = lo.valueLabelName;
 
-        // env.prevContext.lockName = leftContext.lockName;
-        env.context = context;
-        Context rightContext = right.genConsVisit(env, false);
-        String ifNameRight = rightContext.valueLabelName;
-        // env.prevContext = prevContext = rightContext;
+        env.inContext = new Context(lo.psi.getNormalPath().c.pc, beginContext.lambda);
+        ExpOutcome ro = right.genConsVisit(env, false);
+        String ifNameRight = ro.valueLabelName;
 
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "cmp" + location.toString();
-        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, left.location, env.curContractSym.name,
+
+        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
                 "Integrity of left hand expression doesn't flow to value of this compare operation"));
-        env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, right.location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
                 "Integrity of right hand expression doesn't flow to value of this compare operation"));
 
+        typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, right.location);
+        // env.outContext = endContext;
+
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.inLockName), env.hypothesis, location, env.curContractSym.name,
+            env.cons.add(new Constraint(new Inequality(ro.psi.getNormalPath().c.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-        } else {
-            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.lockName), env.hypothesis, location, env.curContractSym.name,
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_LAST_OPERATION));
         }
 
-        return new Context(ifNameRtn, curContext.lockName, curContext.inLockName);
+        ro.psi.join(lo.psi);
+        ro.psi.setNormalPath(endContext);
+
+        return new ExpOutcome(ifNameRtn, ro.psi);
     }
 
     public String toSolCode() {

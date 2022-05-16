@@ -41,12 +41,13 @@ public class Subscript extends TrailerExpr {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        Context context = env.context;
-        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
         VarSym valueVarSym = value.getVarInfo(env, false);
         String ifNameValue = valueVarSym.labelToSherrlocFmt();
         String ifNameRtnValue = ifNameValue + "." + "Subscript" + location.toString();
+
         // String ifNameRtnLock = "";
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
             VarSym indexVarSym = index.getVarInfo(env, tail_position);
@@ -65,23 +66,25 @@ public class Subscript extends TrailerExpr {
                 env.cons.add(new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                         "Integrity level of the subscript value is not trustworthy enough"));
 
-                // ifNameRtnLock = env.prevContext.lockName;
+                // ifNameRtnLock = env.prevContext.lambda;
+                return null;
             } else {
                 logger.error("non-address type variable as index to access DEPMAP @{}", locToString());
                 //System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());
                 return null;
             }
         } else {
-            Context indexContext = index.genConsVisit(env, tail_position);
-            String ifNameIndex = indexContext.valueLabelName;
+            ExpOutcome io = index.genConsVisit(env, tail_position);
+            Context indexContext = io.psi.getNormalPath().c;
+            String ifNameIndex = io.valueLabelName;
             ifNameRtnValue = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
             env.cons.add(new Constraint(new Inequality(ifNameValue, Relation.EQ, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                     "Integrity level of the subscript value is not trustworthy enough"));
 
             // env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
-            // ifNameRtnLock = indexContext.lockName;
+            // ifNameRtnLock = indexContext.lambda;
+            return new ExpOutcome(ifNameRtnValue, io.psi);
         }
-        return new Context(ifNameRtnValue, curContext.lockName, curContext.inLockName);
     }
 
     public VarSym getVarInfo(VisitEnv env, boolean tail_position) {

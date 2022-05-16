@@ -73,4 +73,31 @@ public class Throw extends Statement {
         }
         return now;
     }
+
+    @Override
+    public void globalInfoVisit(ContractSym contractSym) {
+
+    }
+
+    @Override
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
+        PathOutcome psi = new PathOutcome(new PsiUnit(beginContext));
+        ExpOutcome ao = null;
+
+        for (int i = 0; i < exception.args.size(); ++i) {
+            Expression arg = exception.args.get(i);
+            ao = arg.genConsVisit(env, false);
+            psi.joinExe(ao.psi);
+            env.inContext = new Context(Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc), beginContext.lambda);
+        }
+
+
+        String expName = ((Name) exception.value).id;
+        //ExceptionTypeSym expSym = env.getExp(expName);
+
+        //TODO
+        return null;
+    }
 }

@@ -6,9 +6,10 @@ import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Map;
 
 public class FunctionDef extends FunctionSig {
     ArrayList<Statement> body;
@@ -28,8 +29,8 @@ public class FunctionDef extends FunctionSig {
         logger.debug("func: " + funcName);
         FuncSym funcSym = ((FuncSym) env.getCurSym(funcName));
         HashMap<ExceptionTypeSym, Boolean> exceptionTypeSyms = new HashMap<>();
-        for (ExceptionTypeSym t : funcSym.exceptions) {
-            exceptionTypeSyms.put(t, true);
+        for (HashMap.Entry<ExceptionTypeSym, String> t : funcSym.exceptions.entrySet()) {
+            exceptionTypeSyms.put(t.getKey(), true);
             // System.err.println("func sig exp: " + t.name);
         }
 
@@ -54,13 +55,16 @@ public class FunctionDef extends FunctionSig {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        Context context = env.context;
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         String funcName = name;
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         FuncSym funcSym = env.getFunc(funcName);
-        Context curContext = new Context(ifNamePc, Utils.getLabelNameFuncRtnLock(funcName), Utils.getLabelNameInLock(location));
+        // Context curContext = new Context(ifNamePc, Utils.getLabelNameFuncRtnLock(funcName), Utils.getLabelNameInLock(location));
+        String inLockName = Utils.getLabelNameInLock(location);
+        String outLockName = Utils.getLabelNameFuncRtnLock(funcName);
+        String outPcName = Utils.getLabelNameFuncRtnPc(funcName);
+        Context curContext = new Context(ifNamePc, inLockName);
 
 
         String ifNameCall = funcSym.getLabelNameCallPcAfter();
@@ -72,32 +76,51 @@ public class FunctionDef extends FunctionSig {
                 "This contract should be trusted enough to call this method"));
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
-        env.trustCons.add(new Constraint(new Inequality(curContext.inLockName, ifNameCall), env.hypothesis, funcLabels.to_pc.location, env.curContractSym.name,
+        env.trustCons.add(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis, funcLabels.to_pc.location, env.curContractSym.name,
                 "The statically locked integrity must be at least as trusted as initial pc integrity"));
-        env.cons.add(new Constraint(new Inequality(Utils.makeJoin(curContext.inLockName, curContext.lockName), ifNameGamma), env.hypothesis, funcLabels.gamma_label.location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(Utils.makeJoin(inLockName, outLockName), ifNameGamma), env.hypothesis, funcLabels.gamma_label.location, env.curContractSym.name,
                 "This function does not maintain reentrancy locks as specified in signature", 1));
 
-        Context funcBeginContext = new Context(curContext);
-        env.context = funcBeginContext;
+        HashMap<ExceptionTypeSym, PsiUnit> psi = new HashMap<>();
+        for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
+            psi.put(exp.getKey(), new PsiUnit(new Context(funcSym.getLabelNameException(exp.getKey()), ifNameGamma), true));
+        }
+        env.psi = psi;
+
+        Context funcBeginContext = curContext;
+        PsiUnit funcEndContext = new PsiUnit(outPcName, outLockName);
+        // env.inContext = funcBeginContext;
+        // env.outContext = funcEndContext;
 
 
         env.incScopeLayer();
         args.genConsVisit(env, false);
         // Context prev = new Context(env.prevContext);//, prev2 = null;
         CodeLocation loc = null;
+        PathOutcome CO = null;
         int index = 0;
         for (Statement stmt : body) {
+            if (index == 0) {
+                env.inContext = funcBeginContext;
+            }
+            // Context CO = new Context(Utils.getLabelNamePc(stmt.location), Utils.getLabelNameLock(stmt.location));
+            // env.outContext = CO;
             ++index;
             if (stmt instanceof DynamicStatement) {
                 //TODO: ifc check for dynamic statement
                 continue;
             }
-            Context tmp = stmt.genConsVisit(env, index == body.size() && tail_position);
-            env.context = funcBeginContext;
+            CO = stmt.genConsVisit(env, index == body.size() && tail_position);
+            //Context CO = env.outContext;
+            env.inContext = new Context(CO.getNormalPath().c);
         }
+        if (body.size() > 0) {
+            Utils.contextFlow(env, CO.getNormalPath().c, funcEndContext.c, body.get(body.size() - 1).location);
+        }
+
         env.decScopeLayer();
 
-        return curContext;
+        return null;
     }
     /*public void findPrincipal(HashSet<String> principalSet) {
         if (sig.name instanceof LabeledType) {
@@ -141,9 +164,9 @@ public class FunctionDef extends FunctionSig {
             if (stmt instanceof DynamicStatement) {
                 continue;
             }
-            if (stmt instanceof Expression) {
+            /*if (stmt instanceof Expression) {
                 ((Expression) stmt).SolCodeGenStmt(code);
-            }
+            }*/
             else {
                 stmt.SolCodeGen(code);
             }

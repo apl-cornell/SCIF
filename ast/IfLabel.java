@@ -1,5 +1,7 @@
 package ast;
 
+import typecheck.VisitEnv;
+
 import java.util.HashSet;
 
 public abstract class IfLabel extends Expression {
@@ -15,4 +17,5 @@ public abstract class IfLabel extends Expression {
     public abstract void findPrincipal(HashSet<String> principalSet);
 
     public abstract boolean typeMatch(IfLabel begin_pc);
+
 }

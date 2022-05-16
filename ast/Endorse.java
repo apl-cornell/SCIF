@@ -20,9 +20,12 @@ public class Endorse extends Expression {
         return value.NTCgenCons(env, parent);
     }
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        Context tmp = value.genConsVisit(env, tail_position);
-        String ifNameValue = tmp.valueLabelName;
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        //TODO: change to conditioned form
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
+        ExpOutcome vo = value.genConsVisit(env, tail_position);
+        String ifNameValue = vo.valueLabelName;
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "endorse" + location.toString();
 
         String fromLabel = from.toSherrlocFmt();
@@ -31,10 +34,16 @@ public class Endorse extends Expression {
         env.cons.add(new Constraint(new Inequality(ifNameValue, fromLabel), env.hypothesis, location, env.curContractSym.name,
                 "The expression must be trusted to be endorsed"));
 
-        env.cons.add(new Constraint(new Inequality(ifNameRtn, toLabel), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(toLabel, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
                 "The integrity level of this expression would be endorsed"));
 
-        return new Context(ifNameRtn, tmp.lockName, tmp.inLockName);
+        //env.outContext = endContext;
+
+        env.trustCons.add(new Constraint(new Inequality(beginContext.pc, endContext.pc), env.hypothesis, location, env.curContractSym.name,
+                "The control flow of this expression would be endorsed"));
+
+
+        return new ExpOutcome(ifNameRtn, vo.psi);
     }
 
     @Override

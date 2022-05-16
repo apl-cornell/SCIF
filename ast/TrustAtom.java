@@ -1,5 +1,8 @@
 package ast;
 
+import typecheck.ExpOutcome;
+import typecheck.VisitEnv;
+
 import java.util.HashSet;
 
 public class TrustAtom extends Expression {
@@ -15,6 +18,11 @@ public class TrustAtom extends Expression {
     public TrustAtom(IfLabel ifl) {
         this.isIfl = true;
         this.ifl = ifl;
+    }
+
+    @Override
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        return null;
     }
 
     @Override

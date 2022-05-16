@@ -29,7 +29,6 @@ public class Interface extends Node {
     }
 
 
-    @Override
     public void globalInfoVisit(ContractSym contractSym) {
         contractSym.name = contractName;
         contractSym.trustSetting = trustSetting;

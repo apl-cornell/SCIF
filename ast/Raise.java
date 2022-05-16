@@ -1,5 +1,9 @@
 package ast;
 
+import typecheck.ContractSym;
+import typecheck.PathOutcome;
+import typecheck.VisitEnv;
+
 public class Raise extends NonFirstLayerStatement {
     Expression exception;
     Expression from;
@@ -13,4 +17,13 @@ public class Raise extends NonFirstLayerStatement {
     public Raise() {
     }
 
+    @Override
+    public void globalInfoVisit(ContractSym contractSym) {
+
+    }
+
+    @Override
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        return null;
+    }
 }

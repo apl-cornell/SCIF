@@ -6,9 +6,10 @@ import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Map;
 
 public class Call extends TrailerExpr {
     public ArrayList<Expression> args;
@@ -84,9 +85,9 @@ public class Call extends TrailerExpr {
         String rtnTypeName = funcSym.returnType.name;
         env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
 
-        for (ExceptionTypeSym tl : funcSym.exceptions) {
-            if (!parent.isCheckedException(tl, extern)) {
-                System.err.println("Unchecked exception: " + tl.name + " at " + location.toString());
+        for (HashMap.Entry<ExceptionTypeSym, String> tl : funcSym.exceptions.entrySet()) {
+            if (!parent.isCheckedException(tl.getKey(), extern)) {
+                System.err.println("Unchecked exception: " + tl.getKey().name + " at " + location.toString());
                 throw new RuntimeException();
             }
         }
@@ -94,11 +95,23 @@ public class Call extends TrailerExpr {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         //TODO: Assuming value is a Name for now
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
 
-        Context context = env.context;
-        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
+        ArrayList<String> argValueLabelNames = new ArrayList<>();
+
+        PathOutcome psi = new PathOutcome(new PsiUnit(beginContext));
+        ExpOutcome ao = null;
+
+        for (int i = 0; i < args.size(); ++i) {
+            Expression arg = args.get(i);
+            ao = arg.genConsVisit(env, false);
+            psi.joinExe(ao.psi);
+            argValueLabelNames.add(ao.valueLabelName);
+            env.inContext = new Context(Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc), beginContext.lambda);
+        }
 
         String funcName;
         String ifNamePc;
@@ -106,17 +119,19 @@ public class Call extends TrailerExpr {
         String namespace = "";
         String ifNameFuncCallPcBefore, ifNameFuncCallPcAfter, ifNameFuncGammaLock;
 
+        ExpOutcome vo = null;
+
         if (!(value instanceof Name)) {
             if (value instanceof Attribute) {
                 //  the case: a.b(c) where a is a contract, b is a function and c are the arguments
                 // att = a.b
                 logger.debug("call value: " + value.toSolCode());
                 Attribute att = (Attribute) value;
-                Context tmp = att.value.genConsVisit(env, false);
-                // env.prevContext = prevContext;
-                String ifContRtn = tmp.valueLabelName; //the label of called contract
+                vo = att.value.genConsVisit(env, false);
+                psi.joinExe(vo.psi);
+                String ifContRtn = vo.valueLabelName;
 
-                //TODO: assuming a's depth is 1
+                        //TODO: assuming a's depth is 1
                 String varName = ((Name)att.value).id;
                 VarSym var = env.getVar(varName);
                 namespace = var.toSherrlocFmt();
@@ -137,22 +152,20 @@ public class Call extends TrailerExpr {
                 return null;
             }
         } else {
+            //a(b)
             funcName = ((Name) value).id;
             ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
             if (!env.containsFunc(funcName)) {
                 if (env.containsContract(funcName) || Utils.isPrimitiveType(funcName)) { //type cast
                     if (args.size() != 1) return null;
-                    Context tmp = args.get(0).genConsVisit(env, false);
-                    // env.prevContext = prevContext = tmp;
-                    String ifNameArgValue = tmp.valueLabelName;
+                    String ifNameArgValue = argValueLabelNames.get(0);
+                    typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, args.get(0).location);
+                    // env.outContext = endContext;
                     if (!tail_position) {
-                        env.cons.add(new Constraint(new Inequality(curContext.lockName, context.inLockName), env.hypothesis, location, env.curContractSym.name,
+                        env.cons.add(new Constraint(new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
                                 typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-                    } else {
-                        env.cons.add(new Constraint(new Inequality(curContext.lockName, context.lockName), env.hypothesis, location, env.curContractSym.name,
-                                typecheck.Utils.ERROR_MESSAGE_LOCK_IN_LAST_OPERATION));
                     }
-                    return new Context(ifNameArgValue, curContext.lockName, curContext.inLockName);
+                    return new ExpOutcome(ifNameArgValue, psi);
                 } else {
                     return null;
                 }
@@ -161,6 +174,7 @@ public class Call extends TrailerExpr {
             if (funcSym instanceof PolyFuncSym) {
                 ((PolyFuncSym) funcSym).apply();
             }
+
             ifNameFuncCallPcBefore = funcSym.getLabelNameCallPcBefore();
             ifNameFuncCallPcAfter = funcSym.getLabelNameCallPcAfter();
             ifNameFuncGammaLock = funcSym.getLabelNameCallGamma();
@@ -168,41 +182,53 @@ public class Call extends TrailerExpr {
 
         for (int i = 0; i < args.size(); ++i) {
             Expression arg = args.get(i);
-            env.context = context;
-            Context tmp = arg.genConsVisit(env, false);
             // env.prevContext = prevContext = tmp;
-            String ifNameArgValue = tmp.valueLabelName;
+            String ifNameArgValue = argValueLabelNames.get(i);
             String ifNameArgLabel = funcSym.getLabelNameArg(i);
             env.cons.add(new Constraint(new Inequality(ifNameArgValue, Relation.LEQ, ifNameArgLabel), env.hypothesis, arg.location, env.curContractSym.name,
                     "Input to the " + Utils.ordNumString(i + 1) + " argument must be trusted enough"));
-
             env.cons.add(new Constraint(new Inequality(ifNamePc, Relation.LEQ, ifNameArgLabel), env.hypothesis, arg.location, env.curContractSym.name,
                     "Current control flow must be trusted to feed the " + Utils.ordNumString(i + 1) + "-th argument value"));
-
-            // env.cons.add(new Constraint(new Inequality(prevLockName, Relation.LEQ, tmp.lockName), env.hypothesis, arg.location, env.curContractSym.name,                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-
         }
         if (funcSym instanceof PolyFuncSym) {
         }
+
+        PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
+                    Utils.joinLabels(psi.getNormalPath().c.pc, funcSym.getLabelNameCallPcEnd()),
+                    Utils.joinLabels(funcSym.getLabelNameCallGamma(), funcSym.getLabelNameCallPcAfter())
+                )));
+
+        for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
+            ExceptionTypeSym curSym = exp.getKey();
+            String expLabelName = exp.getValue();
+            expPsi.set(curSym, new PsiUnit(
+                    new Context(
+                        Utils.makeJoin(expLabelName, funcSym.getLabelNameCallPcBefore()),
+                        Utils.makeJoin(funcSym.getLabelNameCallGamma(), funcSym.getLabelNameCallPcAfter())),
+                    true));
+            //PsiUnit psiUnit = env.psi.get(curSym);
+            //env.cons.add(new Constraint(new Inequality(Utils.makeJoin(expLabelName, ifNameFuncCallPcAfter), psiUnit.pc), env.hypothesis, location, env.curContractSym.name,
+                    //"Exception " + curSym.name + " is not trusted enough to throw"));
+        }
+
+        //TODO
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameFuncCallPcBefore), env.hypothesis, location, env.curContractSym.name,
                 "Current control flow must be trusted to call this method"));
-        env.cons.add(new Constraint(new Inequality(ifNameFuncCallPcBefore, Utils.makeJoin(ifNameFuncCallPcAfter, curContext.inLockName)), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNameFuncCallPcBefore, Utils.makeJoin(ifNameFuncCallPcAfter, beginContext.lambda)), env.hypothesis, location, env.curContractSym.name,
                 "Calling this function does not respect static reentrancy locks"));
-        env.cons.add(new Constraint(new Inequality(Utils.makeJoin(ifNameFuncCallPcAfter, ifNameFuncGammaLock), curContext.lockName), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(Utils.makeJoin(ifNameFuncCallPcAfter, ifNameFuncGammaLock), Relation.EQ, endContext.lambda), env.hypothesis, location, env.curContractSym.name,
                 "Calling this function does not respect static reentrancy locks"));;
 
 
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.inLockName), env.hypothesis, location, env.curContractSym.name,
+            env.cons.add(new Constraint(new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-        } else {
-            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.lockName), env.hypothesis, location, env.curContractSym.name,
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_LAST_OPERATION));
         }
 
         String ifNameFuncRtnValue = funcSym.getLabelNameRtnValue(namespace);
         // String ifNameFuncRtnLock = funcSym.getLabelNameRtnLock();
-        return new Context(ifNameFuncRtnValue, curContext.lockName, curContext.inLockName);
+        psi.joinExe(expPsi);
+        return new ExpOutcome(ifNameFuncRtnValue, psi);
     }
 
     public String toSolCode() {

@@ -1,5 +1,8 @@
 package ast;
 
+import typecheck.PathOutcome;
+import typecheck.VisitEnv;
+
 public class AugAssign extends NonFirstLayerStatement {
     Expression target;
     BinaryOperator op;
@@ -10,4 +13,8 @@ public class AugAssign extends NonFirstLayerStatement {
         this.value = value;
     }
 
+    @Override
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        return null;
+    }
 }

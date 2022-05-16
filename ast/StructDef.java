@@ -1,6 +1,8 @@
 package ast;
 
 import typecheck.ContractSym;
+import typecheck.PathOutcome;
+import typecheck.VisitEnv;
 
 import java.util.ArrayList;
 
@@ -21,6 +23,12 @@ public class StructDef extends NonFirstLayerStatement {
         contractSym.addType(structName, contractSym.toStructType(structName, members));
 
     }
+
+    @Override
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        return null;
+    }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();

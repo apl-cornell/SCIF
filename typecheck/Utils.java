@@ -69,11 +69,18 @@ public class Utils {
             return prefix + ".." + "PC";
         }
     }
+    public static String getLabelNamePc(CodeLocation location) {
+        if (location == null) {
+            return "PC";
+        } else {
+            return location + ".." + "PC";
+        }
+    }
     public static String getLabelNameLock(CodeLocation location) {
         if (location == null) {
             return "LK";
         } else {
-            return location.toString() + ".." + "LK";
+            return location + ".." + "LK";
         }
         /*if (prefix.equals("")) {
             return "LK";
@@ -94,6 +101,10 @@ public class Utils {
     public static String getLabelNameFuncCallPcAfter(String funcName) {
         return funcName + ".." + "call.pc.aft";
     }
+
+    public static String getLabelNameCallPcEnd(String funcName) {
+        return funcName + ".." + "call.pc.end";
+    }
     public static String getLabelNameFuncCallLock(String funcName) {
         return funcName + ".." + "call.lk";
     }
@@ -109,12 +120,21 @@ public class Utils {
     public static String getLabelNameFuncRtnValue(String funcName) {
         return funcName + ".." + "rtn.v";
     }
+
     public static String getLabelNameFuncRtnLock(String funcName) {
         return funcName + ".." + "rtn.lk";
+    }
+    public static String getLabelNameFuncRtnPc(String funcName) {
+        return funcName + ".." + "rtn.pc";
     }
     public static String getLabelNameArgLabel(String funcName, VarSym arg) {
         return funcName + "." + arg.name + "..lbl";
     }
+
+    public static String getLabelNameFuncExpLabel(String funcName, String name) {
+        return funcName + "." + name + "..lbl";
+    }
+
     public static sherrloc.diagnostic.DiagnosticConstraintResult runSherrloc(String consFilePath) throws Exception {
         logger.debug("runSherrloc()...");
         String[] args = new String[] {"-c", consFilePath};
@@ -529,5 +549,25 @@ public class Utils {
         return "(" + lhs + " ⊔ " + rhs + ")";
     }
 
+    public static void contextFlow(VisitEnv env, Context outContext, Context funcEndContext, CodeLocation location) {
+        env.trustCons.add(new Constraint(new Inequality(outContext.lambda, funcEndContext.lambda), env.hypothesis, location, env.curContractSym.name, "actually-maintained lock of the last sub-statement flows to parent-statement's one" ));
+        env.trustCons.add(new Constraint(new Inequality(outContext.pc, funcEndContext.pc), env.hypothesis, location, env.curContractSym.name, "normal termination control flow of the last sub-statement flows to parent-statement's one" ));
+    }
+
+    public static ExceptionTypeSym getNormalPathException() {
+        return new ExceptionTypeSym("*n", new ArrayList<>());
+    }
+
+    public static PsiUnit joinPsiUnit(PsiUnit u1, PsiUnit u2) {
+        return new PsiUnit(joinContext(u1.c, u2.c), u1.catchable && u2.catchable);
+    }
+
+    private static Context joinContext(Context c1, Context c2) {
+        return new Context(joinLabels(c1.pc, c2.pc), joinLabels(c1.lambda, c2.lambda));
+    }
+
+    public static ExceptionTypeSym getReturnPathException() {
+        return new ExceptionTypeSym("*r", new ArrayList<>());
+    }
 }
 

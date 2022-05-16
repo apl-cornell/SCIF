@@ -31,35 +31,47 @@ public class Return extends NonFirstLayerStatement {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        Context context = env.context;
-        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
-        // String prevLock = env.prevContext.lockName;
+    public void globalInfoVisit(ContractSym contractSym) {
+
+    }
+
+    @Override
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
+        // String prevLock = env.prevContext.lambda;
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
-        env.context = curContext;
+        //env.context = curContext;
         // int occur = env.ctxt.indexOf(".");
         String funcName = scopeContext.getFuncName();
         FuncSym funcSym = env.getFunc(funcName);
         // String ifNameRtnLock = funcSym.getLabelNameRtnLock();
         String ifNameRtnValue = funcSym.getLabelNameRtnValue();
         String ifRtnLockName = funcSym.getLabelNameCallGamma();
+        PathOutcome psi = new PathOutcome();
         if (value == null) {
             env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                     Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-            return new Context(null, context.lockName, context.inLockName);
+            psi.setReturnPath(env.inContext);
+            return psi;
         }
 
-        Context expContext = value.genConsVisit(env, true);
-        String ifNameValue = expContext.valueLabelName;
+        ExpOutcome vo = value.genConsVisit(env, true);
+        Context expContext = vo.psi.getNormalPath().c;
+        String ifNameValue = vo.valueLabelName;
         env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                 "Value must be trusted to be returned"));
         env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis, location, env.curContractSym.name,
                 "Control flow must be trusted to return"));
 
-        env.cons.add(new Constraint(new Inequality(Utils.makeJoin(curContext.lockName, curContext.inLockName), ifRtnLockName), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(Utils.makeJoin(endContext.lambda, beginContext.lambda), ifRtnLockName), env.hypothesis, location, env.curContractSym.name,
                 "Reentrancy locks must be respected to return"));
-        return new Context(null, curContext.lockName, curContext.inLockName);
+        PsiUnit pathn = vo.psi.getNormalPath();
+        vo.psi.setNormalPath(null);
+        vo.psi.setReturnPath(pathn.c);
+
+        return vo.psi;
     }
 
     @Override

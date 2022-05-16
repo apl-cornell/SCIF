@@ -1,5 +1,6 @@
 package typecheck;
 
+import ast.ExceptionType;
 import ast.Program;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Hypothesis;
@@ -9,7 +10,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class VisitEnv {
-    public Context context;
+    public Context inContext;
+    // public PathOutcome outContext;
     // public HashMap<String, FuncInfo> funcMap;
     public ArrayList<Constraint> cons;
     public ArrayList<Constraint> trustCons;
@@ -23,9 +25,11 @@ public class VisitEnv {
     //public HashMap<String, SigCons> sigConsMap;
     public HashMap<String, String> sigReq = new HashMap<>();
     public HashMap<String, Program> programMap;
+    //public HashMap<ExceptionTypeSym, PsiUnit> psi;
 
 
-    public VisitEnv(Context context,
+    public VisitEnv(Context inContext,
+                    // PathOutcome outContext,
                     // HashMap<String, FuncInfo> funcMap,
                     ArrayList<Constraint> cons,
                     ArrayList<Constraint> trustCons,
@@ -35,11 +39,13 @@ public class VisitEnv {
                     Hypothesis hypothesis,
                     HashSet<String> principalSet,
                     ContractSym curContractSym,
-                    HashMap<String, Program> programMap
+                    HashMap<String, Program> programMap,
+                    HashMap<ExceptionTypeSym, PsiUnit> psi
                     //HashMap<String, SigCons> sigConsMap
                     /*HashMap<String, ContractInfo> contractMap*/) {
         // this.ctxt = ctxt;
-        this.context = context;
+        this.inContext = inContext;
+        // this.outContext = outContext;
         // this.funcMap = funcMap;
         this.cons = cons;
         this.trustCons = trustCons;
@@ -50,13 +56,15 @@ public class VisitEnv {
         this.principalSet = principalSet;
         this.curContractSym = curContractSym;
         this.programMap = programMap;
+        this.psi = psi;
         // this.contractMap = contractMap;
         // this.sigConsMap = sigConsMap;
     }
 
-    public VisitEnv() {
+    /*public VisitEnv() {
         // ctxt = null;
-        context = new Context();
+        inContext = new Context();
+        outContext = new PsiUnit();
         // funcMap = new HashMap<>();
         cons = new ArrayList<>();
         trustCons = new ArrayList<>();
@@ -67,9 +75,10 @@ public class VisitEnv {
         principalSet = new HashSet<>();
         curContractSym = null;
         programMap = new HashMap<>();
+        psi = new HashMap<>();
         // contractMap = new HashMap<>();
         //sigConsMap = new HashMap<>();
-    }
+    }*/
 
     public void addVar(String id, VarSym varSym) {
         curContractSym.addVar(id, varSym);
@@ -130,5 +139,23 @@ public class VisitEnv {
 
     public void addSigReq(String namespace, String name) {
         sigReq.put(namespace, name);
+    }
+
+    public Sym getCurSym(String name) {
+        return curSymTab.lookup(name);
+    }
+
+    public Sym getExtSym(String contractName, String funcName) {
+        Sym extST = globalSymTab.lookup(contractName);
+        if (extST == null) return null;
+        return ((ContractSym) extST).lookupSym(funcName);
+    }
+
+    public ExceptionTypeSym toExceptionTypeSym(ExceptionType t) {
+        if (t.isLocal(curContractSym.name)) {
+            return (ExceptionTypeSym) getCurSym(t.getName());
+        } else {
+            return (ExceptionTypeSym) getExtSym(t.getContractName(), t.getName());
+        }
     }
 }

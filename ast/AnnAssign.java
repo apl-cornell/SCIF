@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import jdk.jshell.execution.Util;
 import sherrlocUtils.Constraint;
 import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
@@ -15,13 +16,11 @@ public class AnnAssign extends Statement {
     public Expression value;
     public boolean isStatic;
     public boolean isFinal;
-    public boolean simple; //if the target is a pure name or an expression
 
     public AnnAssign(Expression target, Type annotation, Expression value, boolean simple, boolean isConst, boolean isFinal) {
         this.target = target;
         this.annotation = annotation;
         this.value = value;
-        this.simple = simple;
         this.isStatic = isConst;
         this.isFinal = isFinal;
     }
@@ -30,9 +29,6 @@ public class AnnAssign extends Statement {
     public void setToDefault(IfLabel lbl) { annotation.setToDefault(lbl); }
     public void setTarget(Expression target) {
         this.target = target;
-    }
-    public void setSimple(boolean simple) {
-        this.simple = simple;
     }
     public void setFinal(boolean isFinal) { this.isFinal = isFinal;}
     public void setStatic(boolean isStatic) {this.isStatic = isStatic;}
@@ -75,25 +71,18 @@ public class AnnAssign extends Statement {
 
     @Override
     public void globalInfoVisit(ContractSym contractSym) {
-        if (simple) {
-            String id = ((Name) target).id;
-            CodeLocation loc = location;
-            contractSym.addVar(id, contractSym.toVarSym(id, annotation, isStatic, isFinal, loc, scopeContext));
-        } else {
-            //TODO
-        }
+        String id = ((Name) target).id;
+        CodeLocation loc = location;
+        contractSym.addVar(id, contractSym.toVarSym(id, annotation, isStatic, isFinal, loc, scopeContext));
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        Context context = env.context;
-        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
 
         logger.debug("entering AnnAssign: \n");
         // logger.debug(this.toString() + "\n");
-        if (!simple) {
-            //TODO
-        }
         String SLCNameVar, SLCNameVarLbl;
         VarSym varSym;
         String id = ((Name) target).id;
@@ -136,29 +125,25 @@ public class AnnAssign extends Statement {
 
         env.cons.add(new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis, location, env.curContractSym.name,
                 "Integrity of control flow must be trusted to allow this assignment"));
-        if (value != null) {
-            env.context = curContext;
-            Context tmp = value.genConsVisit(env, scopeContext.isContractLevel());
-            String ifNameValue = tmp.valueLabelName;
-            env.cons.add(new Constraint(new Inequality(ifNameValue, SLCNameVarLbl), env.hypothesis, value.location, env.curContractSym.name,
-                    "Integrity of the value being assigned must be trusted to allow this assignment"));
-            /*if (prevContext != null && prevContext.inLockName != null) {
-                env.cons.add(new Constraint(new Inequality(tmp.lockName, tmp.inLockName), env.hypothesis, value.location, env.curContractSym.name,
-                        "Lock should be maintained after execution of this operation"));
-                // env.cons.add(new Constraint(new Inequality(tmp.lockName, CompareOperator.Eq, prevContext.lockName), env.hypothesis, location, env.curContractSym.name, "Lock should be maintained before execution of this operation"));
-            }*/
-            // prevContext = tmp;
-            // env.prevContext.lockName = tmp.lockName;
-        }
+
+        //env.outContext = endContext;
+
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(curContext.lockName, curContext.inLockName), env.hypothesis, location, env.curContractSym.name,
-                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-        } else if (!scopeContext.isContractLevel()) {
-            env.cons.add(new Constraint(new Inequality(curContext.lockName, context.lockName), env.hypothesis, location, env.curContractSym.name,
-                    Utils.ERROR_MESSAGE_LOCK_IN_LAST_OPERATION));
+            env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        }
+        if (value != null) {
+            env.inContext = beginContext;
+            ExpOutcome valueOutcome = value.genConsVisit(env, scopeContext.isContractLevel());
+            env.cons.add(new Constraint(new Inequality(valueOutcome.valueLabelName, SLCNameVarLbl), env.hypothesis, value.location, env.curContractSym.name,
+                    "Integrity of the value being assigned must be trusted to allow this assignment"));
+            typecheck.Utils.contextFlow(env, valueOutcome.psi.getNormalPath().c, endContext, value.location);
+            valueOutcome.psi.set(Utils.getNormalPathException(), endContext);
+            return valueOutcome.psi;
+        } else {
+            return new PathOutcome(new PsiUnit(endContext));
         }
 
-        return new Context(SLCNameVarLbl, curContext.lockName, curContext.inLockName);
     }
 
     public void findPrincipal(HashSet<String> principalSet) {

@@ -36,8 +36,7 @@ public class Arg extends Node {
         return now;
     }
 
-    @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+    public void genConsVisit(VisitEnv env, boolean tail_position) {
 
         if (annotation instanceof LabeledType) {
             if (annotation instanceof DepMap) {
@@ -55,7 +54,6 @@ public class Arg extends Node {
             env.principalSet.add(varSym.toSherrlocFmt());
         }
 
-        return null;
     }
     public void findPrincipal(HashSet<String> principalSet) {
         if (annotation instanceof LabeledType) {

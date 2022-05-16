@@ -1,5 +1,8 @@
 package ast;
 
+import typecheck.ExpOutcome;
+import typecheck.VisitEnv;
+
 public class IfExp extends Expression {
     Expression test, body, orelse; //TODO
     public IfExp(Expression t, Expression b, Expression o) {
@@ -8,6 +11,11 @@ public class IfExp extends Expression {
         orelse = o;
     }
 
+
+    @Override
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        return null;
+    }
 
     @Override
     public boolean typeMatch(Expression expression) {

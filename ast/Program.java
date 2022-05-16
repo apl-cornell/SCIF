@@ -87,7 +87,6 @@ public class Program extends Node {
         return true;
     }
 
-    @Override
     public void globalInfoVisit(ContractSym contractSym) {
         Utils.addBuiltInSyms(contractSym.symTab, null);
         if (contract == null) return;
@@ -99,8 +98,7 @@ public class Program extends Node {
         contract.globalInfoVisit(contractSym);
     }
 
-    @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         contract.genConsVisit(env, tail_position);
         return null;
     }

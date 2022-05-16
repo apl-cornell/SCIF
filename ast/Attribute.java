@@ -33,7 +33,7 @@ public class Attribute extends TrailerExpr {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         //TODO: assuming only one-level attribute access
         // to add support to multi-level access
         String varName = ((Name) value).id;
@@ -48,20 +48,20 @@ public class Attribute extends TrailerExpr {
         }
 
         StructTypeSym structType = (StructTypeSym) varSym.typeSym;
-        //String prevLockName = env.prevContext.lockName;
-        Context tmp = value.genConsVisit(env, tail_position);
+        //String prevLockName = env.prevContext.lambda;
+        ExpOutcome vo = value.genConsVisit(env, tail_position);
+        String attrValueLabel = vo.valueLabelName;
         String ifAttLabel = structType.getMemberLabel(attr.id);
         String ifNameRnt = scopeContext.getSHErrLocName() + ".struct" + location.toString();
         env.cons.add(new Constraint(new Inequality(ifNameRnt, ifAttLabel), env.hypothesis, location, env.curContractSym.name,
                 "Integrity of the member"));
-        if (!ifAttLabel.equals(tmp.valueLabelName)) {
-            env.cons.add(new Constraint(new Inequality(ifNameRnt, tmp.valueLabelName), env.hypothesis, location, env.curContractSym.name,
+        if (!ifAttLabel.equals(attrValueLabel)) {
+            env.cons.add(new Constraint(new Inequality(ifNameRnt, attrValueLabel), env.hypothesis, location, env.curContractSym.name,
                     "Integrity of the index value must be trusted to indicate the attribute"));
         }
 
 
-        //env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, tmp.lockName), env.hypothesis, location));
-        return new Context(ifNameRnt, tmp.lockName, tmp.inLockName);
+        return new ExpOutcome(ifNameRnt, vo.psi);
     }
     public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
         VarSym rtnVarSym;

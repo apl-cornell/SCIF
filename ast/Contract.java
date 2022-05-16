@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class Contract extends Node {
+public class Contract extends Statement {
     public String contractName;
     public String superContractName = "";
     public TrustSetting trustSetting;
@@ -84,7 +84,7 @@ public class Contract extends Node {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         //env.prevContext = new Context()
         findPrincipal(env.principalSet);
         for (Statement stmt : body) {
@@ -180,22 +180,22 @@ public class Contract extends Node {
                 FunctionSig f = (FunctionSig) statement;
                 if (funcNames.containsKey(f.name)) {
                     if (!funcNames.get(f.name).typeMatch(f)) {
-                        // TODO: func overriden type not match
+                        // TODO: func overridden type not match
                         return false;
                     }
                     overriden = true;
                 } else if (varNames.containsKey(f.name)) {
-                    // TODO: var overriden by func
+                    // TODO: var overridden by func
                     return false;
                 }
             } else {
                 AnnAssign a = (AnnAssign) statement;
                 Name x = (Name) a.target;
                 if (varNames.containsKey(x.id)) {
-                    // TODO: var being overriden
+                    // TODO: var being overridden
                     return false;
                 } else if (funcNames.containsKey(x.id)) {
-                    // TODO: func overriden by var
+                    // TODO: func overridden by var
                     return false;
                 }
             }

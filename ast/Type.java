@@ -1,7 +1,9 @@
 package ast;
 
+import typecheck.ExpOutcome;
 import typecheck.ScopeContext;
 import typecheck.NTCEnv;
+import typecheck.VisitEnv;
 
 import java.util.HashSet;
 
@@ -37,6 +39,11 @@ public class Type extends Expression {
 
     public String toSolCode() {
         return x;
+    }
+
+    @Override
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        return null;
     }
 
     @Override

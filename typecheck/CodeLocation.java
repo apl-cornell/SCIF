@@ -23,6 +23,6 @@ public class CodeLocation {
 
     @Override
     public String toString() {
-        return String.format("L%dC%dF%s", lineNo, columnNo, fileName);
+        return String.format("L%dC%dF%s", lineNo, columnNo, fileName.replace("/", "..."));
     }
 }

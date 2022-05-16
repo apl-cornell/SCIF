@@ -44,12 +44,17 @@ public class While extends NonFirstLayerStatement {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+    public void globalInfoVisit(ContractSym contractSym) {
+
+    }
+
+    @Override
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         // String originalCtxt = env.ctxt;
         Context context = env.context;
         Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
 
-        // String prevLock = env.prevContext.lockName;
+        // String prevLock = env.prevContext.lambda;
 
         Context testContext = test.genConsVisit(env, tail_position && body.size() == 0);
         String IfNameTestValue = testContext.valueLabelName;
@@ -69,7 +74,7 @@ public class While extends NonFirstLayerStatement {
             env.context = curContext;
             Context tmp = stmt.genConsVisit(env, false);
             /*if (lastContext != null) {
-                env.cons.add(new Constraint(new Inequality(tmp.lockName, Relation.LEQ, lastContext.lockName), env.hypothesis, loc, env.curContractSym.name,
+                env.cons.add(new Constraint(new Inequality(tmp.lambda, Relation.LEQ, lastContext.lambda), env.hypothesis, loc, env.curContractSym.name,
                         Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
             }*/
             // env.prevContext = tmp;
@@ -78,7 +83,7 @@ public class While extends NonFirstLayerStatement {
             // lastContext = new Context(tmp);
         }
         env.decScopeLayer();
-        env.cons.add(new Constraint(new Inequality(curContext.lockName, curContext.inLockName), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(curContext.lambda, curContext.inLockName), env.hypothesis, location, env.curContractSym.name,
                 Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
 
         // env.ctxt = originalCtxt;

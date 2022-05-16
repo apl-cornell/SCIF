@@ -42,11 +42,11 @@ public class Name extends Variable {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         // assuming the name would be a variable name
         logger.debug("Name: " + id);
-        String ifNameRnt = env.getVar(id).labelToSherrlocFmt();
-        return new Context(ifNameRnt, env.context.lockName, env.context.inLockName);
+        String ifNameRtn = env.getVar(id).labelToSherrlocFmt();
+        return new ExpOutcome(ifNameRtn, new PathOutcome(new PsiUnit(env.inContext)));
     }
 
     public VarSym getVarInfo(VisitEnv env, boolean tail_position) {

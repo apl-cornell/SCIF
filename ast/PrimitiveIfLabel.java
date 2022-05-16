@@ -1,6 +1,8 @@
 package ast;
 
+import typecheck.ExpOutcome;
 import typecheck.Utils;
+import typecheck.VisitEnv;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -75,6 +77,11 @@ public class PrimitiveIfLabel extends IfLabel {
             }
         }
         return rnt;
+    }
+
+    @Override
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        return null;
     }
 
     @Override

@@ -1,8 +1,6 @@
 package ast;
 
-import typecheck.ContractSym;
-import typecheck.NTCEnv;
-import typecheck.ScopeContext;
+import typecheck.*;
 
 import java.util.ArrayList;
 
@@ -23,8 +21,9 @@ public class ExceptionDef extends NonFirstLayerStatement {
         return true;
     }
 
-    @Override
     public void globalInfoVisit(ContractSym contractSym) {
+        exceptionType.setContractName(contractSym.name);
+        contractSym.addType(exceptionType.x, contractSym.toExceptionType(exceptionType.x, arguments));
         // contractSym.addType(exceptionType, contractSym.toExceptionType(exceptionType, arguments));
 
     }
@@ -33,6 +32,11 @@ public class ExceptionDef extends NonFirstLayerStatement {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(arguments);
         return rtn;
+    }
+
+    @Override
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        return null;
     }
 
     public String toString() {

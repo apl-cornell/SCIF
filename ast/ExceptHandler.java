@@ -1,9 +1,6 @@
 package ast;
 
-import typecheck.NTCEnv;
-import typecheck.ScopeContext;
-import typecheck.SymTab;
-import typecheck.VarSym;
+import typecheck.*;
 
 import java.util.ArrayList;
 
@@ -36,5 +33,17 @@ public class ExceptHandler extends NonFirstLayerStatement {
         }
         env.curSymTab = env.curSymTab.getParent();
         return now;
+    }
+
+    public String getHandlerPcLabelName() {
+        return scopeContext.getSHErrLocName() + "." + "handlerPcLabelName" + location.toString();
+    }
+    public String getHandlerLockLabelName() {
+        return scopeContext.getSHErrLocName() + "." + "handlerLockLabelName" + location.toString();
+    }
+
+    @Override
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        return null;
     }
 }

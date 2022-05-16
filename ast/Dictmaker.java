@@ -1,8 +1,5 @@
 package ast;
 
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
-import sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -23,17 +20,17 @@ public class Dictmaker extends Expression {
         this.values.add(value);
     }
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         //TODO
         return null;
         /*String ifNameRtn = scopeContext.getSHErrLocName() + "." + "dictmaker" + location.toString();
-        String prevLock = env.prevContext.lockName;
+        String prevLock = env.prevContext.lambda;
         Context lasttmp = null;
         for (Expression value: values) {
             if (lasttmp != null) {
-                env.cons.add(new Constraint(new Inequality(prevLock, Relation.EQ, lasttmp.lockName), env.hypothesis, location, env.curContractSym.name,
+                env.cons.add(new Constraint(new Inequality(prevLock, Relation.EQ, lasttmp.lambda), env.hypothesis, location, env.curContractSym.name,
                         Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-                env.prevContext.lockName = prevLock;
+                env.prevContext.lambda = prevLock;
             }
             Context tmp = value.genConsVisit(env, );
             String ifNameValue = tmp.valueLabelName;

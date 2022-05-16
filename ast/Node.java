@@ -10,7 +10,7 @@ import typecheck.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class Node {
+public abstract class Node {
     public CodeLocation location;
     public ScopeContext scopeContext;
     public Node() {
@@ -27,13 +27,9 @@ public class Node {
         return this.getClass().getSimpleName() + "" + location;
     }
 
-    public void globalInfoVisit(ContractSym contractSym) {
-        //Do nothing
-    }
+    //public abstract void globalInfoVisit(ContractSym contractSym);
+    //public abstract PathOutcome genConsVisit(VisitEnv env, boolean tail_position);
 
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        return null;
-    }
     public void findPrincipal(HashSet<String> principalSet) {
     }
 
@@ -59,6 +55,8 @@ public class Node {
     public ArrayList<Node> children() {
         return new ArrayList<>();
     };
+
+
     public void passScopeContext(ScopeContext parent) {
         scopeContext = parent;
         for (Node node : children())

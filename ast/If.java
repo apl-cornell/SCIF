@@ -6,6 +6,7 @@ import sherrlocUtils.Inequality;
 import sherrlocUtils.Relation;
 import typecheck.*;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class If extends NonFirstLayerStatement {
@@ -45,17 +46,23 @@ public class If extends NonFirstLayerStatement {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        Context context = env.context;
-        Context curContext = new Context(context.valueLabelName, Utils.getLabelNameLock(location), context.inLockName);
+    public void globalInfoVisit(ContractSym contractSym) {
+
+    }
+
+    @Override
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
         // String originalCtxt = env.ctxt;
 
-        // curContext.lockName = env.prevContext.lockName;
+        // curContext.lambda = env.prevContext.lambda;
         String rtnValueLabel;
 
-        Context condContext = test.genConsVisit(env, body.size() == 0 && orelse.size() == 0 && tail_position);
-        rtnValueLabel = condContext.valueLabelName;
-        String IfNameTest = condContext.valueLabelName;
+        ExpOutcome to = test.genConsVisit(env, body.size() == 0 && orelse.size() == 0 && tail_position);
+        //Context condContext = to.psi
+        rtnValueLabel = to.valueLabelName;
+        String IfNameTest =  to.valueLabelName;
         String IfNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".If" + location.toString();
         String IfNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
@@ -103,20 +110,23 @@ public class If extends NonFirstLayerStatement {
                 "Integrity of this condition doesn't flow to the control flow in this if branch"));
 
         /*if (body.size() > 0 || orelse.size() > 0) {
-            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.GEQ, curContext.lockName), env.hypothesis, test.location, env.curContractSym.name,
+            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.GEQ, curContext.lambda), env.hypothesis, test.location, env.curContractSym.name,
                     Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }*/
         env.incScopeLayer();
 
         // Context leftContext = new Context(curContext), rightContext = new Context(curContext);
         CodeLocation loc = null;
+        PathOutcome ifo = to.psi;
+        env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
         int index = 0;
         for (Statement stmt : body) {
             ++index;
-            Context tmp = stmt.genConsVisit(env, index == body.size() && tail_position);
+            ifo = stmt.genConsVisit(env, index == body.size() && tail_position);
             // env.prevContext = tmp;
             // prev2 = leftContext;
-            env.context = context;
+            //env.context = context;
+            env.inContext = ifo.getNormalPath().c;
             loc = stmt.location;
             // leftContext = new Context(tmp);
         }
@@ -128,29 +138,32 @@ public class If extends NonFirstLayerStatement {
 
         logger.debug("finished if branch");
         //System.err.println("finished if branch");
-        // env.prevContext.lockName = curContext.lockName;
+        // env.prevContext.lambda = curContext.lambda;
         env.incScopeLayer();
         index = 0;
+        PathOutcome elseo = to.psi;
+        env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
         for (Statement stmt : orelse) {
             ++index;
-            stmt.genConsVisit(env, index == orelse.size() && tail_position);
-            env.context = context;
-            // env.prevContext.lockName = rightContext.lockName;
+            elseo = stmt.genConsVisit(env, index == orelse.size() && tail_position);
+            env.inContext = elseo.getNormalPath().c;
+            // env.prevContext.lambda = rightContext.lambda;
         }
         env.decScopeLayer();
 
-        // env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, Utils.joinLabels(leftContext.lockName, rightContext.lockName)), env.hypothesis, location));
+        ifo.join(elseo);
+        // env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, Utils.joinLabels(leftContext.lambda, rightContext.lambda)), env.hypothesis, location));
 
-        /*env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.GEQ, leftContext.lockName), env.hypothesis, location, env.curContractSym.name,
+        /*env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.GEQ, leftContext.lambda), env.hypothesis, location, env.curContractSym.name,
                 "Lock of then branch contributes to lock of this if statement"));
-        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.GEQ, rightContext.lockName), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.GEQ, rightContext.lambda), env.hypothesis, location, env.curContractSym.name,
                 "Lock of else branch contributes to lock of this if statement"));*/
 
         logger.debug("finished orelse branch");
         //System.err.println("finished orelse branch");
 
         // env.ctxt = originalCtxt;
-        return new Context(null, curContext.lockName, curContext.inLockName);
+        return ifo;
     }
 
     @Override
@@ -158,21 +171,21 @@ public class If extends NonFirstLayerStatement {
         String cond = test.toSolCode();
         code.enterIf(cond);
         for (Statement stmt : body) {
-            if (stmt instanceof Expression) {
+            /*if (stmt instanceof Expression) {
                 ((Expression) stmt).SolCodeGenStmt(code);
-            } else {
+            } else {*/
                 stmt.SolCodeGen(code);
-            }
+            //}
         }
         code.leaveIf();
         if (!orelse.isEmpty()) {
             code.enterElse();
             for (Statement stmt : orelse) {
-                if (stmt instanceof Expression) {
+                /*if (stmt instanceof Expression) {
                     ((Expression) stmt).SolCodeGenStmt(code);
-                } else {
+                } else {*/
                     stmt.SolCodeGen(code);
-                }
+                //}
             }
             code.leaveElse();
         }

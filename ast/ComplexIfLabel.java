@@ -1,5 +1,8 @@
 package ast;
 
+import typecheck.ExpOutcome;
+import typecheck.VisitEnv;
+
 import java.util.HashSet;
 
 public class ComplexIfLabel extends IfLabel {
@@ -72,6 +75,12 @@ public class ComplexIfLabel extends IfLabel {
 
         }
         return rnt;
+    }
+
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+
+        // TODO: deal with dynamic labels
+        return null;
     }
 
     @Override

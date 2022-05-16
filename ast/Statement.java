@@ -1,11 +1,14 @@
 package ast;
 
-import java.util.HashSet;
+import typecheck.ContractSym;
+import typecheck.PathOutcome;
+import typecheck.VisitEnv;
 
 public abstract class Statement extends Node {
 
-    public abstract void findPrincipal(HashSet<String> principalSet);
 
+    public abstract void globalInfoVisit(ContractSym contractSym);
+    public abstract PathOutcome genConsVisit(VisitEnv env, boolean tail_position);
     public String toString() {
         return "";
     }

@@ -14,9 +14,10 @@ public class Assert extends NonFirstLayerStatement {
     }
 
     @Override
-    public Context genConsVisit(VisitEnv env, boolean tail_position) {
-        Context tmp = test.genConsVisit(env, tail_position);
-        return tmp;
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        //TODO: exceptions
+        test.genConsVisit(env, tail_position);
+        return null;
     }
 
     @Override
