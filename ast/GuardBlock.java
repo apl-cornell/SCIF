@@ -1,14 +1,14 @@
 package ast;
 
 import compile.SolCode;
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class GuardBlock extends NonFirstLayerStatement {
+public class GuardBlock extends FirstLayerStatement {
     IfLabel l;
     ArrayList<Statement> body;
     Expression target;

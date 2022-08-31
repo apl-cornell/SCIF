@@ -3,7 +3,7 @@ package ast;
 import typecheck.PathOutcome;
 import typecheck.VisitEnv;
 
-public class Continue extends NonFirstLayerStatement {
+public class Continue extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         return null;

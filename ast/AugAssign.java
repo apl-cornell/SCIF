@@ -3,7 +3,7 @@ package ast;
 import typecheck.PathOutcome;
 import typecheck.VisitEnv;
 
-public class AugAssign extends NonFirstLayerStatement {
+public class AugAssign extends Statement {
     Expression target;
     BinaryOperator op;
     Expression value;

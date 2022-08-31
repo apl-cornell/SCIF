@@ -5,13 +5,14 @@ import typecheck.*;
 
 import java.util.ArrayList;
 
-public class Assert extends NonFirstLayerStatement {
+public class Assert extends Statement {
     Expression test;
     Expression msg;
     public Assert(Expression test, Expression msg) {
         this.test = test;
         this.msg = msg;
     }
+
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {

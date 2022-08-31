@@ -1,9 +1,8 @@
 package typecheck;
 
-import sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Constraint;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class SigCons {
     public String name;

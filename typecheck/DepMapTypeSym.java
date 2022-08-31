@@ -3,6 +3,7 @@ package typecheck;
 import ast.IfLabel;
 
 public class DepMapTypeSym extends MapTypeSym {
+
     public TypeSym keyType;
     public TypeSym valueType;
 
@@ -11,7 +12,7 @@ public class DepMapTypeSym extends MapTypeSym {
     }
 
     public DepMapTypeSym(DepMapTypeSym depMapTypeInfo) {
-        name = depMapTypeInfo.name;
+        super(depMapTypeInfo);
         keyType = depMapTypeInfo.keyType;
         valueType = depMapTypeInfo.valueType;
     }

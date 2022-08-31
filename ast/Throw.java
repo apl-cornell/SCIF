@@ -1,9 +1,8 @@
 package ast;
 
-import sherrlocUtils.Relation;
+import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class Throw extends Statement {
@@ -72,11 +71,6 @@ public class Throw extends Statement {
             throw new RuntimeException();
         }
         return now;
-    }
-
-    @Override
-    public void globalInfoVisit(ContractSym contractSym) {
-
     }
 
     @Override

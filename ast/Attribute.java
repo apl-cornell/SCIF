@@ -1,9 +1,9 @@
 package ast;
 
 import compile.SolCode;
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
-import sherrlocUtils.Relation;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;

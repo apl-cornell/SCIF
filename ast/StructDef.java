@@ -6,7 +6,7 @@ import typecheck.VisitEnv;
 
 import java.util.ArrayList;
 
-public class StructDef extends NonFirstLayerStatement {
+public class StructDef extends FirstLayerStatement {
     String structName;
     ArrayList<AnnAssign> members;
     public StructDef(String structName, ArrayList<AnnAssign> members) {

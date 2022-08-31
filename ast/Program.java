@@ -3,18 +3,16 @@ package ast;
 import compile.SolCode;
 import typecheck.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 // As for now, multiple contracts in one Program might cause problem
 public class Program extends Node {
     public String programName;
-    HashSet<String> iptContracts; // imported contracts
+    Set<String> iptContracts; // imported contracts
     Contract contract;
     String contractName;
     String filePath;
-    ArrayList<String> sourceCode;
+    List<String> sourceCode;
     public Program(HashSet<String> iptContracts, Contract contract) {
         programName = "anonymous";
         contractName = "UNKNOWN";
@@ -35,7 +33,7 @@ public class Program extends Node {
     }
 
     public String getContractName() { return contractName; }
-    public void setSourceCode(ArrayList<String> sourceCode) { this.sourceCode = sourceCode; }
+    public void setSourceCode(List<String> sourceCode) { this.sourceCode = sourceCode; }
     public String getSourceCodeLine(int i) {
         return sourceCode.get(i);
     }

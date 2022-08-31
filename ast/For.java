@@ -2,7 +2,7 @@ package ast;
 
 import java.util.ArrayList;
 
-public abstract class For extends NonFirstLayerStatement {
+public abstract class For extends Statement {
     Variable target;
     Expression iter;
     ArrayList<Statement> body;

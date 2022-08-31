@@ -17,7 +17,7 @@ public class VarSym extends Sym {
     public ScopeContext defContext;
 
     public VarSym() {
-        this.name = "ANONYMOUS";
+        super(Utils.ANONYMOUS_VARIABLE_NAME);
         this.typeSym = null;
         this.location = new CodeLocation();
         defContext = null;
@@ -27,7 +27,8 @@ public class VarSym extends Sym {
     }
 
     public VarSym(String localName, TypeSym type, IfLabel ifl, CodeLocation location, ScopeContext context, boolean isConst, boolean isFinal) {
-        this.name = localName;
+        super(localName);
+        // this.name = localName;
         this.typeSym = type;
         this.ifl = ifl;
         this.location = location;
@@ -45,7 +46,8 @@ public class VarSym extends Sym {
     }*/
 
     public VarSym(VarSym varSym) {
-        this.name = varSym.name;
+        super(varSym.name);
+        // this.name = varSym.name;
         this.typeSym = varSym.typeSym;
         this.ifl = varSym.ifl;
         this.location = varSym.location;

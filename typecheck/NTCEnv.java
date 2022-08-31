@@ -1,8 +1,8 @@
 package typecheck;
 
 import ast.*;
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Hypothesis;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Hypothesis;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -14,6 +14,10 @@ public class PathOutcome {
         psi = new HashMap<>();
     }
 
+    public PathOutcome(HashMap<ExceptionTypeSym, PsiUnit> psi) {
+        this.psi = psi;
+    }
+
     public PathOutcome(PsiUnit normalPath) {
         psi = new HashMap<>();
         psi.put(Utils.getNormalPathException(), normalPath);

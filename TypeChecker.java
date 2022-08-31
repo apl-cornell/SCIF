@@ -4,17 +4,16 @@ import ast.*;
 import java_cup.runtime.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
-import sherrlocUtils.Relation;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Hypothesis;
+import typecheck.sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-
-import modules.sherrloc.GenErrorDiagnostic.src.sherrloc.diagnostic.*;
 
 public class TypeChecker {
     public static void main(String[] args) {
@@ -23,11 +22,11 @@ public class TypeChecker {
         //typecheck(inputFile, outputFile);
     }
 
-    public static ArrayList<Program> regularTypecheck(ArrayList<File> inputFiles, File outputFile, boolean DEBUG) {
+    public static List<Program> regularTypecheck(ArrayList<File> inputFiles, File outputFile, boolean DEBUG) {
 
         logger.trace("typecheck starts");
 
-        ArrayList<Program> roots = new ArrayList<>();
+        List<Program> roots = new ArrayList<>();
         for (File inputFile : inputFiles) {
             try {
 
@@ -39,7 +38,7 @@ public class TypeChecker {
                 Symbol result = Parser.parse(inputFile, null);//p.parse();
                 Program root = (Program) result.value;
                 root.setProgramName(inputFile.getName());
-                ArrayList<String> sourceCode = new ArrayList<String>(Files.readAllLines(Paths.get(inputFile.getAbsolutePath()), StandardCharsets.UTF_8));
+                List<String> sourceCode = Files.readAllLines(Paths.get(inputFile.getAbsolutePath()), StandardCharsets.UTF_8);
                 root.setSourceCode(sourceCode);
                 roots.add(root);
                 logger.debug("Finish");
@@ -52,7 +51,7 @@ public class TypeChecker {
 
         // Step 1: typecheck, generate constraints and check via SHErrLoc
 
-        // Code-paste superclass'd methods and datafield
+        // Code-paste superclasses' methods and data fields
         HashMap<String, Contract> contractMap =  new HashMap<>();
         InheritGraph graph = new InheritGraph();
         for (Program root : roots) {
@@ -130,7 +129,7 @@ public class TypeChecker {
         return result == true ? roots : null;
     }
 
-    public static boolean ifcTypecheck(ArrayList<Program> roots, ArrayList<File> outputFiles, boolean DEBUG) {
+    public static boolean ifcTypecheck(List<Program> roots, List<File> outputFiles, boolean DEBUG) {
 
         HashMap<Program, File> outputFileMap = new HashMap<>();
         for (int i = 0; i < roots.size(); ++i) {
@@ -170,9 +169,19 @@ public class TypeChecker {
 
         logger.debug("starting to ifc typecheck");
 
-        VisitEnv env = new VisitEnv();
+        VisitEnv env = new VisitEnv(
+                new Context(),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                contractMap,
+                contractMap,
+                new Hypothesis(),
+                new HashSet<>(),
+                null,
+                new HashMap<>()
+        );
 
-        env.globalSymTab = env.curSymTab = contractMap;
+        // env.globalSymTab = env.curSymTab = contractMap;
 
         // collect constraints generating for signatures for each contract
         // a map from filename -> contract name -> signature info
@@ -188,15 +197,13 @@ public class TypeChecker {
             }
         }
 
-
-
         logger.trace("typecheck finishes");
         return true;
     }
 
     private static void buildSignatureConstraints(String contractName, VisitEnv env, String namespace, String curContractName) {
-        ArrayList<Constraint> cons =  env.cons;
-        ArrayList<Constraint> trustCons = env.trustCons;
+        List<Constraint> cons =  env.cons;
+        List<Constraint> trustCons = env.trustCons;
         // String contractName = root.getContractName();//contractNames.get(fileIdx);
         ContractSym contractSym = env.getContract(contractName);
         logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n" + env.curSymTab.getTypeSet());

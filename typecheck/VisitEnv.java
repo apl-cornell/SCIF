@@ -2,19 +2,20 @@ package typecheck;
 
 import ast.ExceptionType;
 import ast.Program;
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Hypothesis;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Hypothesis;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 public class VisitEnv {
     public Context inContext;
     // public PathOutcome outContext;
     // public HashMap<String, FuncInfo> funcMap;
-    public ArrayList<Constraint> cons;
-    public ArrayList<Constraint> trustCons;
+    public List<Constraint> cons;
+    public List<Constraint> trustCons;
     // public LookupMaps varNameMap;
     public SymTab globalSymTab;
     public SymTab curSymTab;
@@ -31,16 +32,16 @@ public class VisitEnv {
     public VisitEnv(Context inContext,
                     // PathOutcome outContext,
                     // HashMap<String, FuncInfo> funcMap,
-                    ArrayList<Constraint> cons,
-                    ArrayList<Constraint> trustCons,
+                    List<Constraint> cons,
+                    List<Constraint> trustCons,
                     // LookupMaps varNameMap,
                     SymTab globalSymTab,
                     SymTab curSymTab,
                     Hypothesis hypothesis,
                     HashSet<String> principalSet,
                     ContractSym curContractSym,
-                    HashMap<String, Program> programMap,
-                    HashMap<ExceptionTypeSym, PsiUnit> psi
+                    HashMap<String, Program> programMap
+                    // HashMap<ExceptionTypeSym, PsiUnit> psi
                     //HashMap<String, SigCons> sigConsMap
                     /*HashMap<String, ContractInfo> contractMap*/) {
         // this.ctxt = ctxt;
@@ -56,7 +57,7 @@ public class VisitEnv {
         this.principalSet = principalSet;
         this.curContractSym = curContractSym;
         this.programMap = programMap;
-        this.psi = psi;
+        // this.psi = psi;
         // this.contractMap = contractMap;
         // this.sigConsMap = sigConsMap;
     }
@@ -157,5 +158,13 @@ public class VisitEnv {
         } else {
             return (ExceptionTypeSym) getExtSym(t.getContractName(), t.getName());
         }
+    }
+
+    public ExceptionTypeSym getExp(String name) {
+        Sym sym = curSymTab.lookup(name);
+        if (sym instanceof ExceptionTypeSym)
+            return (ExceptionTypeSym) sym;
+        else
+            return null;
     }
 }

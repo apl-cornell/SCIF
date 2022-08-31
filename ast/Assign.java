@@ -1,14 +1,14 @@
 package ast;
 
 import compile.SolCode;
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
-import sherrlocUtils.Relation;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
 
-public class Assign extends NonFirstLayerStatement {
+public class Assign extends Statement {
     Expression target;
     Expression value;
     public Assign(Expression target, Expression value) {

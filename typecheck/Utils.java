@@ -3,14 +3,13 @@ package typecheck;
 import ast.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sherrloc.constraint.ast.Axiom;
 import sherrloc.constraint.ast.Constructor;
 import sherrloc.constraint.ast.Hypothesis;
 import sherrloc.diagnostic.DiagnosticOptions;
 import sherrloc.diagnostic.ErrorDiagnosis;
 import sherrloc.graph.Variance;
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
 
 import java.io.*;
 import java.util.*;
@@ -49,6 +48,8 @@ public class Utils {
     public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Static reentrancy locks should be maintained except during the last operation";
     public static final String ERROR_MESSAGE_LOCK_IN_LAST_OPERATION = "The operation at tail position should respect the final reentrancy lock label";
 
+    public static final String DEBUG_UNKNOWN_CONTRACT_NAME = "UNKNOWN";
+    public static final String ANONYMOUS_VARIABLE_NAME = "ANONYMOUS";
 
     public static final boolean isPrimitiveType(String x) {
         return BUILTIN_TYPES.contains(x);
@@ -187,7 +188,7 @@ public class Utils {
             return "unknownT";
     }
 
-    public static void writeCons2File(HashSet<String> constructors, ArrayList<Constraint> assumptions, ArrayList<Constraint> constraints, File outputFile, boolean isIFC) {
+    public static void writeCons2File(HashSet<String> constructors, List<Constraint> assumptions, List<Constraint> constraints, File outputFile, boolean isIFC) {
         try {
             // transform every "this" to "contractName.this"
             BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
@@ -355,7 +356,7 @@ public class Utils {
         members.add(value);
         IfLabel thisLabel = new PrimitiveIfLabel(new Name("this"));
         IfLabel botLabel  = new PrimitiveIfLabel(new Name("BOT"));
-        FuncLabels funcLabels = new FuncLabels(thisLabel, thisLabel, botLabel);
+        FuncLabels funcLabels = new FuncLabels(thisLabel, thisLabel, botLabel, botLabel);
         FuncSym sendFuncSym = new FuncSym("send", funcLabels, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel,  new ScopeContext("send"), null);
         globalSymTab.add("send", sendFuncSym);
 
@@ -366,7 +367,7 @@ public class Utils {
         members.add(recipient);
         members.add(value);
         IfLabel trustedSendLabel  = new PrimitiveIfLabel(new Name("trustedSend"));
-        funcLabels = new FuncLabels(trustedSendLabel, trustedSendLabel, trustedSendLabel);
+        funcLabels = new FuncLabels(trustedSendLabel, trustedSendLabel, trustedSendLabel, trustedSendLabel);
         FuncSym trustedSendFuncSym = new FuncSym("trustedSend", funcLabels, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel,  new ScopeContext("trustedSend"), null);
         globalSymTab.add("trustedSend", trustedSendFuncSym);
 
@@ -378,7 +379,7 @@ public class Utils {
                 members = new ArrayList<>();
                 VarSym trustee = createBuiltInVarInfo("trustee", "address", emptyContext, globalSymTab);
                 members.add(trustee);
-                funcLabels = new FuncLabels(thisLabel, thisLabel, thisLabel);
+                funcLabels = new FuncLabels(thisLabel, thisLabel, thisLabel, thisLabel);
                 FuncSym setTrustSym = new FuncSym("setTrust", funcLabels, members, getBuiltinTypeInfo("bool", globalSymTab), thisLabel, new ScopeContext("setTrust"), null);
                 globalSymTab.add("setTrust", setTrustSym);
             //}

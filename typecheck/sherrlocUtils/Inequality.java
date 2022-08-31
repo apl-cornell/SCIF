@@ -1,4 +1,4 @@
-package sherrlocUtils;
+package typecheck.sherrlocUtils;
 
 import ast.CompareOperator;
 

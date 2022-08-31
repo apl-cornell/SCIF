@@ -1,12 +1,11 @@
 package typecheck;
 
 import ast.*;
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
-import sherrlocUtils.Relation;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Relation;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 public class ScopeContext {

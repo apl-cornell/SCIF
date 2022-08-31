@@ -2,7 +2,7 @@ import java.io.*;
 import java_cup.runtime.*;
 import java.util.*;
 import ast.*;
-import sherrlocUtils.*;
+import typecheck.sherrlocUtils.*;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 import typecheck.CodeLocation;
@@ -116,7 +116,7 @@ nonterminal FunctionDef decorated, funcdef;
 nonterminal Arguments parameters, typedarglist, probinittfpdef;
 nonterminal Arg tfpdef;
 nonterminal ArrayList<Statement> stmt, simple_stmt, small_stmts;
-nonterminal Statement small_stmt, expr_stmt;
+nonterminal Statement small_stmt, assign_stmt;
 nonterminal AnnAssign varDec, annassign;
 nonterminal Statement del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt, excborder_stmt;
 nonterminal String ipt_stmt;
@@ -258,7 +258,7 @@ trust_operator ::= EQUAL {: RESULT = Relation.EQ; :}
 // version: static lock
 tFuncLabels ::= LBRACE:x ifLabelOrNull:a RIGHTSHIFT ifLabelOrNull:b SEMI ifLabelOrNull:c RBRACE {:
         logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
-        RESULT = new FuncLabels(a, b, c);
+        RESULT = new FuncLabels(a, b, c, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | {:
@@ -683,7 +683,7 @@ small_stmts ::=
         list.add(a);
         RESULT = list;
     :};
-small_stmt ::= expr_stmt:a {: RESULT = a; :}
+small_stmt ::=  assign_stmt:a {: RESULT = a; :}
     | del_stmt:a {: RESULT = a; :}
     | pass_stmt:a {: RESULT = a; :}  
     | flow_stmt:a {: RESULT = a; :}  
@@ -775,16 +775,8 @@ dynamic_stmt ::= AT:x NAME:a trailer:b SEMI {:
     RESULT = rtn;
 :};
 
-expr_stmt ::= 
-    expr:a SEMI {:RESULT = a;:}
-    | typeSym:a annassign:b SEMI {://testlist_star_expr:a expr_rest_stmt:b {:
-                       b.setType(a);
-                       /*if (a instanceof Name) {
-                           b.setSimple(true);
-                       }*/
-                       RESULT = b;
-    :}
-    | expr:a EQUAL expr:b SEMI {:
+assign_stmt ::=
+    expr:a EQUAL expr:b SEMI {:
         /*ArrayList<Expression> list = new ArrayList<Expression>();
         list.add(a);*/
         Assign rnt = new Assign(a, b);

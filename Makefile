@@ -12,8 +12,8 @@ slc: sherrloc-build
 SCIF: TypeChecker.class LexerTest.class Parser.class SCIF.java
 	javac -cp ${CLASSPATH} SCIF.java
 
-TypeChecker.class: Parser.class Lexer.class TypeChecker.java ${wildcard ast/*.java} ${wildcard typecheck/*.java} ${wildcard sherrlocUtils/*.java} ${wildcard compile/*.java}
-	javac -Xlint:deprecation -cp ${CLASSPATH} TypeChecker.java ast/*.java typecheck/*.java sherrlocUtils/*.java
+TypeChecker.class: Parser.class Lexer.class TypeChecker.java ${wildcard ast/*.java} ${wildcard typecheck/*.java} ${wildcard typecheck.sherrlocUtils/*.java} ${wildcard compile/*.java}
+	javac -Xlint:deprecation -cp ${CLASSPATH} TypeChecker.java ast/*.java typecheck/*.java typecheck/sherrlocUtils/*.java
 
 LexerTest.class: Lexer.java LexerTest.java
 	javac -cp ${CLASSPATH} LexerTest.java 
@@ -37,6 +37,6 @@ clean:
 	rm -f *.class
 	rm -f Lexer.java
 	rm -f Parser.java
-	rm -f ast/*.class typecheck/*.class sherrlocUtils/*.class
+	rm -f ast/*.class typecheck/*.class typecheck/sherrlocUtils/*.class
 
 .PHONY: clean sherrloc-build default all

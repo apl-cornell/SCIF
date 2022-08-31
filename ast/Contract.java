@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class Contract extends Statement {
+public class Contract extends FirstLayerStatement {
     public String contractName;
     public String superContractName = "";
     public TrustSetting trustSetting;
@@ -78,9 +78,9 @@ public class Contract extends Statement {
         contractSym.addContract(contractName, contractSym);
         String name = "this";
         contractSym.addVar(name, contractSym.toVarSym(name, new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, false, null, scopeContext));
-        for (Statement stmt : body) {
+        /*for (Statement stmt : body) {
             stmt.globalInfoVisit(contractSym);
-        }
+        }*/
     }
 
     @Override

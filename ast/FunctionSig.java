@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class FunctionSig extends Statement {
+public class FunctionSig extends FirstLayerStatement {
     public String name;
     public FuncLabels funcLabels;
     public Arguments args;

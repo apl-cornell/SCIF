@@ -1,8 +1,8 @@
 package ast;
 
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
-import sherrlocUtils.Relation;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 public abstract class Literal extends Expression {

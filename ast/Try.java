@@ -1,14 +1,12 @@
 package ast;
 
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 
-public class Try extends NonFirstLayerStatement {
+public class Try extends FirstLayerStatement {
     ArrayList<Statement> body;
     ArrayList<ExceptHandler> handlers;
     // ArrayList<Statement> orelse;
@@ -63,15 +61,16 @@ public class Try extends NonFirstLayerStatement {
         for (HashMap.Entry<ExceptionTypeSym, PsiUnit> p : oldPsi.entrySet()) {
             newPsi.put(p.getKey(), new PsiUnit(p.getValue().pc, p.getValue().lambda, p.getValue().inTx));
         }*/
-        boolean inTx = this instanceof Extry;
+        /*boolean inTx = this instanceof Extry;
         for (ExceptHandler h : handlers) {
             newPsi.put(env.toExceptionTypeSym(h.type), new PsiUnit(h.getHandlerPcLabelName(), h.getHandlerLockLabelName(), inTx));
             env.cons.add(new Constraint(new Inequality(h.getHandlerLockLabelName(), beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));
-        }
+        }*/
 
         //env.psi = newPsi;
         PathOutcome psi = new PathOutcome();
+        PathOutcome input = new PathOutcome();
         env.incScopeLayer();
         PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
         for (Statement s : body) {
@@ -82,27 +81,36 @@ public class Try extends NonFirstLayerStatement {
         env.decScopeLayer();
         for (ExceptHandler h : handlers) {
             ExceptionTypeSym expSym = env.getExp(h.name);
+            PsiUnit u = psi.psi.get(expSym);
 
-            env.cons.add(new Constraint(new Inequality(h.getHandlerLockLabelName(), beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+            env.cons.add(new Constraint(new Inequality(u.c.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));
-        }
-        Context cTry = env.outContext;
+            /*env.cons.add(new Constraint(new Inequality(u.c.pc, h.), env.hypothesis, location, env.curContractSym.name,
+                    "Try clause should maintain locks when throwing exception " + h.name));*/
 
-        env.psi = oldPsi;
+            input.set(expSym, u);
+            psi.set(expSym, (Context) null);
+        }
+        //Context cTry = env.outContext;
+
+        //env.psi = oldPsi;
         for (ExceptHandler h : handlers) {
             //TODO: inc layer
-            env.inContext = new Context(h.getHandlerPcLabelName(), beginContext.lambda);
-            h.genConsVisit(env, tail_position);
-            cTry = new Context(Utils.makeJoin(cTry.pc, env.outContext.outPcName), Utils.makeJoin(cTry.lambda, env.outContext.lockName));
+            //env.inContext = new Context(h.getHandlerPcLabelName(), beginContext.lambda);
+            ExceptionTypeSym expSym = env.getExp(h.name);
+            env.inContext = new Context(input.psi.get(expSym).c.pc, beginContext.lambda);
+            PathOutcome ho = h.genConsVisit(env, tail_position);
+            psi.join(ho);
+            // cTry = new Context(Utils.makeJoin(cTry.pc, env.outContext.outPcName), Utils.makeJoin(cTry.lambda, env.outContext.lockName));
         }
 
-        Utils.contextFlow(env, cTry, endContext, location);
-        env.outContext = endContext;
+        /*Utils.contextFlow(env, cTry, endContext, location);
+        env.outContext = endContext;*/
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(env.outContext.lockName, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+            env.cons.add(new Constraint(new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 
-        return null;
+        return psi;
     }
 }

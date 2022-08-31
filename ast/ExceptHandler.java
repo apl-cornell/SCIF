@@ -4,7 +4,7 @@ import typecheck.*;
 
 import java.util.ArrayList;
 
-public class ExceptHandler extends NonFirstLayerStatement {
+public class ExceptHandler extends Statement {
     ExceptionType type;
     String name;
     ArrayList<Statement> body;

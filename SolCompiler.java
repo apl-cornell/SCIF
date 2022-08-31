@@ -8,9 +8,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.List;
 
 public class SolCompiler {
-    public static void compile(ArrayList<Program> roots, File outputFile) {
+    public static void compile(List<Program> roots, File outputFile) {
         // assuming the code typechecks, might need to deal with namespace when multi-contract
         //TODO: assuming only one contract for now
         logger.trace("compile starts");

@@ -20,7 +20,8 @@ public class ContractSym extends TypeSym {
                        // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
                        TrustSetting trustSetting,
                        IfLabel ifl) {
-        this.name = name;
+        super(name);
+        // this.name = name;
         /*this.iptContracts = iptContracts;
         this.typeMap = typeMap;
         this.varMap = varMap;
@@ -31,7 +32,8 @@ public class ContractSym extends TypeSym {
     }
 
     public ContractSym() {
-        name = "UNKNOWN";
+        // name = "UNKNOWN";
+        super(Utils.DEBUG_UNKNOWN_CONTRACT_NAME);
         /*iptContracts = new HashSet<>();
         typeMap = new HashMap<>();
         varMap = new HashMap<>();

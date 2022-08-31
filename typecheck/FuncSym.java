@@ -8,6 +8,7 @@ import com.owlike.genson.GensonBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class FuncSym extends Sym {
     public String funcName;
@@ -27,9 +28,10 @@ public class FuncSym extends Sym {
                    HashMap<ExceptionTypeSym, String> exceptions,
                    ScopeContext scopeContext,
                    CodeLocation location) {
+        super(funcName);
         // this.typeName = funcName;
         this.funcName = funcName;
-        this.name = funcName;
+        // this.name = funcName;
         this.funcLabels = funcLabels;
         this.parameters = parameters;
         this.returnType = returnType;
@@ -45,9 +47,10 @@ public class FuncSym extends Sym {
                    IfLabel returnLabel,
                    ScopeContext scopeContext,
                    CodeLocation location) {
+        super(funcName);
         // this.typeName = funcName;
         this.funcName = funcName;
-        this.name = funcName;
+        // this.name = funcName;
         this.funcLabels = funcLabels;
         this.parameters = parameters;
         this.returnType = returnType;
@@ -75,7 +78,7 @@ public class FuncSym extends Sym {
     }
 
     public String getLabelNameCallPcAfter(String namespace) {
-        if (namespace != "")
+        if (!Objects.equals(namespace, ""))
             namespace += "..";
         return namespace + Utils.getLabelNameFuncCallPcAfter(scopeContext.getSHErrLocName());
     }
@@ -84,7 +87,7 @@ public class FuncSym extends Sym {
         return Utils.getLabelNameFuncRtnValue(scopeContext.getSHErrLocName());
     }
     public String getLabelNameRtnValue(String namespace) {
-        if (namespace != "")
+        if (!Objects.equals(namespace, ""))
             namespace += "..";
         return namespace + Utils.getLabelNameFuncRtnValue(scopeContext.getSHErrLocName());
     }
@@ -100,7 +103,7 @@ public class FuncSym extends Sym {
     }
 
     public String getLabelNameArg(String namespace, int index) {
-        if (namespace != "")
+        if (!Objects.equals(namespace, ""))
             namespace += "..";
         return namespace + Utils.getLabelNameArgLabel(scopeContext.getSHErrLocName(), parameters.get(index));
     }
@@ -208,7 +211,7 @@ public class FuncSym extends Sym {
         return Utils.getLabelNameFuncCallGamma(scopeContext.getSHErrLocName());
     }
     public String getLabelNameCallGamma(String namespace) {
-        if (namespace != "")
+        if (!Objects.equals(namespace, ""))
             namespace += "..";
         return namespace + Utils.getLabelNameFuncCallGamma(scopeContext.getSHErrLocName());
     }

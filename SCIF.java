@@ -10,6 +10,7 @@ import typecheck.Utils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 
@@ -18,17 +19,18 @@ import java.util.concurrent.Callable;
         description = "A set of tools for a new smart contract language with information flow control, SCIF.")
 public class SCIF implements Callable<Integer> {
     @Parameters(arity = "1..*", description = "The source code file(s).")
-    File[] inputFiles;
+    private File[] m_inputFiles;
 
-    @Option(names = "-debug") boolean DEBUG;
+    @Option(names = "-debug")
+    private boolean m_debug;
 
     @Option(names = "-lg", arity = "1..*", description = "The log file.")
-    String[] outputFileNames;
+    private String[] m_outputFileNames;
 
     @ArgGroup(exclusive = true)
-    FuncRequest funcRequest;
+    private FuncRequest m_funcRequest;
 
-    static class FuncRequest {
+    private static class FuncRequest {
         @Option(names = {"-t", "--typechecker"}, required = true, description = "Information flow typecheck: constraints as log")
         boolean typecheck;
         @Option(names = {"-p", "--parser"}, required = true, description = "Parse: ast json as log")
@@ -44,7 +46,7 @@ public class SCIF implements Callable<Integer> {
         System.exit(exitCode);
     }
 
-    ArrayList<Program> typecheck(String[] outputFileNames, boolean DEBUG) throws Exception {
+    private List<Program> _typecheck(String[] outputFileNames) throws Exception {
         File logDir = new File("./.scif");
         logDir.mkdirs();
 
@@ -55,12 +57,14 @@ public class SCIF implements Callable<Integer> {
         } else {
             NTCConsFile = new File(outputFileNames[0]);
         }
+
+        //List<File> files = ImmutableList.copyOf(m_inputFiles);
         ArrayList<File> files = new ArrayList<>();
-        for (File file : inputFiles) {
+        for (File file : m_inputFiles) {
             files.add(file);
         }
         System.out.println("Regular Typechecking:");
-        ArrayList<Program> roots = TypeChecker.regularTypecheck(files, NTCConsFile, DEBUG);
+        List<Program> roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
         boolean passNTC = true;
         //if (!Utils.emptyFile(outputFileName))
         //    passNTC = runSLC(outputFileName);
@@ -82,7 +86,7 @@ public class SCIF implements Callable<Integer> {
         }
 
         System.out.println("\nInformation Flow Typechecking:");
-        boolean passIFC = TypeChecker.ifcTypecheck(roots, IFCConsFiles, DEBUG);
+        boolean passIFC = TypeChecker.ifcTypecheck(roots, IFCConsFiles, m_debug);
         // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
         // logger.debug("running SHErrLoc...");
         // boolean passIFC = runSLC(outputFileName);
@@ -94,30 +98,30 @@ public class SCIF implements Callable<Integer> {
     public Integer call() throws Exception {
 
         logger.trace("SCIF starts");
-        if (funcRequest == null || funcRequest.compile) {
-            ArrayList<Program> roots = typecheck(new String[0], DEBUG);
+        if (m_funcRequest == null || m_funcRequest.compile) {
+            List<Program> roots = _typecheck(new String[0]);
             logger.debug("finished typecheck, compiling...");
             if (roots == null) {
                 return 1;
             }
             String outputFileName;
             File outputFile;
-            if (outputFileNames == null) {
+            if (m_outputFileNames == null) {
                 outputFile = File.createTempFile("tmp", "sol");
                 outputFileName = outputFile.getAbsolutePath();
                 outputFile.deleteOnExit();
             } else {
-                outputFileName = outputFileNames[0];
+                outputFileName = m_outputFileNames[0];
                 outputFile = new File(outputFileName);
             }
             SolCompiler.compile(roots, outputFile);
-        } else if (funcRequest.typecheck) {
-            typecheck(outputFileNames, DEBUG);
-        } else if (funcRequest.parse) {
-            File astOutputFile = outputFileNames == null ? null : new File(outputFileNames[0]);
-            Parser.parse(inputFiles[0], astOutputFile);
-        } else if (funcRequest.tokenize) {
-            LexerTest.tokenize(inputFiles[0]);
+        } else if (m_funcRequest.typecheck) {
+            _typecheck(m_outputFileNames);
+        } else if (m_funcRequest.parse) {
+            File astOutputFile = m_outputFileNames == null ? null : new File(m_outputFileNames[0]);
+            Parser.parse(m_inputFiles[0], astOutputFile);
+        } else if (m_funcRequest.tokenize) {
+            LexerTest.tokenize(m_inputFiles[0]);
         }else {
                 logger.error("No funcRequest specified, this should never happen!");
                 //System.out.println("No funcRequest specified, this should never happen!");

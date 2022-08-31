@@ -4,7 +4,7 @@ import typecheck.ContractSym;
 import typecheck.PathOutcome;
 import typecheck.VisitEnv;
 
-public class Import extends NonFirstLayerStatement {
+public class Import extends FirstLayerStatement {
     @Override
     public void globalInfoVisit(ContractSym contractSym) {
 

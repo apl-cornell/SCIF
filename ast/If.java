@@ -1,23 +1,25 @@
 package ast;
 
 import compile.SolCode;
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
-import sherrlocUtils.Relation;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 
-public class If extends NonFirstLayerStatement {
+public class If extends FirstLayerStatement {
+
     Expression test;
     ArrayList<Statement> body;
     ArrayList<Statement> orelse;
+
     public If(Expression test, ArrayList<Statement> body, ArrayList<Statement> orelse) {
         this.test = test;
         this.body = body;
         this.orelse = orelse;
     }
+
     public If(Expression test, ArrayList<Statement> body) {
         this.test = test;
         this.body = body;
@@ -53,20 +55,21 @@ public class If extends NonFirstLayerStatement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
+                typecheck.Utils.getLabelNameLock(location));
         // String originalCtxt = env.ctxt;
 
         // curContext.lambda = env.prevContext.lambda;
         String rtnValueLabel;
 
-        ExpOutcome to = test.genConsVisit(env, body.size() == 0 && orelse.size() == 0 && tail_position);
+        ExpOutcome to = test.genConsVisit(env,
+                body.size() == 0 && orelse.size() == 0 && tail_position);
         //Context condContext = to.psi
         rtnValueLabel = to.valueLabelName;
-        String IfNameTest =  to.valueLabelName;
+        String IfNameTest = to.valueLabelName;
         String IfNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".If" + location.toString();
         String IfNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-
 
         boolean createdHypo = false;
         //TestableVarInfo testedVar = null;
@@ -74,8 +77,9 @@ public class If extends NonFirstLayerStatement {
         boolean tested = false;
         if (test instanceof Compare) {
             Compare bo = (Compare) test;
-            if ((bo.op == CompareOperator.Eq || bo.op == CompareOperator.GtE || bo.op == CompareOperator.LtE) &&
-                bo.left instanceof Name && bo.right instanceof Name) {
+            if ((bo.op == CompareOperator.Eq || bo.op == CompareOperator.GtE
+                    || bo.op == CompareOperator.LtE) &&
+                    bo.left instanceof Name && bo.right instanceof Name) {
                 Name left = (Name) bo.left, right = (Name) bo.right;
                 if (env.containsVar(left.id) && env.containsVar(right.id)) {
 
@@ -86,14 +90,16 @@ public class If extends NonFirstLayerStatement {
                     logger.debug(r.toString());
                     //System.err.println(l.toString());
                     //System.err.println(r.toString());
-                    if (l.typeSym.name.equals(Utils.ADDRESSTYPE) && r.typeSym.name.equals(Utils.ADDRESSTYPE)) {
+                    if (l.typeSym.name.equals(Utils.ADDRESSTYPE) && r.typeSym.name.equals(
+                            Utils.ADDRESSTYPE)) {
                         /*testedVar = ((TestableVarInfo) l);
                         beforeTestedLabel = testedVar.testedLabel;
                         tested = testedVar.tested;
                         testedVar.setTested(r.toSherrlocFmt());*/
 
                         createdHypo = true;
-                        Inequality hypo = new Inequality(l.toSherrlocFmt(), bo.op, r.toSherrlocFmt());
+                        Inequality hypo = new Inequality(l.toSherrlocFmt(), bo.op,
+                                r.toSherrlocFmt());
 
                         env.hypothesis.add(hypo);
                         //System.err.println("testing label");
@@ -104,10 +110,13 @@ public class If extends NonFirstLayerStatement {
                 }
             }
         }
-        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis,
+                location, env.curContractSym.name,
                 "Control flow integrity before this if condition doesn't flow to the one after this condition"));
-        env.cons.add(new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location, env.curContractSym.name,
-                "Integrity of this condition doesn't flow to the control flow in this if branch"));
+        env.cons.add(
+                new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location,
+                        env.curContractSym.name,
+                        "Integrity of this condition doesn't flow to the control flow in this if branch"));
 
         /*if (body.size() > 0 || orelse.size() > 0) {
             env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.GEQ, curContext.lambda), env.hypothesis, test.location, env.curContractSym.name,
@@ -174,7 +183,7 @@ public class If extends NonFirstLayerStatement {
             /*if (stmt instanceof Expression) {
                 ((Expression) stmt).SolCodeGenStmt(code);
             } else {*/
-                stmt.SolCodeGen(code);
+            stmt.SolCodeGen(code);
             //}
         }
         code.leaveIf();
@@ -184,12 +193,13 @@ public class If extends NonFirstLayerStatement {
                 /*if (stmt instanceof Expression) {
                     ((Expression) stmt).SolCodeGenStmt(code);
                 } else {*/
-                    stmt.SolCodeGen(code);
+                stmt.SolCodeGen(code);
                 //}
             }
             code.leaveElse();
         }
     }
+
     @Override
     public void passScopeContext(ScopeContext parent) {
         scopeContext = new ScopeContext(this, parent);
@@ -197,6 +207,7 @@ public class If extends NonFirstLayerStatement {
             node.passScopeContext(scopeContext);
         }
     }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();

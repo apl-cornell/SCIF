@@ -1,10 +1,8 @@
 package ast;
 
-import compile.SolCode;
-import sherrlocUtils.Relation;
 import typecheck.*;
 
-public class DynamicStatement extends NonFirstLayerStatement {
+public class DynamicStatement extends Statement {
     Call call;
 
     public DynamicStatement(Call call) {

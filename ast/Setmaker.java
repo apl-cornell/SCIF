@@ -1,7 +1,5 @@
 package ast;
 
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;

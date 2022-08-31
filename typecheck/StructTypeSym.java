@@ -7,7 +7,7 @@ public class StructTypeSym extends TypeSym {
     ArrayList<VarSym> members;
 
     public StructTypeSym(String typeName, ArrayList<VarSym> members) {
-        this.name = typeName;
+        super(typeName);
         this.members = members;
     }
 

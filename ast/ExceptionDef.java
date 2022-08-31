@@ -4,7 +4,7 @@ import typecheck.*;
 
 import java.util.ArrayList;
 
-public class ExceptionDef extends NonFirstLayerStatement {
+public class ExceptionDef extends Statement {
     ExceptionType exceptionType;
     Arguments arguments;
     public ExceptionDef(String name, Arguments members) {

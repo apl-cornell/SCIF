@@ -4,7 +4,7 @@ import typecheck.ContractSym;
 import typecheck.PathOutcome;
 import typecheck.VisitEnv;
 
-public class Raise extends NonFirstLayerStatement {
+public class Raise extends FirstLayerStatement {
     Expression exception;
     Expression from;
     public Raise(Expression exception, Expression from) {

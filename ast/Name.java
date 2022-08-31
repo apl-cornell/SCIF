@@ -1,6 +1,6 @@
 package ast;
 
-import sherrlocUtils.Relation;
+import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 public class Name extends Variable {

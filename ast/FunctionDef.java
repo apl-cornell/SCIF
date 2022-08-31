@@ -1,22 +1,25 @@
 package ast;
 
 import compile.SolCode;
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
-import sherrlocUtils.Relation;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class FunctionDef extends FunctionSig {
+
     ArrayList<Statement> body;
-    public FunctionDef(String name, FuncLabels funcLabels, Arguments args, ArrayList<Statement> body, ArrayList<String> decoratorList, Type rtn) {
+
+    public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
+            ArrayList<Statement> body, ArrayList<String> decoratorList, Type rtn) {
         super(name, funcLabels, args, decoratorList, rtn);
         this.body = body;
     }
+
     public FunctionDef(FunctionSig funcSig, ArrayList<Statement> body) {
         super(funcSig);
         this.body = body;
@@ -41,7 +44,9 @@ public class FunctionDef extends FunctionSig {
             arg.NTCgenCons(env, now);
         }
         if (funcSym.returnType != null) {
-            env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ, env.getSymName(funcSym.returnType.name)), env.globalHypothesis, location, env.curContractSym.name,
+            env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ,
+                    env.getSymName(funcSym.returnType.name)), env.globalHypothesis, location,
+                    env.curContractSym.name,
                     "Label of this method's return value"));
         }
 
@@ -66,32 +71,37 @@ public class FunctionDef extends FunctionSig {
         String outPcName = Utils.getLabelNameFuncRtnPc(funcName);
         Context curContext = new Context(ifNamePc, inLockName);
 
-
         String ifNameCall = funcSym.getLabelNameCallPcAfter();
-        env.trustCons.add(new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis, funcLabels.to_pc.location, env.curContractSym.name,
-                "Control flow of this method start with its call-after(second) label"));
+        env.trustCons.add(
+                new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis,
+                        funcLabels.to_pc.location, env.curContractSym.name,
+                        "Control flow of this method start with its call-after(second) label"));
 
         String ifNameContract = env.curContractSym.getLabelNameContract();
-        env.trustCons.add(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis, funcLabels.begin_pc.location, env.curContractSym.name,
+        env.trustCons.add(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis,
+                funcLabels.begin_pc.location, env.curContractSym.name,
                 "This contract should be trusted enough to call this method"));
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
-        env.trustCons.add(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis, funcLabels.to_pc.location, env.curContractSym.name,
+        env.trustCons.add(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis,
+                funcLabels.to_pc.location, env.curContractSym.name,
                 "The statically locked integrity must be at least as trusted as initial pc integrity"));
-        env.cons.add(new Constraint(new Inequality(Utils.makeJoin(inLockName, outLockName), ifNameGamma), env.hypothesis, funcLabels.gamma_label.location, env.curContractSym.name,
-                "This function does not maintain reentrancy locks as specified in signature", 1));
+        env.cons.add(
+                new Constraint(new Inequality(Utils.makeJoin(inLockName, outLockName), ifNameGamma),
+                        env.hypothesis, funcLabels.gamma_label.location, env.curContractSym.name,
+                        "This function does not maintain reentrancy locks as specified in signature",
+                        1));
 
         HashMap<ExceptionTypeSym, PsiUnit> psi = new HashMap<>();
         for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
-            psi.put(exp.getKey(), new PsiUnit(new Context(funcSym.getLabelNameException(exp.getKey()), ifNameGamma), true));
+            psi.put(exp.getKey(), new PsiUnit(
+                    new Context(funcSym.getLabelNameException(exp.getKey()), ifNameGamma), true));
         }
-        env.psi = psi;
 
         Context funcBeginContext = curContext;
         PsiUnit funcEndContext = new PsiUnit(outPcName, outLockName);
         // env.inContext = funcBeginContext;
         // env.outContext = funcEndContext;
-
 
         env.incScopeLayer();
         args.genConsVisit(env, false);
@@ -115,7 +125,8 @@ public class FunctionDef extends FunctionSig {
             env.inContext = new Context(CO.getNormalPath().c);
         }
         if (body.size() > 0) {
-            Utils.contextFlow(env, CO.getNormalPath().c, funcEndContext.c, body.get(body.size() - 1).location);
+            Utils.contextFlow(env, CO.getNormalPath().c, funcEndContext.c,
+                    body.get(body.size() - 1).location);
         }
 
         env.decScopeLayer();
@@ -137,19 +148,21 @@ public class FunctionDef extends FunctionSig {
         boolean pub = false;
         boolean payable = false;
         if (decoratorList != null) {
-            if (decoratorList.contains(Utils.PUBLIC_DECORATOR))
+            if (decoratorList.contains(Utils.PUBLIC_DECORATOR)) {
                 pub = true;
-            if (decoratorList.contains(Utils.PAYABLE_DECORATOR))
+            }
+            if (decoratorList.contains(Utils.PAYABLE_DECORATOR)) {
                 payable = true;
+            }
         }
         String rtnTypeCode = "";
-        if (rtn != null && !this.rtn.isVoid())
+        if (rtn != null && !this.rtn.isVoid()) {
             rtnTypeCode = rtn.toSolCode();
+        }
 
         if (isConstructor) {
             code.enterConstructorDef(args.toSolCode(), body);
-        }
-        else {
+        } else {
             code.enterFunctionDef(name, args.toSolCode(), rtnTypeCode, pub, payable);
         }
 
@@ -174,6 +187,7 @@ public class FunctionDef extends FunctionSig {
 
         code.leaveFunctionDef();
     }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = super.children();

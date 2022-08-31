@@ -1,6 +1,6 @@
 package ast;
 
-import sherrlocUtils.Relation;
+import typecheck.sherrlocUtils.Relation;
 
 import java.util.ArrayList;
 import java.util.HashSet;

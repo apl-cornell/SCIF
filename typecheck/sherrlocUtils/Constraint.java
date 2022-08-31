@@ -1,4 +1,4 @@
-package sherrlocUtils;
+package typecheck.sherrlocUtils;
 
 import typecheck.CodeLocation;
 

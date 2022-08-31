@@ -5,8 +5,10 @@ import typecheck.VisitEnv;
 
 import java.util.ArrayList;
 
-public class Delete extends NonFirstLayerStatement {
+public class Delete extends Statement {
+
     ArrayList<Expression> targets;
+
     public Delete(ArrayList<Expression> targets) {
         this.targets = targets;
     }

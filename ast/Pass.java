@@ -6,7 +6,7 @@ import typecheck.VisitEnv;
 
 import java.util.HashSet;
 
-public class Pass extends NonFirstLayerStatement {
+public class Pass extends FirstLayerStatement {
     public Pass() {
     }
     public void findPrincipal(HashSet<String> principalSet) {

@@ -1,5 +1,5 @@
-package sherrlocUtils;
+package typecheck.sherrlocUtils;
 
 public enum Relation {
-    EQ, LEQ, GEQ
+    EQ, LEQ, GEQ;
 }

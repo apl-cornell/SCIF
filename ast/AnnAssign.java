@@ -1,16 +1,15 @@
 package ast;
 
 import compile.SolCode;
-import jdk.jshell.execution.Util;
-import sherrlocUtils.Constraint;
-import sherrlocUtils.Inequality;
-import sherrlocUtils.Relation;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class AnnAssign extends Statement {
+public class AnnAssign extends FirstLayerStatement {
     public Expression target;
     public Type annotation;
     public Expression value;
