@@ -4,7 +4,7 @@ import typecheck.ContractSym;
 
 import java.util.HashSet;
 
-public abstract class FirstLayerStatement extends Statement {
+public abstract class TopLayerNode extends Node {
 
     public abstract void globalInfoVisit(ContractSym contractSym);
     /*@Override

@@ -1,3 +1,0 @@
-contract Empty[this] {
-    uint a;
-}
