@@ -1,0 +1,39 @@
+from Cryptography import keccak256, recoverSigner;
+
+contract PaymentChannel [this] {
+    address sender;
+    address recipient;
+    uint expiration;
+
+    PaymentChannel constructor(address trustOracle, address lockOracle, address _recipient, uint duration) {
+        register_runtime(trustOracle, lockOracle);
+        sender = msg.sender;
+        recipient = _recipient;
+        expiration = block.now + duration;
+    }
+
+    private bool isValidSignature(uint amount, bytes signature) {
+        bytes message = keccak256(this, amount);
+        return recoverSigner(message, signature) = sender;
+    }
+
+    public void close(uint amount, bytes signature) {
+        assert msg.sender = recipient;
+        assert isValidSignature(amount, signature);
+
+        send(recipient, amount);
+        selfdestruct(sender);
+    }
+
+    public void extend(uint newExpiration) {
+        assert msg.sender = sender;
+        assert newExpiration > expiration;
+
+        expiration = newExpiration;
+    }
+
+    public void claimTimeout() {
+        assert block.now >= expiration;
+        selfdestruct(sender);
+    }
+}
