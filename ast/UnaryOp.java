@@ -6,21 +6,25 @@ import typecheck.*;
 import java.util.ArrayList;
 
 public class UnaryOp extends Expression {
+
     UnaryOperator op;
     Expression operand;
+
     public UnaryOp(UnaryOperator x, Expression y) {
         op = x;
         operand = y;
     }
 
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext rtn = operand.NTCgenCons(env, now);
+        ScopeContext rtn = operand.ntcGenCons(env, now);
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         if (op == UnaryOperator.USub || op == UnaryOperator.UAdd) {
-            env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.EQ, env, location));
+            env.addCons(
+                    rtn.genCons(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.EQ, env, location));
         } else if (op == UnaryOperator.Not || op == UnaryOperator.Invert) {
-            env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
+            env.addCons(
+                    rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
         }
         return now;
     }

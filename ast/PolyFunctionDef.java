@@ -32,7 +32,7 @@ public class PolyFunctionDef extends FunctionDef {
         funcId = name;
 
         /*if (name instanceof LabeledType) {
-            funcId = ((LabeledType) name).x.id;
+            funcId = ((LabeledType) name).name.id;
             callLabel = ((LabeledType) name).ifl;
         } else {
             funcId = ((Name) name).id;
@@ -60,7 +60,7 @@ public class PolyFunctionDef extends FunctionDef {
         String originalCtxt = env.ctxt;
         String funcName = "";
         if (name instanceof LabeledType) {
-            funcName = ((LabeledType) name).x.id;
+            funcName = ((LabeledType) name).name.id;
 
             //((LabeledType) name).ifl.findPrincipal(env.principalSet);
         } else {

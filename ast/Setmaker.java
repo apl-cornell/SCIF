@@ -5,13 +5,17 @@ import typecheck.*;
 import java.util.ArrayList;
 
 public class Setmaker extends Expression {
+
     ArrayList<Expression> elements;
+
     public Setmaker(ArrayList<Expression> elements) {
         this.elements = elements;
     }
+
     public Setmaker() {
         this.elements = new ArrayList<>();
     }
+
     public void addElement(Expression element) {
         this.elements.add(element);
     }
@@ -45,5 +49,10 @@ public class Setmaker extends Expression {
     public boolean typeMatch(Expression expression) {
         return expression instanceof Setmaker &&
                 Utils.arrayExpressionTypeMatch(elements, ((Setmaker) expression).elements);
+    }
+
+    @Override
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        return null;
     }
 }

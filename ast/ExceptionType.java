@@ -4,12 +4,12 @@ public class ExceptionType extends Type {
     Type type;
     String contractName;
     public ExceptionType(Type type) {
-        super(type.x);
+        super(type.name);
         this.type = type;
         this.contractName = "";
     }
     public ExceptionType(Type type, String contractName) {
-        super(contractName + "." + type.x);
+        super(contractName + "." + type.name);
         this.type = type;
         this.contractName = contractName;
     }
@@ -19,7 +19,7 @@ public class ExceptionType extends Type {
     }
 
     public String getName() {
-        return type.x;
+        return type.name;
     }
 
     public String getContractName() {

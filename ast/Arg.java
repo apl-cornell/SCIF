@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -7,8 +8,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class Arg extends Node {
+
     String name;
     Type annotation;
+
     public Arg(String name, Type annotation) {
         this.name = name;
         this.annotation = annotation;
@@ -24,16 +27,21 @@ public class Arg extends Node {
     }
 
     @Override
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
 
-        ScopeContext type = annotation.NTCgenCons(env, now);
+        ScopeContext type = annotation.ntcGenCons(env, now);
 
         env.addSym(name, env.toVarSym(name, annotation, false, false, location, now));
 
         env.cons.add(type.genCons(now, Relation.EQ, env, location));
 
         return now;
+    }
+
+    @Override
+    public void solidityCodeGen(SolCode code) {
+        
     }
 
     public void genConsVisit(VisitEnv env, boolean tail_position) {
@@ -46,7 +54,8 @@ public class Arg extends Node {
             }
         }
         // String ifName = env.ctxt + "." + name;
-        VarSym varSym = env.curContractSym.toVarSym(name, annotation, false, false, location, scopeContext);
+        VarSym varSym = env.curContractSym.toVarSym(name, annotation, false, false, location,
+                scopeContext);
         env.addVar(name, varSym);
         // env.varNameMap.add(name, ifName, varSym);
 
@@ -55,6 +64,7 @@ public class Arg extends Node {
         }
 
     }
+
     public void findPrincipal(HashSet<String> principalSet) {
         if (annotation instanceof LabeledType) {
             ((LabeledType) annotation).ifl.findPrincipal(principalSet);

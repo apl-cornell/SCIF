@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import java.util.List;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -12,21 +13,21 @@ import java.util.Map;
 
 public class FunctionDef extends FunctionSig {
 
-    ArrayList<Statement> body;
+    List<Statement> body;
 
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
-            ArrayList<Statement> body, ArrayList<String> decoratorList, Type rtn) {
+            List<Statement> body, List<String> decoratorList, Type rtn) {
         super(name, funcLabels, args, decoratorList, rtn);
         this.body = body;
     }
 
-    public FunctionDef(FunctionSig funcSig, ArrayList<Statement> body) {
+    public FunctionDef(FunctionSig funcSig, List<Statement> body) {
         super(funcSig);
         this.body = body;
     }
 
     @Override
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         // add args to local sym;
         String funcName = this.name;
         logger.debug("func: " + funcName);
@@ -41,7 +42,7 @@ public class FunctionDef extends FunctionSig {
         // now.printExceptionSet();
 
         for (Arg arg : this.args.args) {
-            arg.NTCgenCons(env, now);
+            arg.ntcGenCons(env, now);
         }
         if (funcSym.returnType != null) {
             env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ,
@@ -53,7 +54,7 @@ public class FunctionDef extends FunctionSig {
         env.setCurSymTab(new SymTab(env.curSymTab));
         for (Statement stmt : body) {
             // logger.debug("stmt: " + stmt);
-            stmt.NTCgenCons(env, now);
+            stmt.ntcGenCons(env, now);
         }
         env.curSymTab = env.curSymTab.getParent();
         return now;
@@ -125,6 +126,7 @@ public class FunctionDef extends FunctionSig {
             env.inContext = new Context(CO.getNormalPath().c);
         }
         if (body.size() > 0) {
+            assert CO != null;
             Utils.contextFlow(env, CO.getNormalPath().c, funcEndContext.c,
                     body.get(body.size() - 1).location);
         }
@@ -180,17 +182,16 @@ public class FunctionDef extends FunctionSig {
             /*if (stmt instanceof Expression) {
                 ((Expression) stmt).SolCodeGenStmt(code);
             }*/
-            else {
-                stmt.SolCodeGen(code);
-            }
+
+            stmt.solidityCodeGen(code);
         }
 
         code.leaveFunctionDef();
     }
 
     @Override
-    public ArrayList<Node> children() {
-        ArrayList<Node> rtn = super.children();
+    public List<Node> children() {
+        List<Node> rtn = super.children();
         rtn.addAll(body);
         return rtn;
     }

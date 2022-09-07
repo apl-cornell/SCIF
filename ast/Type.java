@@ -5,40 +5,34 @@ import typecheck.ScopeContext;
 import typecheck.NTCEnv;
 import typecheck.VisitEnv;
 
-import java.util.HashSet;
-
 public class Type extends Expression {
-    public String x;
-    public Type(String x) {
-        this.x = x;
+
+    public String getName() {
+        return name;
+    }
+
+    String name;
+
+    public Type(String name) {
+        this.name = name;
     }
 
     @Override
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         return now;
     }
 
     public String toSHErrLocFmt() {
-        return "T_" + x + location;
+        return "T_" + name + location;
     }
 
     public String toSherrloc(String k, String v) {
         return "";
     }
 
-    @Override
-    public void findPrincipal(HashSet<String> principalSet) {
-        return;
-    }
-
-
-    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
-        return;
-    }
-
     public String toSolCode() {
-        return x;
+        return name;
     }
 
     @Override
@@ -49,11 +43,11 @@ public class Type extends Expression {
     @Override
     public boolean typeMatch(Expression expression) {
         return expression instanceof Type &&
-                x.equals(((Type) expression).x);
+                name.equals(((Type) expression).name);
     }
 
     public boolean isVoid() {
-        return x.equals("void");
+        return name.equals("void");
     }
 
     public void setToDefault(IfLabel lbl) {

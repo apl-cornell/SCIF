@@ -1,16 +1,22 @@
 package ast;
 
+import compile.SolCode;
+import java.util.HashSet;
 import typecheck.ContractSym;
+import typecheck.NTCEnv;
 import typecheck.PathOutcome;
+import typecheck.ScopeContext;
 import typecheck.VisitEnv;
 
 import java.util.ArrayList;
 
-public class StructDef extends FirstLayerStatement {
+public class StructDef extends TopLayerNode {
+
     String structName;
     ArrayList<AnnAssign> members;
+
     public StructDef(String structName, ArrayList<AnnAssign> members) {
-        this.members= members;
+        this.members = members;
         this.structName = structName;
     }
 
@@ -25,8 +31,23 @@ public class StructDef extends FirstLayerStatement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+        return false;
+    }
+
+    @Override
+    public void findPrincipal(HashSet<String> principalSet) {
+
+    }
+
+    @Override
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         return null;
+    }
+
+    @Override
+    public void solidityCodeGen(SolCode code) {
+
     }
 
     @Override

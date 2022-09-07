@@ -9,18 +9,20 @@ import typecheck.*;
 import java.util.ArrayList;
 
 public class Assign extends Statement {
+
     Expression target;
     Expression value;
+
     public Assign(Expression target, Expression value) {
         this.target = target;
         this.value = value;
     }
 
     @Override
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext tgt = target.NTCgenCons(env, now);
-        ScopeContext v = value.NTCgenCons(env, now);
+        ScopeContext tgt = target.ntcGenCons(env, now);
+        ScopeContext v = value.ntcGenCons(env, now);
         // con: tgt should be a supertype of v
         logger.debug(v);
         logger.debug(env);
@@ -32,7 +34,8 @@ public class Assign extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
+                typecheck.Utils.getLabelNameLock(location));
         // Context prevContext = env.prevContext;
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
@@ -58,17 +61,22 @@ public class Assign extends Statement {
         String ifNameValue = vo.valueLabelName;
         // prevContext = valueContext;
 
-        env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis, location, env.curContractSym.name,
-                "Integrity of the value being assigned must be trusted to allow this assignment"));
+        env.cons.add(
+                new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis, location,
+                        env.curContractSym.name,
+                        "Integrity of the value being assigned must be trusted to allow this assignment"));
 
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, value.location, env.curContractSym.name,
-                "Integrity of control flow must be trusted to allow this assignment"));
+        env.cons.add(
+                new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, value.location,
+                        env.curContractSym.name,
+                        "Integrity of control flow must be trusted to allow this assignment"));
 
         typecheck.Utils.contextFlow(env, vo.psi.getNormalPath().c, endContext, value.location);
         // env.outContext = endContext;
 
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+            env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
+                    env.hypothesis, location, env.curContractSym.name,
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 
@@ -79,9 +87,10 @@ public class Assign extends Statement {
         return vo.psi;
     }
 
-    public void SolCodeGen(SolCode code) {
+    public void solidityCodeGen(SolCode code) {
         code.addAssign(target.toSolCode(), value.toSolCode());
     }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();

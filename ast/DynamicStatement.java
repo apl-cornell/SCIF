@@ -1,17 +1,24 @@
 package ast;
 
+import compile.SolCode;
 import typecheck.*;
 
 public class DynamicStatement extends Statement {
+
     Call call;
 
     public DynamicStatement(Call call) {
         this.call = call;
     }
 
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         //TODO: check arguments
         return parent;
+    }
+
+    @Override
+    public void solidityCodeGen(SolCode code) {
+        
     }
 
     public String toSolCode() {

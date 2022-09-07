@@ -16,29 +16,30 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class TypeChecker {
+
     public static void main(String[] args) {
         File inputFile = new File(args[0]);
         File outputFile = new File(args[1]);
         //typecheck(inputFile, outputFile);
     }
 
-    public static List<Program> regularTypecheck(ArrayList<File> inputFiles, File outputFile, boolean DEBUG) {
+    public static List<SourceFile> regularTypecheck(ArrayList<File> inputFiles, File outputFile,
+            boolean DEBUG) {
 
         logger.trace("typecheck starts");
 
-        List<Program> roots = new ArrayList<>();
+        List<SourceFile> roots = new ArrayList<>();
         for (File inputFile : inputFiles) {
             try {
-
-
 
                 //Lexer lexer = new Lexer(new FileReader(inputFile));
                 //Parser p = new Parser(lexer);
 
                 Symbol result = Parser.parse(inputFile, null);//p.parse();
-                Program root = (Program) result.value;
-                root.setProgramName(inputFile.getName());
-                List<String> sourceCode = Files.readAllLines(Paths.get(inputFile.getAbsolutePath()), StandardCharsets.UTF_8);
+                SourceFile root = (SourceFile) result.value;
+                // TODO root.setName(inputFile.getName());
+                List<String> sourceCode = Files.readAllLines(Paths.get(inputFile.getAbsolutePath()),
+                        StandardCharsets.UTF_8);
                 root.setSourceCode(sourceCode);
                 roots.add(root);
                 logger.debug("Finish");
@@ -52,10 +53,10 @@ public class TypeChecker {
         // Step 1: typecheck, generate constraints and check via SHErrLoc
 
         // Code-paste superclasses' methods and data fields
-        HashMap<String, Contract> contractMap =  new HashMap<>();
+        HashMap<String, Contract> contractMap = new HashMap<>();
         InheritGraph graph = new InheritGraph();
-        for (Program root : roots) {
-            if (!root.NTCinherit(graph)) {
+        for (SourceFile root : roots) {
+            if (!root.ntcInherit(graph)) {
                 // TODO: doesn't typecheck
                 return null;
             }
@@ -64,7 +65,9 @@ public class TypeChecker {
             }
         }
 
-        logger.debug(" check if there is any non-existent contract name: " + contractMap.keySet() + " " + graph.getAllNodes());
+        logger.debug(
+                " check if there is any non-existent contract name: " + contractMap.keySet() + " "
+                        + graph.getAllNodes());
         // check if there is any non-existent contract name
         for (String contractName : graph.getAllNodes()) {
             if (!contractMap.containsKey(contractName)) {
@@ -78,7 +81,7 @@ public class TypeChecker {
         for (String x : graph.getTopologicalQueue()) {
             Node rt = null;
             for (Node root : roots) {
-                if (((Program) root).containContract(x)) {
+                if (((SourceFile) root).containContract(x)) {
                     rt = root;
                     break;
                 }
@@ -87,7 +90,7 @@ public class TypeChecker {
                 // TODO: contract not found
                 return null;
             }
-            if (!((Program) rt).codePasteContract(x, contractMap)) {
+            if (!((SourceFile) rt).codePasteContract(x, contractMap)) {
                 // TODO: inherit failed
                 return null;
             }
@@ -95,10 +98,10 @@ public class TypeChecker {
 
         // Collect global info
         NTCEnv NTCenv = new NTCEnv();
-        for (Program root : roots) {
+        for (SourceFile root : roots) {
             NTCenv.programMap.put(root.getContractName(), root);
             root.passScopeContext(null);
-            if (!root.NTCGlobalInfo(NTCenv, null)) {
+            if (!root.ntcGlobalInfo(NTCenv, null)) {
                 // doesn't typecheck
                 return null;
             }
@@ -106,19 +109,18 @@ public class TypeChecker {
 
         logger.debug("Current Contracts: " + NTCenv.globalSymTab.getTypeSet());
 
-
         // Generate constraints
         for (Node root : roots) {
-            root.NTCgenCons(NTCenv, null);
+            root.ntcGenCons(NTCenv, null);
         }
         // Check using SHErrLoc and get a solution
-
 
         logger.debug("generating cons file for NTC");
         // constructors: all types
         // assumptions: none or relations between types
         // constraints
-        Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons, outputFile, false);
+        Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons,
+                outputFile, false);
         boolean result = false;
         try {
             result = runSLC(NTCenv.programMap, outputFile.getAbsolutePath(), DEBUG);
@@ -129,9 +131,10 @@ public class TypeChecker {
         return result == true ? roots : null;
     }
 
-    public static boolean ifcTypecheck(List<Program> roots, List<File> outputFiles, boolean DEBUG) {
+    public static boolean ifcTypecheck(List<SourceFile> roots, List<File> outputFiles,
+            boolean DEBUG) {
 
-        HashMap<Program, File> outputFileMap = new HashMap<>();
+        HashMap<SourceFile, File> outputFileMap = new HashMap<>();
         for (int i = 0; i < roots.size(); ++i) {
             outputFileMap.put(roots.get(i), outputFiles.get(i));
         }
@@ -144,9 +147,9 @@ public class TypeChecker {
 
         //ArrayList<Constraint> cons = new ArrayList<>();
 
-        for (Program root : roots) {
+        for (SourceFile root : roots) {
             ContractSym contractSym = new ContractSym();
-            contractSym.name = ((Program)root).getContractName();
+            contractSym.name = ((SourceFile) root).getContractName();
             contractSym.astNode = root;
             contractNames.add(contractSym.name);
             contractMap.add(contractSym.name, contractSym);
@@ -155,7 +158,7 @@ public class TypeChecker {
 
         logger.debug("contracts: \n" + contractMap.getTypeSet());
         int idx = 0;
-        for (Program root : roots) {
+        for (SourceFile root : roots) {
             ContractSym contractSym = (ContractSym) contractMap.lookup(contractNames.get(idx));
             ++idx;
             contractSym.symTab = new SymTab(contractMap);
@@ -189,7 +192,7 @@ public class TypeChecker {
             buildSignatureConstraints(root, env);
         }*/
 
-        for (Program root : roots) {
+        for (SourceFile root : roots) {
             env.programMap.put(root.getContractName(), root);
             env.sigReq.clear();
             if (!ifcTypecheck(root, env, outputFileMap.get(root), DEBUG)) {
@@ -201,26 +204,35 @@ public class TypeChecker {
         return true;
     }
 
-    private static void buildSignatureConstraints(String contractName, VisitEnv env, String namespace, String curContractName) {
-        List<Constraint> cons =  env.cons;
+    private static void buildSignatureConstraints(String contractName, VisitEnv env,
+            String namespace, String curContractName) {
+        List<Constraint> cons = env.cons;
         List<Constraint> trustCons = env.trustCons;
         // String contractName = root.getContractName();//contractNames.get(fileIdx);
         ContractSym contractSym = env.getContract(contractName);
-        logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n" + env.curSymTab.getTypeSet());
+        logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n"
+                + env.curSymTab.getTypeSet());
         // generate trust relationship dec constraints
 
         if (namespace != "") {
-            trustCons.add(new Constraint(new Inequality(namespace, Relation.EQ, namespace + "..this"), null, curContractName,
-                    "TODO"));
+            trustCons.add(
+                    new Constraint(new Inequality(namespace, Relation.EQ, namespace + "..this"),
+                            null, curContractName,
+                            "TODO"));
         }
         String ifNameContract = contractSym.getLabelNameContract();
         String ifContract = contractSym.getLabelContract();
         if (namespace == "") {
-            cons.add(new Constraint(new Inequality(ifNameContract, Relation.EQ, ifContract), contractSym.ifl.location, contractName,
+            cons.add(new Constraint(new Inequality(ifNameContract, Relation.EQ, ifContract),
+                    contractSym.ifl.getLocation(), contractName,
                     "Integrity label of contract " + ifNameContract + " may be incorrect"));
 
-            for (TrustConstraint trustConstraint : contractSym.trustSetting.trust_list) {
-                trustCons.add(new Constraint(new Inequality(trustConstraint.lhs.toSherrlocFmt(contractName), trustConstraint.optor, trustConstraint.rhs.toSherrlocFmt(contractName)), trustConstraint.location, contractName,
+            for (TrustConstraint trustConstraint : contractSym.trustSetting.getTrust_list()) {
+                trustCons.add(new Constraint(
+                        new Inequality(trustConstraint.lhs.toSherrlocFmt(contractName),
+                                trustConstraint.optor,
+                                trustConstraint.rhs.toSherrlocFmt(contractName)),
+                        trustConstraint.getLocation(), contractName,
                         "Static trust relationship"));
             }
         }
@@ -242,16 +254,22 @@ public class TypeChecker {
             logger.debug("add func's sig constraints: [" + func.funcName + "]");
             // logger.debug(ifNameCallBeforeLabel + "\n" + ifNameCallAfterLabel + "\n" + ifNameCallLockLabel + "\n" + ifCallAfterLabel + "\n" +ifCallLockLabel);
             if (ifCallBeforeLabel != null) {
-                cons.add(new Constraint(new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel), func.funcLabels.begin_pc.location, contractName,
+                cons.add(new Constraint(
+                        new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel),
+                        func.funcLabels.begin_pc.getLocation(), contractName,
                         "Integrity requirement to call this method may be incorrect"));
             }
             if (ifCallAfterLabel != null) {
-                cons.add(new Constraint(new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel), func.funcLabels.to_pc.location, contractName,
+                cons.add(new Constraint(
+                        new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel),
+                        func.funcLabels.to_pc.getLocation(), contractName,
                         "Integrity pc level autoendorsed to when calling this method may be incorrect"));
             }
 
             if (ifCallLockLabel != null) {
-                cons.add(new Constraint(new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallGammaLabel), func.funcLabels.gamma_label.location, contractName,
+                cons.add(new Constraint(
+                        new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallGammaLabel),
+                        func.funcLabels.gamma_label.getLocation(), contractName,
                         "The final reentrancy lock label may be declared incorrectly"));
 
             }
@@ -259,7 +277,9 @@ public class TypeChecker {
             String ifNameReturnLabel = func.getLabelNameRtnValue();
             String ifReturnLabel = func.getRtnValueLabel();
             if (ifReturnLabel != null) {
-                cons.add(new Constraint(new Inequality(ifReturnLabel, Relation.EQ, ifNameReturnLabel), func.location, contractName,
+                cons.add(new Constraint(
+                        new Inequality(ifReturnLabel, Relation.EQ, ifNameReturnLabel),
+                        func.location, contractName,
                         "Integrity label of this method's return value may be incorrect"));
             }
 
@@ -268,10 +288,14 @@ public class TypeChecker {
                 String ifNameArgLabel = func.getLabelNameArg(namespace, i);
                 String ifArgLabel = arg.getLabel(namespace);
                 if (ifArgLabel != null) {
-                    cons.add(new Constraint(new Inequality(ifNameArgLabel, Relation.EQ, ifArgLabel), arg.ifl.location, contractName,
+                    cons.add(new Constraint(new Inequality(ifNameArgLabel, Relation.EQ, ifArgLabel),
+                            arg.ifl.getLocation(), contractName,
                             "Argument " + arg.name + " may be labeled incorrectly"));
-                    trustCons.add(new Constraint(new Inequality(ifNameCallBeforeLabel, ifNameArgLabel), arg.ifl.location, contractName,
-                            "Argument " + arg.name + " must be no more trusted than caller's integrity"));
+                    trustCons.add(
+                            new Constraint(new Inequality(ifNameCallBeforeLabel, ifNameArgLabel),
+                                    arg.ifl.getLocation(), contractName,
+                                    "Argument " + arg.name
+                                            + " must be no more trusted than caller's integrity"));
                 }
             }
 
@@ -280,10 +304,12 @@ public class TypeChecker {
         // env.addSigCons(contractName, trustCons, cons);
     }
 
-    private static boolean ifcTypecheck(Program root, VisitEnv env, File outputFile, boolean DEBUG) {
+    private static boolean ifcTypecheck(SourceFile root, VisitEnv env, File outputFile,
+            boolean DEBUG) {
         String contractName = root.getContractName();//contractNames.get(fileIdx);
         ContractSym contractSym = env.getContract(contractName);
-        logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n" + env.curSymTab.getTypeSet());
+        logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n"
+                + env.curSymTab.getTypeSet());
 
         env.curContractSym = contractSym;
         env.curSymTab = contractSym.symTab;
@@ -297,8 +323,10 @@ public class TypeChecker {
             String varName = var.labelToSherrlocFmt();
             String ifLabel = var.getLabel();
             if (ifLabel != null) {
-                env.cons.add(new Constraint(new Inequality(varName, Relation.EQ, ifLabel), var.location, contractName,
-                        "Variable " + var.name + " may be labeled incorrectly"));
+                env.cons.add(
+                        new Constraint(new Inequality(varName, Relation.EQ, ifLabel), var.location,
+                                contractName,
+                                "Variable " + var.name + " may be labeled incorrectly"));
 
                 //env.cons.add(new Constraint(new Inequality(if Label, varName), var.location));
 
@@ -314,7 +342,7 @@ public class TypeChecker {
         //env.cons.addAll(curSigCons.cons);
 
         Node tmp = root;
-        if (!(tmp instanceof Program))  {
+        if (!(tmp instanceof SourceFile)) {
             // TODO: not supported currently
             Interface anInterface = (Interface) tmp;
             for (FunctionSig functionSig : anInterface.funcSigs) {
@@ -322,13 +350,14 @@ public class TypeChecker {
             }
 
         } else {
-            Program program = (Program) tmp;
+            SourceFile sourceFile = (SourceFile) tmp;
             // env.varNameMap = new LookupMaps(varMap);
 
-            program.genConsVisit(env, true);
-            buildSignatureConstraints(program.getContractName(), env, "", program.getContractName());
+            sourceFile.genConsVisit(env, true);
+            buildSignatureConstraints(sourceFile.getContractName(), env, "",
+                    sourceFile.getContractName());
             env.sigReq.forEach((name, curContractName) -> {
-                buildSignatureConstraints(curContractName, env, name, program.getContractName());
+                buildSignatureConstraints(curContractName, env, name, sourceFile.getContractName());
             });
         }
 
@@ -342,9 +371,11 @@ public class TypeChecker {
         return result;
     }
 
-    static boolean runSLC(HashMap<String, Program> programMap, String outputFileName, boolean DEBUG) throws Exception {
+    static boolean runSLC(HashMap<String, SourceFile> programMap, String outputFileName,
+            boolean DEBUG) throws Exception {
 
-        String classDirectoryPath = new File(SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+        String classDirectoryPath = new File(
+                SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
         sherrloc.diagnostic.DiagnosticConstraintResult result = Utils.runSherrloc(outputFileName);
         logger.debug(result);
         if (result.success()) {
@@ -367,7 +398,8 @@ public class TypeChecker {
                     seced = true;
                     System.out.println("Some other possible places:");
                 }
-                String s = Utils.SLCSuggestionToString(programMap, result.getSuggestions().get(i), DEBUG);
+                String s = Utils.SLCSuggestionToString(programMap, result.getSuggestions().get(i),
+                        DEBUG);
                 if (s != null) {
                     System.out.println(idx + ":");
                     System.out.println(s);

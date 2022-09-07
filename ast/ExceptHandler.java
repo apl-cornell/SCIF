@@ -1,23 +1,28 @@
 package ast;
 
+import compile.SolCode;
+import java.util.List;
 import typecheck.*;
 
 import java.util.ArrayList;
 
 public class ExceptHandler extends Statement {
+
     ExceptionType type;
     String name;
-    ArrayList<Statement> body;
-    public ExceptHandler(ExceptionType type, String name, ArrayList<Statement> body) {
+    List<Statement> body;
+
+    public ExceptHandler(ExceptionType type, String name, List<Statement> body) {
         this.type = type;
         this.name = name;
         this.body = body;
     }
-    public void setBody(ArrayList<Statement> body) {
+
+    public void setBody(List<Statement> body) {
         this.body = body;
     }
 
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         env.curSymTab = new SymTab(env.curSymTab);
 
@@ -29,15 +34,21 @@ public class ExceptHandler extends Statement {
         env.addSym(name, var);
 
         for (Statement s : body) {
-            ScopeContext tmp = s.NTCgenCons(env, now);
+            ScopeContext tmp = s.ntcGenCons(env, now);
         }
         env.curSymTab = env.curSymTab.getParent();
         return now;
     }
 
+    @Override
+    public void solidityCodeGen(SolCode code) {
+
+    }
+
     public String getHandlerPcLabelName() {
         return scopeContext.getSHErrLocName() + "." + "handlerPcLabelName" + location.toString();
     }
+
     public String getHandlerLockLabelName() {
         return scopeContext.getSHErrLocName() + "." + "handlerLockLabelName" + location.toString();
     }

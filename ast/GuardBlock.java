@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import java.util.List;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
@@ -8,39 +9,37 @@ import typecheck.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class GuardBlock extends FirstLayerStatement {
+public class GuardBlock extends Statement {
+
     IfLabel l;
-    ArrayList<Statement> body;
+    List<Statement> body;
     Expression target;
 
-    public GuardBlock(IfLabel l, ArrayList<Statement> body, Expression target) {
+    public GuardBlock(IfLabel l, List<Statement> body, Expression target) {
         this.l = l;
         this.body = body;
         this.target = target;
     }
 
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         // consider to be a new scope
         // must contain at least one Statement
-        ScopeContext now  = new ScopeContext(this, parent);
+        ScopeContext now = new ScopeContext(this, parent);
         env.curSymTab = new SymTab(env.curSymTab);
         ScopeContext rtn = null;
         for (Statement s : body) {
-            rtn = s.NTCgenCons(env, now);
+            rtn = s.ntcGenCons(env, now);
         }
         env.curSymTab = env.curSymTab.getParent();
         return now;
     }
 
-    @Override
-    public void globalInfoVisit(ContractSym contractSym) {
-
-    }
-
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context curContext = new Context(beginContext.pc, scopeContext.getSHErrLocName() + "." + "lockin" + location.toString());
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
+        Context curContext = new Context(beginContext.pc,
+                scopeContext.getSHErrLocName() + "." + "lockin" + location.toString());
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
+                typecheck.Utils.getLabelNameLock(location));
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".guardBlock" + location.toString();
@@ -52,7 +51,8 @@ public class GuardBlock extends FirstLayerStatement {
 
         String guardLabel = l.toSherrlocFmt();
 
-        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, curContext.lambda), beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, curContext.lambda),
+                beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
                 "Cannot grant a dynamic reentrancy lock"));
         // String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
@@ -79,16 +79,23 @@ public class GuardBlock extends FirstLayerStatement {
 
         PathOutcome psiOutcome = new PathOutcome();
 
-        for (HashMap.Entry<ExceptionTypeSym, PsiUnit> entry: psi.psi.entrySet()) {
+        for (HashMap.Entry<ExceptionTypeSym, PsiUnit> entry : psi.psi.entrySet()) {
             PsiUnit value = entry.getValue();
-            String newPathLabel = scopeContext.getSHErrLocName() + "." + "lock" + location.toString() + "." + entry.getKey().name;
-            env.cons.add(new Constraint(new Inequality(newPathLabel, CompareOperator.Eq, Utils.meetLabels(value.c.lambda, guardLabel)), env.hypothesis, location, env.curContractSym.name,
+            String newPathLabel =
+                    scopeContext.getSHErrLocName() + "." + "lock" + location.toString() + "."
+                            + entry.getKey().name;
+            env.cons.add(new Constraint(new Inequality(newPathLabel, CompareOperator.Eq,
+                    Utils.meetLabels(value.c.lambda, guardLabel)), env.hypothesis, location,
+                    env.curContractSym.name,
                     "Operations inside lock clause does't respect locks"));
-            psiOutcome.set(entry.getKey(), new PsiUnit(new Context(value.c.pc, newPathLabel), value.catchable));
+            psiOutcome.set(entry.getKey(),
+                    new PsiUnit(new Context(value.c.pc, newPathLabel), value.catchable));
         }
 
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(psiOutcome.getNormalPath().c.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+            env.cons.add(new Constraint(
+                    new Inequality(psiOutcome.getNormalPath().c.lambda, beginContext.lambda),
+                    env.hypothesis, location, env.curContractSym.name,
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
         /*env.cons.add(new Constraint(new Inequality(Utils.meetLabels(curContext.lockName, guardLabel), context.lockName), env.hypothesis, location, env.curContractSym.name,
@@ -99,8 +106,8 @@ public class GuardBlock extends FirstLayerStatement {
         // env.ctxt = originalCtxt;
 
         //if (target == null) {
-        return  psiOutcome;
-                //new Context(lastContext.valueLabelName, curContext.lockName, curContext.inLockName);
+        return psiOutcome;
+        //new Context(lastContext.valueLabelName, curContext.lockName, curContext.inLockName);
         /*} else {
             String ifNameTgt = ""; //TODO: only support one argument now
             String rtnLockName = "";
@@ -132,7 +139,7 @@ public class GuardBlock extends FirstLayerStatement {
     }
 
     @Override
-    public void SolCodeGen(SolCode code) {
+    public void solidityCodeGen(SolCode code) {
         /*
             guard{l}
             lock(l)
@@ -142,7 +149,7 @@ public class GuardBlock extends FirstLayerStatement {
             /*if (stmt instanceof Expression) {
                 ((Expression) stmt).SolCodeGenStmt(code);
             } else {*/
-                stmt.SolCodeGen(code);
+            stmt.solidityCodeGen(code);
             //}
         }
         /*
@@ -150,18 +157,23 @@ public class GuardBlock extends FirstLayerStatement {
          */
         code.exitGuard(l);
     }
+
     @Override
     public void passScopeContext(ScopeContext parent) {
         scopeContext = new ScopeContext(this, parent);
-        for (Node node : children())
+        for (Node node : children()) {
             node.passScopeContext(scopeContext);
+        }
     }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(l);
         rtn.addAll(body);
-        if (target != null) rtn.add(target);
+        if (target != null) {
+            rtn.add(target);
+        }
         return rtn;
     }
 }

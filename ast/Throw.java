@@ -1,30 +1,30 @@
 package ast;
 
+import compile.SolCode;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.HashSet;
 
 public class Throw extends Statement {
+
     Call exception;
+
     public Throw(Call exception) {
         this.exception = exception;
     }
-    public void findPrincipal(HashSet<String> principalSet) {
-
-    }
 
     @Override
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         String exceptionName;
         ExceptionTypeSym exceptionSym;
         if (!(exception.value instanceof Name)) {
-            if (exception.value  instanceof Attribute) {
+            if (exception.value instanceof Attribute) {
                 // a.b(c), a must be a contract
                 Attribute att = (Attribute) exception.value;
                 // (att.value).(att.attr)
-                String contractTypeName = ((Name)att.value).id;
+                String contractTypeName = ((Name) att.value).id;
                 exceptionName = att.attr.id;
                 ContractSym s = env.getContract(contractTypeName);
                 logger.debug("contract " + contractTypeName + ": " + s.name);
@@ -59,7 +59,7 @@ public class Throw extends Statement {
         for (int i = 0; i < exception.args.size(); ++i) {
             Expression arg = exception.args.get(i);
             TypeSym paraInfo = exceptionSym.parameters.get(i).typeSym;
-            ScopeContext argContext = arg.NTCgenCons(env, now);
+            ScopeContext argContext = arg.ntcGenCons(env, now);
             String typeName = env.getSymName(paraInfo.name);
             env.addCons(argContext.genCons(typeName, Relation.GEQ, env, location));
         }
@@ -67,16 +67,23 @@ public class Throw extends Statement {
         // env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
 
         if (!parent.isCheckedException(exceptionSym, false)) {
-            System.err.println("Unchecked exception " + exceptionSym.name + " at " + "lo" + location.toString());
+            System.err.println("Unchecked exception " + exceptionSym.name + " at " + "lo"
+                    + location.toString());
             throw new RuntimeException();
         }
         return now;
     }
 
     @Override
+    public void solidityCodeGen(SolCode code) {
+        
+    }
+
+    @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
+                typecheck.Utils.getLabelNameLock(location));
         PathOutcome psi = new PathOutcome(new PsiUnit(beginContext));
         ExpOutcome ao = null;
 
@@ -84,9 +91,10 @@ public class Throw extends Statement {
             Expression arg = exception.args.get(i);
             ao = arg.genConsVisit(env, false);
             psi.joinExe(ao.psi);
-            env.inContext = new Context(Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc), beginContext.lambda);
+            env.inContext = new Context(
+                    Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
+                    beginContext.lambda);
         }
-
 
         String expName = ((Name) exception.value).id;
         //ExceptionTypeSym expSym = env.getExp(expName);

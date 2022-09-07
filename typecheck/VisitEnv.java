@@ -1,11 +1,10 @@
 package typecheck;
 
 import ast.ExceptionType;
-import ast.Program;
+import ast.SourceFile;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,7 +24,7 @@ public class VisitEnv {
     // public HashMap<String, ContractInfo> contractMap;
     //public HashMap<String, SigCons> sigConsMap;
     public HashMap<String, String> sigReq = new HashMap<>();
-    public HashMap<String, Program> programMap;
+    public HashMap<String, SourceFile> programMap;
     //public HashMap<ExceptionTypeSym, PsiUnit> psi;
 
 
@@ -40,7 +39,7 @@ public class VisitEnv {
                     Hypothesis hypothesis,
                     HashSet<String> principalSet,
                     ContractSym curContractSym,
-                    HashMap<String, Program> programMap
+                    HashMap<String, SourceFile> programMap
                     // HashMap<ExceptionTypeSym, PsiUnit> psi
                     //HashMap<String, SigCons> sigConsMap
                     /*HashMap<String, ContractInfo> contractMap*/) {

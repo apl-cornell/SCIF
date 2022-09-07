@@ -11,8 +11,10 @@ import java.util.ArrayList;
 
 // Assume operators are INT
 public class BinOp extends Expression {
+
     Expression left, right;
     BinaryOperator op;
+
     public BinOp(Expression l, BinaryOperator x, Expression r) {
         left = l;
         op = x;
@@ -20,13 +22,13 @@ public class BinOp extends Expression {
     }
 
     @Override
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         logger.debug("binOp:");
         ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext l = left.NTCgenCons(env, now);
+        ScopeContext l = left.ntcGenCons(env, now);
         // logger.debug("binOp/left:");
         // logger.debug(l.toString());
-        ScopeContext r = right.NTCgenCons(env, now);
+        ScopeContext r = right.ntcGenCons(env, now);
         // logger.debug("binOp/right:");
         // logger.debug(r.toString());
         env.cons.add(now.genCons(l, Relation.LEQ, env, location));
@@ -38,7 +40,8 @@ public class BinOp extends Expression {
     @Override
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
+                typecheck.Utils.getLabelNameLock(location));
 
         env.inContext = beginContext;
         ExpOutcome lo = left.genConsVisit(env, false);
@@ -50,16 +53,21 @@ public class BinOp extends Expression {
 
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bin" + location.toString();
 
-        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location,
+                env.curContractSym.name,
                 "Integrity of left hand expression doesn't flow to value of this binary operation"));
-        env.cons.add(new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
-                "Integrity of right hand expression doesn't flow to value of this binary operation"));
+        env.cons.add(
+                new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location,
+                        env.curContractSym.name,
+                        "Integrity of right hand expression doesn't flow to value of this binary operation"));
 
         typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, right.location);
         // env.outContext = endContext;
 
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(ro.psi.getNormalPath().c.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+            env.cons.add(new Constraint(
+                    new Inequality(ro.psi.getNormalPath().c.lambda, beginContext.lambda),
+                    env.hypothesis, location, env.curContractSym.name,
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 

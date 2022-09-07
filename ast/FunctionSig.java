@@ -1,21 +1,26 @@
 package ast;
 
+import compile.SolCode;
 import compile.Utils;
+import java.util.List;
 import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class FunctionSig extends FirstLayerStatement {
+public class FunctionSig extends TopLayerNode {
+
     public String name;
     public FuncLabels funcLabels;
     public Arguments args;
-    public ArrayList<String> decoratorList;
+    public List<String> decoratorList;
     public Type rtn;
-    public ArrayList<ExceptionType> exceptionList;
+    public List<ExceptionType> exceptionList;
     public boolean isConstructor;
-    public FunctionSig(String name, FuncLabels funcLabels, Arguments args, ArrayList<String> decoratorList, Type rtn) {
+
+    public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
+            List<String> decoratorList, Type rtn) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
@@ -28,7 +33,9 @@ public class FunctionSig extends FirstLayerStatement {
 
         funcLabels.setToDefault(isConstructor, decoratorList);
     }
-    public FunctionSig(String name, FuncLabels funcLabels, Arguments args, ArrayList<String> decoratorList, Type rtn, ArrayList<ExceptionType> exceptionList) {
+
+    public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
+            List<String> decoratorList, Type rtn, List<ExceptionType> exceptionList) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
@@ -41,6 +48,7 @@ public class FunctionSig extends FirstLayerStatement {
 
         funcLabels.setToDefault(isConstructor, decoratorList);
     }
+
     public FunctionSig(FunctionSig funcSig) {
         this.name = funcSig.name;
         this.funcLabels = funcSig.funcLabels;
@@ -51,12 +59,12 @@ public class FunctionSig extends FirstLayerStatement {
         this.isConstructor = funcSig.isConstructor;
     }
 
-    public void setDecoratorList(ArrayList<String> decoratorList) {
+    public void setDecoratorList(List<String> decoratorList) {
         this.decoratorList = decoratorList;
     }
 
     @Override
-    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         ArrayList<VarSym> argsInfo = args.parseArgs(env, now);
         HashMap<ExceptionTypeSym, String> exceptions = new HashMap<>();
@@ -67,7 +75,9 @@ public class FunctionSig extends FirstLayerStatement {
             // ExceptionTypeSym exceptionType = env.get(t);
             exceptions.put(t1, null);
         }
-        env.addSym(name, new FuncSym(name, funcLabels, argsInfo, env.toTypeSym(rtn), null, exceptions, scopeContext, location));
+        env.addSym(name,
+                new FuncSym(name, funcLabels, argsInfo, env.toTypeSym(rtn), null, exceptions,
+                        scopeContext, location));
         return true;
 
     }
@@ -76,18 +86,24 @@ public class FunctionSig extends FirstLayerStatement {
     public void globalInfoVisit(ContractSym contractSym) {
         ArrayList<VarSym> argsInfo = args.parseArgs(contractSym);
         IfLabel ifl = null;
-        if (rtn instanceof LabeledType)
+        if (rtn instanceof LabeledType) {
             ifl = ((LabeledType) rtn).ifl;
+        }
         HashMap<ExceptionTypeSym, String> exceptions = new HashMap<>();
         for (ExceptionType t : exceptionList) {
             IfLabel label = null;
             /*if (t.type instanceof  LabeledType)
                 label = ((LabeledType) t.type).ifl;*/
-            ExceptionTypeSym exceptionTypeSym = contractSym.getExceptionSym(t.type.x);
-            exceptions.put(exceptionTypeSym, typecheck.Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(), t.getName()));
+            ExceptionTypeSym exceptionTypeSym = contractSym.getExceptionSym(t.type.name);
+            exceptions.put(exceptionTypeSym,
+                    typecheck.Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(),
+                            t.getName()));
         }
-        contractSym.symTab.add(name, new FuncSym(name, funcLabels, argsInfo, contractSym.toTypeSym(rtn), ifl, exceptions, scopeContext, location));
+        contractSym.symTab.add(name,
+                new FuncSym(name, funcLabels, argsInfo, contractSym.toTypeSym(rtn), ifl, exceptions,
+                        scopeContext, location));
     }
+
     public void findPrincipal(HashSet<String> principalSet) {
         if (funcLabels != null) {
             funcLabels.findPrincipal(principalSet);
@@ -106,51 +122,73 @@ public class FunctionSig extends FirstLayerStatement {
     public String rtnToSHErrLocFmt() {
         return toSHErrLocFmt() + ".RTN";
     }
+
     @Override
     public void passScopeContext(ScopeContext parent) {
         scopeContext = new ScopeContext(this, parent);
         for (Node node : children()) {
             if (node != null) //TODO: remove null check
+            {
                 node.passScopeContext(scopeContext);
+            }
         }
     }
+
     @Override
-    public ArrayList<Node> children() {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        return null;
+    }
+
+    @Override
+    public void solidityCodeGen(SolCode code) {
+
+    }
+
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+
+        return null;
+    }
+
+    @Override
+    public List<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        if (funcLabels != null)
+        if (funcLabels != null) {
             rtn.add(funcLabels);
+        }
         rtn.add(args);
-        if (this.rtn != null)
+        if (this.rtn != null) {
             rtn.add(this.rtn);
+        }
         return rtn;
     }
 
     public boolean typeMatch(FunctionSig f) {
-        if (!f.name.equals(name))
+        if (!f.name.equals(name)) {
             return false;
-        if (!f.funcLabels.typeMatch(funcLabels))
+        }
+        if (!f.funcLabels.typeMatch(funcLabels)) {
             return false;
-        if (!f.args.typeMatch(args))
+        }
+        if (!f.args.typeMatch(args)) {
             return false;
+        }
 
         if (!(decoratorList == null && f.decoratorList == null)) {
-            if (decoratorList == null || f.decoratorList == null || decoratorList.size() != f.decoratorList.size())
+            if (decoratorList == null || f.decoratorList == null
+                    || decoratorList.size() != f.decoratorList.size()) {
                 return false;
+            }
             int index = 0;
             while (index < decoratorList.size()) {
-                if (!decoratorList.get(index).equals(f.decoratorList.get(index)))
+                if (!decoratorList.get(index).equals(f.decoratorList.get(index))) {
                     return false;
+                }
                 ++index;
             }
         }
-        if (!f.rtn.typeMatch(rtn))
+        if (!f.rtn.typeMatch(rtn)) {
             return false;
+        }
         return true;
-    }
-
-    @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-
-        return null;
     }
 }

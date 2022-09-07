@@ -1,23 +1,28 @@
 package ast;
 
+import compile.SolCode;
 import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
 public class Arguments extends Node {
+
     ArrayList<Arg> args;
     ArrayList<Expression> defaults; //corresponds to the last size(defualts) args
+
     //TODO: deaults cons generate
     //TODO: kwonlyargs, varargs and kwarg
     public Arguments(ArrayList<Arg> args, ArrayList<Expression> defaults) {
         this.args = args;
         this.defaults = defaults;
     }
+
     public Arguments() {
         this.args = new ArrayList<>();
         this.defaults = null;
     }
+
     public void merge(Arguments y) {
         if (y.args != null) {
             this.args.addAll(y.args);
@@ -51,6 +56,7 @@ public class Arguments extends Node {
             arg.genConsVisit(env, index == args.size() && tail_position);
         }
     }
+
     public void findPrincipal(HashSet<String> principalSet) {
         for (Arg arg : args) {
             arg.findPrincipal(principalSet);
@@ -63,8 +69,9 @@ public class Arguments extends Node {
         for (Arg arg : args) {
             if (!first) {
                 rtn += ", ";
-            } else
+            } else {
                 first = false;
+            }
             // rnt += "type name"
             rtn += arg.toSolCode();
         }
@@ -72,12 +79,24 @@ public class Arguments extends Node {
     }
 
     @Override
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        return null;
+    }
+
+    @Override
+    public void solidityCodeGen(SolCode code) {
+
+    }
+
+    @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        if (args != null)
+        if (args != null) {
             rtn.addAll(args);
-        if (defaults != null)
+        }
+        if (defaults != null) {
             rtn.addAll(defaults);
+        }
         return rtn;
     }
 
@@ -86,23 +105,28 @@ public class Arguments extends Node {
         boolean bothDefaultsNull = defaults == null && arguments.defaults == null;
 
         if (!bothArgsNull) {
-            if (args == null || arguments.args == null || args.size() != arguments.args.size())
+            if (args == null || arguments.args == null || args.size() != arguments.args.size()) {
                 return false;
+            }
             int index = 0;
             while (index < args.size()) {
-                if (!args.get(index).typeMatch(arguments.args.get(index)))
+                if (!args.get(index).typeMatch(arguments.args.get(index))) {
                     return false;
+                }
                 ++index;
             }
         }
 
         if (!bothDefaultsNull) {
-            if (defaults == null || arguments.defaults == null || defaults.size() != arguments.defaults.size())
+            if (defaults == null || arguments.defaults == null
+                    || defaults.size() != arguments.defaults.size()) {
                 return false;
+            }
             int index = 0;
             while (index < defaults.size()) {
-                if (!defaults.get(index).typeMatch(arguments.defaults.get(index)))
+                if (!defaults.get(index).typeMatch(arguments.defaults.get(index))) {
                     return false;
+                }
                 ++index;
             }
         }

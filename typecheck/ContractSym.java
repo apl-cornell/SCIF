@@ -5,6 +5,7 @@ import ast.*;
 import java.util.ArrayList;
 
 public class ContractSym extends TypeSym {
+
     // public HashSet<String> iptContracts;
     /*public HashMap<String, Type> typeMap;
     public HashMap<String, VarInfo> varMap;
@@ -13,13 +14,13 @@ public class ContractSym extends TypeSym {
     public IfLabel ifl;
     // public ArrayList<TrustConstraint> trustCons;
     public TrustSetting trustSetting;
-    public Program astNode;
+    public SourceFile astNode;
 
     public ContractSym(String name,
-                       SymTab symTab,
-                       // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
-                       TrustSetting trustSetting,
-                       IfLabel ifl) {
+            SymTab symTab,
+            // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
+            TrustSetting trustSetting,
+            IfLabel ifl) {
         super(name);
         // this.name = name;
         /*this.iptContracts = iptContracts;
@@ -44,19 +45,24 @@ public class ContractSym extends TypeSym {
 
     public TypeSym toType(String typeName) {
         Sym sym = symTab.lookup(typeName);
-        if (sym == null) return null;
-        if (sym instanceof TypeSym)
+        if (sym == null) {
+            return null;
+        }
+        if (sym instanceof TypeSym) {
             return (TypeSym) sym;
+        }
         return null;
     }
 
     public TypeSym toStructType(String typeName, ArrayList<AnnAssign> members) {
         Sym sym = symTab.lookup(typeName);
-        if (sym != null)
-            if (sym instanceof TypeSym)
+        if (sym != null) {
+            if (sym instanceof TypeSym) {
                 return (TypeSym) sym;
-            else
+            } else {
                 return null;
+            }
+        }
         ArrayList<VarSym> memberList = new ArrayList<>();
         for (AnnAssign member : members) {
             VarSym tmp = member.toVarInfo(this);
@@ -71,11 +77,11 @@ public class ContractSym extends TypeSym {
         }
         // System.err.println("[in]toTypeSym: " + astType.x);
 
-        Sym s = symTab.lookup(astType.x);
+        Sym s = symTab.lookup(astType.getName());
         TypeSym typeSym = null;
-        if (s instanceof TypeSym)
+        if (s instanceof TypeSym) {
             typeSym = (TypeSym) s;
-        else  {
+        } else {
             LabeledType lt = (LabeledType) astType;
             if (lt instanceof DepMap) {
                 DepMap depMap = (DepMap) lt;
@@ -91,26 +97,32 @@ public class ContractSym extends TypeSym {
     }
 
 
-    public VarSym toVarSym(String localName, ast.Type astType, boolean isConst, boolean isFinal, CodeLocation loc, ScopeContext scopeContext) {
+    public VarSym toVarSym(String localName, ast.Type astType, boolean isConst, boolean isFinal,
+            CodeLocation loc, ScopeContext scopeContext) {
         TypeSym typeSym = toTypeSym(astType);
         IfLabel ifl = null;
-        if (astType instanceof LabeledType)
+        if (astType instanceof LabeledType) {
             ifl = ((LabeledType) astType).ifl;
+        }
         return new VarSym(localName, typeSym, ifl, loc, scopeContext, isConst, isFinal);
     }
 
     public void addVar(String varname, VarSym varSym) {
         symTab.add(varname, varSym);
     }
+
     public void addFunc(String funcname, FuncSym funcSym) {
         symTab.add(funcname, funcSym);
     }
+
     public void addType(String typename, TypeSym typeSym) {
         symTab.add(typename, typeSym);
     }
+
     public void addContract(String typename, ContractSym typeSym) {
         symTab.add(typename, typeSym);
     }
+
     public boolean isLValue() {
         return false;
     }
@@ -118,6 +130,7 @@ public class ContractSym extends TypeSym {
     public Sym lookupSym(String funcName) {
         return symTab.lookup(funcName);
     }
+
     public boolean containVar(String varName) {
         Sym sym = symTab.lookup(varName);
         return (sym != null && sym instanceof VarSym);
@@ -125,10 +138,11 @@ public class ContractSym extends TypeSym {
 
     public FuncSym getFunc(String id) {
         Sym sym = symTab.lookup(id);
-        if (sym instanceof FuncSym)
+        if (sym instanceof FuncSym) {
             return (FuncSym) sym;
-        else
+        } else {
             return null;
+        }
     }
 
 
@@ -143,15 +157,18 @@ public class ContractSym extends TypeSym {
     public ExceptionTypeSym toExceptionType(String exceptionName, Arguments arguments) {
 
         ExceptionTypeSym sym = getExceptionSym(exceptionName);
-        if (sym != null)
+        if (sym != null) {
             return sym;
+        }
         ArrayList<VarSym> memberList = arguments.parseArgs(this);
         return new ExceptionTypeSym(exceptionName, memberList);
     }
 
     public ExceptionTypeSym getExceptionSym(String exceptionName) {
         Sym sym = symTab.lookup(exceptionName);
-        if (sym == null || (!(sym instanceof  ExceptionTypeSym))) return null;
+        if (sym == null || (!(sym instanceof ExceptionTypeSym))) {
+            return null;
+        }
         return (ExceptionTypeSym) sym;
     }
 }

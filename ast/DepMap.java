@@ -18,8 +18,8 @@ public class DepMap extends LabeledType {
     @Override
     public void findPrincipal(HashSet<String> principalSet) {
         ifl.findPrincipal(principalSet);
-        keyType.findPrincipal(principalSet, x);
-        valueType.findPrincipal(principalSet, x);
+        keyType.findPrincipal(principalSet, name);
+        valueType.findPrincipal(principalSet, name);
     }
 
     @Override

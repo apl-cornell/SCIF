@@ -1,8 +1,6 @@
 package ast;
 
 import compile.SolCode;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -27,19 +25,19 @@ public class While extends Statement {
         this.orelse = null;
     }
 
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
         env.curSymTab = new SymTab(env.curSymTab);
-        ScopeContext rtn = test.NTCgenCons(env, now);
+        ScopeContext rtn = test.ntcGenCons(env, now);
         env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
 
         for (Statement s : body) {
-            ScopeContext tmp = s.NTCgenCons(env, now);
+            ScopeContext tmp = s.ntcGenCons(env, now);
         }
         for (Statement s : orelse) {
-            ScopeContext tmp = s.NTCgenCons(env, now);
+            ScopeContext tmp = s.ntcGenCons(env, now);
         }
         env.curSymTab = env.curSymTab.getParent();
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
@@ -84,7 +82,7 @@ public class While extends Statement {
         return null;
 
     }
-
+/*
     public void findPrincipal(HashSet<String> principalSet) {
         for (Statement stmt : body) {
             stmt.findPrincipal(principalSet);
@@ -92,16 +90,16 @@ public class While extends Statement {
         for (Statement stmt : orelse) {
             stmt.findPrincipal(principalSet);
         }
-    }
+    }*/
 
     @Override
-    public void SolCodeGen(SolCode code) {
+    public void solidityCodeGen(SolCode code) {
         code.enterWhile(test.toSolCode());
         for (Statement stmt : body) {
             /*if (stmt instanceof Expression) {
                 ((Expression) stmt).SolCodeGenStmt(code);
             } else {*/
-            stmt.SolCodeGen(code);
+            stmt.solidityCodeGen(code);
             // }
         }
         code.leaveWhile();

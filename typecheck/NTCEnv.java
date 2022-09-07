@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class NTCEnv {
+
     public SymTab globalSymTab;
     public SymTab curSymTab;
     // public HashMap<String, SymTab> externalSymTab;
@@ -16,7 +17,8 @@ public class NTCEnv {
     public ArrayList<Constraint> cons;
     public Hypothesis globalHypothesis;
     public ContractSym curContractSym;
-    public HashMap<String, Program> programMap;
+    public HashMap<String, SourceFile> programMap;
+
     public NTCEnv() {
         globalSymTab = new SymTab();
         cons = new ArrayList<>();
@@ -30,28 +32,40 @@ public class NTCEnv {
     public void setGlobalSymTab(SymTab curSymTab) {
         globalSymTab = curSymTab;
     }
-    public void setCurSymTab(SymTab curSymTab) { this.curSymTab = curSymTab; }
-    public void setCurContractSym(ContractSym curContractSym) { this.curContractSym = curContractSym; }
 
-    public VarSym toVarSym(String varName, ast.Type astType, boolean isConst, boolean isFinal, CodeLocation location, ScopeContext context) {
+    public void setCurSymTab(SymTab curSymTab) {
+        this.curSymTab = curSymTab;
+    }
+
+    public void setCurContractSym(ContractSym curContractSym) {
+        this.curContractSym = curContractSym;
+    }
+
+    public VarSym toVarSym(String varName, ast.Type astType, boolean isConst, boolean isFinal,
+            CodeLocation location, ScopeContext context) {
         TypeSym typeSym = toTypeSym(astType);
-        if (typeSym == null) return null;
+        if (typeSym == null) {
+            return null;
+        }
         return new VarSym(varName, typeSym, null, location, context, isConst, isFinal);
     }
 
     public TypeSym toTypeSym(ast.Type astType) {
         TypeSym typeSym = null;
-        if (astType == null) return new BuiltinTypeSym(Utils.BuiltinType2ID(BuiltInT.VOID));
+        if (astType == null) {
+            return new BuiltinTypeSym(Utils.BuiltinType2ID(BuiltInT.VOID));
+        }
         // System.err.println("[in]toTypeSym: " + astType.x);
 
         if (astType instanceof ExceptionType exceptionType) {
             return toExceptionTypeSym(exceptionType);
         }
 
-        Sym s = getCurSym(astType.x);
+        Sym s = getCurSym(astType.getName());
         if (s instanceof TypeSym)//Utils.isPrimitiveType(astType.x))
+        {
             typeSym = (TypeSym) s;// new BuiltinTypeSym(astType.x);
-        else {
+        } else {
             LabeledType lt = (LabeledType) astType;
             if (lt instanceof DepMap) {
                 DepMap depMap = (DepMap) lt;
@@ -85,7 +99,7 @@ public class NTCEnv {
         return curSymTab.lookup(id).getSLCName();
     }
 
-   public String getSymName(BuiltInT type) {
+    public String getSymName(BuiltInT type) {
         Sym symbol = curSymTab.lookup(Utils.BuiltinType2ID(type));
         return symbol.getSLCName();
     }
@@ -100,13 +114,17 @@ public class NTCEnv {
 
     public boolean contractExists(String contractName) {
         Sym rtn = globalSymTab.lookup(contractName);
-        if (rtn == null) return false;
+        if (rtn == null) {
+            return false;
+        }
         return rtn instanceof ContractSym;
     }
 
     public Sym getExtSym(String contractName, String funcName) {
         Sym extST = globalSymTab.lookup(contractName);
-        if (extST == null) return null;
+        if (extST == null) {
+            return null;
+        }
         return ((ContractSym) extST).lookupSym(funcName);
     }
 
@@ -128,8 +146,9 @@ public class NTCEnv {
 
     public ContractSym getContract(String name) {
         Sym sym = globalSymTab.lookup(name);
-        if (sym != null && sym instanceof ContractSym)
+        if (sym != null && sym instanceof ContractSym) {
             return (ContractSym) sym;
+        }
         return null;
     }
 
@@ -143,11 +162,13 @@ public class NTCEnv {
 
     public Sym toExceptionType(String exceptionName, Arguments arguments, ScopeContext parent) {
         Sym sym = curSymTab.lookup(exceptionName);
-        if (sym != null)
-            if (sym instanceof TypeSym)
+        if (sym != null) {
+            if (sym instanceof TypeSym) {
                 return (TypeSym) sym;
-            else
+            } else {
                 return null;
+            }
+        }
         ArrayList<VarSym> memberList = arguments.parseArgs(this, parent);
         return new ExceptionTypeSym(exceptionName, memberList);
     }

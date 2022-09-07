@@ -1,11 +1,16 @@
 package ast;
 
+import compile.SolCode;
+import typecheck.ContractSym;
 import typecheck.ExpOutcome;
+import typecheck.NTCEnv;
+import typecheck.ScopeContext;
 import typecheck.VisitEnv;
 
 import java.util.HashSet;
 
-public class TrustAtom extends Expression {
+public class TrustAtom extends TopLayerNode {
+
     String name;
     IfLabel ifl;
     boolean isIfl;
@@ -20,21 +25,36 @@ public class TrustAtom extends Expression {
         this.ifl = ifl;
     }
 
-    @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        return null;
-    }
-
-    @Override
-    public boolean typeMatch(Expression expression) {
-        return expression instanceof TrustAtom;
-    }
-
     public String toSherrlocFmt(String contractName) {
         if (isIfl) {
             return ifl.toSherrlocFmt();
         } else {
             return contractName + "." + name;
         }
+    }
+
+    @Override
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        return null;
+    }
+
+    @Override
+    public void solidityCodeGen(SolCode code) {
+
+    }
+
+    @Override
+    public void globalInfoVisit(ContractSym contractSym) {
+
+    }
+
+    @Override
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+        return false;
+    }
+
+    @Override
+    public void findPrincipal(HashSet<String> principalSet) {
+        ifl.findPrincipal(principalSet);
     }
 }

@@ -1,18 +1,35 @@
 package ast;
 
 import typecheck.ExpOutcome;
+import typecheck.NTCEnv;
+import typecheck.ScopeContext;
 import typecheck.VisitEnv;
 
 import java.util.HashSet;
 
 public class ComplexIfLabel extends IfLabel {
-    public IfOperator op;
-    public IfLabel left, right;
+
+    IfOperator op;
+    IfLabel left, right;
+
+    public IfOperator getOp() {
+        return op;
+    }
+
+    public IfLabel getLeft() {
+        return left;
+    }
+
+    public IfLabel getRight() {
+        return right;
+    }
+
     public ComplexIfLabel(IfLabel left, IfOperator op, IfLabel right) {
         this.left = left;
         this.op = op;
         this.right = right;
     }
+
     @Override
     public String toSherrlocFmt() {
         String l = left.toSherrlocFmt();
@@ -29,6 +46,7 @@ public class ComplexIfLabel extends IfLabel {
         }
         return rnt;
     }
+
     public String toSherrlocFmt(String namespace) {
         String l = left.toSherrlocFmt(namespace);
         String r = right.toSherrlocFmt(namespace);
@@ -97,8 +115,9 @@ public class ComplexIfLabel extends IfLabel {
 
     @Override
     public boolean typeMatch(IfLabel begin_pc) {
-        if (!(begin_pc instanceof ComplexIfLabel))
+        if (!(begin_pc instanceof ComplexIfLabel)) {
             return false;
+        }
 
         ComplexIfLabel cil = (ComplexIfLabel) begin_pc;
         return op == cil.op && left.typeMatch(cil.left) && right.typeMatch(cil.right);
@@ -113,5 +132,10 @@ public class ComplexIfLabel extends IfLabel {
     public boolean typeMatch(Expression expression) {
         return expression instanceof ComplexIfLabel &&
                 typeMatch((IfLabel) expression);
+    }
+
+    @Override
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        return null;
     }
 }

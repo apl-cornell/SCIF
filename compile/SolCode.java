@@ -1,6 +1,7 @@
 package compile;
 
 import ast.*;
+import java.util.List;
 import typecheck.*;
 
 import java.io.BufferedWriter;
@@ -11,11 +12,12 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 
 public class SolCode {
+
     int indentWidth;
     int indentLevel;
     String unitIndent;
     String currentIndent;
-    public ArrayList<String> code; //each line with no newline char
+    public List<String> code; //each line with no newline char
     public HashMap<String, String> labelTable; // map label names to on-chain addresses
     public typecheck.DynamicSystemOption dynamicSystemOption;
 
@@ -26,7 +28,9 @@ public class SolCode {
         indentWidth = 4;
         indentLevel = 0;
         unitIndent = "";
-        for (int i = 0; i < indentWidth; ++i) unitIndent += " ";
+        for (int i = 0; i < indentWidth; ++i) {
+            unitIndent += " ";
+        }
         currentIndent = "";
     }
 
@@ -42,8 +46,9 @@ public class SolCode {
 
     public void addLine(String line) {
         // System.err.println("ADDING: " + currentIndent + line);
-        if (line.equals("assert(true);") || line.equals("assert(!false);"))
+        if (line.equals("assert(true);") || line.equals("assert(!false);")) {
             line = "//" + line;
+        }
         code.add(currentIndent + line);
     }
 
@@ -77,23 +82,31 @@ public class SolCode {
         addLine("}");
     }
 
-    public void enterFunctionDef(String name, String args, String returnType, boolean isPublic, boolean isPayable) {
-        if (name.equals(Utils.CONSTRUCTOR_NAME))
+    public void enterFunctionDef(String name, String args, String returnType, boolean isPublic,
+            boolean isPayable) {
+        if (name.equals(Utils.CONSTRUCTOR_NAME)) {
             addLine("constructor (" + args + ")");
-        else
+        } else {
             addLine("function " + name + "(" + args + ")");
+        }
         addIndent();
-        if (isPublic) addLine(Utils.PUBLIC_DECORATOR);
-        else addLine(Utils.PRIVATE_DECORATOR);
-        if (isPayable) addLine(Utils.PAYABLE_DECORATOR);
-        if (!returnType.isEmpty())
+        if (isPublic) {
+            addLine(Utils.PUBLIC_DECORATOR);
+        } else {
+            addLine(Utils.PRIVATE_DECORATOR);
+        }
+        if (isPayable) {
+            addLine(Utils.PAYABLE_DECORATOR);
+        }
+        if (!returnType.isEmpty()) {
             addLine("returns (" + returnType + ")");
+        }
         decIndent();
         addLine("{");
         addIndent();
     }
 
-    public void enterConstructorDef(String args, ArrayList<Statement> body) {
+    public void enterConstructorDef(String args, List<Statement> body) {
         addLine("constructor (" + args + ")");
         if (dynamicSystemOption == DynamicSystemOption.BaseContractCentralized) {
             boolean foundOption = false;
@@ -207,10 +220,10 @@ public class SolCode {
 
         if (!funcLabels.begin_pc.equals(funcLabels.to_pc)) {
             addLine(assertExp("!" + checkIfLocked(funcLabels.begin_pc, funcLabels.to_pc)) + ";");
-                    //"ifLocked(" + funcLabels.begin_pc + ")") + ";");
+            //"ifLocked(" + funcLabels.begin_pc + ")") + ";");
         }
         addLine(assertExp(checkIfTrustSender(funcLabels.begin_pc)) + ";");
-                // "ifTrust(" + funcLabels.begin_pc + ", " + "msg.sender)") + ";");
+        // "ifTrust(" + funcLabels.begin_pc + ", " + "msg.sender)") + ";");
 
     }
 
@@ -218,11 +231,14 @@ public class SolCode {
         if (l instanceof PrimitiveIfLabel) {
             // TODO: error report when missing this entry
             String name = ((PrimitiveIfLabel) l).toString();
-            if (name.equals(typecheck.Utils.LABEL_BOTTOM)) return "true"; //TODO
+            if (name.equals(typecheck.Utils.LABEL_BOTTOM)) {
+                return "true"; //TODO
+            }
             String addr = labelTable.get(name);
             return "ifTrust(" + addr + ", msg.sender)";
-        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.JOIN) {
-            return "(" + checkIfTrustSender(((ComplexIfLabel) l).left) + " || " + checkIfTrustSender(((ComplexIfLabel) l).right) + ")";
+        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).getOp() == IfOperator.JOIN) {
+            return "(" + checkIfTrustSender(((ComplexIfLabel) l).getLeft()) + " || "
+                    + checkIfTrustSender(((ComplexIfLabel) l).getRight()) + ")";
         } else {
             // TODO: error report;
             return "NaL";
@@ -232,7 +248,7 @@ public class SolCode {
     private String checkIfLocked(IfLabel l_1, IfLabel l_2) {
         // check if l_1 => l_2 join l
         String name_1, name_2;
-        if (!(l_2 instanceof  PrimitiveIfLabel)) {
+        if (!(l_2 instanceof PrimitiveIfLabel)) {
             //TODO: error report
             return null;
         } else {
@@ -243,16 +259,21 @@ public class SolCode {
             name_1 = ((PrimitiveIfLabel) l_1).toString();
 
             if (name_2.equals(typecheck.Utils.LABEL_BOTTOM)
-            || name_1.equals(name_2))
+                    || name_1.equals(name_2)) {
                 return "false";
+            }
             String addr_2 = labelTable.get(name_2);
 
-            if (name_1.equals(typecheck.Utils.LABEL_BOTTOM))
+            if (name_1.equals(typecheck.Utils.LABEL_BOTTOM)) {
                 return "ifLocked(" + addr_2 + ")";
+            }
             String addr_1 = labelTable.get(name_1);
             return "ifLocked(" + addr_1 + ", " + addr_2 + ")";// + name;
-        } else if (l_1 instanceof ComplexIfLabel && ((ComplexIfLabel) l_1).op == IfOperator.JOIN) {
-            return "(" + checkIfLocked(((ComplexIfLabel) l_1).left, l_2) + " && " + checkIfLocked(((ComplexIfLabel) l_1).right, l_2) + ")";
+        } else if (l_1 instanceof ComplexIfLabel
+                && ((ComplexIfLabel) l_1).getOp() == IfOperator.JOIN) {
+            return "(" + checkIfLocked(((ComplexIfLabel) l_1).getLeft(), l_2) + " && "
+                    + checkIfLocked(
+                    ((ComplexIfLabel) l_1).getRight(), l_2) + ")";
         } else {
             // TODO: error report;
             return "NaL";
@@ -272,18 +293,22 @@ public class SolCode {
             lock(l)
          */
         addLine(assertExp(lock(l)) + ";");
-                // "lock(" + l + ")") + ";");
+        // "lock(" + l + ")") + ";");
     }
 
     private String lock(IfLabel l) {
         if (l instanceof PrimitiveIfLabel) {
             // TODO: error report when missing this entry
             String name = ((PrimitiveIfLabel) l).toString();
-            if (name.equals(typecheck.Utils.LABEL_BOTTOM)) return "false";//TODO: should make a nop statement
+            if (name.equals(typecheck.Utils.LABEL_BOTTOM)) {
+                return "false";//TODO: should make a nop statement
+            }
             String addr = labelTable.get(name);
             return "lock(" + addr + ")";
-        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.MEET) {
-            return "(" + lock(((ComplexIfLabel) l).left) + " && " + lock(((ComplexIfLabel) l).right) + ")";
+        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).getOp() == IfOperator.MEET) {
+            return "(" + lock(((ComplexIfLabel) l).getLeft()) + " && " + lock(
+                    ((ComplexIfLabel) l).getRight())
+                    + ")";
         } else {
             // TODO: error report;
             return "NaL";
@@ -294,11 +319,14 @@ public class SolCode {
         if (l instanceof PrimitiveIfLabel) {
             // TODO: error report when missing this entry
             String name = ((PrimitiveIfLabel) l).toString();
-            if (name.equals(typecheck.Utils.LABEL_BOTTOM)) return "false";//TODO: should make a nop statement
+            if (name.equals(typecheck.Utils.LABEL_BOTTOM)) {
+                return "false";//TODO: should make a nop statement
+            }
             String addr = labelTable.get(name);
             return "unlock(" + addr + ")";
-        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).op == IfOperator.MEET) {
-            return "(" + unlock(((ComplexIfLabel) l).left) + " && " + unlock(((ComplexIfLabel) l).right) + ")";
+        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).getOp() == IfOperator.MEET) {
+            return "(" + unlock(((ComplexIfLabel) l).getLeft()) + " && " + unlock(
+                    ((ComplexIfLabel) l).getRight()) + ")";
         } else {
             // TODO: error report;
             return "NaL";
@@ -310,7 +338,7 @@ public class SolCode {
             unlock(l);
          */
         addLine(assertExp(unlock(l)) + ";");
-                // "unlock(" + l + ")") + ";");
+        // "unlock(" + l + ")") + ";");
     }
 
     private String assertExp(String arguments) {
@@ -318,7 +346,7 @@ public class SolCode {
     }
 
     public void setDynamicOption(TrustSetting trustSetting) {
-        dynamicSystemOption = trustSetting.dynamicSystemOption;
-        labelTable = trustSetting.labelTable;
+        dynamicSystemOption = trustSetting.getDynamicSystemOption();
+        labelTable = trustSetting.getLabelTable();
     }
 }

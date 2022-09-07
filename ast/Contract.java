@@ -1,44 +1,61 @@
 package ast;
 
 import compile.SolCode;
+import java.util.List;
 import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class Contract extends FirstLayerStatement {
-    public String contractName;
-    public String superContractName = "";
-    public TrustSetting trustSetting;
-    // public ArrayList<TrustConstraint> trustCons;
-    public IfLabel ifl;
-    ArrayList<Statement> body;
-    public Contract(String contractName, TrustSetting trustSetting, ArrayList<Statement> body, IfLabel ifl) {
+public class Contract extends Node {
+
+    String contractName;
+    String superContractName = "";
+    TrustSetting trustSetting;
+    IfLabel ifl;
+    List<StateVariableDeclaration> varDeclarations;
+    List<ExceptionDef> exceptionDefs;
+    List<FunctionDef> methodDeclarations;
+
+    public Contract(String contractName, TrustSetting trustSetting,
+            List<StateVariableDeclaration> varDeclarations,
+            List<ExceptionDef> exceptionDefs,
+            List<FunctionDef> methodDeclarations,
+            IfLabel ifl) {
         this.contractName = contractName;
         this.trustSetting = trustSetting;
         this.trustSetting.labelTable.put("this", "address(this)");
-        this.body = body;
+        this.varDeclarations = varDeclarations;
+        this.exceptionDefs = exceptionDefs;
+        this.methodDeclarations = methodDeclarations;
         this.ifl = ifl;
     }
-    public Contract(String contractName, String superContractName, TrustSetting trustSetting, ArrayList<Statement> body, IfLabel ifl) {
+
+    public Contract(String contractName, String superContractName, TrustSetting trustSetting,
+            List<StateVariableDeclaration> varDeclarations,
+            List<ExceptionDef> exceptionDefs,
+            List<FunctionDef> methodDeclarations,
+            IfLabel ifl) {
         this.contractName = contractName;
         this.superContractName = superContractName;
         this.trustSetting = trustSetting;
         this.trustSetting.labelTable.put("this", "address(this)");
-        this.body = body;
+        this.varDeclarations = varDeclarations;
+        this.exceptionDefs = exceptionDefs;
+        this.methodDeclarations = methodDeclarations;
         this.ifl = ifl;
     }
 
-    public boolean NTCinherit(InheritGraph graph) {
+    public boolean ntcInherit(InheritGraph graph) {
         // add an edge from superclass to this contract
-        if (!superContractName.equals(""))
+        if (!superContractName.equals("")) {
             graph.addEdge(superContractName, contractName);
+        }
         return true;
     }
 
-    @Override
-    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         env.setCurSymTab(new SymTab(env.curSymTab));
         Utils.addBuiltInSyms(env.globalSymTab, trustSetting);
@@ -51,46 +68,63 @@ public class Contract extends FirstLayerStatement {
         env.addGlobalSym(contractName, contractSym);
         env.setCurContractSym(contractSym);
 
-        for (Statement stmt : body) {
-            if (!stmt.NTCGlobalInfo(env, now)) return false;
+        for (StateVariableDeclaration dec : varDeclarations) {
+            if (!dec.ntcGlobalInfo(env, now)) {
+                return false;
+            }
         }
+        for (FunctionDef fDef : methodDeclarations) {
+            if (!fDef.ntcGlobalInfo(env, now)) {
+                return false;
+            }
+        }
+
         env.curSymTab = env.curSymTab.getParent();
         return true;
     }
 
     @Override
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-    env.setCurContractSym(env.getContract(contractName));
+        env.setCurContractSym(env.getContract(contractName));
 
-
-        for (Statement stmt : body) {
-            stmt.NTCgenCons(env, now);
+        for (StateVariableDeclaration dec : varDeclarations) {
+            dec.ntcGenCons(env, now);
         }
+
+        for (FunctionDef fDef : methodDeclarations) {
+            fDef.ntcGenCons(env, now);
+        }
+
         return now;
     }
 
-    @Override
     public void globalInfoVisit(ContractSym contractSym) {
         contractSym.name = contractName;
         contractSym.trustSetting = trustSetting;
         contractSym.ifl = ifl;
         contractSym.addContract(contractName, contractSym);
         String name = "this";
-        contractSym.addVar(name, contractSym.toVarSym(name, new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, false, null, scopeContext));
-        /*for (Statement stmt : body) {
-            stmt.globalInfoVisit(contractSym);
-        }*/
+        contractSym.addVar(name, contractSym.toVarSym(name,
+                new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, false,
+                null, scopeContext));
     }
 
-    @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public void genConsVisit(VisitEnv env, boolean tail_position) {
         //env.prevContext = new Context()
         findPrincipal(env.principalSet);
-        for (Statement stmt : body) {
-            stmt.genConsVisit(env, tail_position);
+
+        for (StateVariableDeclaration dec : varDeclarations) {
+            dec.genConsVisit(env, tail_position);
         }
-        return null;
+
+        for (ExceptionDef expDef : exceptionDefs) {
+            expDef.genConsVisit(env, tail_position);
+        }
+
+        for (FunctionDef fDef : methodDeclarations) {
+            fDef.genConsVisit(env, tail_position);
+        }
     }
 
     public void findPrincipal(HashSet<String> principalSet) {
@@ -98,17 +132,36 @@ public class Contract extends FirstLayerStatement {
             trustConstraint.findPrincipal(principalSet);
         }
         ifl.findPrincipal(principalSet);
-        for (Statement stmt : body) {
-            stmt.findPrincipal(principalSet);
+
+        for (StateVariableDeclaration dec : varDeclarations) {
+            dec.findPrincipal(principalSet);
+        }
+
+        for (ExceptionDef expDef : exceptionDefs) {
+            expDef.findPrincipal(principalSet);
+        }
+
+        for (FunctionDef fDef : methodDeclarations) {
+            fDef.findPrincipal(principalSet);
         }
     }
 
-    public void SolCodeGen(SolCode code) {
+    public void solidityCodeGen(SolCode code) {
         code.setDynamicOption(trustSetting);
         code.enterContractDef(contractName);
-        for (Statement stmt : body) {
-            stmt.SolCodeGen(code);
+
+        for (StateVariableDeclaration dec : varDeclarations) {
+            dec.solidityCodeGen(code);
         }
+
+        for (ExceptionDef expDef : exceptionDefs) {
+            expDef.solidityCodeGen(code);
+        }
+
+        for (FunctionDef fDef : methodDeclarations) {
+            fDef.solidityCodeGen(code);
+        }
+
         code.leaveContractDef();
     }
 
@@ -124,13 +177,16 @@ public class Contract extends FirstLayerStatement {
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.addAll(trustSetting.trust_list);
-        rtn.addAll(body);
+        rtn.addAll(varDeclarations);
+        rtn.addAll(methodDeclarations);
         return rtn;
     }
 
     public boolean codePasteContract(HashMap<String, Contract> contractMap) {
-        if (superContractName.equals(""))
+        // TODO: add exception
+        if (superContractName.equals("")) {
             return true;
+        }
 
         // check no functions with the same name
         // add other functions from superContract
@@ -138,7 +194,7 @@ public class Contract extends FirstLayerStatement {
         Contract superContract = contractMap.get(superContractName);
         if (superContract == null) {
             // TODO: superContract not found
-            return  false;
+            return false;
         }
 
         // inherit from superContract
@@ -150,68 +206,73 @@ public class Contract extends FirstLayerStatement {
         trustSetting.trust_list = newTrustCons;
 
         // Statement
-        HashMap<String, AnnAssign> varNames = new HashMap<>();
+        HashMap<String, StateVariableDeclaration> varNames = new HashMap<>();
         HashMap<String, FunctionSig> funcNames = new HashMap<>();
-        for (Statement statement : body) {
-            if (statement instanceof FunctionSig) {
-                FunctionSig f = (FunctionSig) statement;
-                if (varNames.containsKey(f.name) || funcNames.containsKey(f.name)) {
-                    //TODO: duplicate names
-                    return false;
-                }
-                funcNames.put(f.name, f);
-            } else {
-                AnnAssign a = (AnnAssign) statement;
-                Name x = (Name) a.target;
-                if (varNames.containsKey(x.id) || funcNames.containsKey(x.id)) {
-                    //TODO: duplicate names
-                    return false;
-                }
-                varNames.put(x.id, a);
+
+        for (StateVariableDeclaration a : varDeclarations) {
+            Name x = a.name;
+            if (varNames.containsKey(x.id)) {
+                //TODO: duplicate names
+                return false;
             }
+            varNames.put(x.id, a);
         }
 
-        ArrayList<Statement> newBody = new ArrayList<>();
-        for (Statement statement : superContract.body) {
-            // check if duplicate names
-            // check if they match exactly
-            boolean overriden = false;
-            if (statement instanceof FunctionSig) {
-                FunctionSig f = (FunctionSig) statement;
-                if (funcNames.containsKey(f.name)) {
-                    if (!funcNames.get(f.name).typeMatch(f)) {
-                        // TODO: func overridden type not match
-                        return false;
-                    }
-                    overriden = true;
-                } else if (varNames.containsKey(f.name)) {
-                    // TODO: var overridden by func
-                    return false;
-                }
-            } else {
-                AnnAssign a = (AnnAssign) statement;
-                Name x = (Name) a.target;
-                if (varNames.containsKey(x.id)) {
-                    // TODO: var being overridden
-                    return false;
-                } else if (funcNames.containsKey(x.id)) {
-                    // TODO: func overridden by var
-                    return false;
-                }
+        for (FunctionDef f : methodDeclarations) {
+            if (varNames.containsKey(f.name) || funcNames.containsKey(f.name)) {
+                //TODO: duplicate names
+                return false;
+            }
+            funcNames.put(f.name, f);
+        }
+
+        ArrayList<StateVariableDeclaration> newStateVarDecs = new ArrayList<>();
+        ArrayList<FunctionDef> newFuncDefs = new ArrayList<>();
+
+        for (StateVariableDeclaration a : superContract.varDeclarations) {
+            Name x = a.name;
+            if (varNames.containsKey(x.id)) {
+                // TODO: var being overridden
+                return false;
+            } else if (funcNames.containsKey(x.id)) {
+                // TODO: func overridden by var
+                return false;
             }
 
-            if (!overriden) {
-                newBody.add(statement);
+            newStateVarDecs.add(a);
+        }
+        newStateVarDecs.addAll(varDeclarations);
+
+        for (FunctionDef f : methodDeclarations) {
+            boolean overridden = false;
+            if (funcNames.containsKey(f.name)) {
+                if (!funcNames.get(f.name).typeMatch(f)) {
+                    // TODO: func overridden type not match
+                    return false;
+                }
+                overridden = true;
+            } else if (varNames.containsKey(f.name)) {
+                // TODO: var overridden by func
+                return false;
+            }
+
+            if (!overridden) {
+                newFuncDefs.add(f);
             }
         }
-        newBody.addAll(body);
-        body = newBody;
+        newFuncDefs.addAll(methodDeclarations);
 
+        varDeclarations = newStateVarDecs;
+        methodDeclarations = newFuncDefs;
         return true;
     }
 
     public String toString() {
         return "TODO";
         //return genson.serialize(body.get();
+    }
+
+    public String getContractName() {
+        return contractName;
     }
 }

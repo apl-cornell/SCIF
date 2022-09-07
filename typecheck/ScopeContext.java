@@ -8,7 +8,13 @@ import typecheck.sherrlocUtils.Relation;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/*
+ * A context class that stores tree structure between nodes and an exception map that indicate what
+ * exceptions are acceptable in the current contract
+ * */
 public class ScopeContext {
+
     Node cur;
     HashMap<ExceptionTypeSym, Boolean> funcExceptionMap;
     ScopeContext parent;
@@ -24,14 +30,16 @@ public class ScopeContext {
     public ScopeContext(Node cur, ScopeContext parent) {
         this.cur = cur;
         this.parent = parent;
-        if (parent != null)
+        if (parent != null) {
             funcExceptionMap = new HashMap<>(parent.funcExceptionMap);
-        else
+        } else {
             funcExceptionMap = new HashMap<>();
+        }
         SHErrLocName = calcSHErrLocName();
     }
 
-    public ScopeContext(Node cur, ScopeContext parent, HashMap<ExceptionTypeSym, Boolean> funcExceptionMap) {
+    public ScopeContext(Node cur, ScopeContext parent,
+            HashMap<ExceptionTypeSym, Boolean> funcExceptionMap) {
         this.cur = cur;
         this.parent = parent;
         this.funcExceptionMap = new HashMap<>(funcExceptionMap);
@@ -41,27 +49,29 @@ public class ScopeContext {
     private String calcSHErrLocName() {
 
         String localPostfix;
-        if (cur instanceof Contract)
-            localPostfix = ((Contract) cur).contractName;
-        else if (cur instanceof FunctionSig)
+        if (cur instanceof Contract) {
+            localPostfix = ((Contract) cur).getContractName();
+        } else if (cur instanceof FunctionSig) {
             localPostfix = ((FunctionSig) cur).name;
-        else if (cur instanceof If)
+        } else if (cur instanceof If) {
             localPostfix = "if" + cur.locToString();
-        else if (cur instanceof While)
+        } else if (cur instanceof While) {
             localPostfix = "while" + cur.locToString();
-        else if (cur instanceof Interface)
+        } else if (cur instanceof Interface) {
             localPostfix = ((Interface) cur).contractName;
-        else if (cur instanceof GuardBlock)
+        } else if (cur instanceof GuardBlock) {
             localPostfix = "guardBlock" + cur.locToString();
-        else if (cur instanceof Program)
-            localPostfix = ((Program) cur).programName;
-        else
+        } else if (cur instanceof SourceFile) {
+            localPostfix = ((SourceFile) cur).getSourceFileName();
+        } else {
             localPostfix = cur.toSHErrLocFmt();
+        }
 
-        if (parent != null)
+        if (parent != null) {
             return parent.getSHErrLocName() + "." + localPostfix;
-        else
+        } else {
             return localPostfix;
+        }
     }
 
     public String getSHErrLocName() {
@@ -70,17 +80,22 @@ public class ScopeContext {
 
     public Constraint genCons(ScopeContext rhs, Relation op, NTCEnv env, CodeLocation location) {
 
-        return new Constraint(new Inequality(getSHErrLocName(), op, rhs.getSHErrLocName()), env.globalHypothesis, location, env.curContractSym.name, "");
+        return new Constraint(new Inequality(getSHErrLocName(), op, rhs.getSHErrLocName()),
+                env.globalHypothesis, location, env.curContractSym.name, "");
     }
+
     public Constraint genCons(String rhs, Relation op, NTCEnv env, CodeLocation location) {
-        return new Constraint(new Inequality(getSHErrLocName(), op, rhs), env.globalHypothesis, location, env.curContractSym.name, "");
+        return new Constraint(new Inequality(getSHErrLocName(), op, rhs), env.globalHypothesis,
+                location, env.curContractSym.name, "");
     }
 
     public boolean isContractLevel() {
-        if (cur instanceof Contract)
+        if (cur instanceof Contract) {
             return true;
-        if ((cur instanceof FunctionDef) || (cur instanceof FunctionSig) || (parent == null))
+        }
+        if ((cur instanceof FunctionDef) || (cur instanceof FunctionSig) || (parent == null)) {
             return false;
+        }
         return parent.isContractLevel();
     }
 
@@ -90,8 +105,9 @@ public class ScopeContext {
 
     public String getFuncName() {
         ScopeContext now = this;
-        while (!(now.cur instanceof FunctionSig))
-            now =  now.parent;
+        while (!(now.cur instanceof FunctionSig)) {
+            now = now.parent;
+        }
         return ((FunctionSig) now.cur).name;
     }
 

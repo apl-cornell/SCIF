@@ -39,4 +39,4 @@ clean:
 	rm -f Parser.java
 	rm -f ast/*.class typecheck/*.class typecheck/sherrlocUtils/*.class
 
-.PHONY: clean sherrloc-build default all
+.PHONY: clean sherrloc-build default all SCIF

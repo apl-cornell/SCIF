@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import java.util.List;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -8,48 +9,43 @@ import typecheck.*;
 
 import java.util.ArrayList;
 
-public class If extends FirstLayerStatement {
+public class If extends Statement {
 
     Expression test;
-    ArrayList<Statement> body;
-    ArrayList<Statement> orelse;
+    List<Statement> body;
+    List<Statement> orelse;
 
-    public If(Expression test, ArrayList<Statement> body, ArrayList<Statement> orelse) {
+    public If(Expression test, List<Statement> body, List<Statement> orelse) {
         this.test = test;
         this.body = body;
         this.orelse = orelse;
     }
 
-    public If(Expression test, ArrayList<Statement> body) {
+    public If(Expression test, List<Statement> body) {
         this.test = test;
         this.body = body;
         this.orelse = new ArrayList<>();
     }
 
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
         env.curSymTab = new SymTab(env.curSymTab);
         ScopeContext rtn = null;
 
-        rtn = test.NTCgenCons(env, now);
+        rtn = test.ntcGenCons(env, now);
         env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
 
         for (Statement s : body) {
-            rtn = s.NTCgenCons(env, now);
+            rtn = s.ntcGenCons(env, now);
         }
         for (Statement s : orelse) {
-            rtn = s.NTCgenCons(env, now);
+            rtn = s.ntcGenCons(env, now);
         }
         env.curSymTab = env.curSymTab.getParent();
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         return now;
-    }
-
-    @Override
-    public void globalInfoVisit(ContractSym contractSym) {
-
     }
 
     @Override
@@ -176,14 +172,14 @@ public class If extends FirstLayerStatement {
     }
 
     @Override
-    public void SolCodeGen(SolCode code) {
+    public void solidityCodeGen(SolCode code) {
         String cond = test.toSolCode();
         code.enterIf(cond);
         for (Statement stmt : body) {
             /*if (stmt instanceof Expression) {
                 ((Expression) stmt).SolCodeGenStmt(code);
             } else {*/
-            stmt.SolCodeGen(code);
+            stmt.solidityCodeGen(code);
             //}
         }
         code.leaveIf();
@@ -193,7 +189,7 @@ public class If extends FirstLayerStatement {
                 /*if (stmt instanceof Expression) {
                     ((Expression) stmt).SolCodeGenStmt(code);
                 } else {*/
-                stmt.SolCodeGen(code);
+                stmt.solidityCodeGen(code);
                 //}
             }
             code.leaveElse();

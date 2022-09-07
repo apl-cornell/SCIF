@@ -7,6 +7,7 @@ import typecheck.*;
 import java.util.ArrayList;
 
 public class Endorse extends Expression {
+
     Expression value;
     IfLabel from, to;
 
@@ -16,14 +17,16 @@ public class Endorse extends Expression {
         this.to = to;
     }
 
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
-        return value.NTCgenCons(env, parent);
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        return value.ntcGenCons(env, parent);
     }
+
     @Override
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         //TODO: change to conditioned form
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
+                typecheck.Utils.getLabelNameLock(location));
         ExpOutcome vo = value.genConsVisit(env, tail_position);
         String ifNameValue = vo.valueLabelName;
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "endorse" + location.toString();
@@ -31,17 +34,21 @@ public class Endorse extends Expression {
         String fromLabel = from.toSherrlocFmt();
         String toLabel = to.toSherrlocFmt();
 
-        env.cons.add(new Constraint(new Inequality(ifNameValue, fromLabel), env.hypothesis, location, env.curContractSym.name,
-                "The expression must be trusted to be endorsed"));
+        env.cons.add(
+                new Constraint(new Inequality(ifNameValue, fromLabel), env.hypothesis, location,
+                        env.curContractSym.name,
+                        "The expression must be trusted to be endorsed"));
 
-        env.cons.add(new Constraint(new Inequality(toLabel, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(toLabel, ifNameRtn), env.hypothesis, location,
+                env.curContractSym.name,
                 "The integrity level of this expression would be endorsed"));
 
         //env.outContext = endContext;
 
-        env.trustCons.add(new Constraint(new Inequality(beginContext.pc, endContext.pc), env.hypothesis, location, env.curContractSym.name,
-                "The control flow of this expression would be endorsed"));
-
+        env.trustCons.add(
+                new Constraint(new Inequality(beginContext.pc, endContext.pc), env.hypothesis,
+                        location, env.curContractSym.name,
+                        "The control flow of this expression would be endorsed"));
 
         return new ExpOutcome(ifNameRtn, vo.psi);
     }

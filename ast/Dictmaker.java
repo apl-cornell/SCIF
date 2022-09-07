@@ -6,19 +6,24 @@ import java.util.ArrayList;
 
 //TODO: incomplete
 public class Dictmaker extends Expression {
+
     ArrayList<Expression> keys, values;
+
     public Dictmaker(ArrayList<Expression> keys, ArrayList<Expression> values) {
         this.keys = keys;
         this.values = values;
     }
+
     public Dictmaker() {
         this.keys = new ArrayList<>();
         this.values = new ArrayList<>();
     }
+
     public void addPair(Expression key, Expression value) {
         this.keys.add(key);
         this.values.add(value);
     }
+
     @Override
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         //TODO
@@ -46,5 +51,10 @@ public class Dictmaker extends Expression {
         return expression instanceof Dictmaker &&
                 Utils.arrayExpressionTypeMatch(keys, ((Dictmaker) expression).keys) &&
                 Utils.arrayExpressionTypeMatch(values, ((Dictmaker) expression).values);
+    }
+
+    @Override
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        return null;
     }
 }

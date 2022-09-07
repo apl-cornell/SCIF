@@ -3,6 +3,7 @@ package ast;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 import compile.SolCode;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import typecheck.*;
@@ -11,13 +12,23 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public abstract class Node {
-    public CodeLocation location;
-    public ScopeContext scopeContext;
-    public Node() {
+
+    // Record where the corresponding code is in original source file
+    CodeLocation location;
+
+    public CodeLocation getLocation() {
+        return location;
     }
+
+    /*
+        Built in regular typecheck
+     */
+    ScopeContext scopeContext;
+
     public void setLoc(CodeLocation location) {
         this.location = location;
     }
+
     public String locToString() {
         return this.location.toString();
     }
@@ -27,49 +38,37 @@ public abstract class Node {
         return this.getClass().getSimpleName() + "" + location;
     }
 
-    //public abstract void globalInfoVisit(ContractSym contractSym);
     //public abstract PathOutcome genConsVisit(VisitEnv env, boolean tail_position);
 
-    public void findPrincipal(HashSet<String> principalSet) {
-    }
-
-    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
-        return false;
-    }
+    // public abstract void findPrincipal(HashSet<String> principalSet);
 
     /* take each statement as an expression, return the type (context) as result. */
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
-        /* not supposed to call this implementation */
-        return null;
-    }
+    public abstract ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent);
 
-    public boolean NTCinherit(InheritGraph graph) {
-        return false;
-    }
+    public abstract void solidityCodeGen(SolCode code);
 
-    public void SolCodeGen(SolCode code) {
-        // npt supposed to be called
-        return;
-    }
-
-    public ArrayList<Node> children() {
+    public List<Node> children() {
         return new ArrayList<>();
-    };
-
+    }
 
     public void passScopeContext(ScopeContext parent) {
         scopeContext = parent;
-        for (Node node : children())
-            if (node != null)
+        for (Node node : children()) {
+            if (node != null) {
                 node.passScopeContext(scopeContext);
+            }
+        }
     }
 
-    static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();
+    // A Genson object for serialization
+    static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true)
+            .useRuntimeType(true).create();
+
     @Override
     public String toString() {
         return "TODO";
         //return genson.serialize(location);
     }
-    protected static final Logger logger = LogManager.getLogger();
 
+    protected static final Logger logger = LogManager.getLogger();
 }

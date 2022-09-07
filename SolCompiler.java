@@ -1,25 +1,22 @@
-import ast.Node;
-import ast.Program;
+import ast.SourceFile;
 import compile.SolCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.util.ArrayList;
 import java.util.List;
 
 public class SolCompiler {
-    public static void compile(List<Program> roots, File outputFile) {
+
+    public static void compile(List<SourceFile> roots, File outputFile) {
         // assuming the code typechecks, might need to deal with namespace when multi-contract
         //TODO: assuming only one contract for now
         logger.trace("compile starts");
 
         System.out.println("\nCompiled Solidity code:");
-        for (Program root : roots) {
+        for (SourceFile root : roots) {
             SolCode code = new SolCode();
-            root.SolCodeGen(code);
+            root.solidityCodeGen(code);
 
             code.output(outputFile);
             code.display();

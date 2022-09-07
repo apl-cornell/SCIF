@@ -1,17 +1,22 @@
 package ast;
 
+import compile.SolCode;
+import java.util.List;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;
 
-public class Try extends FirstLayerStatement {
-    ArrayList<Statement> body;
-    ArrayList<ExceptHandler> handlers;
+public class Try extends Statement {
+
+    List<Statement> body;
+    List<ExceptHandler> handlers;
+
     // ArrayList<Statement> orelse;
     // ArrayList<Statement> finalbody;
-    public Try(ArrayList<Statement> body, ArrayList<ExceptHandler> handlers) {//, ArrayList<Statement> orelse, ArrayList<Statement> finalbody) {
+    public Try(List<Statement> body,
+            List<ExceptHandler> handlers) {//, ArrayList<Statement> orelse, ArrayList<Statement> finalbody) {
         this.body = body;
         this.handlers = handlers;
         // this.orelse = orelse;
@@ -19,7 +24,7 @@ public class Try extends FirstLayerStatement {
     }
 
 
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
@@ -35,25 +40,26 @@ public class Try extends FirstLayerStatement {
         }
 
         for (Statement s : body) {
-            tmp = s.NTCgenCons(env, now);
+            tmp = s.ntcGenCons(env, now);
         }
         env.curSymTab = env.curSymTab.getParent();
 
         for (ExceptHandler h : handlers) {
-            tmp = h.NTCgenCons(env, parent);
+            tmp = h.ntcGenCons(env, parent);
         }
         return now;
     }
 
     @Override
-    public void globalInfoVisit(ContractSym contractSym) {
+    public void solidityCodeGen(SolCode code) {
 
     }
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location), typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
+                typecheck.Utils.getLabelNameLock(location));
 
         // add new exceptions to psi
         /*HashMap<ExceptionTypeSym, PsiUnit> oldPsi = env.psi;
@@ -83,8 +89,10 @@ public class Try extends FirstLayerStatement {
             ExceptionTypeSym expSym = env.getExp(h.name);
             PsiUnit u = psi.psi.get(expSym);
 
-            env.cons.add(new Constraint(new Inequality(u.c.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
-                    "Try clause should maintain locks when throwing exception " + h.name));
+            env.cons.add(
+                    new Constraint(new Inequality(u.c.lambda, beginContext.lambda), env.hypothesis,
+                            location, env.curContractSym.name,
+                            "Try clause should maintain locks when throwing exception " + h.name));
             /*env.cons.add(new Constraint(new Inequality(u.c.pc, h.), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));*/
 
@@ -107,7 +115,9 @@ public class Try extends FirstLayerStatement {
         /*Utils.contextFlow(env, cTry, endContext, location);
         env.outContext = endContext;*/
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+            env.cons.add(new Constraint(
+                    new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
+                    env.hypothesis, location, env.curContractSym.name,
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 

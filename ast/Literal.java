@@ -6,18 +6,21 @@ import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 public abstract class Literal extends Expression {
+
     @Override
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         String ifNameRtn = "LITERAL..." + location.toString();
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtn), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtn), env.hypothesis, location,
+                env.curContractSym.name,
                 "Control flow must be trusted to use this literal"));
 
-        return new ExpOutcome(ifNameRtn, new PathOutcome(new PsiUnit(new Context(ifNamePc, env.inContext.lambda))));
+        return new ExpOutcome(ifNameRtn,
+                new PathOutcome(new PsiUnit(new Context(ifNamePc, env.inContext.lambda))));
     }
 
     @Override
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         // con: tgt should be a supertype of v
         if (this instanceof Num) {

@@ -1,32 +1,54 @@
 package ast;
 
+import compile.SolCode;
+import java.util.HashSet;
 import typecheck.*;
 
 import java.util.ArrayList;
 
-public class ExceptionDef extends Statement {
+public class ExceptionDef extends TopLayerNode {
+
     ExceptionType exceptionType;
     Arguments arguments;
+
     public ExceptionDef(String name, Arguments members) {
         this.arguments = members;
         this.exceptionType = new ExceptionType(new Type(name));
     }
 
 
-    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         /*if (exceptionType.isLocal(env.curContractSym.name)) {
         }*/
         exceptionType.setContractName(env.curContractSym.name);
-        env.globalSymTab.add(exceptionType.x, env.toExceptionType(exceptionType.x, arguments, parent));
+        env.globalSymTab.add(exceptionType.name,
+                env.toExceptionType(exceptionType.name, arguments, parent));
         return true;
+    }
+
+    @Override
+    public void findPrincipal(HashSet<String> principalSet) {
+        // TODO
     }
 
     public void globalInfoVisit(ContractSym contractSym) {
         exceptionType.setContractName(contractSym.name);
-        contractSym.addType(exceptionType.x, contractSym.toExceptionType(exceptionType.x, arguments));
+        contractSym.addType(exceptionType.name,
+                contractSym.toExceptionType(exceptionType.name, arguments));
         // contractSym.addType(exceptionType, contractSym.toExceptionType(exceptionType, arguments));
 
     }
+
+    @Override
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        return null;
+    }
+
+    @Override
+    public void solidityCodeGen(SolCode code) {
+
+    }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
@@ -34,7 +56,6 @@ public class ExceptionDef extends Statement {
         return rtn;
     }
 
-    @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         return null;
     }

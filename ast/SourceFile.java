@@ -5,80 +5,91 @@ import typecheck.*;
 
 import java.util.*;
 
-// As for now, multiple contracts in one Program might cause problem
-public class Program extends Node {
-    public String programName;
+// A program only contains one contract
+public class SourceFile extends Node {
+
+    String sourceFileName; // e.g., "A.scif"
     Set<String> iptContracts; // imported contracts
     Contract contract;
     String contractName;
     String filePath;
+
+    /*
+        @sourceCode represents the source code in lines
+     */
     List<String> sourceCode;
-    public Program(HashSet<String> iptContracts, Contract contract) {
-        programName = "anonymous";
-        contractName = "UNKNOWN";
-        if (contract != null)
-            contractName = contract.contractName;
+
+    public SourceFile(String sourceFileName, Set<String> iptContracts, Contract contract) {
+        this.sourceFileName = sourceFileName;
+        contractName = contract.contractName;
         this.iptContracts = iptContracts;
         this.contract = contract;
         sourceCode = null;
     }
-    public Program(Contract contract) {
-        programName = "anonymous";
-        contractName = "UNKNOWN";
-        if (contract != null)
-            contractName = contract.contractName;
+
+    public SourceFile(String sourceFileName, Contract contract) {
+        contractName = contract.contractName;
         this.iptContracts = new HashSet<>();
         this.contract = contract;
         this.sourceCode = null;
     }
 
-    public String getContractName() { return contractName; }
-    public void setSourceCode(List<String> sourceCode) { this.sourceCode = sourceCode; }
+    public String getContractName() {
+        return contractName;
+    }
+
     public String getSourceCodeLine(int i) {
         return sourceCode.get(i);
     }
+
+    public void setSourceCode(List<String> sourceCode) {
+        this.sourceCode = sourceCode;
+    }
+
     public Contract findContract(String name) {
-        if (contract.contractName.equals(name))
+        if (contract.contractName.equals(name)) {
             return contract;
+        }
         return null;
     }
+
     public boolean containContract(String name) {
         return findContract(name) != null;
-    }
-    public void setProgramName(String name) {
-        programName = name;
     }
 
     public boolean codePasteContract(String name, HashMap<String, Contract> contractMap) {
         Contract contract = findContract(name);
-        if (contract == null) return false;
+        if (contract == null) {
+            return false;
+        }
         return contract.codePasteContract(contractMap);
     }
 
-    public boolean NTCinherit(InheritGraph graph) {
-        return contract.NTCinherit(graph);
+    public boolean ntcInherit(InheritGraph graph) {
+        return contract.ntcInherit(graph);
     }
 
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        logger.debug("contract: " + contract.contractName + "\n" + env.getContract(contract.contractName));
+        logger.debug("contract: " + contract.contractName + "\n" + env.getContract(
+                contract.contractName));
         env.setGlobalSymTab(env.getContract(contract.contractName).symTab);
         env.setCurSymTab(env.globalSymTab);
-        contract.NTCgenCons(env, now);
+        contract.ntcGenCons(env, now);
         return now;
     }
 
-    @Override
-    public boolean NTCGlobalInfo(NTCEnv env, ScopeContext parent) {
-        for (String iptContract : iptContracts)
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+        for (String iptContract : iptContracts) {
             if (!env.containsContract(iptContract)) {
                 logger.debug("not containing imported contract: " + iptContract);
                 return false;
             }
+        }
         // env.setGlobalSymTab(new SymTab());
         env.setCurSymTab(env.globalSymTab);
         // Utils.addBuiltInSyms(env.globalSymTab, contract.trustSetting);
-        if (!contract.NTCGlobalInfo(env, parent)) {
+        if (!contract.ntcGlobalInfo(env, parent)) {
             logger.debug("GlobalInfo failed with: " + contract);
             return false;
         }
@@ -87,12 +98,15 @@ public class Program extends Node {
 
     public void globalInfoVisit(ContractSym contractSym) {
         Utils.addBuiltInSyms(contractSym.symTab, null);
-        if (contract == null) return;
+        if (contract == null) {
+            return;
+        }
         if (!iptContracts.contains(contract.contractName)) {
             iptContracts.add(contract.contractName);
         }
         // contractSym.iptContracts = iptContracts;
-        logger.debug("visit Contract: " + contract.contractName + "\n" + contractSym.symTab.getTypeSet());
+        logger.debug("visit Contract: " + contract.contractName + "\n"
+                + contractSym.symTab.getTypeSet());
         contract.globalInfoVisit(contractSym);
     }
 
@@ -105,7 +119,7 @@ public class Program extends Node {
         contract.findPrincipal(principalSet);
     }
 
-    public void SolCodeGen(SolCode code) {
+    public void solidityCodeGen(SolCode code) {
         code.addVersion(compile.Utils.SOLITIDY_VERSION);
 
         //TODO: deal with baseContract imports
@@ -117,11 +131,13 @@ public class Program extends Node {
                 exists = true;
                 break;
             }
-            if (!exists)
+            if (!exists) {
                 code.addImport(contractName);
+            }
         }
-        contract.SolCodeGen(code);
+        contract.solidityCodeGen(code);
     }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
@@ -133,7 +149,7 @@ public class Program extends Node {
         return contract;
     }
 
-    public String getProgramName() {
-        return programName;
+    public String getSourceFileName() {
+        return sourceFileName;
     }
 }

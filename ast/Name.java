@@ -4,20 +4,22 @@ import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 public class Name extends Variable {
+
     public String id;
+
     //Context ctx;
     public Name(String x) {
         id = x;
-        // id = new ScopedName(x, "");
+        // id = new ScopedName(name, "");
         // ctx = null;
     }
-    /*public Name(String x, Context y) {
-        id = x;
+    /*public Name(String name, Context y) {
+        id = name;
         ctx = y;
     }*/
 
 
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         Sym s = env.getCurSym(id);
         logger.debug("Name: " + id);
         // logger.debug(s.toString());

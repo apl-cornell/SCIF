@@ -1,12 +1,10 @@
 // the main class of STC
 
-import ast.Node;
-import ast.Program;
+import ast.SourceFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
 import picocli.CommandLine.*;
-import typecheck.Utils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -46,7 +44,7 @@ public class SCIF implements Callable<Integer> {
         System.exit(exitCode);
     }
 
-    private List<Program> _typecheck(String[] outputFileNames) throws Exception {
+    private List<SourceFile> _typecheck(String[] outputFileNames) throws Exception {
         File logDir = new File("./.scif");
         logDir.mkdirs();
 
@@ -64,7 +62,7 @@ public class SCIF implements Callable<Integer> {
             files.add(file);
         }
         System.out.println("Regular Typechecking:");
-        List<Program> roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
+        List<SourceFile> roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
         boolean passNTC = true;
         //if (!Utils.emptyFile(outputFileName))
         //    passNTC = runSLC(outputFileName);
@@ -99,7 +97,7 @@ public class SCIF implements Callable<Integer> {
 
         logger.trace("SCIF starts");
         if (m_funcRequest == null || m_funcRequest.compile) {
-            List<Program> roots = _typecheck(new String[0]);
+            List<SourceFile> roots = _typecheck(new String[0]);
             logger.debug("finished typecheck, compiling...");
             if (roots == null) {
                 return 1;

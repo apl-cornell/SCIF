@@ -1,13 +1,14 @@
 package ast;
 
+import java.util.List;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Extry extends Try {
 
-    public Extry(ArrayList<Statement> body, ArrayList<ExceptHandler> handlers) {//, ArrayList<Statement> orelse, ArrayList<Statement> finalbody) {
+    public Extry(List<Statement> body,
+            List<ExceptHandler> handlers) {//, ArrayList<Statement> orelse, ArrayList<Statement> finalbody) {
         super(body, handlers);
     }
 
@@ -28,12 +29,12 @@ public class Extry extends Try {
         }
 
         for (Statement s : body) {
-            tmp = s.NTCgenCons(env, now);
+            tmp = s.ntcGenCons(env, now);
         }
         env.curSymTab = env.curSymTab.getParent();
 
         for (ExceptHandler h : handlers) {
-            tmp = h.NTCgenCons(env, parent);
+            tmp = h.ntcGenCons(env, parent);
         }
         return now;
     }

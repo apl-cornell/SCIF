@@ -6,8 +6,10 @@ import typecheck.*;
 import java.util.ArrayList;
 
 public class Assert extends Statement {
+
     Expression test;
     Expression msg;
+
     public Assert(Expression test, Expression msg) {
         this.test = test;
         this.msg = msg;
@@ -22,7 +24,12 @@ public class Assert extends Statement {
     }
 
     @Override
-    public void SolCodeGen(SolCode code) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        return null;
+    }
+
+    @Override
+    public void solidityCodeGen(SolCode code) {
         code.addLine("assert(" + test.toSolCode() + ");");
     }
 

@@ -9,15 +9,17 @@ import typecheck.*;
 import java.util.ArrayList;
 
 public class Attribute extends TrailerExpr {
+
     Name attr;
+
     // value.attr
-    public  Attribute(Expression v, Name a) {
+    public Attribute(Expression v, Name a) {
         value = v;
         attr = a;
     }
 
     @Override
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         VarSym varSym = getVarInfo(env);
         ScopeContext now = new ScopeContext(this, parent);
         env.addCons(now.genCons(varSym.typeSym.name, Relation.EQ, env, location));
@@ -53,16 +55,18 @@ public class Attribute extends TrailerExpr {
         String attrValueLabel = vo.valueLabelName;
         String ifAttLabel = structType.getMemberLabel(attr.id);
         String ifNameRnt = scopeContext.getSHErrLocName() + ".struct" + location.toString();
-        env.cons.add(new Constraint(new Inequality(ifNameRnt, ifAttLabel), env.hypothesis, location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNameRnt, ifAttLabel), env.hypothesis, location,
+                env.curContractSym.name,
                 "Integrity of the member"));
         if (!ifAttLabel.equals(attrValueLabel)) {
-            env.cons.add(new Constraint(new Inequality(ifNameRnt, attrValueLabel), env.hypothesis, location, env.curContractSym.name,
+            env.cons.add(new Constraint(new Inequality(ifNameRnt, attrValueLabel), env.hypothesis,
+                    location, env.curContractSym.name,
                     "Integrity of the index value must be trusted to indicate the attribute"));
         }
 
-
         return new ExpOutcome(ifNameRnt, vo.psi);
     }
+
     public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
         VarSym rtnVarSym;
         VarSym parentVarSym = value.getVarInfo(env, tail_position);
@@ -74,6 +78,7 @@ public class Attribute extends TrailerExpr {
     public String toSolCode() {
         return SolCode.toAttribute(value.toSolCode(), attr.id);
     }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
