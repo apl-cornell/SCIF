@@ -2,8 +2,8 @@
 
 JAVA=java
 ROOT=`dirname $0`
-jars=(lib/*)
+jars=(build/libs/*full*.jar)
 libs=$(printf ":%s" "${jars[@]}")
-CLASSPATH=${ROOT}${libs}:${ROOT}/build/classes/java/main
+CLASSPATH=${ROOT}${libs}
 
 ${JAVA} -cp ${CLASSPATH} SCIF "$@"

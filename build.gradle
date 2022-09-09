@@ -1,28 +1,31 @@
 plugins {
     id 'java'
     id "org.xbib.gradle.plugin.jflex" version "1.6.0" // a plugin for building a lexer using jflex
-    id "cup.gradle.cup-gradle-plugin" version "2.0" // building a parser using jcup
+    id "cup.gradle.cup-gradle-plugin" version "2.0" // building a parser using cup
     id "idea"
 }
 
-version '0.5'
+version '0.5.0'
 
 repositories {
     mavenCentral()
     flatDir {
-        dirs 'lib'
+        dirs 'build/libs'
     }
 }
 
-tasks.register('hello') {
-    doLast {
-        println 'Hello World!'
-    }
+ant.importBuild("sherrloc/build.xml") {
+    antTargetName -> "slc-" + antTargetName
 }
 
-cup {
-    sourceDir = "src"
-    args = ["-expect", "1000", "-interface", "-parser", "Parser"]
+def compileSlcJar = tasks.register("compileSlcJar", Copy) {
+    dependsOn("slc-jar")
+    from(ant.lib) {
+        println ant.lib
+        include "SHErrLoc.jar"
+        rename "SHErrLoc.jar", "sherrloc.jar"
+    }
+    into "build/libs"
 }
 
 sourceSets {
@@ -33,7 +36,15 @@ sourceSets {
         java {
             srcDirs = ['src', 'build/generated-src/cup']
         }
+        resources {
+            srcDirs = ['src/config']
+        }
     }
+}
+
+cup {
+    sourceDir = "src"
+    args = ["-expect", "1000", "-interface", "-parser", "Parser"]
 }
 
 idea {
@@ -42,11 +53,36 @@ idea {
     }
 }
 
+compileJava.configure {
+    dependsOn("compileSlcJar")
+}
+
+def fatJar = tasks.register("fatJar", Jar) {
+    manifest {
+        attributes "Main-Class": "SCIF"
+    }
+
+    archiveBaseName = "SCIF-full"
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+    with jar
+}
+
+artifacts {
+    archives fatJar
+}
 
 dependencies {
-    implementation name: 'java-cup-11b'
-    implementation name: 'log4j-api-2.12.1'
-    implementation name: 'genson-1.5'
+    implementation 'org.apache.logging.log4j:log4j-core:2.12.1'
+    implementation 'com.owlike:genson:1.5'
     implementation name: 'sherrloc'
-    implementation name: "picocli-4.0.0-beta-1b"
+    implementation "info.picocli:picocli:4.0.0"
 }

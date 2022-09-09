@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 
-
 @Command(name = "SCIF", version = "SCIF 0.1.0", mixinStandardHelpOptions = true,
         description = "A set of tools for a new smart contract language with information flow control, SCIF.")
 public class SCIF implements Callable<Integer> {
+
     @Parameters(arity = "1..*", description = "The source code file(s).")
     private File[] m_inputFiles;
 
@@ -29,13 +29,16 @@ public class SCIF implements Callable<Integer> {
     private FuncRequest m_funcRequest;
 
     private static class FuncRequest {
-        @Option(names = {"-t", "--typechecker"}, required = true, description = "Information flow typecheck: constraints as log")
+
+        @Option(names = {"-t",
+                "--typechecker"}, required = true, description = "Information flow typecheck: constraints as log")
         boolean typecheck;
         @Option(names = {"-p", "--parser"}, required = true, description = "Parse: ast json as log")
         boolean parse;
         @Option(names = {"-l", "--lexer"}, required = true, description = "Tokenize")
         boolean tokenize;
-        @Option(names = {"-c", "--compiler"}, required = true, description = "Compile to Solidity (default)")
+        @Option(names = {"-c",
+                "--compiler"}, required = true, description = "Compile to Solidity (default)")
         boolean compile;
     }
 
@@ -66,11 +69,16 @@ public class SCIF implements Callable<Integer> {
         boolean passNTC = true;
         //if (!Utils.emptyFile(outputFileName))
         //    passNTC = runSLC(outputFileName);
-        if (roots == null)
+        if (roots == null) {
             passNTC = false;
+        }
 
-        if (!passNTC) return null;
-        if (3 == 3) return null;
+        if (!passNTC) {
+            return null;
+        }
+        if (3 == 3) {
+            return null;
+        }
         // System.out.println("["+ outputFileName + "]");
         ArrayList<File> IFCConsFiles = new ArrayList<>();
         for (int i = 0; i < roots.size(); ++i) {
@@ -120,14 +128,14 @@ public class SCIF implements Callable<Integer> {
             Parser.parse(m_inputFiles[0], astOutputFile);
         } else if (m_funcRequest.tokenize) {
             LexerTest.tokenize(m_inputFiles[0]);
-        }else {
-                logger.error("No funcRequest specified, this should never happen!");
-                //System.out.println("No funcRequest specified, this should never happen!");
+        } else {
+            logger.error("No funcRequest specified, this should never happen!");
+            //System.out.println("No funcRequest specified, this should never happen!");
         }
 
         logger.trace("SCIF finishes");
         return 0;
     }
 
-    protected static final Logger logger = LogManager.getLogger();
+    protected static final Logger logger = LogManager.getLogger(SCIF.class);
 }
