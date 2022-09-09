@@ -1,4 +1,0 @@
-a:int{Alice or Bob and Carl}
-
-def foo{Alice}(a:int{Alice}) -> int{Bob}:
-    return a

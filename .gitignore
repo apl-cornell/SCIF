@@ -8,4 +8,8 @@ tmp.*
 logs
 .scif
 .idea
+.ideabackup
 backup
+tmp
+.gradle
+build

@@ -1,6 +1,0 @@
-contract sample :
-    a : bool{alice}
-
-    def f{alice, alice -> bob or alice}() -> bool :
-        return 1
-

@@ -1,0 +1,27 @@
+runtime CentralizedRuntime implements BasicRuntime {
+    TrustOracle trustOracle;
+    LockOracle lockOracle;
+    CentralizedRuntime(address trustOracleAddr, address lockOracleAddr) {
+        trustOracle = (TrustOracle) trustOracleAddr;
+        trustOracle.register();
+
+        lockOracle = (LockOracle) lockOracleAddr;
+        lockOracle.register();
+    }
+
+    public bool ifTrust(address addr) {
+        return trustOracle.ifTrust(addr);
+    }
+
+    public bool ifTrust(address addr1, address addr2) {
+        return trustOracle.ifTrust(addr1, addr2);
+    }
+
+    public void addTrust(address addr) {
+        trustOracle.addTrust(addr);
+    }
+
+    public bool lock(address addr) {
+        lockOracle.lock(addr);
+    }
+}

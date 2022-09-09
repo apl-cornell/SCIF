@@ -1,0 +1,9 @@
+contract DependantType {
+    final address name;
+    uint{name} a;
+    map(name: address, uint{name}) balances;
+
+    public void{y} foo(final address y) {
+        // ...
+    }
+}

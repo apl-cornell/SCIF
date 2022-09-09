@@ -1,3 +1,0 @@
-interface ContractB :
-    def add{BOB}(x : int{BOB}, y : int{BOB}) -> int{BOB}
-

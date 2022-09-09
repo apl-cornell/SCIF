@@ -1,0 +1,4 @@
+contract ExceptionDefinition {
+    exception X();
+    exception Y(uint aug1, bool aug2);
+}

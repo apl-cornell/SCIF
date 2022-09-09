@@ -1,0 +1,44 @@
+contract TownCrier [this]
+    where sgx => this
+{
+    address requester;
+    BaseContract callback;
+    address sgx;
+    uint FEE;
+    exception NoPendingRequest();
+    exception NotEnoughPayment();
+    // exception InformationFlowViolation(); Should we throw an exception when failing runtime ifc/lock checks?
+
+    TownCrier(address trustOracle, address lockOracle, address _sgx, uint _FEE) {
+        register_runtime(trustOracle, lockOracle);
+        sgx = _sgx; // should update dynamic trust accordingly
+        FEE = _FEE;
+    }
+
+    public payable void request(address _callback) throw NotEnoughPayment() {
+        endorse(msg.sender, _callback, BOT -> this) if (msg.value >= FEE) {
+            requester = msg.sender;
+            callback = _callback;
+        } else {
+            throw NotEnoughPayment();
+        }
+    }
+
+    public void deliver{this; BOT}(bytes{this} data) throw NoPendingRequest() {
+        assert requester != 0, NoPendingRequest();
+
+        try {
+            callback.call(data);
+        } catch (*) {
+            // the call reverted but TownCrier still keeps the fee 
+            log();
+        }
+        requester = 0;
+        send(sgx, FEE);
+    }
+
+    void cancel{requester -> this; BOT}() throw {
+        requester = 0;
+        send(requester, FEE);
+    }
+}

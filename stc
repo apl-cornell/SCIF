@@ -1,6 +1,0 @@
-#!/bin/sh
-
-JAVA=java
-CLASSPATH=".:lib/*"
-
-${JAVA} -cp ${CLASSPATH} STC "$@"

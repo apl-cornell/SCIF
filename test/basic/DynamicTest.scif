@@ -1,0 +1,13 @@
+contract DynamicTest {
+    address name;
+
+    public void foo() {
+        if (name => this) {
+            if (msg.sender => this) {
+                if (msg.sender => name) { // should we allow checks between two dynamic labels?
+                    // ...
+                }
+            }
+        }
+    }
+}
