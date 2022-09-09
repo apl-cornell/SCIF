@@ -3,32 +3,34 @@
 ## Prerequisite
 
 * [JFlex](https://jflex.de/)
-* Java 15
+* Java 17
 * Ant
+* Gradle
 
 ## Installation
+
 ```console
 git clone --recurse-submodules  https://github.com/Neroysq/Wyvern.git
-make all
+./gradlew build
 ```
 
 ## Usage
-`make all` to compile all files including sherrloc
 
 ```console
-Usage: SCIF (-t | -p | -l | -c) [-hV] -i=<inputFiles>...
-            [-i=<inputFiles>...]... [-lg=<outputFileNames>...]...
+Usage: SCIF [-t | -p | -l | -c] [-hV] [-debug] [-lg=<m_outputFileNames>...]...
+            <m_inputFiles>...
 A set of tools for a new smart contract language with information flow control,
 SCIF.
-  -c, --compiler        Compile to Solidity
-  -h, --help            Show this help message and exit.
-  -i=<inputFiles>...    The source code file(s).
-  -l, --lexer           Tokenize
-      -lg=<outputFileNames>...
-                        The log file.
-  -p, --parser          Parse: ast json as log
-  -t, --typechecker     Information flow typecheck: constraints as log
-  -V, --version         Print version information and exit.
+      <m_inputFiles>...   The source code file(s).
+  -c, --compiler          Compile to Solidity (default)
+      -debug
+  -h, --help              Show this help message and exit.
+  -l, --lexer             Tokenize
+      -lg=<m_outputFileNames>...
+                          The log file.
+  -p, --parser            Parse: ast json as log
+  -t, --typechecker       Information flow typecheck: constraints as log
+  -V, --version           Print version information and exit.
 ```
 
 An example:
@@ -37,11 +39,3 @@ An example:
 ./scif -c -i=SCIFex/Wallet.java
 ```
 
-## TODO List
-* finish the full pass
-* more examples: multiWallet, Uniswap...
-* default annotations
-* `struct`
-* all built-in functions/variables 
-* augassign 
-* exception related
