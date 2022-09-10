@@ -7,10 +7,9 @@ plugins {
 
 version '0.5.0'
 
-repositories {
-    mavenCentral()
-    flatDir {
-        dirs 'build/libs'
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -18,10 +17,15 @@ ant.importBuild("sherrloc/build.xml") {
     antTargetName -> "slc-" + antTargetName
 }
 
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs "build/libs"
+    }
+}
+
 def compileSlcJar = tasks.register("compileSlcJar", Copy) {
-    dependsOn("slc-jar")
     from(ant.lib) {
-        println ant.lib
         include "SHErrLoc.jar"
         rename "SHErrLoc.jar", "sherrloc.jar"
     }
@@ -80,9 +84,17 @@ artifacts {
     archives fatJar
 }
 
+configurations {
+    priority // hack to force sherrloc to apprear later than jflex and cup
+    sourceSets.main.compileClasspath = configurations.priority + sourceSets.main.compileClasspath
+    sourceSets.main.runtimeClasspath = configurations.priority + sourceSets.main.runtimeClasspath
+}
+
 dependencies {
+    priority "de.jflex:jflex:1.8.2"
+    priority 'de.jflex:cup-parent:11b-20160615'
     implementation 'org.apache.logging.log4j:log4j-core:2.12.1'
     implementation 'com.owlike:genson:1.5'
-    implementation name: 'sherrloc'
     implementation "info.picocli:picocli:4.0.0"
+    implementation files("build/libs/sherrloc.jar")
 }
