@@ -959,15 +959,6 @@ suite ::= LBRACE small_stmts:a RBRACE {:
     | LBRACE RBRACE {:
         RESULT = new ArrayList<Statement>();
     :};
-/*stmts ::=
-    stmt:a {:
-        RESULT = a;
-    :}
-    | stmts:list stmt:b {:
-        list.addAll(b);
-        RESULT = list;
-    :};
-    */
 
 expr ::=
     expr:a OR:o expr:b {:

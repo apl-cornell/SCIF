@@ -1,0 +1,11 @@
+contract BaseContract [this] {
+    RuntimeManager _manager;
+
+    constructor(address trustOracle, address lockOracle) {
+        _manager = CentralizedRuntime(trustOracle, lockOracle);
+    }
+
+    constructor(RuntimeManager manager) {
+        _manager = manager;
+    }
+}

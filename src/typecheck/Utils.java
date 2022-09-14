@@ -319,7 +319,7 @@ public class Utils {
             now = now.parent;
         }
         FunctionDef funcNode = (FunctionDef) now.cur;
-        Sym sym = env.getCurSym(funcNode.name);
+        Sym sym = env.getCurSym(funcNode.getName());
         return ((FuncSym) sym);
     }
 

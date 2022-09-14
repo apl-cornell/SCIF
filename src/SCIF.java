@@ -11,8 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-
-@Command(name = "SCIF", version = "SCIF 0.1.0", mixinStandardHelpOptions = true,
+/**
+ * The main program of SCIF compiler. It accepts arguments and options to perform parsing,
+ * typechecking, and compiling SCIF code.
+ */
+@Command(name = "SCIF", version = "SCIF 0.5.0", mixinStandardHelpOptions = true,
         description = "A set of tools for a new smart contract language with information flow control, SCIF.")
 public class SCIF implements Callable<Integer> {
 
@@ -47,6 +50,13 @@ public class SCIF implements Callable<Integer> {
         System.exit(exitCode);
     }
 
+    /**
+     * Typecheck input code files, and return the manipulated AST.
+     *
+     * @param outputFileNames
+     * @return The manipulated AST.
+     * @throws Exception
+     */
     private List<SourceFile> _typecheck(String[] outputFileNames) throws Exception {
         File logDir = new File("./.scif");
         logDir.mkdirs();
@@ -130,7 +140,6 @@ public class SCIF implements Callable<Integer> {
             LexerTest.tokenize(m_inputFiles[0]);
         } else {
             logger.error("No funcRequest specified, this should never happen!");
-            //System.out.println("No funcRequest specified, this should never happen!");
         }
 
         logger.trace("SCIF finishes");

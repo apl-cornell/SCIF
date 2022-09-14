@@ -2,6 +2,7 @@ package ast;
 
 import compile.SolCode;
 import compile.Utils;
+import java.util.Arrays;
 import java.util.List;
 import typecheck.*;
 
@@ -11,27 +12,65 @@ import java.util.HashSet;
 
 public class FunctionSig extends TopLayerNode {
 
-    public String name;
-    public FuncLabels funcLabels;
-    public Arguments args;
-    public List<String> decoratorList;
-    public Type rtn;
-    public List<ExceptionType> exceptionList;
-    public boolean isConstructor;
+    public String getName() {
+        return name;
+    }
 
+    String name;
+    FuncLabels funcLabels;
+    Arguments args;
+
+    /**
+     * a list of decorators, e.g., <code>public</code>, <code>private</code>. Can be null after
+     * initialization and need to be set to default
+     */
+    List<String> decoratorList;
+    Type rtn;
+    List<ExceptionType> exceptionList;
+    boolean isConstructor;
+
+    /**
+     * @param name          local name of this method
+     * @param funcLabels    information flow labels of this method <code>{a -> b; c; d}</code>
+     * @param args          arguments of this method
+     * @param decoratorList a list of decorators, e.g., <code>public</code>, <code>private</code>.
+     *                      will be set to <code>private</code> if no visibility specified.
+     * @param rtn           Type of the return value
+     */
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
             List<String> decoratorList, Type rtn) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
-        this.decoratorList = decoratorList;
+        this.decoratorList = setToDefault(decoratorList);
         this.rtn = rtn;
         this.exceptionList = new ArrayList<>();
         if (name.equals(Utils.CONSTRUCTOR_NAME)) {
             isConstructor = true;
         }
 
-        funcLabels.setToDefault(isConstructor, decoratorList);
+        funcLabels.setToDefault(isConstructor, this.decoratorList);
+    }
+
+    private List<String> setToDefault(List<String> decoratorList) {
+        if (decoratorList == null) {
+            return new ArrayList<>(Arrays.asList(Utils.PRIVATE_DECORATOR));
+        } else {
+            boolean isPublic = false, isPrivate = false;
+            if (decoratorList.contains(Utils.PUBLIC_DECORATOR)) {
+                isPublic = true;
+            }
+            if (decoratorList.contains(Utils.PRIVATE_DECORATOR)) {
+                isPrivate = true;
+            }
+            if (!(isPrivate && isPublic)) {
+                decoratorList.add(Utils.PRIVATE_DECORATOR);
+            } else if (isPrivate && isPublic) {
+                return null;
+                // TODO: throw new Exception("a method can not be both public and private");
+            }
+            return decoratorList;
+        }
     }
 
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
@@ -39,14 +78,14 @@ public class FunctionSig extends TopLayerNode {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
-        this.decoratorList = decoratorList;
+        this.decoratorList = setToDefault(decoratorList);
         this.rtn = rtn;
         this.exceptionList = exceptionList;
         if (name.equals(Utils.CONSTRUCTOR_NAME)) {
             isConstructor = true;
         }
 
-        funcLabels.setToDefault(isConstructor, decoratorList);
+        funcLabels.setToDefault(isConstructor, this.decoratorList);
     }
 
     public FunctionSig(FunctionSig funcSig) {

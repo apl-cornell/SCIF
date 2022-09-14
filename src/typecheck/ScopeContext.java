@@ -52,7 +52,7 @@ public class ScopeContext {
         if (cur instanceof Contract) {
             localPostfix = ((Contract) cur).getContractName();
         } else if (cur instanceof FunctionSig) {
-            localPostfix = ((FunctionSig) cur).name;
+            localPostfix = ((FunctionSig) cur).getName();
         } else if (cur instanceof If) {
             localPostfix = "if" + cur.locToString();
         } else if (cur instanceof While) {
@@ -108,7 +108,7 @@ public class ScopeContext {
         while (!(now.cur instanceof FunctionSig)) {
             now = now.parent;
         }
-        return ((FunctionSig) now.cur).name;
+        return ((FunctionSig) now.cur).getName();
     }
 
     // static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();

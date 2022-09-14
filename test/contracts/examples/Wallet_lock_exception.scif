@@ -1,17 +1,18 @@
-contract NewWallet [this] extends Wallet {
+contract Wallet [this] extends BaseContract {
     map(address, uint) balances;
     exception balanceNotEnough();
     exception transferFailure();
 
-    constructor(address trustOracle, address lockOracle) {
-        super(CentralizedRuntime(trustOracle, lockOracle)); // forced to be the first operation in constructors
+    constructor(RuntimeManager m, ...) {
+        super(m);
+        m.register();
     }
 
     // {BOT -> this; BOT} (t{BOT} name) return {value: this; end_pc: this}
     public void withdraw(uint amount) throw balanceNotEnough(), transferFailure() {
         Wallet a = new Wallet();
 
-        endorse(amount, msg.sender, BOT => this) if (balances[msg.sender] >= amount) {
+        endorse(amount, msg.sender, BOT -> this) if (balances[msg.sender] >= amount) {
             lock(this) {
                 try {
                     send(msg.sender, amount);
@@ -26,7 +27,7 @@ contract NewWallet [this] extends Wallet {
     }
 
     public payable void deposit() {
-        endorse(msg.value, msg.sender, BOT => this) {
+        endorse(msg.value, msg.sender, BOT -> this) {
             balances[msg.sender] += msg.value;
         }
     }
