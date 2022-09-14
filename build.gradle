@@ -44,6 +44,14 @@ sourceSets {
             srcDirs = ['src/config']
         }
     }
+    test {
+        java {
+            srcDirs = ['test/src']
+        }
+        resources {
+            srcDirs = ['test/contracts']
+        }
+    }
 }
 
 cup {
@@ -80,6 +88,10 @@ def fatJar = tasks.register("fatJar", Jar) {
     with jar
 }
 
+test {
+    useJUnitPlatform()
+}
+
 artifacts {
     archives fatJar
 }
@@ -88,13 +100,18 @@ configurations {
     priority // hack to force sherrloc to apprear later than jflex and cup
     sourceSets.main.compileClasspath = configurations.priority + sourceSets.main.compileClasspath
     sourceSets.main.runtimeClasspath = configurations.priority + sourceSets.main.runtimeClasspath
+    sourceSets.test.compileClasspath = configurations.priority + sourceSets.test.compileClasspath
+    sourceSets.test.runtimeClasspath = configurations.priority + sourceSets.test.runtimeClasspath
 }
 
 dependencies {
+    implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
     priority "de.jflex:jflex:1.8.2"
     priority 'de.jflex:cup-parent:11b-20160615'
     implementation 'org.apache.logging.log4j:log4j-core:2.12.1'
     implementation 'com.owlike:genson:1.5'
     implementation "info.picocli:picocli:4.0.0"
     implementation files("build/libs/sherrloc.jar")
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.9.0"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.9.0"
 }

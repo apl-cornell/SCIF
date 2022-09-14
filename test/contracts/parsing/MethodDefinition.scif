@@ -1,0 +1,5 @@
+contract MethodDefinition {
+    exception X();
+    void foo() {
+    }
+}

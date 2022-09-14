@@ -11,7 +11,7 @@ contract NewWallet [this] extends Wallet {
     public void withdraw(uint amount) throw balanceNotEnough(), transferFailure() {
         Wallet a = new Wallet();
 
-        endorse(amount, msg.sender, BOT -> this) if (balances[msg.sender] >= amount) {
+        endorse(amount, msg.sender, BOT => this) if (balances[msg.sender] >= amount) {
             lock(this) {
                 try {
                     send(msg.sender, amount);
@@ -26,7 +26,7 @@ contract NewWallet [this] extends Wallet {
     }
 
     public payable void deposit() {
-        endorse(msg.value, msg.sender, BOT -> this) {
+        endorse(msg.value, msg.sender, BOT => this) {
             balances[msg.sender] += msg.value;
         }
     }

@@ -271,37 +271,6 @@ contract_extends ::=
         RESULT = null;
     :};
 
-/*
-    CONTRACT NAME:name LBRACE file_input:list RBRACE {:
-        TrustSetting trustSetting = new TrustSetting();
-        RESULT = new Contract((String) name, trustSetting, list, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-        //System.err.println(RESULT);
-    :}
-    | CONTRACT NAME:name LSQB ifLabel:ifl RSQB LBRACE file_input:list RBRACE {:
-        TrustSetting trustSetting = new TrustSetting();
-        RESULT = new Contract((String) name, trustSetting, list, ifl);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-        //System.err.println(RESULT);
-    :}
-    | CONTRACT NAME:name LSQB ifLabel:ifl RSQB EXTENDS NAME:y LBRACE file_input:list RBRACE {:
-        TrustSetting trustSetting = new TrustSetting();
-        RESULT = new Contract((String) name, (String) y, trustSetting, list, ifl);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-        //System.err.println(RESULT);
-    :}
-    | CONTRACT NAME:name LSQB ifLabel:ifl RSQB LBRACE trust_setting:trustSetting file_input:list RBRACE {:
-        RESULT = new Contract((String) name, trustSetting, list, ifl);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-        //System.err.println(RESULT);
-    :}
-    | CONTRACT NAME:name LSQB ifLabel:ifl RSQB EXTENDS NAME:y LBRACE trust_setting:trustSetting file_input:list RBRACE {:
-        RESULT = new Contract((String) name, (String) y, trustSetting, list, ifl);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-        //System.err.println(RESULT);
-    :};
-*/
-
 trust_setting ::=
     LBRACE LBRACE NAME:dynamicOption RBRACE RBRACE {:
         List<TrustConstraint> list = new ArrayList<>();
@@ -317,6 +286,12 @@ trust_setting ::=
     | LBRACE LBRACE NAME:dynamicOption SEMI trust_decs: trust_list SEMI label_table:l RBRACE RBRACE {:
             TrustSetting trustSetting = new TrustSetting((String)dynamicOption, trust_list, l);
             RESULT = trustSetting;
+    :}
+    | {:
+        List<TrustConstraint> list = new ArrayList<>();
+        HashMap<String, String> tmp = new HashMap<String, String>();
+        TrustSetting trustSetting = new TrustSetting(null, list, tmp);
+        RESULT = trustSetting;
     :};
 
 label_table ::=
@@ -404,14 +379,14 @@ exp_defs ::=
         list.add(eDef);
         RESULT = list;
     :}
-    | errorDef {:
+    | {:
         List<ExceptionDef> list = new ArrayList<>();
         RESULT = list;
     :};
 
 func_defs ::=
-    func_defs:list funcdef:fDef {:
-        list.add(fDef);
+    funcdef:fDef func_defs:list {:
+        list.add(0, fDef);
         RESULT = list;
     :}
     | {:
@@ -474,6 +449,7 @@ funcSig ::= r_funcSig:a NEWLINE {: RESULT = a;
 
 errorDef ::=
     EXCEPTION:x NAME:a parameters:b SEMI {:
+        logger.debug("exception def: " + a);
         RESULT = new ExceptionDef((String) a, b);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
@@ -481,7 +457,7 @@ errorDef ::=
 r_funcSig ::=
     typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b {:
         // System.out.println("parsing function");
-        // logger.debug("parsing func sig");
+        logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, c);
         RESULT.setLoc(new CodeLocation(cleft, cright, filename));
         //makeNode("funcdef", a, b, c, d);
@@ -611,7 +587,7 @@ funcdef ::=
 
 typeSym ::=
     NAME:a {:
-        logger.debug("a name");
+        logger.debug("a name: " + (String) a);
         RESULT = new Type((String)a);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}

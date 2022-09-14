@@ -466,13 +466,15 @@ public class Utils {
     }
 
     public static DynamicSystemOption resolveDynamicOption(String dynamicOption) {
-        switch (dynamicOption) {
-            case "BaseContractCentralized":
-                return DynamicSystemOption.BaseContractCentralized;
-            case "Decentralized":
-                return DynamicSystemOption.Decentralized;
+        if (dynamicOption == null) {
+            return DynamicSystemOption.BaseContractCentralized;
         }
-        return null; //TODO error report
+        return switch (dynamicOption) {
+            case "BaseContractCentralized" -> DynamicSystemOption.BaseContractCentralized;
+            case "Decentralized" -> DynamicSystemOption.Decentralized;
+            default -> null;
+        };
+        //TODO error report
     }
 
     public static String translateSLCSuggestion(HashMap<String, SourceFile> programMap, String s,

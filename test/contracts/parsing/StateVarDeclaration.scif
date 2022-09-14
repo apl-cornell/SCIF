@@ -1,6 +1,6 @@
 contract StateVariableDeclaration {
     uint name;
-    map(address, uint) balances;
+    // map(address, uint) balances;
     bool b;
     bytes d;
 }

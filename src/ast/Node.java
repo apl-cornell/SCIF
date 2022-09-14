@@ -9,20 +9,21 @@ import org.apache.logging.log4j.Logger;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
+/**
+ * An AST node
+ */
 public abstract class Node {
 
-    // Record where the corresponding code is in original source file
+    /**
+     * Record where the corresponding code is in original source file
+     */
     CodeLocation location;
 
     public CodeLocation getLocation() {
         return location;
     }
-
-    /*
-        Built in regular typecheck
-     */
+    
     ScopeContext scopeContext;
 
     public void setLoc(CodeLocation location) {
@@ -33,16 +34,13 @@ public abstract class Node {
         return this.location.toString();
     }
 
-
     public String toSHErrLocFmt() {
         return this.getClass().getSimpleName() + "" + location;
     }
 
-    //public abstract PathOutcome genConsVisit(VisitEnv env, boolean tail_position);
-
-    // public abstract void findPrincipal(HashSet<String> principalSet);
-
-    /* take each statement as an expression, return the type (context) as result. */
+    /**
+     * take each statement as an expression, return the type (context) as result.
+     */
     public abstract ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent);
 
     public abstract void solidityCodeGen(SolCode code);
@@ -60,7 +58,9 @@ public abstract class Node {
         }
     }
 
-    // A Genson object for serialization
+    /**
+     * A Genson object for serialization
+     */
     static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true)
             .useRuntimeType(true).create();
 

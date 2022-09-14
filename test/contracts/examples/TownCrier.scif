@@ -16,7 +16,7 @@ contract TownCrier [this]
     }
 
     public payable void request(address _callback) throw NotEnoughPayment() {
-        endorse(msg.sender, _callback, BOT -> this) if (msg.value >= FEE) {
+        endorse(msg.sender, _callback, BOT => this) if (msg.value >= FEE) {
             requester = msg.sender;
             callback = _callback;
         } else {

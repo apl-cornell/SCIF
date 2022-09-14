@@ -1,9 +1,0 @@
-contract MethodDefinition {
-    void foo() {
-
-    }
-
-    uint bar(uint input1, uint input2) {
-        
-    }
-}
