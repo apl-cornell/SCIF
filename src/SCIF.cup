@@ -21,7 +21,7 @@ parser code {:
         report_error("Syntax error", cur_token);
     }
 
-    public void Debuglog(String s) {
+    public void debuglog(String s) {
         logger.debug(s);
         //if (DEBUG)
         //    System.err.println(s);
@@ -210,6 +210,10 @@ sourceFile ::=
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
         logger.debug(RESULT);
     :};
+    /*
+    | error:err {:
+        report_fatal_error("Syntax error when parsing source file", err);
+    :};*/
 
 ipt_stmts ::=
     ipt_stmts:s  ipt_stmt:a {:
