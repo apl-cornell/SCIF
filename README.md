@@ -39,3 +39,17 @@ An example:
 ./scif -c -i=SCIFex/Wallet.java
 ```
 
+## Documentation
+
+### Prerequisite
+
+* yarn
+* node.js 18
+
+### Run locally
+
+```console
+yarn install
+yarn docs:dev
+```
+
