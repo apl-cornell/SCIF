@@ -6,6 +6,7 @@ SCIF is statically typed, meaning that the type of each variable and method need
 
 * `bool`: Boolean type where the possible values are `true` and `false`.
 * `uint`: Unsigned integer type where the possible values are between 0 and 2^256 - 1.
+* `byte`: Byte type where the possible values are between 0 and 2^8 - 1.
 
 ## Arrays
 
