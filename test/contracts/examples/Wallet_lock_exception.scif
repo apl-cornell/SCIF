@@ -3,14 +3,34 @@ contract Wallet [this] extends BaseContract {
     exception balanceNotEnough();
     exception transferFailure();
 
+    class DecentralizedRuntimeManager implements RuntimeManager {
+
+        public bool ifTrust(address a, address b) {
+            if (a == address(this)) {
+                if (ifDTrust(b)) {
+                    return true;
+                } else {
+                    // perform a bfs over direct trustees
+                }
+            }
+            return BaseContract(a).ifTrust(a, b);
+        }
+    }
+
+    /**
+     *  A deploy transaction:
+     *      m = RuntimeManager()
+     *      create new DecentralizedRuntimeManager(m)
+    */
     constructor(RuntimeManager m, ...) {
         super(m);
-        m.register();
+        // m.register();
+        DecentralizedRuntimeManager child = new DecentralizedRuntimeManager(m);
     }
 
     // {BOT -> this; BOT} (t{BOT} name) return {value: this; end_pc: this}
-    public void withdraw(uint amount) throw balanceNotEnough(), transferFailure() {
-        Wallet a = new Wallet();
+    @public
+    void withdraw(uint amount) throws (balanceNotEnough, transferFailure) {
 
         endorse(amount, msg.sender, BOT -> this) if (balances[msg.sender] >= amount) {
             lock(this) {
@@ -26,7 +46,9 @@ contract Wallet [this] extends BaseContract {
         }
     }
 
-    public payable void deposit() {
+    @public
+    @payable
+    void deposit() {
         endorse(msg.value, msg.sender, BOT -> this) {
             balances[msg.sender] += msg.value;
         }

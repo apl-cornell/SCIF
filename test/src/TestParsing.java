@@ -5,20 +5,24 @@ import java_cup.runtime.Symbol;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class TestParsing {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "EmptyContract",
-            "StateVarDeclaration",
-            "ExceptionDefinition",
-            "MethodDefinition",
+            "basic/EmptyContract",
+            "basic/StateVarDeclaration",
+            "basic/ExceptionDefinition",
+            "basic/MethodDefinition",
+            "basic/BaseContract",
     })
     void testPositiveParsing(String contractName) {
-        String inputFilePath = "parsing/" + contractName + ".scif";
+        String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         try {
             Symbol result = Parser.parse(new File(input.toURI()), null);
+            assertNotNull(result);
         } catch (URISyntaxException e) {
             System.err.println("IOException when converting the input file URL to URI");
         } /*catch (Exception e) {
@@ -26,7 +30,20 @@ public class TestParsing {
         }*/
     }
 
-    void testNegativeParsing() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "WrongStateVarDeclaration",
+    })
+    void testNegativeParsing(String contractName) {
+        String inputFilePath = "parsing/" + contractName + ".scif";
+        URL input = ClassLoader.getSystemResource(inputFilePath);
+        try {
+            Symbol result = Parser.parse(new File(input.toURI()), null);
+            assertNull(result);
+        } catch (URISyntaxException e) {
+            System.err.println("IOException when converting the input file URL to URI");
+        } /*catch (Exception e) {
 
+        }*/
     }
 }

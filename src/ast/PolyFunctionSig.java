@@ -6,10 +6,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class PolyFunctionSig extends FunctionSig {
+
     ArrayList<Integer> polyArgs;
 
-    public PolyFunctionSig(String name, FuncLabels funcLabels, ArrayList<String> polyArgs, Arguments args, ArrayList<String> decoratorList, Type rtn) {
-        super(name, funcLabels, args, decoratorList, rtn);
+    public PolyFunctionSig(String name, FuncLabels funcLabels, ArrayList<String> polyArgs,
+            Arguments args, ArrayList<String> decoratorList, Type rtn, boolean isConstructor) {
+        super(name, funcLabels, args, decoratorList, rtn, isConstructor);
         this.polyArgs = new ArrayList<>();
         HashMap<String, Integer> argToIndex = new HashMap<>();
         for (int i = 0; i < args.args.size(); ++i) {
@@ -41,9 +43,12 @@ public class PolyFunctionSig extends FunctionSig {
         ArrayList<VarSym> argsInfo = args.parseArgs(contractSym);
         logger.debug("creating polyFuncInfo with polyarg size: " + polyArgs.size());
         IfLabel ifl = null;
-        if (rtn instanceof LabeledType)
+        if (rtn instanceof LabeledType) {
             ifl = ((LabeledType) rtn).ifl;
-        contractSym.addFunc(funcId, new PolyFuncSym(funcId, funcLabels, polyArgs, argsInfo, contractSym.toTypeSym(rtn), ifl, scopeContext, location));
+        }
+        contractSym.addFunc(funcId,
+                new PolyFuncSym(funcId, funcLabels, polyArgs, argsInfo, contractSym.toTypeSym(rtn),
+                        ifl, scopeContext, location));
     }
 
 

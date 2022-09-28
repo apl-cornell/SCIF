@@ -4,10 +4,18 @@ import java.awt.*;
 import java.util.ArrayList;
 
 public class Map extends LabeledType {
+
     public Type keyType;
     public Type valueType;
+
     public Map(Type keyType, Type valueType, IfLabel ifl) {
         super("map", ifl);
+        this.keyType = keyType;
+        this.valueType = valueType;
+    }
+
+    public Map(String keyName, LabeledType keyType, LabeledType valueType, IfLabel ifl) {
+        super(keyName, ifl);
         this.keyType = keyType;
         this.valueType = valueType;
     }
@@ -19,6 +27,7 @@ public class Map extends LabeledType {
         rtn += "(" + k + " => " + v + ")";
         return rtn;
     }
+
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();

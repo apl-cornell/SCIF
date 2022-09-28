@@ -2,76 +2,6 @@ import java_cup.runtime.*;
 import java.util.Stack;
 import java.util.HashMap;
 
-
-/**
- * token : (https://github.com/python/cpython/blob/master/Parser/tokenizer.c)
-    "ENDMARKER",
-    "NAME",
-    "NUMBER",
-    "STRING",
-    "NEWLINE",
-    "INDENT",
-    "DEDENT",
-    "LPAR",
-    "RPAR",
-    "LSQB",
-    "RSQB",
-    "COLON",
-    "COMMA",
-    "SEMI",
-    "PLUS",
-    "MINUS",
-    "STAR",
-    "SLASH",
-    "VBAR",
-    "AMPER",
-    "LESS",
-    "GREATER",
-    "EQUAL",
-    "DOT",
-    "PERCENT",
-    "LBRACE",
-    "RBRACE",
-    "EQEQUAL",
-    "NOTEQUAL",
-    "LESSEQUAL",
-    "GREATEREQUAL",
-    "TILDE",
-    "CIRCUMFLEX",
-    "LEFTSHIFT",
-    "RIGHTSHIFT",
-    "DOUBLESTAR",
-    "PLUSEQUAL",
-    "MINEQUAL",
-    "STAREQUAL",
-    "SLASHEQUAL",
-    "PERCENTEQUAL",
-    "AMPEREQUAL",
-    "VBAREQUAL",
-    "CIRCUMFLEXEQUAL",
-    "LEFTSHIFTEQUAL",
-    "RIGHTSHIFTEQUAL",
-    "DOUBLESTAREQUAL",
-    "DOUBLESLASH",
-    "DOUBLESLASHEQUAL",
-    "AT",
-    "ATEQUAL",
-    "RARROW",
-    "ELLIPSIS",
-    "OP",
-    "<ERRORTOKEN>",
-    "COMMENT",
-    "NL",
-    "ENCODING",
-    "<N_TOKENS>"
-
-    Wyvern-specific
-    "ENDORSE",
-    "AUTOENDORSE",
-    "GUARD"
- */
-
-
 %%
 
 %class Lexer
@@ -130,7 +60,6 @@ import java.util.HashMap;
         // keywords.put("while",   Integer.valueOf(sym.WHILE));
         // keywords.put("with",    Integer.valueOf(sym.WITH));
         keywords.put("endorse", Integer.valueOf(sym.ENDORSE));
-        // keywords.put("const", Integer.valueOf(sym.CONST));
         keywords.put("map", Integer.valueOf(sym.MAP));
         keywords.put("contract", Integer.valueOf(sym.CONTRACT));
         //keywords.put("interface", Integer.valueOf(sym.INTERFACE));
@@ -143,10 +72,13 @@ import java.util.HashMap;
         //keywords.put("new", Integer.valueOf(sym.NEW));
         keywords.put("final", Integer.valueOf(sym.FINAL));
         keywords.put("static", Integer.valueOf(sym.STATIC));
+        keywords.put("throws", Integer.valueOf(sym.THROWS));
         keywords.put("throw", Integer.valueOf(sym.THROW));
+        keywords.put("endorseIf", Integer.valueOf(sym.ENDORSEIF));
         keywords.put("catch", Integer.valueOf(sym.CATCH));
         keywords.put("exception", Integer.valueOf(sym.EXCEPTION));
         keywords.put("all", Integer.valueOf(sym.ALL));
+        keywords.put("constructor", Integer.valueOf(sym.CONSTRUCTOR));
     }
 
 
@@ -207,10 +139,6 @@ invalid = "$" | "?" | "`"
 
 <YYINITIAL> {
     {comment}   {}
-//    "True"  { return op(sym.TRUE); }
-//    "False" { return op(sym.FALSE); }
-//    "None"  { return op(sym.NONE); }
-    "..."   { return op(sym.ELLIPSIS); }
     {NAME}  { 
             Integer i = keywords.get(yytext());
             if (i == null) return id();

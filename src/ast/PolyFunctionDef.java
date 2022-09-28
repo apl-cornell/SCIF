@@ -6,10 +6,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class PolyFunctionDef extends FunctionDef {
+
     ArrayList<Integer> polyArgs;
 
-    public PolyFunctionDef(String name, FuncLabels funcLabels, ArrayList<String> polyArgs, Arguments args, ArrayList<Statement> body, ArrayList<String> decoratorList, Type rnt) {
-        super(name, funcLabels, args, body, decoratorList, rnt);
+    public PolyFunctionDef(String name, FuncLabels funcLabels, ArrayList<String> polyArgs,
+            Arguments args, ArrayList<Statement> body, ArrayList<String> decoratorList, Type rnt,
+            boolean isContructor) {
+        super(name, funcLabels, args, body, decoratorList, rnt, isContructor);
         this.polyArgs = new ArrayList<>();
         HashMap<String, Integer> argToIndex = new HashMap<>();
         for (int i = 0; i < args.args.size(); ++i) {
@@ -43,9 +46,12 @@ public class PolyFunctionDef extends FunctionDef {
         ArrayList<VarSym> argsInfo = args.parseArgs(contractSym);
         logger.debug("creating polyFuncInfo with polyarg size: " + polyArgs.size());
         IfLabel ifl = null;
-        if (rtn instanceof LabeledType)
+        if (rtn instanceof LabeledType) {
             ifl = ((LabeledType) rtn).ifl;
-        contractSym.addFunc(funcId, new PolyFuncSym(funcId, funcLabels, polyArgs, argsInfo, contractSym.toTypeSym(rtn), ifl, scopeContext, location));
+        }
+        contractSym.addFunc(funcId,
+                new PolyFuncSym(funcId, funcLabels, polyArgs, argsInfo, contractSym.toTypeSym(rtn),
+                        ifl, scopeContext, location));
     }
 
 

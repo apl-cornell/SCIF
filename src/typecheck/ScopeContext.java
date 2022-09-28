@@ -37,7 +37,7 @@ public class ScopeContext {
         }
         SHErrLocName = calcSHErrLocName();
     }
-
+    
     public ScopeContext(Node cur, ScopeContext parent,
             HashMap<ExceptionTypeSym, Boolean> funcExceptionMap) {
         this.cur = cur;

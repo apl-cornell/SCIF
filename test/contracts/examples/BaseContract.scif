@@ -1,5 +1,48 @@
 contract BaseContract [this] {
-    RuntimeManager _manager;
+    class BaseRuntimeManager implements RuntimeManager {
+
+        address[] trustees;
+        map(address, uint) trusteeIndex;
+
+        TrustOracle trustOracle;
+        LockOracle lockOracle;
+
+        constructor(address trustOracleAddr, address lockOracleAddr) {
+            trustOracle = TrustOracle(trustOracleAddr);
+            lockOracle = LockOracle(lockOracleAddr);
+            trustOracle.register();
+            setTrust(address(this));
+        }
+
+        private void setLocalTrust(address trustee) {
+            trustees.push(trustee);
+            trusteeIndex[trustee] = trustees.length;
+        }
+
+        private void revokeLocalTrust(address trustee) {
+            uint ind = trusteeIndex[trustee] - 1;
+            address lastTrustee = trustees[trustees.length - 1];
+            trustees[ind] = lastTrustee;
+            trusteeIndex[lastTrustee] = ind + 1;
+            trustees.pop();
+            trusteeIndex[trustee] = 0;
+        }
+
+        public bool ifTrust(address a, address b);
+        public bool ifTrust(address a, address b, address[] proof);
+        public pure bool ifDTrust(address trustee);
+        public pure address[] getDTrustList();
+
+        public void setTrust(address trustee);
+        public void revokeTrust(address trustee);
+
+        public bool lock(address l);
+        public bool unlock(address l);
+        public bool ifLocked(address l);
+        public bool ifLocked(address l_1, address l_2);
+    }
+
+    final RuntimeManager _manager;
 
     constructor(address trustOracle, address lockOracle) {
         _manager = CentralizedRuntime(trustOracle, lockOracle);

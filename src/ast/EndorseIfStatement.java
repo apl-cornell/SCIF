@@ -3,25 +3,24 @@ package ast;
 import compile.SolCode;
 import java.util.ArrayList;
 import java.util.List;
-import typecheck.Context;
 import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.ScopeContext;
-import typecheck.Utils;
 import typecheck.VisitEnv;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 
-public class EndorseStatement extends Statement {
+public class EndorseIfStatement extends Statement {
 
-    List<Name> vars;
+    List<Expression> expressionList;
     IfLabel from, to;
+    If ifStatement;
 
-    public EndorseStatement(List<Name> vars, IfLabel from, IfLabel to) {
-        this.vars = vars;
+    public EndorseIfStatement(List<Expression> expressionList, IfLabel from, IfLabel to,
+            If ifStatement) {
+        this.expressionList = expressionList;
         this.from = from;
         this.to = to;
+        this.ifStatement = ifStatement;
     }
 
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
@@ -44,7 +43,7 @@ public class EndorseStatement extends Statement {
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        rtn.addAll(vars);
+        rtn.addAll(expressionList);
         rtn.add(from);
         rtn.add(to);
         return rtn;

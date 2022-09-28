@@ -38,16 +38,14 @@ public class FunctionSig extends TopLayerNode {
      * @param rtn           Type of the return value
      */
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
-            List<String> decoratorList, Type rtn) {
+            List<String> decoratorList, Type rtn, boolean isConstructor) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
         this.decoratorList = setToDefault(decoratorList);
         this.rtn = rtn;
         this.exceptionList = new ArrayList<>();
-        if (name.equals(Utils.CONSTRUCTOR_NAME)) {
-            isConstructor = true;
-        }
+        this.isConstructor = isConstructor;
 
         funcLabels.setToDefault(isConstructor, this.decoratorList);
     }
@@ -74,16 +72,15 @@ public class FunctionSig extends TopLayerNode {
     }
 
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
-            List<String> decoratorList, Type rtn, List<ExceptionType> exceptionList) {
+            List<String> decoratorList, Type rtn, List<ExceptionType> exceptionList,
+            boolean isConstructor) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
         this.decoratorList = setToDefault(decoratorList);
         this.rtn = rtn;
         this.exceptionList = exceptionList;
-        if (name.equals(Utils.CONSTRUCTOR_NAME)) {
-            isConstructor = true;
-        }
+        this.isConstructor = isConstructor;
 
         funcLabels.setToDefault(isConstructor, this.decoratorList);
     }

@@ -16,8 +16,8 @@ public class FunctionDef extends FunctionSig {
     List<Statement> body;
 
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
-            List<Statement> body, List<String> decoratorList, Type rtn) {
-        super(name, funcLabels, args, decoratorList, rtn);
+            List<Statement> body, List<String> decoratorList, Type rtn, boolean isConstructor) {
+        super(name, funcLabels, args, decoratorList, rtn, isConstructor);
         this.body = body;
     }
 
