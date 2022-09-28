@@ -35,7 +35,7 @@ SCIF.
 
 An example:
 
-```bash
+```console
 ./scif -c -i=SCIFex/Wallet.java
 ```
 

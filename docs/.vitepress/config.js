@@ -23,6 +23,20 @@ export default {
                         link: '/Introduction/scif-by-example'
                     }
                 ]
+            },
+            {
+                text: 'Language Basics',
+                collapsible: true,
+                items: [
+                    {
+                        text: 'Information Flow Control',
+                        link: '/LanguageBasics/information-flow-control'
+                    },
+                    {
+                        text: 'Types',
+                        link: '/LanguageBasics/types'
+                    }
+                ]
             }
         ]
     }

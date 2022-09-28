@@ -10,5 +10,6 @@ backup
 tmp
 .gradle
 build
+bin
 node_modules
 .DS_Store
