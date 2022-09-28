@@ -64,13 +64,14 @@ Comparing to a regular smart contract language, such as Solidity, SCIF supports 
 * Method calls
 * Dynamic trust and label checking
 
-### Lock System
+### Reentrancy Protection
 
-* Reentrancy
 * Reentrancy Security
 * Locks enforcing reentrancy
 * Static locks
 * Dynamic locks
+
+### Confused Deputy Protection
 
 ### Runtime System
 
