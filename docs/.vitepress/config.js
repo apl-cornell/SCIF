@@ -35,6 +35,18 @@ export default {
                     {
                         text: 'Types',
                         link: '/LanguageBasics/types'
+                    },
+                    {
+                        text: 'Contracts',
+                        link: '/LanguageBasics/contracts'
+                    },
+                    {
+                        text: 'Expressions and Statements',
+                        link: '/LanguageBasics/expressions-and-statements'
+                    },
+                    {
+                        text: 'Built-in Methods and Variables',
+                        link: '/LanguageBasics/built-in-methods-and-variables'
                     }
                 ]
             }
