@@ -1,15 +1,15 @@
 {
-  "name": "SCIF-Doc",
+  "name": "scif",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "git@github.com:Neroysq/SCIF-Doc.git",
+  "repository": "git@github.com:Neroysq/scif.git",
   "author": "Siqiu Yao",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^18.8.3",
     "vitepress": "^1.0.0-alpha.15",
     "vue": "^3.2.39"
   },
-
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
