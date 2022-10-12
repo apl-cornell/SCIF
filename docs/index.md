@@ -94,7 +94,7 @@ Comparing to a regular smart contract language, such as Solidity, SCIF supports 
 
 An example of internal link: [Getting Started](/Introduction/getting-started.md)
 
-```Java
+```scif
 public class Example {
     private int x;
     public int x() { return x; }
