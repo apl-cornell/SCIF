@@ -12,7 +12,7 @@ In addtion to the set of principals, SCIF need to know the relationship between 
 
 For example, suppose principal `Alice` is trusted principal `Bob` in the program. It can be declared as:
 
-```Java
+```scif
 Alice => Bob
 ```
 
@@ -20,7 +20,7 @@ It reads "Alice flows to Bob", meaning that Alice's information is allowed to fl
 
 If Alice and Bob are mutually trusted, the following expression captures such a relationship:
 
-```Java
+```scif
 Alice == Bob
 ```
 
@@ -32,7 +32,7 @@ In SCIF, an intergity policy is expressed as labels attached to code.
 
 Here is a quick example:
 
-```Java
+```scif
 address owner;
 uint{owner} trustedCounter;
 ```
