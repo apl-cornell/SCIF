@@ -6,7 +6,7 @@ export async function highlighter() {
     console.log('Current directory: '+ process.cwd())
     const highlighter = await getHighlighter({})
 
-    const scifGrammar = JSON.parse(readFileSync("./docs/.vitepress/scif.tmLanguage.json", "utf-8"))
+    const scifGrammar = JSON.parse(readFileSync("./docs/.vitepress/c.tmLanguage.json", "utf-8"))
 
     const scif = {
         id: "scif",
