@@ -10,22 +10,26 @@ import java.util.HashSet;
 public class Arg extends Node {
 
     String name;
-    Type annotation;
+    LabeledType annotation;
     boolean isStatic;
     boolean isFinal;
 
 
-    public Arg(String name, Type annotation) {
+    public Arg(String name, LabeledType annotation) {
         this.name = name;
         this.annotation = annotation;
         this.isStatic = false;
         this.isFinal = false;
     }
-    public Arg(String name, Type annotation, boolean isStatic, boolean isFinal) {
+    public Arg(String name, LabeledType annotation, boolean isStatic, boolean isFinal) {
         this.name = name;
         this.annotation = annotation;
         this.isStatic = isStatic;
         this.isFinal = isFinal;
+    }
+
+    public void setToDefault(IfLabel ifl) {
+        annotation.setToDefault(ifl);
     }
 
     public VarSym parseArg(ContractSym contractSym) {

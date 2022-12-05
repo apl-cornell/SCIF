@@ -11,9 +11,13 @@ public class ExceptionDef extends TopLayerNode {
     ExceptionType exceptionType;
     Arguments arguments;
 
-    public ExceptionDef(String name, Arguments members) {
+    public ExceptionDef(String name, IfLabel ifl, Arguments members) {
         this.arguments = members;
-        this.exceptionType = new ExceptionType(new Type(name));
+        if (ifl == null) {
+            this.exceptionType = new ExceptionType(new Type(name));
+        } else {
+            this.exceptionType = new ExceptionType(new LabeledType(name, ifl));
+        }
     }
 
 
@@ -34,7 +38,7 @@ public class ExceptionDef extends TopLayerNode {
     public void globalInfoVisit(ContractSym contractSym) {
         exceptionType.setContractName(contractSym.name);
         contractSym.addType(exceptionType.name,
-                contractSym.toExceptionType(exceptionType.name, arguments));
+                contractSym.toExceptionType(exceptionType.name, exceptionType.type.ifl, arguments));
         // contractSym.addType(exceptionType, contractSym.toExceptionType(exceptionType, arguments));
 
     }

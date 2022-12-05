@@ -94,6 +94,7 @@ terminal FINAL, STATIC;
 terminal TRY, EXTRY, CATCH, CATCHALL, EXCEPTION, THROW, THROWS, ALL;
 terminal DELETE;
 terminal ERROR, CONSTRUCTOR;//, PERCENTEQUAL;
+terminal ASSUME;
 /* unused terminals
 PERCENTEQUAL, STRUCT, PLUSEQUAL, CLASS, SUPER, WHILE, , DOUBLESLASHEQUAL
 terminal INTERFACE;FOR,
@@ -158,8 +159,8 @@ nonterminal Setmaker setmaker;
 nonterminal Call arglist;
 nonterminal LabeledType labeledType;
 nonterminal IfLabel ifLabel, unitIfLabel;
-nonterminal Type typeSym;
-nonterminal List<Type> typeSyms;
+nonterminal LabeledType typeSym;
+nonterminal List<LabeledType> typeSyms;
 nonterminal ast.Map mapType;
 // nonterminal Autoendorse autoendorse;
 //nonterminal IfLabel maybeAutoendorseIfLabel;
@@ -265,6 +266,7 @@ contract ::=
             constructors: constructors
             func_defs: f_defs
         RBRACE {:
+        // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
         RESULT = new Contract((String) name, c_extends, t_setting, v_decs, e_defs, f_defs, c_label);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
@@ -287,25 +289,30 @@ contract_extends ::=
     :};
 
 trust_setting ::=
-    LBRACE LBRACE NAME:dynamicOption RBRACE RBRACE {:
-        List<TrustConstraint> list = new ArrayList<>();
-        HashMap<String, String> tmp = new HashMap<String, String>();
-        TrustSetting trustSetting = new TrustSetting((String)dynamicOption, list, tmp);
-        RESULT = trustSetting;
-    :}
-    | LBRACE LBRACE NAME:dynamicOption SEMI trust_decs: trust_list RBRACE RBRACE {:
-        HashMap<String, String> tmp = new HashMap<String, String>();
-        TrustSetting trustSetting = new TrustSetting((String)dynamicOption, trust_list, tmp);
-        RESULT = trustSetting;
-    :}
-    | LBRACE LBRACE NAME:dynamicOption SEMI trust_decs: trust_list SEMI label_table:l RBRACE RBRACE {:
-            TrustSetting trustSetting = new TrustSetting((String)dynamicOption, trust_list, l);
+//    ASSUME:x LBRACE NAME:dynamicOption RBRACE {:
+//        List<TrustConstraint> list = new ArrayList<>();
+//        HashMap<String, String> tmp = new HashMap<String, String>();
+//        TrustSetting trustSetting = new TrustSetting((String)dynamicOption, list, tmp);
+//        RESULT = trustSetting;
+//    :}
+//    |
+//    ASSUME:x LBRACE NAME:dynamicOption SEMI trust_decs: trust_list RBRACE {:
+//        HashMap<String, String> tmp = new HashMap<String, String>();
+//        TrustSetting trustSetting = new TrustSetting((String)dynamicOption, trust_list, tmp);
+//        RESULT = trustSetting;
+//    :}
+//    | ASSUME:x LBRACE NAME:dynamicOption SEMI trust_decs: trust_list SEMI label_table:l RBRACE {:
+//            TrustSetting trustSetting = new TrustSetting((String)dynamicOption, trust_list, l);
+//            RESULT = trustSetting;
+//    :}
+//    |
+    ASSUME:x LBRACE trust_decs: trust_list RBRACE {:
+            TrustSetting trustSetting = new TrustSetting(trust_list);
             RESULT = trustSetting;
     :}
     | {:
         List<TrustConstraint> list = new ArrayList<>();
-        HashMap<String, String> tmp = new HashMap<String, String>();
-        TrustSetting trustSetting = new TrustSetting(null, list, tmp);
+        TrustSetting trustSetting = new TrustSetting(list);
         RESULT = trustSetting;
     :};
 
@@ -333,23 +340,23 @@ trust_decs ::=
     :};
 
 trust_dec ::=
-    LBRACE:x ifLabelorAddr:lhs trust_operator:optor ifLabelorAddr:rhs RBRACE {:
+    ifLabel:lhs trust_operator:optor ifLabel:rhs SEMI {:
         TrustConstraint cons = new TrustConstraint(lhs, optor, rhs);
         RESULT = cons;
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+        RESULT.setLoc(new CodeLocation(lhsleft, lhsright, filename));
     :};
 
-ifLabelorAddr ::=
-    ifLabel:x {:
-        TrustAtom rtn = new TrustAtom(x);
-        RESULT = rtn;
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
-    | AT NAME:x {:
-        TrustAtom rtn = new TrustAtom((String)x);
-        RESULT = rtn;
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :};
+//ifLabelorAddr ::=
+//    ifLabel:x {:
+//        TrustAtom rtn = new TrustAtom(x);
+//        RESULT = rtn;
+//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+//    :}
+//    | NAME:x {:
+//        TrustAtom rtn = new TrustAtom((String)x);
+//        RESULT = rtn;
+//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+//    :};
 
 trust_operator ::=
     EQUAL {: RESULT = Relation.EQ; :}
@@ -364,6 +371,7 @@ state_var_decs ::=
     :}
     | {:
         List<StateVariableDeclaration> l = new ArrayList<>();
+        //l.add(v);
         RESULT = l;
     :};
 
@@ -378,7 +386,6 @@ state_var_dec ::=
         StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, b, false, m.contains(sym.FINAL));
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-        rnt.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
 
     :}
     | modifiers:m typeSym:t NAME:a SEMI {:
@@ -390,9 +397,10 @@ state_var_dec ::=
     :};
 
 modifiers ::=
-    FINAL:x modifiers:m {:
-        m.add(sym.FINAL);
-        RESULT = m;
+    FINAL:x {:
+        RESULT = new HashSet<>();
+        RESULT.add(sym.FINAL);
+        // RESULT = m;
         // RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | {:
@@ -492,7 +500,12 @@ funcSig ::= r_funcSig:a NEWLINE {: RESULT = a;
 errorDef ::=
     EXCEPTION:x NAME:a parameters:b SEMI {:
         logger.debug("exception def: " + a);
-        RESULT = new ExceptionDef((String) a, b);
+        RESULT = new ExceptionDef((String) a, null, b);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
+    | EXCEPTION:x LBRACE ifLabel:ifl RBRACE NAME:a parameters:b SEMI {:
+        logger.debug("exception def: " + a);
+        RESULT = new ExceptionDef((String) a, null, b);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
@@ -624,7 +637,7 @@ funcdef ::=
 typeSym ::=
     NAME:a {:
         logger.debug("a name: " + (String) a);
-        RESULT = new Type((String)a);
+        RESULT = new LabeledType((String)a, null);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | mapType:m {:
@@ -640,7 +653,7 @@ typeSym ::=
 
 typeSyms ::=
     typeSym:a {:
-        RESULT = new ArrayList<Type>();
+        RESULT = new ArrayList<LabeledType>();
         RESULT.add(a);
     :}
     | typeSyms:list typeSym:a {:

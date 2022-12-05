@@ -31,8 +31,8 @@ public class Endorse extends Expression {
         String ifNameValue = vo.valueLabelName;
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "endorse" + location.toString();
 
-        String fromLabel = from.toSherrlocFmt();
-        String toLabel = to.toSherrlocFmt();
+        String fromLabel = from.toSherrlocFmt(scopeContext);
+        String toLabel = to.toSherrlocFmt(scopeContext);
 
         env.cons.add(
                 new Constraint(new Inequality(ifNameValue, fromLabel), env.hypothesis, location,

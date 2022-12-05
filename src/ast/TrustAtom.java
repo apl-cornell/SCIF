@@ -27,7 +27,7 @@ public class TrustAtom extends TopLayerNode {
 
     public String toSherrlocFmt(String contractName) {
         if (isIfl) {
-            return ifl.toSherrlocFmt();
+            return ifl.toSherrlocFmt(scopeContext);
         } else {
             return contractName + "." + name;
         }

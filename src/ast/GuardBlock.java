@@ -49,7 +49,7 @@ public class GuardBlock extends Statement {
 
         // env.prevContext.lambda = newLockLabel;
 
-        String guardLabel = l.toSherrlocFmt();
+        String guardLabel = l.toSherrlocFmt(scopeContext);
 
         env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, curContext.lambda),
                 beginContext.lambda), env.hypothesis, location, env.curContractSym.name,

@@ -47,7 +47,12 @@ public class FunctionSig extends TopLayerNode {
         this.exceptionList = new ArrayList<>();
         this.isConstructor = isConstructor;
 
+        setDefault();
+    }
+
+    private void setDefault() {
         funcLabels.setToDefault(isConstructor, this.decoratorList);
+        args.setToDefault(funcLabels.begin_pc);
     }
 
     private List<String> setToDefault(List<String> decoratorList) {
@@ -82,7 +87,7 @@ public class FunctionSig extends TopLayerNode {
         this.exceptionList = exceptionList;
         this.isConstructor = isConstructor;
 
-        funcLabels.setToDefault(isConstructor, this.decoratorList);
+        setDefault();
     }
 
     public FunctionSig(FunctionSig funcSig) {
@@ -93,6 +98,8 @@ public class FunctionSig extends TopLayerNode {
         this.rtn = funcSig.rtn;
         this.exceptionList = funcSig.exceptionList;
         this.isConstructor = funcSig.isConstructor;
+
+        setDefault();
     }
 
     public void setDecoratorList(List<String> decoratorList) {

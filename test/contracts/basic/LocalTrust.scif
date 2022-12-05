@@ -1,0 +1,31 @@
+contract LocalTrust {
+    final address addrA = 0x...;
+    final address addrB = 0x...;
+    final address addrC = 0x...;
+    principal high;
+    principal low;
+    assume {
+        high => this;
+        this => low;
+        addrA => high;
+        addrB => low;
+    }
+
+    uint highValue{high};
+    uint lowValue{low};
+
+    @public
+    void setHigh{high (join this)}(uint v) {
+        highValue = v;
+    }
+
+    @public
+    void foo() {
+        setHigh(0);
+    }
+
+    @public
+    void setLow{low}(uint v) {
+        lowValue = v;
+    }
+}

@@ -18,7 +18,7 @@ import java.util.*;
 public class Utils {
 
     public static final String[] BUILTIN_TYPE_NAMES =
-            new String[]{"bool", "address", "bytes", "string", "void", "uint"};
+            new String[]{"bool", "address", "bytes", "string", "void", "uint", "principal"};
     //new String[] {"bool", "int128", "uint256", "address", "bytes", "string", "int", "void", "uint"};
     public static final HashSet<String> BUILTIN_TYPES = new HashSet<>(
             Arrays.asList(BUILTIN_TYPE_NAMES));
@@ -27,6 +27,7 @@ public class Utils {
     public static final String LABEL_TOP = "TOP";
     public static final String LABEL_BOTTOM = "BOT";
     public static final String LABEL_THIS = "this";
+    public static final String LABEL_SENDER = "sender";
     public static final String DEAD = "---DEAD---";
     public static final String KEY = "KEY";
     public static final String SHERRLOC_TOP = LABEL_TOP;
@@ -52,6 +53,7 @@ public class Utils {
 
     public static final String DEBUG_UNKNOWN_CONTRACT_NAME = "UNKNOWN";
     public static final String ANONYMOUS_VARIABLE_NAME = "ANONYMOUS";
+    public static final String PRINCIPAL_TYPE = "principal";
 
     public static final boolean isPrimitiveType(String x) {
         return BUILTIN_TYPES.contains(x);
@@ -198,6 +200,8 @@ public class Utils {
             return "address";
         } else if (type == BuiltInT.BYTES) {
             return "bytes";
+        } else if (type == BuiltInT.PRINCIPAL) {
+            return "principal";
         } else {
             return "unknownT";
         }
@@ -625,7 +629,7 @@ public class Utils {
     }
 
     public static ExceptionTypeSym getNormalPathException() {
-        return new ExceptionTypeSym("*n", new ArrayList<>());
+        return new ExceptionTypeSym("*n", null, new ArrayList<>());
     }
 
     public static PsiUnit joinPsiUnit(PsiUnit u1, PsiUnit u2) {
@@ -637,7 +641,7 @@ public class Utils {
     }
 
     public static ExceptionTypeSym getReturnPathException() {
-        return new ExceptionTypeSym("*r", new ArrayList<>());
+        return new ExceptionTypeSym("*r", null, new ArrayList<>());
     }
 }
 

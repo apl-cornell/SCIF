@@ -116,7 +116,7 @@ public class SourceFile extends Node {
     }
 
     public void findPrincipal(HashSet<String> principalSet) {
-        contract.findPrincipal(principalSet);
+        // contract.findPrincipal(principalSet);
     }
 
     public void solidityCodeGen(SolCode code) {

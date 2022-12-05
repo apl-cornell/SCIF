@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import java.awt.Label;
 import sherrloc.constraint.ast.Top;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
@@ -13,12 +14,12 @@ import java.util.HashSet;
 public class AnnAssign extends Statement {
 
     Expression target;
-    Type annotation;
+    LabeledType annotation;
     Expression value;
     boolean isStatic;
     boolean isFinal;
 
-    public AnnAssign(Expression target, Type annotation, Expression value,
+    public AnnAssign(Expression target, LabeledType annotation, Expression value,
             boolean isConst, boolean isFinal) {
         this.target = target;
         this.annotation = annotation;
@@ -27,7 +28,7 @@ public class AnnAssign extends Statement {
         this.isFinal = isFinal;
     }
 
-    public void setType(Type type) {
+    public void setType(LabeledType type) {
         this.annotation = type;
     }
 
@@ -111,7 +112,7 @@ public class AnnAssign extends Statement {
             env.addVar(id, varSym);
             // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
             if (annotation instanceof LabeledType) {
-                String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
+                String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt(scopeContext);
                 env.cons.add(new Constraint(
                         new Inequality(ifLabel, Relation.EQ, varSym.labelToSherrlocFmt()),
                         env.hypothesis, location, env.curContractSym.name,

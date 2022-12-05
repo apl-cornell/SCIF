@@ -58,7 +58,7 @@ public class VarSym extends Sym {
 
     public String getLabel() {
         if (ifl != null) {
-            return ifl.toSherrlocFmt();
+            return ifl.toSherrlocFmt(defContext);
         } else {
             return null;
         }
@@ -89,7 +89,7 @@ public class VarSym extends Sym {
     public String toString() {
         return name + "|" + isStatic + "|" + isFinal + "|" +
                 genson.serialize(typeSym) + "|" +
-                (ifl != null ? ifl.toSherrlocFmt() + "|" : "") +
+                (ifl != null ? ifl.toSherrlocFmt(defContext) + "|" : "") +
                 (location != null ? location.toString() : "");
     }
 }

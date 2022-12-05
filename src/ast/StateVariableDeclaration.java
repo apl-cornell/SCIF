@@ -21,25 +21,26 @@ import typecheck.sherrlocUtils.Relation;
 public class StateVariableDeclaration extends TopLayerNode {
 
     Name name;
-    Type type;
+    LabeledType type;
     Expression value;
     boolean isStatic;
     boolean isFinal;
 
-    public StateVariableDeclaration(Name name, Type type, Expression value,
+    public StateVariableDeclaration(Name name, LabeledType type, Expression value,
             boolean isConst, boolean isFinal) {
         this.name = name;
         this.type = type;
         this.value = value;
         this.isStatic = isConst;
         this.isFinal = isFinal;
+        this.type.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
 
-    public void setType(Type type) {
-        this.type = type;
-    }
+//    public void setType(LabeledType type) {
+//        this.type = type;
+//    }
 
-    public void setToDefault(IfLabel lbl) {
+    private void setToDefault(IfLabel lbl) {
         type.setToDefault(lbl);
     }
 
@@ -125,7 +126,7 @@ public class StateVariableDeclaration extends TopLayerNode {
             env.addVar(id, varSym);
             // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
             if (type instanceof LabeledType) {
-                String ifLabel = ((LabeledType) type).ifl.toSherrlocFmt();
+                String ifLabel = ((LabeledType) type).ifl.toSherrlocFmt(scopeContext);
                 env.cons.add(new Constraint(
                         new Inequality(ifLabel, Relation.EQ, varSym.labelToSherrlocFmt()),
                         env.hypothesis, location, env.curContractSym.name,
@@ -139,17 +140,17 @@ public class StateVariableDeclaration extends TopLayerNode {
         SLCNameVar = varSym.toSherrlocFmt();
         SLCNameVarLbl = varSym.labelToSherrlocFmt();
         logger.debug(varSym.typeSym.name);
-        if (varSym.typeSym.name.equals(Utils.ADDRESSTYPE)) {
+        if (varSym.typeSym.name.equals(Utils.ADDRESSTYPE) || varSym.typeSym.name.equals(Utils.PRINCIPAL_TYPE)) {
             env.principalSet.add(varSym.toSherrlocFmt());
         }
 
-        if (type instanceof LabeledType) {
+        /*if (type instanceof LabeledType) {
             if (type instanceof DepMap) {
                 ((DepMap) type).findPrincipal(env.principalSet);
             } else {
                 ((LabeledType) type).ifl.findPrincipal(env.principalSet);
             }
-        }
+        }*/
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         // String ifNameTgtLbl = ifNameTgt + "..lbl";
         // Context prevContext = env.prevContext;

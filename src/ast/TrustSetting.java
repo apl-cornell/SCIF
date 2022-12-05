@@ -37,11 +37,11 @@ public class TrustSetting extends Node {
         labelTable = new HashMap<>();
     }
 
-    public TrustSetting(String dynamicOption, List<TrustConstraint> trust_list,
-            HashMap<String, String> labelTable) {
-        this.dynamicSystemOption = Utils.resolveDynamicOption(dynamicOption);
+    public TrustSetting(List<TrustConstraint> trust_list) {
+        this.dynamicSystemOption = null;
+        // Utils.resolveDynamicOption(dynamicOption);
         this.trust_list = trust_list;
-        this.labelTable = labelTable;
+        this.labelTable = new HashMap<>();
     }
 
     @Override

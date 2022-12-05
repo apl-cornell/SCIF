@@ -2,6 +2,8 @@ package ast;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import typecheck.NTCEnv;
+import typecheck.ScopeContext;
 
 public class LabeledType extends Type {
 
@@ -41,5 +43,11 @@ public class LabeledType extends Type {
         if (this.ifl == null) {
             this.ifl = lbl;
         }
+    }
+    @Override
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
+        ifl.ntcGenCons(env, parent);
+        return now;
     }
 }

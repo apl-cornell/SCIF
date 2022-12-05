@@ -14,7 +14,7 @@ public class StructTypeSym extends TypeSym {
     public String getMemberLabel(String name) {
         for (VarSym mb : members) {
             if (mb.name.equals(name)) {
-                return mb.ifl.toSherrlocFmt();
+                return mb.ifl.toSherrlocFmt("");
             }
         }
         return null;

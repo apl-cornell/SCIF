@@ -279,7 +279,7 @@ public class TypeChecker {
             }
 
             String ifNameReturnLabel = func.getLabelNameRtnValue();
-            String ifReturnLabel = func.getRtnValueLabel();
+            String ifReturnLabel = func.getRtnValueLabel(namespace);
             if (ifReturnLabel != null) {
                 cons.add(new Constraint(
                         new Inequality(ifReturnLabel, Relation.EQ, ifNameReturnLabel),
@@ -344,27 +344,21 @@ public class TypeChecker {
         //SigCons curSigCons = env.getSigCons(contractName);
         //env.trustCons.addAll(curSigCons.trustcons);
         //env.cons.addAll(curSigCons.cons);
+        System.out.println("before prinSet size: " + env.principalSet.size());
 
         Node tmp = root;
-        if (!(tmp instanceof SourceFile)) {
-            // TODO: not supported currently
-            Interface anInterface = (Interface) tmp;
-            for (FunctionSig functionSig : anInterface.funcSigs) {
-                functionSig.findPrincipal(env.principalSet);
-            }
+        SourceFile sourceFile = (SourceFile) tmp;
+        // env.varNameMap = new LookupMaps(varMap);
 
-        } else {
-            SourceFile sourceFile = (SourceFile) tmp;
-            // env.varNameMap = new LookupMaps(varMap);
+        sourceFile.genConsVisit(env, true);
+        System.out.println("mid prinSet size: " + env.principalSet.size());
+        buildSignatureConstraints(sourceFile.getContractName(), env, "",
+                sourceFile.getContractName());
+        env.sigReq.forEach((name, curContractName) -> {
+            buildSignatureConstraints(curContractName, env, name, sourceFile.getContractName());
+        });
 
-            sourceFile.genConsVisit(env, true);
-            buildSignatureConstraints(sourceFile.getContractName(), env, "",
-                    sourceFile.getContractName());
-            env.sigReq.forEach((name, curContractName) -> {
-                buildSignatureConstraints(curContractName, env, name, sourceFile.getContractName());
-            });
-        }
-
+        System.out.println("prinSet size: " + env.principalSet.size());
         if (!Utils.writeCons2File(env.principalSet, env.trustCons, env.cons, outputFile, true)) {
             return true;
         }

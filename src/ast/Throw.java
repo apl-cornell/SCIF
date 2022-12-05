@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import java.nio.file.Path;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
@@ -108,9 +109,18 @@ public class Throw extends Statement {
         }
 
         String expName = ((Name) exception.value).id;
-        //ExceptionTypeSym expSym = env.getExp(expName);
+        ExceptionTypeSym expSym = env.getExp(expName);
 
-        //TODO
-        return null;
+        PsiUnit expUnit = new PsiUnit(
+                new Context(Utils.joinLabels(beginContext.pc, expSym.ifl.toSherrlocFmt(scopeContext)),
+                        psi.getNormalPath().c.lambda),
+                false);
+        PathOutcome psi2 = new PathOutcome();
+        psi2.set(expSym, expUnit);
+
+        psi.remove(Utils.getNormalPathException());
+        psi.join(psi2);
+
+        return psi;
     }
 }

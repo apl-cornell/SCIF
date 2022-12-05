@@ -32,7 +32,11 @@ public class PathOutcome {
     }
 
     public void set(ExceptionTypeSym key, PsiUnit value) {
-        set(key, value);
+        psi.put(key, value);
+    }
+    public void remove(ExceptionTypeSym expSym) {
+        assert psi.containsKey(expSym);
+        psi.remove(expSym);
     }
 
     public void setNormalPath(Context endContext) {
@@ -54,10 +58,13 @@ public class PathOutcome {
     public void joinExe(PathOutcome psi) {
         PsiUnit n = getNormalPath();
         join(psi);
-        setNormalPath(n.c);
+        if (n != null) {
+            setNormalPath(n.c);
+        }
     }
 
     public void setReturnPath(Context inContext) {
         set(Utils.getReturnPathException(), inContext);
     }
+
 }

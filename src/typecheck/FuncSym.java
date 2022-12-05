@@ -111,15 +111,6 @@ public class FuncSym extends Sym {
     public String getLabelNameException(ExceptionTypeSym exp) {
         return Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(), exp.name);
     }
-
-    public String getCallPcLabel() {
-        if (funcLabels != null && funcLabels.begin_pc != null) {
-            return funcLabels.begin_pc.toSherrlocFmt();
-        }
-        else {
-            return null;
-        }
-    }
     public String getCallPcLabel(String namespace) {
         if (funcLabels != null && funcLabels.begin_pc != null) {
             return funcLabels.begin_pc.toSherrlocFmt(namespace);
@@ -129,14 +120,6 @@ public class FuncSym extends Sym {
         }
     }
 
-    public String getCallLockLabel() {
-        if (funcLabels != null && funcLabels.gamma_label != null) {
-            return funcLabels.gamma_label.toSherrlocFmt();
-        }
-        else {
-            return null;
-        }
-    }
 
     public String getCallLockLabel(String namespace) {
         if (funcLabels != null && funcLabels.gamma_label != null) {
@@ -171,14 +154,6 @@ public class FuncSym extends Sym {
         }
     }*/
 
-    public String getCallAfterLabel() {
-        if (funcLabels != null && funcLabels.to_pc != null) {
-            return funcLabels.to_pc.toSherrlocFmt();
-        }
-        else {
-            return null;
-        }
-    }
 
     public String getCallAfterLabel(String namespace) {
         if (funcLabels != null && funcLabels.to_pc != null) {
@@ -189,9 +164,9 @@ public class FuncSym extends Sym {
         }
     }
 
-    public String getRtnValueLabel() {
+    public String getRtnValueLabel(String namespace) {
         if (returnLabel != null) {
-            return returnLabel.toSherrlocFmt();
+            return returnLabel.toSherrlocFmt(namespace);
         } else {
             return null;
         }

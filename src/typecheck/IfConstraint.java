@@ -22,8 +22,8 @@ public class IfConstraint {
     }
     public IfConstraint(String op, IfLabel left, IfLabel right, CodeLocation location, String contractName) {
         this.op = op;
-        this.left = left.toSherrlocFmt();
-        this.right = right.toSherrlocFmt();
+        this.left = left.toSherrlocFmt(contractName);
+        this.right = right.toSherrlocFmt(contractName);
         this.left = checkThis(this.left, contractName);
         this.right = checkThis(this.right, contractName);
 

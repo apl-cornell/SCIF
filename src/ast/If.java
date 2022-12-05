@@ -133,7 +133,11 @@ public class If extends Statement {
             // env.prevContext = tmp;
             // prev2 = leftContext;
             //env.context = context;
-            env.inContext = ifo.getNormalPath().c;
+            PsiUnit normalUnit = ifo.getNormalPath();
+            if (normalUnit == null) {
+                break;
+            }
+            env.inContext = normalUnit.c;
             loc = stmt.location;
             // leftContext = new Context(tmp);
         }

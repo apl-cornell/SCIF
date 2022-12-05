@@ -30,6 +30,7 @@ public class Contract extends Node {
         this.exceptionDefs = exceptionDefs;
         this.methodDeclarations = methodDeclarations;
         this.ifl = ifl;
+        setDefault();
     }
 
     public Contract(String contractName, String superContractName, TrustSetting trustSetting,
@@ -45,6 +46,13 @@ public class Contract extends Node {
         this.exceptionDefs = exceptionDefs;
         this.methodDeclarations = methodDeclarations;
         this.ifl = ifl;
+        setDefault();
+    }
+
+    private void setDefault() {
+        if (ifl == null) {
+            ifl = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
+        }
     }
 
     public boolean ntcInherit(InheritGraph graph) {
@@ -119,11 +127,23 @@ public class Contract extends Node {
         contractSym.addVar(name, contractSym.toVarSym(name,
                 new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, false,
                 null, scopeContext));
+
+        for (StateVariableDeclaration dec : varDeclarations) {
+            dec.globalInfoVisit(contractSym);
+        }
+
+        for (ExceptionDef expDef : exceptionDefs) {
+            expDef.globalInfoVisit(contractSym);
+        }
+
+        for (FunctionDef fDef : methodDeclarations) {
+            fDef.globalInfoVisit(contractSym);
+        }
     }
 
     public void genConsVisit(VisitEnv env, boolean tail_position) {
         //env.prevContext = new Context()
-        findPrincipal(env.principalSet);
+        // findPrincipal(env.principalSet);
 
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.genConsVisit(env, tail_position);
@@ -189,6 +209,7 @@ public class Contract extends Node {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.addAll(trustSetting.trust_list);
         rtn.addAll(varDeclarations);
+        rtn.addAll(exceptionDefs);
         rtn.addAll(methodDeclarations);
         return rtn;
     }

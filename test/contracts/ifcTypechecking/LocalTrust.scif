@@ -1,4 +1,9 @@
 contract LocalTrust {
+    assume {
+        high => low;
+    }
+    principal high;
+    principal low;
     uint{high} a;
     uint{low} b;
 

@@ -50,7 +50,4 @@ public class Type extends Expression {
         return name.equals("void");
     }
 
-    public void setToDefault(IfLabel lbl) {
-
-    }
 }

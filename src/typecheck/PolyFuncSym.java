@@ -61,19 +61,6 @@ public class PolyFuncSym extends FuncSym {
             return rtn;
     }
 
-    @Override
-    public String getCallPcLabel() {
-        logger.debug("entering polyfuncinfo - getCallBeforeLabel");
-        String rtn = "";
-        if (funcLabels.begin_pc != null) {
-            rtn = funcLabels.begin_pc.toSherrlocFmtApply(polyArgs, applyCounter);
-        }
-        else {
-            return null;
-        }
-        logger.debug("getcallbeforelabel finished: " + rtn);
-        return rtn;
-    }
     /*@Override
     public String getCallLockLabel() {
         String rtn = "";
@@ -111,14 +98,6 @@ public class PolyFuncSym extends FuncSym {
         }
     }*/
 
-    @Override
-    public String getRtnValueLabel() {
-        if (returnLabel != null) {
-            return returnLabel.toSherrlocFmtApply(polyArgs, applyCounter);
-        } else {
-            return null;
-        }
-    }
 
     public String getArgLabel(int index) {
         VarSym varSym = parameters.get(index);

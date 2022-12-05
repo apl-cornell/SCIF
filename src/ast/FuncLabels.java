@@ -78,7 +78,7 @@ public class FuncLabels extends Node {
         //TODO: set end_pc
         IfLabel thisLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
         if (isConstructor) {
-            begin_pc = to_pc = gamma_label = thisLbl;
+            begin_pc = to_pc = gamma_label = end_pc = thisLbl;
         } else {
             if (gamma_label != null) {
                 return;
@@ -97,9 +97,12 @@ public class FuncLabels extends Node {
                     }
                     if (isPublic) {
                         IfLabel botLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM));
-                        begin_pc = to_pc = gamma_label = botLbl;
+                        begin_pc = new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER));
+                        to_pc = thisLbl;
+                        gamma_label = botLbl;
+                        end_pc = thisLbl;
                     } else {
-                        begin_pc = to_pc = gamma_label = thisLbl;
+                        begin_pc = to_pc = gamma_label = end_pc = thisLbl;
                     }
                 }
             }

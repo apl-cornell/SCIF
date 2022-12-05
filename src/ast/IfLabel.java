@@ -1,12 +1,13 @@
 package ast;
 
+import typecheck.ScopeContext;
 import typecheck.VisitEnv;
 
 import java.util.HashSet;
 
 public abstract class IfLabel extends Expression {
 
-    public abstract String toSherrlocFmt();
+    public abstract String toSherrlocFmt(ScopeContext defContext);
 
     public abstract String toSherrlocFmt(String namespace);
 

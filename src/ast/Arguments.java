@@ -23,6 +23,12 @@ public class Arguments extends Node {
         this.defaults = null;
     }
 
+    public void setToDefault(IfLabel ifl) {
+        for (Arg arg : args) {
+            arg.setToDefault(ifl);
+        }
+    }
+
     public void merge(Arguments y) {
         if (y.args != null) {
             this.args.addAll(y.args);

@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import java.util.ArrayList;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.ScopeContext;
@@ -26,8 +27,14 @@ public class CallStatement extends Statement {
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        // TODO
-        return null;
+        return call.genConsVisit(env, tail_position).psi;
+    }
+
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.add(call);
+        return rtn;
     }
 
 }

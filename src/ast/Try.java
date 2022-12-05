@@ -91,26 +91,33 @@ public class Try extends Statement {
             ExceptionTypeSym expSym = env.getExp(h.name);
             PsiUnit u = psi.psi.get(expSym);
 
-            env.cons.add(
-                    new Constraint(new Inequality(u.c.lambda, beginContext.lambda), env.hypothesis,
-                            location, env.curContractSym.name,
-                            "Try clause should maintain locks when throwing exception " + h.name));
+            if (u != null) {
+                env.cons.add(
+                        new Constraint(new Inequality(u.c.lambda, beginContext.lambda), env.hypothesis,
+                                location, env.curContractSym.name,
+                                "Try clause should maintain locks when throwing exception " + h.name));
             /*env.cons.add(new Constraint(new Inequality(u.c.pc, h.), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));*/
 
-            input.set(expSym, u);
-            psi.set(expSym, (Context) null);
+                input.set(expSym, u);
+                // psi.set(expSym, (Context) null);
+                psi.remove(expSym);
+            }
         }
         //Context cTry = env.outContext;
 
         //env.psi = oldPsi;
         for (ExceptHandler h : handlers) {
-            //TODO: inc layer
+            env.incScopeLayer();
             //env.inContext = new Context(h.getHandlerPcLabelName(), beginContext.lambda);
             ExceptionTypeSym expSym = env.getExp(h.name);
-            env.inContext = new Context(input.psi.get(expSym).c.pc, beginContext.lambda);
-            PathOutcome ho = h.genConsVisit(env, tail_position);
-            psi.join(ho);
+            PsiUnit expUnit = input.psi.get(expSym);
+            if (expUnit != null) {
+                env.inContext = new Context(expUnit.c.pc, beginContext.lambda);
+                PathOutcome ho = h.genConsVisit(env, tail_position);
+                psi.join(ho);
+            }
+            env.decScopeLayer();
             // cTry = new Context(Utils.makeJoin(cTry.pc, env.outContext.outPcName), Utils.makeJoin(cTry.lambda, env.outContext.lockName));
         }
 
@@ -124,5 +131,21 @@ public class Try extends Statement {
         }
 
         return psi;
+    }
+
+    @Override
+    public void passScopeContext(ScopeContext parent) {
+        scopeContext = new ScopeContext(this, parent);
+        for (Node node : children()) {
+            node.passScopeContext(scopeContext);
+        }
+    }
+
+    @Override
+    public ArrayList<Node> children() {
+        ArrayList<Node> rtn = new ArrayList<>();
+        rtn.addAll(body);
+        rtn.addAll(handlers);
+        return rtn;
     }
 }

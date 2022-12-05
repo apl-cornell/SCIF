@@ -81,6 +81,7 @@ import java.util.HashMap;
         keywords.put("exception", Integer.valueOf(sym.EXCEPTION));
         keywords.put("all", Integer.valueOf(sym.ALL));
         keywords.put("constructor", Integer.valueOf(sym.CONSTRUCTOR));
+        keywords.put("assume", Integer.valueOf(sym.ASSUME));
     }
 
 

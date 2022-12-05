@@ -11,10 +11,10 @@ import java.util.HashSet;
 
 public class TrustConstraint extends TopLayerNode {
 
-    public TrustAtom lhs, rhs;
+    public IfLabel lhs, rhs;
     public Relation optor;
 
-    public TrustConstraint(TrustAtom lhs, Relation optor, TrustAtom rhs) {
+    public TrustConstraint(IfLabel lhs, Relation optor, IfLabel rhs) {
         this.lhs = lhs;
         this.optor = optor;
         this.rhs = rhs;

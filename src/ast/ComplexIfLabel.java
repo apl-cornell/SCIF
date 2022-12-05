@@ -31,9 +31,9 @@ public class ComplexIfLabel extends IfLabel {
     }
 
     @Override
-    public String toSherrlocFmt() {
-        String l = left.toSherrlocFmt();
-        String r = right.toSherrlocFmt();
+    public String toSherrlocFmt(ScopeContext defContext) {
+        String l = left.toSherrlocFmt(defContext);
+        String r = right.toSherrlocFmt(defContext);
         String rnt = "";
         switch (op) {
             case JOIN:
