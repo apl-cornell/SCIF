@@ -1,0 +1,17 @@
+contract LocalTrust {
+
+    principal high;
+    principal low;
+
+    uint{high} a;
+    uint{low} b;
+
+    assume {
+        high => low;
+    }
+
+    @public
+    void assignAtoB() {
+        b = a;
+    }
+}
