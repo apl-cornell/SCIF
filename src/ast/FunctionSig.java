@@ -107,6 +107,7 @@ public class FunctionSig extends TopLayerNode {
         for (ExceptionType t : exceptionList) {
             t.setContractName(env.curContractSym.name);
             ExceptionTypeSym t1 = env.toExceptionTypeSym(t);
+            assert t1 != null;
             // System.err.println("add func exp: " +  t1.name);
             // ExceptionTypeSym exceptionType = env.get(t);
             exceptions.put(t1, null);
@@ -131,6 +132,7 @@ public class FunctionSig extends TopLayerNode {
             /*if (t.type instanceof  LabeledType)
                 label = ((LabeledType) t.type).ifl;*/
             ExceptionTypeSym exceptionTypeSym = contractSym.getExceptionSym(t.type.name);
+            assert exceptionTypeSym != null;
             exceptions.put(exceptionTypeSym,
                     typecheck.Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(),
                             t.getName()));

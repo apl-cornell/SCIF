@@ -75,7 +75,7 @@ terminal NUMBER, STRING;
 terminal FALSE, TRUE, NONE, ELLIPSIS;
 terminal AND, AS, ASSERT;
 terminal BREAK, CONTINUE;
-terminal ELSE, FROM;
+terminal ELSE;//, FROM;
 terminal IF, IMPORT, IN, IS, NOT;
 terminal OR, PASS, RAISE, RETURN;
 terminal LPAR, RPAR, LSQB, RSQB, COLON, COMMA, SEMI;
@@ -91,7 +91,7 @@ terminal CONTRACT;
 terminal EQUALGREATER;
 terminal NEWLINE, EXTENDS;
 terminal FINAL, STATIC;
-terminal TRY, CATCH, EXCEPTION, THROW, THROWS, ALL;
+terminal TRY, EXTRY, CATCH, CATCHALL, EXCEPTION, THROW, THROWS, ALL;
 terminal DELETE;
 terminal ERROR, CONSTRUCTOR;//, PERCENTEQUAL;
 /* unused terminals
@@ -179,6 +179,7 @@ nonterminal TrustConstraint trust_dec;
 nonterminal TrustAtom ifLabelorAddr;
 nonterminal Relation trust_operator;
 nonterminal HashMap<String, String> label_table;
+nonterminal Set<Integer> modifiers;
 nonterminal DynamicStatement dynamic_stmt;
 nonterminal ExceptionDef errorDef;
 nonterminal ExceptionType except_type;
@@ -282,7 +283,7 @@ contract_extends ::=
         RESULT = (String) y;
     :}
     | {:
-        RESULT = null;
+        RESULT = ""; // no supercontract
     :};
 
 trust_setting ::=
@@ -371,21 +372,31 @@ state_var_decs ::=
     TODO: final and static
 */
 state_var_dec ::=
-    typeSym:t NAME:a EQUAL expr:b SEMI {:
+    modifiers:m typeSym:t NAME:a EQUAL expr:b SEMI {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
-        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, b, false, false);
+        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, b, false, m.contains(sym.FINAL));
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
         rnt.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
 
     :}
-    | typeSym:t NAME:a SEMI {:
+    | modifiers:m typeSym:t NAME:a SEMI {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
-        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, false);
+        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, m.contains(sym.FINAL));
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :};
+
+modifiers ::=
+    FINAL:x modifiers:m {:
+        m.add(sym.FINAL);
+        RESULT = m;
+        // RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
+    | {:
+        RESULT = new HashSet<>();
     :};
 
 exp_defs ::=
@@ -428,7 +439,7 @@ func_defs ::=
 
 // version: static lock
 tFuncLabels ::=
-    LBRACE:x ifLabelOrNull:a RIGHTSHIFT ifLabelOrNull:b SEMI ifLabelOrNull:c RBRACE {:
+    LBRACE:x ifLabelOrNull:a RARROW ifLabelOrNull:b SEMI ifLabelOrNull:c RBRACE {:
         logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
         RESULT = new FuncLabels(a, b, c, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
@@ -707,10 +718,10 @@ probinittfpdef ::=
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 tfpdef ::= 
-     typeSym:b NAME:a{:
+     modifiers:m typeSym:b NAME:a{:
         // System.err.println("pair (" + b + " " + a + ")");
         String name = (String)a;
-        RESULT = new Arg(name, b);
+        RESULT = new Arg(name, b, false, m.contains(sym.FINAL));
         RESULT.setLoc(new CodeLocation(bleft, bright, filename));
     :};
 
@@ -798,6 +809,7 @@ throw_stmt ::= THROW:x trailer_expr:e SEMI{:
         if (!(e instanceof Call)) {
             return null;
         }
+
         RESULT = new Throw((Call)e);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
@@ -831,7 +843,7 @@ except_clause ::=
     :};
 
 exceptall_clause ::=
-    CATCH:p ALL LPAR except_type:t NAME:x RPAR suite:s {:
+    CATCHALL:p LPAR except_type:t NAME:x RPAR suite:s {:
         RESULT = new ExceptHandler(t, (String)x, s);
         RESULT.setLoc(new CodeLocation(pleft, pright, filename));
     :};
@@ -942,11 +954,11 @@ raise_stmt ::= RAISE:a SEMI {:
     | RAISE:x expr:a SEMI {:
         RESULT = new Raise(a);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
-    | RAISE:x expr:a FROM expr:b SEMI {:
-        RESULT = new Raise(a, b);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
+//    | RAISE:x expr:a FROM expr:b SEMI {:
+//        RESULT = new Raise(a, b);
+//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+//    :};
 assert_stmt ::= ASSERT:x expr:a COMMA expr:b SEMI {:
         RESULT = new Assert(a, b);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));

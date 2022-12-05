@@ -3,7 +3,7 @@ package typecheck;
 import java.util.HashMap;
 import java.util.HashSet;
 
-/*
+/**
     variables, types, functions, contracts
 */
 

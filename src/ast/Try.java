@@ -36,7 +36,9 @@ public class Try extends Statement {
 
         //TODO: inc scope layer
         for (ExceptHandler h : handlers) {
-            now.addException(env.toExceptionTypeSym(h.type), false);
+            ExceptionTypeSym t = env.toExceptionTypeSym(h.type);
+            assert t != null;
+            now.addException(t, false);
         }
 
         for (Statement s : body) {

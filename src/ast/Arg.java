@@ -11,10 +11,21 @@ public class Arg extends Node {
 
     String name;
     Type annotation;
+    boolean isStatic;
+    boolean isFinal;
+
 
     public Arg(String name, Type annotation) {
         this.name = name;
         this.annotation = annotation;
+        this.isStatic = false;
+        this.isFinal = false;
+    }
+    public Arg(String name, Type annotation, boolean isStatic, boolean isFinal) {
+        this.name = name;
+        this.annotation = annotation;
+        this.isStatic = isStatic;
+        this.isFinal = isFinal;
     }
 
     public VarSym parseArg(ContractSym contractSym) {

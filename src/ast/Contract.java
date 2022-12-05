@@ -73,6 +73,13 @@ public class Contract extends Node {
                 return false;
             }
         }
+
+        for (ExceptionDef def : exceptionDefs) {
+            if (!def.ntcGlobalInfo(env, now)) {
+                return false;
+            }
+        }
+
         for (FunctionDef fDef : methodDeclarations) {
             if (!fDef.ntcGlobalInfo(env, now)) {
                 return false;
@@ -90,6 +97,10 @@ public class Contract extends Node {
 
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.ntcGenCons(env, now);
+        }
+
+        for (ExceptionDef def : exceptionDefs) {
+            def.ntcGenCons(env, now);
         }
 
         for (FunctionDef fDef : methodDeclarations) {

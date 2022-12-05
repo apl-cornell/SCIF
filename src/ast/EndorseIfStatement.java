@@ -24,13 +24,12 @@ public class EndorseIfStatement extends Statement {
     }
 
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        // TODO
-        return parent;
+        return ifStatement.ntcGenCons(env, parent);
     }
 
     @Override
     public void solidityCodeGen(SolCode code) {
-
+        // TODO
     }
 
     @Override

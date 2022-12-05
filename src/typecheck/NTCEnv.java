@@ -175,6 +175,7 @@ public class NTCEnv {
 
     public ExceptionTypeSym toExceptionTypeSym(ExceptionType t) {
         if (t.isLocal(curContractSym.name)) {
+            System.out.println("isLocal");
             return (ExceptionTypeSym) getCurSym(t.getName());
         } else {
             return (ExceptionTypeSym) getExtSym(t.getContractName(), t.getName());

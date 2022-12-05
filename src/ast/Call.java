@@ -90,7 +90,7 @@ public class Call extends TrailerExpr {
             TypeSym paraInfo = funcSym.parameters.get(i).typeSym;
             ScopeContext argContext = arg.ntcGenCons(env, now);
             String typeName = env.getSymName(paraInfo.name);
-            env.addCons(argContext.genCons(typeName, Relation.GEQ, env, location));
+            env.addCons(argContext.genCons(typeName, Relation.GEQ, env, arg.location));
         }
         String rtnTypeName = funcSym.returnType.name;
         env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));

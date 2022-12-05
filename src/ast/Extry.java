@@ -13,7 +13,8 @@ public class Extry extends Try {
     }
 
 
-    public ScopeContext NTCgenCons(NTCEnv env, ScopeContext parent) {
+    @Override
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         // consider to be a new scope
         // must contain at least one Statement
 

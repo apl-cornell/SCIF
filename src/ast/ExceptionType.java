@@ -14,8 +14,8 @@ public class ExceptionType extends Type {
         this.contractName = contractName;
     }
 
-    public boolean isLocal(String name) {
-        return name.equals(contractName);
+    public boolean isLocal(String localContract) {
+        return contractName.equals("") || contractName.equals(localContract);
     }
 
     public String getName() {

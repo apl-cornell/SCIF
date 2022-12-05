@@ -31,6 +31,7 @@ public class TypeChecker {
         List<SourceFile> roots = new ArrayList<>();
         for (File inputFile : inputFiles) {
             try {
+                logger.debug(inputFile);
 
                 //Lexer lexer = new Lexer(new FileReader(inputFile));
                 //Parser p = new Parser(lexer);
@@ -119,13 +120,16 @@ public class TypeChecker {
         // constructors: all types
         // assumptions: none or relations between types
         // constraints
-        Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons,
-                outputFile, false);
+        if (!Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons,
+                outputFile, false)) {
+            return roots;
+        }
         boolean result = false;
         try {
             result = runSLC(NTCenv.programMap, outputFile.getAbsolutePath(), DEBUG);
         } catch (Exception e) {
-            // handle exceptions;
+            e.printStackTrace();
+            return null;
         }
 
         return result == true ? roots : null;
@@ -361,23 +365,28 @@ public class TypeChecker {
             });
         }
 
-        Utils.writeCons2File(env.principalSet, env.trustCons, env.cons, outputFile, true);
+        if (!Utils.writeCons2File(env.principalSet, env.trustCons, env.cons, outputFile, true)) {
+            return true;
+        }
         boolean result = false;
         try {
             result = runSLC(env.programMap, outputFile.getAbsolutePath(), DEBUG);
         } catch (Exception e) {
-            // handle exceptions;
+            e.printStackTrace();
+            return false;
         }
         return result;
     }
 
     static boolean runSLC(HashMap<String, SourceFile> programMap, String outputFileName,
             boolean DEBUG) throws Exception {
+        logger.trace("running SLC");
+
 
         String classDirectoryPath = new File(
                 SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
         sherrloc.diagnostic.DiagnosticConstraintResult result = Utils.runSherrloc(outputFileName);
-        logger.debug(result);
+        logger.debug("runSLC: " + result);
         if (result.success()) {
             System.out.println(Utils.TYPECHECK_PASS_MSG);
         } else {

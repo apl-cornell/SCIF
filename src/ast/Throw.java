@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -55,19 +56,29 @@ public class Throw extends Statement {
             }
             exceptionSym = ((ExceptionTypeSym) s);
         }
+        // check if the parameter number matches
+        if (exceptionSym.parameters.size() != exception.args.size()) {
+            System.err.println("Throwing an exception " + exceptionSym.name + " with unmatched parameter number at " + "location: "
+                    + location.toString());
+            throw new RuntimeException();
+        }
+
         // typecheck arguments
         for (int i = 0; i < exception.args.size(); ++i) {
             Expression arg = exception.args.get(i);
             TypeSym paraInfo = exceptionSym.parameters.get(i).typeSym;
             ScopeContext argContext = arg.ntcGenCons(env, now);
             String typeName = env.getSymName(paraInfo.name);
-            env.addCons(argContext.genCons(typeName, Relation.GEQ, env, location));
+            Constraint argCon = argContext.genCons(typeName, Relation.GEQ, env, arg.location);
+            env.addCons(argCon);
+            System.out.println(paraInfo.name);
+            System.out.println(argCon.toSherrlocFmt(true));
         }
         // String rtnTypeName = exceptionSym.returnType.name;
         // env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
 
         if (!parent.isCheckedException(exceptionSym, false)) {
-            System.err.println("Unchecked exception " + exceptionSym.name + " at " + "lo"
+            System.err.println("Unchecked exception " + exceptionSym.name + " at " + "location: "
                     + location.toString());
             throw new RuntimeException();
         }

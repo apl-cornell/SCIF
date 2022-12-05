@@ -35,7 +35,9 @@ public class If extends Statement {
         ScopeContext rtn = null;
 
         rtn = test.ntcGenCons(env, now);
-        env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
+        Constraint testCon = rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
+        env.addCons(testCon);
+        System.out.println(testCon.toSherrlocFmt(true));
 
         for (Statement s : body) {
             rtn = s.ntcGenCons(env, now);

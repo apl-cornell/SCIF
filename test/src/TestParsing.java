@@ -16,6 +16,8 @@ public class TestParsing {
             "basic/ExceptionDefinition",
             "basic/MethodDefinition",
             "basic/BaseContract",
+            "basic/ExceptionThrowAndCatch",
+            "examples/ERC20"
     })
     void testPositiveParsing(String contractName) {
         String inputFilePath = contractName + ".scif";

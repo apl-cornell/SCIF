@@ -203,11 +203,14 @@ public class Utils {
         }
     }
 
-    public static void writeCons2File(HashSet<String> constructors, List<Constraint> assumptions,
+    public static boolean writeCons2File(HashSet<String> constructors, List<Constraint> assumptions,
             List<Constraint> constraints, File outputFile, boolean isIFC) {
         try {
             // transform every "this" to "contractName.this"
             BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
+            if (constraints.size() == 0) {
+                return false;
+            }
             logger.debug("Writing the constraints of size {}", constraints.size());
             //System.err.println("Writing the constraints of size " + env.cons.size());
             if (!constructors.contains("BOT") && isIFC) {
@@ -252,10 +255,12 @@ public class Utils {
             consFile.close();
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
-    public static void SLCinput(HashSet<String> constructors, ArrayList<Constraint> assumptions,
+    public static boolean SLCinput(HashSet<String> constructors, ArrayList<Constraint> assumptions,
             ArrayList<Constraint> constraints, boolean isIFC) {
         try {
             sherrloc.constraint.ast.Hypothesis hypothesis = new Hypothesis();
@@ -264,6 +269,9 @@ public class Utils {
             // transform every "this" to "contractName.this"
             //BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
             logger.debug("Writing the constraints of size {}", constraints.size());
+            if (constraints.size() == 0) {
+                return false;
+            }
             //System.err.println("Writing the constraints of size " + env.cons.size());
             if (!constructors.contains("BOT") && isIFC) {
                 constructors.add("BOT");
@@ -309,7 +317,9 @@ public class Utils {
             //consFile.close();
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
     protected static final Logger logger = LogManager.getLogger();
