@@ -355,6 +355,7 @@ public class Utils {
             TypeSym s = new BuiltinTypeSym(typeName);
             globalSymTab.add(typeName, s);
         }
+        globalSymTab.add("error", builtin_error_sym());
         ArrayList<VarSym> members = new ArrayList<>();
 
 
@@ -388,6 +389,7 @@ public class Utils {
 
         /* send(address, value) */
 
+        HashMap<ExceptionTypeSym, String> exceptions = new HashMap<>();
         members = new ArrayList<>();
         VarSym recipient = createBuiltInVarInfo("recipient", "address", emptyContext, globalSymTab);
         value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
@@ -396,6 +398,7 @@ public class Utils {
         IfLabel thisLabel = new PrimitiveIfLabel(new Name("this"));
         IfLabel botLabel = new PrimitiveIfLabel(new Name("BOT"));
         FuncLabels funcLabels = new FuncLabels(thisLabel, thisLabel, botLabel, botLabel);
+        exceptions.put(builtin_error_sym(), "BOT");
         FuncSym sendFuncSym = new FuncSym("send", funcLabels, members,
                 getBuiltinTypeInfo("bool", globalSymTab), thisLabel, new ScopeContext("send"),
                 null);
@@ -430,6 +433,10 @@ public class Utils {
         globalSymTab.add("setTrust", setTrustSym);
         //}
         //}
+    }
+
+    private static ExceptionTypeSym builtin_error_sym() {
+        return new ExceptionTypeSym("error", new PrimitiveIfLabel(new Name(LABEL_BOTTOM)), new ArrayList<>());
     }
 
     public static boolean isBuiltinFunc(String funcName) {
@@ -611,10 +618,6 @@ public class Utils {
         } else {
             return i + "th";
         }
-    }
-
-    public static String makeJoin(String lhs, String rhs) {
-        return "(" + lhs + " ⊔ " + rhs + ")";
     }
 
     public static void contextFlow(VisitEnv env, Context outContext, Context funcEndContext,

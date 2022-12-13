@@ -1,0 +1,34 @@
+contract Wallet [this] {
+    map(address, uint) balances; //previously map(user: address, uint{user}) balances
+    exception balanceNotEnough();
+    exception transferFailure();
+
+//     *
+//     *  {BOT -> this; BOT} (t{BOT} name) return {value: this; end_pc: this}
+//     *  msg.sender: address{msg.sender}
+//     *  amount: uint{msg.sender}
+//     *
+    @public
+    void withdraw(uint amount) throws (balanceNotEnough, transferFailure) {
+        if (balances[msg.sender] >= amount) {
+            // pc: this join msg.sender
+            lock(this) {
+                try {
+                    send(msg.sender, amount);
+                } catchall (error e) {
+                    throw transferFailure();
+                }
+                balances[msg.sender] = balances[msg.sender] - amount;
+            }
+        } else {
+            // pc: this join msg.sender
+            throw balanceNotEnough();
+        }
+    }
+
+    @public
+    @payable
+    void deposit() {
+        balances[msg.sender] = balances[msg.sender] + msg.value;
+    }
+}

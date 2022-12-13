@@ -59,7 +59,7 @@ public class BoolOp extends Expression {
 
         if (!tail_position) {
             env.cons.add(new Constraint(
-                    new Inequality(ro.psi.getNormalPath().c.lambda, beginContext.lambda),
+                    new Inequality(endContext.lambda, beginContext.lambda),
                     env.hypothesis, location, env.curContractSym.name,
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }

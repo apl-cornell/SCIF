@@ -88,7 +88,7 @@ public class FunctionDef extends FunctionSig {
                 funcLabels.to_pc.location, env.curContractSym.name,
                 "The statically locked integrity must be at least as trusted as initial pc integrity"));
         env.cons.add(
-                new Constraint(new Inequality(Utils.makeJoin(inLockName, outLockName), ifNameGamma),
+                new Constraint(new Inequality(Utils.joinLabels(inLockName, outLockName), ifNameGamma),
                         env.hypothesis, funcLabels.gamma_label.location, env.curContractSym.name,
                         "This function does not maintain reentrancy locks as specified in signature",
                         1));

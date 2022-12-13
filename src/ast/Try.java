@@ -84,7 +84,9 @@ public class Try extends Statement {
         for (Statement s : body) {
             so = s.genConsVisit(env, false);
             psi.joinExe(so);
-            env.inContext = new Context(so.getNormalPath().c.pc, beginContext.lambda);
+            // env.inContext = new Context(so.getNormalPath().c.pc, beginContext.lambda);
+            env.inContext = new Context(so.getNormalPath().c);
+
         }
         env.decScopeLayer();
         for (ExceptHandler h : handlers) {
@@ -121,11 +123,13 @@ public class Try extends Statement {
             // cTry = new Context(Utils.makeJoin(cTry.pc, env.outContext.outPcName), Utils.makeJoin(cTry.lambda, env.outContext.lockName));
         }
 
+        typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
+
         /*Utils.contextFlow(env, cTry, endContext, location);
         env.outContext = endContext;*/
         if (!tail_position) {
             env.cons.add(new Constraint(
-                    new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
+                    new Inequality(endContext.lambda, beginContext.lambda),
                     env.hypothesis, location, env.curContractSym.name,
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }

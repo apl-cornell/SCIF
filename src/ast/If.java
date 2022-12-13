@@ -157,6 +157,10 @@ public class If extends Statement {
         for (Statement stmt : orelse) {
             ++index;
             elseo = stmt.genConsVisit(env, index == orelse.size() && tail_position);
+            PsiUnit normalUnit = elseo.getNormalPath();
+            if (normalUnit == null) {
+                break;
+            }
             env.inContext = elseo.getNormalPath().c;
             // env.prevContext.lambda = rightContext.lambda;
         }

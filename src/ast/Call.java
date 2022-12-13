@@ -217,6 +217,7 @@ public class Call extends TrailerExpr {
                             + "-th argument value"));
         }
         if (funcSym instanceof PolyFuncSym) {
+            // TODO
         }
 
         PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
@@ -229,8 +230,8 @@ public class Call extends TrailerExpr {
             String expLabelName = exp.getValue();
             expPsi.set(curSym, new PsiUnit(
                     new Context(
-                            Utils.makeJoin(expLabelName, funcSym.getLabelNameCallPcBefore()),
-                            Utils.makeJoin(funcSym.getLabelNameCallGamma(),
+                            Utils.joinLabels(expLabelName, funcSym.getLabelNameCallPcBefore()),
+                            Utils.joinLabels(funcSym.getLabelNameCallGamma(),
                                     funcSym.getLabelNameCallPcAfter())),
                     true));
             //PsiUnit psiUnit = env.psi.get(curSym);
@@ -239,16 +240,18 @@ public class Call extends TrailerExpr {
         }
 
         //TODO
+
+        typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
         env.cons.add(
                 new Constraint(new Inequality(ifNamePc, ifNameFuncCallPcBefore), env.hypothesis,
                         location, env.curContractSym.name,
                         "Current control flow must be trusted to call this method"));
         env.cons.add(new Constraint(new Inequality(ifNameFuncCallPcBefore,
-                Utils.makeJoin(ifNameFuncCallPcAfter, beginContext.lambda)), env.hypothesis,
+                Utils.joinLabels(ifNameFuncCallPcAfter, beginContext.lambda)), env.hypothesis,
                 location, env.curContractSym.name,
                 "Calling this function does not respect static reentrancy locks"));
         env.cons.add(new Constraint(
-                new Inequality(Utils.makeJoin(ifNameFuncCallPcAfter, ifNameFuncGammaLock),
+                new Inequality(Utils.joinLabels(ifNameFuncCallPcAfter, ifNameFuncGammaLock),
                         Relation.EQ, endContext.lambda), env.hypothesis, location,
                 env.curContractSym.name,
                 "Calling this function does not respect static reentrancy locks"));

@@ -69,7 +69,7 @@ public class Return extends Statement {
                         "Control flow must be trusted to return"));
 
         env.cons.add(new Constraint(
-                new Inequality(Utils.makeJoin(endContext.lambda, beginContext.lambda),
+                new Inequality(Utils.joinLabels(endContext.lambda, beginContext.lambda),
                         ifRtnLockName), env.hypothesis, location, env.curContractSym.name,
                 "Reentrancy locks must be respected to return"));
         PsiUnit pathn = vo.psi.getNormalPath();
