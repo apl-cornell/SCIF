@@ -27,9 +27,9 @@ public class Type extends Expression {
         return "T_" + name + location;
     }
 
-    public String toSherrloc(String k, String v) {
-        return "";
-    }
+    // public String toSherrloc(String k, String v) {
+    //    return "";
+    //}
 
     public String toSolCode() {
         return name;

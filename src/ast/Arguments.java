@@ -63,11 +63,11 @@ public class Arguments extends Node {
         }
     }
 
-    public void findPrincipal(HashSet<String> principalSet) {
-        for (Arg arg : args) {
-            arg.findPrincipal(principalSet);
-        }
-    }
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        for (Arg arg : args) {
+//            arg.findPrincipal(principalSet);
+//        }
+//    }
 
     public String toSolCode() {
         String rtn = "";

@@ -112,7 +112,7 @@ public class FunctionSig extends TopLayerNode {
         ArrayList<VarSym> argsInfo = args.parseArgs(env, now);
         HashMap<ExceptionTypeSym, String> exceptions = new HashMap<>();
         for (ExceptionType t : exceptionList) {
-            t.setContractName(env.curContractSym.name);
+            t.setContractName(env.curContractSym().getName());
             ExceptionTypeSym t1 = env.toExceptionTypeSym(t);
             assert t1 != null;
             // System.err.println("add func exp: " +  t1.name);
@@ -149,20 +149,20 @@ public class FunctionSig extends TopLayerNode {
                         scopeContext, location));
     }
 
-    public void findPrincipal(HashSet<String> principalSet) {
-        if (funcLabels != null) {
-            funcLabels.findPrincipal(principalSet);
-        }
-        args.findPrincipal(principalSet);
-
-        if (rtn instanceof LabeledType) {
-            if (rtn instanceof DepMap) {
-                ((DepMap) rtn).findPrincipal(principalSet);
-            } else {
-                ((LabeledType) rtn).ifl.findPrincipal(principalSet);
-            }
-        }
-    }
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        if (funcLabels != null) {
+//            funcLabels.findPrincipal(principalSet);
+//        }
+//        args.findPrincipal(principalSet);
+//
+//        if (rtn instanceof LabeledType) {
+//            if (rtn instanceof DepMap) {
+//                ((DepMap) rtn).findPrincipal(principalSet);
+//            } else {
+//                ((LabeledType) rtn).ifl.findPrincipal(principalSet);
+//            }
+//        }
+//    }
 
     public String rtnToSHErrLocFmt() {
         return toSHErrLocFmt() + ".RTN";

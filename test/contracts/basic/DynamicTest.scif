@@ -1,13 +1,52 @@
-contract DynamicTest {
-    address name;
 
-    public void foo() {
-        if (name => this) {
-            if (msg.sender => this) {
-                if (msg.sender => name) { // should we allow checks between two dynamic labels?
-                    // ...
-                }
-            }
+/**
+    Describe a SCIF contract in which only {@code owner} is able to
+    manipulate data within, e.g., Parity wallet.
+*/
+contract DynamicTest {
+    address{this} owner;
+    uint{owner} v1;
+    uint{owner} v2;
+
+//    @public
+//    bool setOwner{msg.sender -> this}(address _newOwner) {
+//        if (msg.sender => owner) {
+//            address newOwner = endorse(_newOwner, * -> this);
+//            setTrust(newOwner);
+//            revokeTrust(owner);
+//            owner = newOwner;
+//            return true;
+//        } else {
+//            return false;
+//        }
+//    }
+    constructor(address theOwner) {
+        owner = theOwner;
+    }
+
+    @public
+    void setOwner{owner}(address newOwner) {
+        setTrust(newOwner);
+        revokeTrust(owner);
+        owner = newOwner;
+    }
+
+    @public
+    void setV1{owner}(uint v) { v1 = v; }
+
+    @public
+    void setV2{owner}(uint v) { v2 = v; }
+
+    @public
+    void setV1toV2{owner}() { v1 = v2; }
+
+    @public
+    bool withdraw{this}(uint amount) {
+        if (amount <= this.balance) {
+            send(msg.sender, amount);
+            return true;
+        } else {
+            return false;
         }
     }
 }

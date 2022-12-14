@@ -1,7 +1,7 @@
 package typecheck;
 
 public abstract class Sym {
-    public String name;
+    private String name;
     protected int hashCode;
     abstract boolean isLValue();
     public String getSLCName() {
@@ -25,5 +25,9 @@ public abstract class Sym {
             return false;
         Sym other = (Sym) o;
         return this.hashCode() == other.hashCode();
+    }
+
+    protected void setName(String s) {
+        name = s;
     }
 }

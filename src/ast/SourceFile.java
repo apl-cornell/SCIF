@@ -74,7 +74,7 @@ public class SourceFile extends Node {
         logger.debug("contract: " + contract.contractName + "\n" + env.getContract(
                 contract.contractName));
         env.setGlobalSymTab(env.getContract(contract.contractName).symTab);
-        env.setCurSymTab(env.globalSymTab);
+        env.setCurSymTab(env.globalSymTab());
         contract.ntcGenCons(env, now);
         return now;
     }
@@ -87,7 +87,7 @@ public class SourceFile extends Node {
             }
         }
         // env.setGlobalSymTab(new SymTab());
-        env.setCurSymTab(env.globalSymTab);
+        env.setCurSymTab(env.globalSymTab());
         // Utils.addBuiltInSyms(env.globalSymTab, contract.trustSetting);
         if (!contract.ntcGlobalInfo(env, parent)) {
             logger.debug("GlobalInfo failed with: " + contract);

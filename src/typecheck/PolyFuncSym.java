@@ -21,7 +21,7 @@ public class PolyFuncSym extends FuncSym {
             polyArgs.add(getLabelNameArg(i));
         }
         applyCounter = 0;
-        substitutePoly();
+        // substitutePoly();
     }
 
     public void apply() {
@@ -99,25 +99,25 @@ public class PolyFuncSym extends FuncSym {
     }*/
 
 
-    public String getArgLabel(int index) {
-        VarSym varSym = parameters.get(index);
-        if (varSym.ifl == null) return null;
-        return varSym.ifl.toSherrlocFmtApply(polyArgs, applyCounter);
-    }
+//    public String getArgLabel(int index) {
+//        VarSym varSym = parameters.get(index);
+//        if (varSym.ifl == null) return null;
+//        return varSym.ifl.toSherrlocFmtApply(polyArgs, applyCounter);
+//    }
 
-    public void substitutePoly() { //TODO: might need to copy
-        logger.debug("polyArgList size: " + polyArgList.size());
-        for (int index : polyArgList) {
-            String argName = parameters.get(index).name;
-            String argLabelName = getLabelNameArg(index);
-            if (funcLabels.begin_pc != null)
-                funcLabels.begin_pc.replace(argName, argLabelName);
-            if (returnLabel != null)
-                returnLabel.replace(argName, argLabelName);
-            for (VarSym arg : parameters) {
-                if (arg.ifl != null)
-                    arg.ifl.replace(argName, argLabelName);
-            }
-        }
-    }
+//    public void substitutePoly() { //TODO: might need to copy
+//        logger.debug("polyArgList size: " + polyArgList.size());
+//        for (int index : polyArgList) {
+//            String argName = parameters.get(index).getName();
+//            String argLabelName = getLabelNameArg(index);
+//            if (funcLabels.begin_pc != null)
+//                funcLabels.begin_pc.replace(argName, argLabelName);
+//            if (returnLabel != null)
+//                returnLabel.replace(argName, argLabelName);
+//            for (VarSym arg : parameters) {
+//                if (arg.ifl != null)
+//                    arg.ifl.replace(argName, argLabelName);
+//            }
+//        }
+//    }
 }

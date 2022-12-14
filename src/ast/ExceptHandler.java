@@ -24,7 +24,7 @@ public class ExceptHandler extends Statement {
 
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        env.curSymTab = new SymTab(env.curSymTab);
+        env.setCurSymTab(new SymTab(env.curSymTab()));
 
         VarSym var = env.toVarSym(name, type, true, true, location, now);
         if (var == null) {
@@ -36,7 +36,7 @@ public class ExceptHandler extends Statement {
         for (Statement s : body) {
             ScopeContext tmp = s.ntcGenCons(env, now);
         }
-        env.curSymTab = env.curSymTab.getParent();
+        env.setCurSymTab(env.curSymTab().getParent());
         return now;
     }
 

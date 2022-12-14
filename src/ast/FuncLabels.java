@@ -28,20 +28,20 @@ public class FuncLabels extends Node {
         this.end_pc = end_pc;
     }
 
-    public void findPrincipal(HashSet<String> principalSet) {
-        if (begin_pc != null) {
-            begin_pc.findPrincipal(principalSet);
-        }
-        if (to_pc != null) {
-            to_pc.findPrincipal(principalSet);
-        }
-        if (gamma_label != null) {
-            gamma_label.findPrincipal(principalSet);
-        }
-        if (end_pc != null) {
-            end_pc.findPrincipal(principalSet);
-        }
-    }
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        if (begin_pc != null) {
+//            begin_pc.findPrincipal(principalSet);
+//        }
+//        if (to_pc != null) {
+//            to_pc.findPrincipal(principalSet);
+//        }
+//        if (gamma_label != null) {
+//            gamma_label.findPrincipal(principalSet);
+//        }
+//        if (end_pc != null) {
+//            end_pc.findPrincipal(principalSet);
+//        }
+//    }
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {

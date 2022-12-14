@@ -12,7 +12,7 @@ public abstract class TopLayerNode extends Node {
 
     public abstract boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent);
 
-    public abstract void findPrincipal(HashSet<String> principalSet);
+    // public abstract void findPrincipal(HashSet<String> principalSet);
     
 }
 

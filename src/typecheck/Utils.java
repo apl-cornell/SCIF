@@ -71,7 +71,7 @@ public class Utils {
         if (prefix.equals("")) {
             return "PC";
         } else {
-            return prefix + ".." + "PC";
+            return prefix + "." + "PC";
         }
     }
 
@@ -79,7 +79,7 @@ public class Utils {
         if (location == null) {
             return "PC";
         } else {
-            return location + ".." + "PC";
+            return location + "." + "PC";
         }
     }
 
@@ -87,7 +87,7 @@ public class Utils {
         if (location == null) {
             return "LK";
         } else {
-            return location + ".." + "LK";
+            return location + "." + "LK";
         }
         /*if (prefix.equals("")) {
             return "LK";
@@ -100,28 +100,28 @@ public class Utils {
         if (location == null) {
             return "ILK";
         } else {
-            return location.toString() + ".." + "ILK";
+            return location.toString() + "." + "ILK";
         }
     }
 
     public static String getLabelNameFuncCallPcBefore(String funcName) {
-        return funcName + ".." + "call.pc.bfr";
+        return funcName + "." + "call.pc.bfr";
     }
 
     public static String getLabelNameFuncCallPcAfter(String funcName) {
-        return funcName + ".." + "call.pc.aft";
+        return funcName + "." + "call.pc.aft";
     }
 
     public static String getLabelNameCallPcEnd(String funcName) {
-        return funcName + ".." + "call.pc.end";
+        return funcName + "." + "call.pc.end";
     }
 
     public static String getLabelNameFuncCallLock(String funcName) {
-        return funcName + ".." + "call.lk";
+        return funcName + "." + "call.lk";
     }
 
     public static String getLabelNameFuncCallGamma(String funcName) {
-        return funcName + ".." + "gamma.lk";
+        return funcName + "." + "gamma.lk";
     }
 
     /*public static String getLabelNameFuncCallBefore(String funcName) {
@@ -131,23 +131,23 @@ public class Utils {
         return funcName + ".." + "call.after";
     }*/
     public static String getLabelNameFuncRtnValue(String funcName) {
-        return funcName + ".." + "rtn.v";
+        return funcName + "." + "rtn.v";
     }
 
     public static String getLabelNameFuncRtnLock(String funcName) {
-        return funcName + ".." + "rtn.lk";
+        return funcName + "." + "rtn.lk";
     }
 
     public static String getLabelNameFuncRtnPc(String funcName) {
-        return funcName + ".." + "rtn.pc";
+        return funcName + "." + "rtn.pc";
     }
 
     public static String getLabelNameArgLabel(String funcName, VarSym arg) {
-        return funcName + "." + arg.name + "..lbl";
+        return funcName + "." + arg.getName() + ".lbl";
     }
 
     public static String getLabelNameFuncExpLabel(String funcName, String name) {
-        return funcName + "." + name + "..lbl";
+        return funcName + "." + name + ".lbl";
     }
 
     public static sherrloc.diagnostic.DiagnosticConstraintResult runSherrloc(String consFilePath)
@@ -223,9 +223,9 @@ public class Utils {
             if (!constructors.contains("TOP") && isIFC) {
                 constructors.add("TOP");
             }
-            if (!constructors.contains("this") && isIFC) {
+            /*if (!constructors.contains("this") && isIFC) {
                 constructors.add("this");
-            }
+            }*/
 
             if (!constructors.isEmpty()) {
                 for (String principal : constructors) {
@@ -381,7 +381,7 @@ public class Utils {
         members.add(sender);
         VarSym value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
         members.add(value);
-        StructTypeSym msgT = new StructTypeSym("msgT", members);
+        StructTypeSym msgT = new StructTypeSym("msgT", members, universalContext);
         VarSym msg = new VarSym("msg",
                 msgT, null,
                 null, universalContext, false, false);
@@ -482,8 +482,8 @@ public class Utils {
         return true;
     }
 
-    public static String getLabelNameContract(String name) {
-        return name + "." + "codeLbl";
+    public static String getLabelNameContract(ScopeContext context) {
+        return context.getSHErrLocName() + "." + "codeLbl";
     }
 
     public static DynamicSystemOption resolveDynamicOption(String dynamicOption) {
@@ -623,11 +623,11 @@ public class Utils {
     public static void contextFlow(VisitEnv env, Context outContext, Context funcEndContext,
             CodeLocation location) {
         env.trustCons.add(new Constraint(new Inequality(outContext.lambda, funcEndContext.lambda),
-                env.hypothesis, location, env.curContractSym.name,
+                env.hypothesis, location, env.curContractSym.getName(),
                 "actually-maintained lock of the last sub-statement flows to parent-statement's one"));
         env.trustCons.add(
                 new Constraint(new Inequality(outContext.pc, funcEndContext.pc), env.hypothesis,
-                        location, env.curContractSym.name,
+                        location, env.curContractSym.getName(),
                         "normal termination control flow of the last sub-statement flows to parent-statement's one"));
     }
 

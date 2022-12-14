@@ -53,8 +53,8 @@ public class TrustAtom extends TopLayerNode {
         return false;
     }
 
-    @Override
-    public void findPrincipal(HashSet<String> principalSet) {
-        ifl.findPrincipal(principalSet);
-    }
+//    @Override
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        ifl.findPrincipal(principalSet);
+//    }
 }

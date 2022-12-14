@@ -10,7 +10,7 @@ import java.util.Map;
 
 
 /*
- * A context class that stores tree structure between nodes and an exception map that indicate what
+ * A context class that stores tree structure between nodes and an exception map that indicates what
  * exceptions are acceptable in the current contract
  * */
 public class ScopeContext {
@@ -18,7 +18,7 @@ public class ScopeContext {
     Node cur;
     HashMap<ExceptionTypeSym, Boolean> funcExceptionMap;
     ScopeContext parent;
-    String SHErrLocName;
+    private String SHErrLocName;
 
     public ScopeContext(String specifiedName) {
         cur = null;
@@ -81,12 +81,12 @@ public class ScopeContext {
     public Constraint genCons(ScopeContext rhs, Relation op, NTCEnv env, CodeLocation location) {
 
         return new Constraint(new Inequality(getSHErrLocName(), op, rhs.getSHErrLocName()),
-                env.globalHypothesis, location, env.curContractSym.name, "");
+                env.globalHypothesis(), location, env.curContractSym().getName(), "");
     }
 
     public Constraint genCons(String rhs, Relation op, NTCEnv env, CodeLocation location) {
-        return new Constraint(new Inequality(getSHErrLocName(), op, rhs), env.globalHypothesis,
-                location, env.curContractSym.name, "");
+        return new Constraint(new Inequality(getSHErrLocName(), op, rhs), env.globalHypothesis(),
+                location, env.curContractSym().getName(), "");
     }
 
     public boolean isContractLevel() {
@@ -132,7 +132,7 @@ public class ScopeContext {
     public void printExceptionSet() {
         System.err.println(funcExceptionMap.size());
         for (Map.Entry<ExceptionTypeSym, Boolean> t : funcExceptionMap.entrySet()) {
-            System.err.println(t + t.getKey().name);
+            System.err.println(t + t.getKey().getName());
         }
     }
 }

@@ -19,17 +19,17 @@ public class MapTypeSym extends TypeSym {
     }
 
     public MapTypeSym(MapTypeSym depMapTypeInfo) {
-        super(depMapTypeInfo.name);
+        super(depMapTypeInfo.getName());
         keyType = depMapTypeInfo.keyType;
         valueType = depMapTypeInfo.valueType;
         // name = getName();
     }
 
-    @Override
-    public String getName() {
-        return this.name;
-        // return "Map." + keyType.getName() + "." + valueType.getName();
-    }
+//    @Override
+//    public String getName() {
+//        return this.name;
+//        // return "Map." + keyType.getName() + "." + valueType.getName();
+//    }
 
     public static String getMapName(TypeSym keyType, TypeSym valueType) {
         return "Map." + keyType.getName() + "." + valueType.getName();

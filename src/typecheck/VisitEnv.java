@@ -152,7 +152,7 @@ public class VisitEnv {
     }
 
     public ExceptionTypeSym toExceptionTypeSym(ExceptionType t) {
-        if (t.isLocal(curContractSym.name)) {
+        if (t.isLocal(curContractSym.getName())) {
             return (ExceptionTypeSym) getCurSym(t.getName());
         } else {
             return (ExceptionTypeSym) getExtSym(t.getContractName(), t.getName());
@@ -165,5 +165,9 @@ public class VisitEnv {
             return (ExceptionTypeSym) sym;
         else
             return null;
+    }
+
+    public ScopeContext getScopeContext() {
+        return curContractSym.getContractNode().getScopeContext();
     }
 }

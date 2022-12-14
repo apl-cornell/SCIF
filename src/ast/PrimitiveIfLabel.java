@@ -98,25 +98,25 @@ public class PrimitiveIfLabel extends IfLabel {
         return null;
     }
 
-    @Override
-    public void findPrincipal(HashSet<String> principalSet) {
-        if (value != null) {
-            String name = value.id;
-            if (!name.equals(Utils.LABEL_TOP) && !name.equals(Utils.LABEL_BOTTOM)) {
-                principalSet.add(name);
-            }
-        }
-    }
+//    @Override
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        if (value != null) {
+//            String name = value.id;
+//            if (!name.equals(Utils.LABEL_TOP) && !name.equals(Utils.LABEL_BOTTOM)) {
+//                principalSet.add(name);
+//            }
+//        }
+//    }
 
-    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
-        if (value != null) {
-            String name = value.id;
-            if (!name.equals(Utils.LABEL_TOP) && !name.equals(Utils.LABEL_BOTTOM) && !name.equals(
-                    getRidOf)) {
-                principalSet.add(name);
-            }
-        }
-    }
+//    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
+//        if (value != null) {
+//            String name = value.id;
+//            if (!name.equals(Utils.LABEL_TOP) && !name.equals(Utils.LABEL_BOTTOM) && !name.equals(
+//                    getRidOf)) {
+//                principalSet.add(name);
+//            }
+//        }
+//    }
 
     @Override
     public boolean typeMatch(IfLabel begin_pc) {
@@ -146,8 +146,8 @@ public class PrimitiveIfLabel extends IfLabel {
         if (s instanceof VarSym) {
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
-            logger.debug(s.name);
-            if (!typeSym.name.equals(Utils.BuiltinType2ID(BuiltInT.PRINCIPAL)) && !typeSym.name.equals(Utils.BuiltinType2ID(BuiltInT.ADDRESS))) {
+            logger.debug(s.getName());
+            if (!typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.PRINCIPAL)) && !typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.ADDRESS))) {
                 System.err.println("Primitive non-address/principal ifc label " + value.id + " at " + "location: "
                     + location.toString());
                 throw new RuntimeException();

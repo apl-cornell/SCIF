@@ -65,14 +65,14 @@ public class Contract extends Node {
 
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        env.setCurSymTab(new SymTab(env.curSymTab));
-        Utils.addBuiltInSyms(env.globalSymTab, trustSetting);
+        env.setCurSymTab(new SymTab(env.curSymTab()));
+        Utils.addBuiltInSyms(env.globalSymTab(), trustSetting);
         /*
             add built-in variable "this"
          */
         //String name = "this";
         //env.globalSymTab.add(name, new VarSym(env.toVarSym(name, new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, new CodeLocation(), now)));
-        ContractSym contractSym = new ContractSym(contractName, env.curSymTab, trustSetting, ifl);
+        ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), trustSetting, ifl);
         env.addGlobalSym(contractName, contractSym);
         env.setCurContractSym(contractSym);
 
@@ -94,7 +94,7 @@ public class Contract extends Node {
             }
         }
 
-        env.curSymTab = env.curSymTab.getParent();
+        env.setCurSymTab(env.curSymTab().getParent());
         return true;
     }
 
@@ -119,7 +119,7 @@ public class Contract extends Node {
     }
 
     public void globalInfoVisit(ContractSym contractSym) {
-        contractSym.name = contractName;
+        // contractSym.name = contractName;
         contractSym.trustSetting = trustSetting;
         contractSym.ifl = ifl;
         contractSym.addContract(contractName, contractSym);
@@ -158,24 +158,24 @@ public class Contract extends Node {
         }
     }
 
-    public void findPrincipal(HashSet<String> principalSet) {
-        for (TrustConstraint trustConstraint : trustSetting.trust_list) {
-            trustConstraint.findPrincipal(principalSet);
-        }
-        ifl.findPrincipal(principalSet);
-
-        for (StateVariableDeclaration dec : varDeclarations) {
-            dec.findPrincipal(principalSet);
-        }
-
-        for (ExceptionDef expDef : exceptionDefs) {
-            expDef.findPrincipal(principalSet);
-        }
-
-        for (FunctionDef fDef : methodDeclarations) {
-            fDef.findPrincipal(principalSet);
-        }
-    }
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        for (TrustConstraint trustConstraint : trustSetting.trust_list) {
+//            trustConstraint.findPrincipal(principalSet);
+//        }
+//        ifl.findPrincipal(principalSet);
+//
+//        for (StateVariableDeclaration dec : varDeclarations) {
+//            dec.findPrincipal(principalSet);
+//        }
+//
+//        for (ExceptionDef expDef : exceptionDefs) {
+//            expDef.findPrincipal(principalSet);
+//        }
+//
+//        for (FunctionDef fDef : methodDeclarations) {
+//            fDef.findPrincipal(principalSet);
+//        }
+//    }
 
     public void solidityCodeGen(SolCode code) {
         code.setDynamicOption(trustSetting);

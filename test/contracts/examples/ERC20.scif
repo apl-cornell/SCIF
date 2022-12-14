@@ -1,0 +1,41 @@
+contract ERC20 {
+    map(address, uint){this} balances;
+    map(address owner, map{this}(address, uint{owner})){this} allowances;
+
+    @public
+    bool approve{sender -> sender; BOT}(address allowed, uint amount) {
+        allowances[sender][allowed] = amount;
+    }
+
+    //
+    //  dynamically check that (msg.sender join l_deputy) => from
+    //  TODO: support final
+    @public
+    bool{this} transfer{from -> this; BOT}(final address from, address to, uint amount) {
+        //TODO: change to ([], a->b)
+        // endorseIf
+        endorseIf(from, to, amount, from -> this)
+        if (balances[from] >= amount) {
+            balances[from] = balances[from] - amount;
+            balances[to] = balances[to] + amount;
+            // balances[from] -= amount;
+            // balances[to] += amount;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // {BOT -> from}
+    @public
+    bool{from} transferAllowed{sender -> from; BOT}(final address from, address to, uint amount) {
+        endorseIf(from, to, amount, sender -> from) if (allowances[from][sender] >= amount) {
+            if (transfer(from, to, amount)) {
+                allowances[from][sender] = allowances[from][sender] - amount;
+                //allowances[from][msg.sender] -= amount;
+                return true;
+            }
+        }
+        return false;
+    }
+}

@@ -71,4 +71,8 @@ public abstract class Node {
     }
 
     protected static final Logger logger = LogManager.getLogger();
+
+    public ScopeContext getScopeContext() {
+        return scopeContext;
+    }
 }

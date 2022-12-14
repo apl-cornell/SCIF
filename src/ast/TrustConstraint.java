@@ -30,10 +30,10 @@ public class TrustConstraint extends TopLayerNode {
         return false;
     }
 
-    public void findPrincipal(HashSet<String> principalSet) {
-        lhs.findPrincipal(principalSet);
-        rhs.findPrincipal(principalSet);
-    }
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        lhs.findPrincipal(principalSet);
+//        rhs.findPrincipal(principalSet);
+//    }
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {

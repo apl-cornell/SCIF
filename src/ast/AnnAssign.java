@@ -65,7 +65,7 @@ public class AnnAssign extends Statement {
         ScopeContext tgt = new ScopeContext(target, now);
 
         String name = ((Name) target).id;
-        env.globalSymTab.add(name,
+        env.globalSymTab().add(name,
                 env.toVarSym(name, annotation, isStatic, isFinal, location, tgt));
         return true;
     }
@@ -82,10 +82,10 @@ public class AnnAssign extends Statement {
         ScopeContext tgt = target.ntcGenCons(env, now);
 
         logger.debug("1: \n" + env + "\n2: " + target.toSolCode() + "\n" + tgt);
-        env.cons.add(type.genCons(tgt, Relation.EQ, env, location));
+        env.addCons(type.genCons(tgt, Relation.EQ, env, location));
         if (value != null) {
             ScopeContext v = value.ntcGenCons(env, now);
-            env.cons.add(tgt.genCons(v, Relation.LEQ, env, location));
+            env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
         }
         return now;
     }
@@ -115,49 +115,49 @@ public class AnnAssign extends Statement {
                 String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt(scopeContext);
                 env.cons.add(new Constraint(
                         new Inequality(ifLabel, Relation.EQ, varSym.labelToSherrlocFmt()),
-                        env.hypothesis, location, env.curContractSym.name,
-                        "Variable " + varSym.name + " may be labeled incorrectly"));
+                        env.hypothesis, location, env.curContractSym.getName(),
+                        "Variable " + varSym.getName() + " may be labeled incorrectly"));
             }
         } else {
             // ifNameTgt = ((Name) target).id;
             varSym = env.getVar(id);
         }
-        logger.debug(varSym.name);
+        logger.debug(varSym.getName());
         SLCNameVar = varSym.toSherrlocFmt();
         SLCNameVarLbl = varSym.labelToSherrlocFmt();
-        logger.debug(varSym.typeSym.name);
-        if (varSym.typeSym.name.equals(Utils.ADDRESSTYPE)) {
+        logger.debug(varSym.typeSym.getName());
+        if (varSym.typeSym.getName().equals(Utils.ADDRESSTYPE)) {
             env.principalSet.add(varSym.toSherrlocFmt());
         }
 
-        if (annotation instanceof LabeledType) {
-            if (annotation instanceof DepMap) {
-                ((DepMap) annotation).findPrincipal(env.principalSet);
-            } else {
-                ((LabeledType) annotation).ifl.findPrincipal(env.principalSet);
-            }
-        }
+//        if (annotation instanceof LabeledType) {
+//            if (annotation instanceof DepMap) {
+//                ((DepMap) annotation).findPrincipal(env.principalSet);
+//            } else {
+//                ((LabeledType) annotation).ifl.findPrincipal(env.principalSet);
+//            }
+//        }
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         // String ifNameTgtLbl = ifNameTgt + "..lbl";
         // Context prevContext = env.prevContext;
 
         env.cons.add(
                 new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis, location,
-                        env.curContractSym.name,
+                        env.curContractSym.getName(),
                         "Integrity of control flow must be trusted to allow this assignment"));
 
         //env.outContext = endContext;
 
         if (!tail_position) {
             env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis, location, env.curContractSym.name,
+                    env.hypothesis, location, env.curContractSym.getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
         if (value != null) {
             env.inContext = beginContext;
             ExpOutcome valueOutcome = value.genConsVisit(env, scopeContext.isContractLevel());
             env.cons.add(new Constraint(new Inequality(valueOutcome.valueLabelName, SLCNameVarLbl),
-                    env.hypothesis, value.location, env.curContractSym.name,
+                    env.hypothesis, value.location, env.curContractSym.getName(),
                     "Integrity of the value being assigned must be trusted to allow this assignment"));
             typecheck.Utils.contextFlow(env, valueOutcome.psi.getNormalPath().c, endContext,
                     value.location);
@@ -169,11 +169,11 @@ public class AnnAssign extends Statement {
 
     }
 
-    public void findPrincipal(HashSet<String> principalSet) {
-        if (annotation instanceof LabeledType) {
-            ((LabeledType) annotation).ifl.findPrincipal(principalSet);
-        }
-    }
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        if (annotation instanceof LabeledType) {
+//            ((LabeledType) annotation).ifl.findPrincipal(principalSet);
+//        }
+//    }
 
     public void solidityCodeGen(SolCode code) {
         if (value != null) {

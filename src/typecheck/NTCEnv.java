@@ -1,6 +1,7 @@
 package typecheck;
 
 import ast.*;
+import java.util.List;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 
@@ -10,22 +11,22 @@ import java.util.HashSet;
 
 public class NTCEnv {
 
-    public SymTab globalSymTab;
-    public SymTab curSymTab;
+    private SymTab globalSymTab;
+    private SymTab curSymTab;
     // public HashMap<String, SymTab> externalSymTab;
     // external contracts will be added to the global SymTab
-    public ArrayList<Constraint> cons;
-    public Hypothesis globalHypothesis;
-    public ContractSym curContractSym;
-    public HashMap<String, SourceFile> programMap;
+    private ArrayList<Constraint> cons;
+    private Hypothesis globalHypothesis;
+    private ContractSym curContractSym;
+    private HashMap<String, SourceFile> programMap;
 
-    public NTCEnv() {
+    public NTCEnv(ContractSym contractSym) {
         globalSymTab = new SymTab();
         cons = new ArrayList<>();
         //globalSymTab = null; //TODO
         curSymTab = globalSymTab;
         globalHypothesis = new Hypothesis();
-        curContractSym = new ContractSym();
+        curContractSym = contractSym;
         programMap = new HashMap<>();
     }
 
@@ -174,11 +175,39 @@ public class NTCEnv {
     }
 
     public ExceptionTypeSym toExceptionTypeSym(ExceptionType t) {
-        if (t.isLocal(curContractSym.name)) {
+        if (t.isLocal(curContractSym.getName())) {
             System.out.println("isLocal");
             return (ExceptionTypeSym) getCurSym(t.getName());
         } else {
             return (ExceptionTypeSym) getExtSym(t.getContractName(), t.getName());
         }
+    }
+
+    public void addSourceFile(String contractName, SourceFile root) {
+        programMap.put(contractName, root);
+    }
+
+    public SymTab globalSymTab() {
+        return globalSymTab;
+    }
+
+    public List<Constraint> cons() {
+        return cons;
+    }
+
+    public HashMap<String, SourceFile> programMap() {
+        return programMap;
+    }
+
+    public Hypothesis globalHypothesis() {
+        return globalHypothesis;
+    }
+
+    public ContractSym curContractSym() {
+        return curContractSym;
+    }
+
+    public SymTab curSymTab() {
+        return curSymTab;
     }
 }

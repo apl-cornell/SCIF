@@ -18,13 +18,13 @@ public class LabeledType extends Type {
         return "";
     }
 
-    public void findPrincipal(HashSet<String> principalSet) {
-        ifl.findPrincipal(principalSet);
-    }
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        ifl.findPrincipal(principalSet);
+//    }
 
-    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
-        ifl.findPrincipal(principalSet, getRidOf);
-    }
+//    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
+//        ifl.findPrincipal(principalSet, getRidOf);
+//    }
 
     @Override
     public ArrayList<Node> children() {

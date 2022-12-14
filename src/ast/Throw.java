@@ -29,7 +29,7 @@ public class Throw extends Statement {
                 String contractTypeName = ((Name) att.value).id;
                 exceptionName = att.attr.id;
                 ContractSym s = env.getContract(contractTypeName);
-                logger.debug("contract " + contractTypeName + ": " + s.name);
+                logger.debug("contract " + contractTypeName + ": " + s.getName());
                 if (!(env.getExtSym(exceptionName, contractTypeName) == null)) {
                     System.err.println("a.b not found");
                     return null;
@@ -59,7 +59,7 @@ public class Throw extends Statement {
         }
         // check if the parameter number matches
         if (exceptionSym.parameters.size() != exception.args.size()) {
-            System.err.println("Throwing an exception " + exceptionSym.name + " with unmatched parameter number at " + "location: "
+            System.err.println("Throwing an exception " + exceptionSym.getName() + " with unmatched parameter number at " + "location: "
                     + location.toString());
             throw new RuntimeException();
         }
@@ -69,17 +69,17 @@ public class Throw extends Statement {
             Expression arg = exception.args.get(i);
             TypeSym paraInfo = exceptionSym.parameters.get(i).typeSym;
             ScopeContext argContext = arg.ntcGenCons(env, now);
-            String typeName = env.getSymName(paraInfo.name);
+            String typeName = env.getSymName(paraInfo.getName());
             Constraint argCon = argContext.genCons(typeName, Relation.GEQ, env, arg.location);
             env.addCons(argCon);
-            System.out.println(paraInfo.name);
+            System.out.println(paraInfo.getName());
             System.out.println(argCon.toSherrlocFmt(true));
         }
         // String rtnTypeName = exceptionSym.returnType.name;
         // env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
 
         if (!parent.isCheckedException(exceptionSym, false)) {
-            System.err.println("Unchecked exception " + exceptionSym.name + " at " + "location: "
+            System.err.println("Unchecked exception " + exceptionSym.getName() + " at " + "location: "
                     + location.toString());
             throw new RuntimeException();
         }

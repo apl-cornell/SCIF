@@ -24,7 +24,7 @@ contract DistributedBank [this] {
         }
     }
     
-    public void withdraw{BOT -> high; BOT}(address{BOT} sender, uint{BOT} amount) {
+    public void withdraw{BOT -> high; BOT}(address sender, uint amount) {
 
         // ... check if this is the sender
 

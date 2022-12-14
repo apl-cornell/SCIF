@@ -65,7 +65,7 @@ public class FuncSym extends Sym {
     }
     public String getLabelNameCallPcBefore(String namespace) {
         if (namespace != "")
-            namespace += "..";
+            namespace += ".";
         return namespace + Utils.getLabelNameFuncCallPcBefore(scopeContext.getSHErrLocName());
     }
 
@@ -79,7 +79,7 @@ public class FuncSym extends Sym {
 
     public String getLabelNameCallPcAfter(String namespace) {
         if (!Objects.equals(namespace, ""))
-            namespace += "..";
+            namespace += ".";
         return namespace + Utils.getLabelNameFuncCallPcAfter(scopeContext.getSHErrLocName());
     }
 
@@ -104,16 +104,16 @@ public class FuncSym extends Sym {
 
     public String getLabelNameArg(String namespace, int index) {
         if (!Objects.equals(namespace, ""))
-            namespace += "..";
+            namespace += ".";
         return namespace + Utils.getLabelNameArgLabel(scopeContext.getSHErrLocName(), parameters.get(index));
     }
 
     public String getLabelNameException(ExceptionTypeSym exp) {
-        return Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(), exp.name);
+        return Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(), exp.getName());
     }
     public String getCallPcLabel(String namespace) {
         if (funcLabels != null && funcLabels.begin_pc != null) {
-            return funcLabels.begin_pc.toSherrlocFmt(namespace);
+            return namespace + "." + funcLabels.begin_pc.toSherrlocFmt(scopeContext);
         }
         else {
             return null;
@@ -123,7 +123,7 @@ public class FuncSym extends Sym {
 
     public String getCallLockLabel(String namespace) {
         if (funcLabels != null && funcLabels.gamma_label != null) {
-            return funcLabels.gamma_label.toSherrlocFmt(namespace);
+            return namespace + "." + funcLabels.gamma_label.toSherrlocFmt(scopeContext);
         }
         else {
             return null;
@@ -157,7 +157,7 @@ public class FuncSym extends Sym {
 
     public String getCallAfterLabel(String namespace) {
         if (funcLabels != null && funcLabels.to_pc != null) {
-            return funcLabels.to_pc.toSherrlocFmt(namespace);
+            return namespace + "." + funcLabels.to_pc.toSherrlocFmt(scopeContext);
         }
         else {
             return null;
@@ -166,7 +166,7 @@ public class FuncSym extends Sym {
 
     public String getRtnValueLabel(String namespace) {
         if (returnLabel != null) {
-            return returnLabel.toSherrlocFmt(namespace);
+            return namespace + "." + returnLabel.toSherrlocFmt(scopeContext);
         } else {
             return null;
         }
@@ -187,7 +187,7 @@ public class FuncSym extends Sym {
     }
     public String getLabelNameCallGamma(String namespace) {
         if (!Objects.equals(namespace, ""))
-            namespace += "..";
+            namespace += ".";
         return namespace + Utils.getLabelNameFuncCallGamma(scopeContext.getSHErrLocName());
     }
 }

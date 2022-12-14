@@ -51,7 +51,7 @@ public class SymTab {
         HashMap<String, VarSym> rtn = new HashMap<>();
         for (Sym sym : table.values()) {
             if (sym instanceof VarSym)
-                rtn.put(sym.name, (VarSym) sym);
+                rtn.put(sym.getName(), (VarSym) sym);
         }
         return rtn;
     }
@@ -60,7 +60,7 @@ public class SymTab {
         HashMap<String, FuncSym> rtn = new HashMap<>();
         for (Sym sym : table.values()) {
             if (sym instanceof FuncSym)
-                rtn.put(sym.name, (FuncSym) sym);
+                rtn.put(sym.getName(), (FuncSym) sym);
         }
         return rtn;
     }

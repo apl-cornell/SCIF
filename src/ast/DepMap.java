@@ -11,16 +11,16 @@ public class DepMap extends LabeledType {
         this.valueType = valueType;
     }
 
-    public String toSherrloc(String name, String value) {
-        return ifl.toSherrlocFmt(name, value);
-    }
+//    public String toSherrloc(String name, String value) {
+//        return ifl.toSherrlocFmt(name, value);
+//    }
 
-    @Override
-    public void findPrincipal(HashSet<String> principalSet) {
-        ifl.findPrincipal(principalSet);
-        keyType.findPrincipal(principalSet, name);
-        valueType.findPrincipal(principalSet, name);
-    }
+//    @Override
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        ifl.findPrincipal(principalSet);
+//        keyType.findPrincipal(principalSet, name);
+//        valueType.findPrincipal(principalSet, name);
+//    }
 
     @Override
     public boolean typeMatch(Type annotation) {

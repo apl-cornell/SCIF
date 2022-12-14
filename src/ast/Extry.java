@@ -19,7 +19,7 @@ public class Extry extends Try {
         // must contain at least one Statement
 
         ScopeContext now = new ScopeContext(this, parent);
-        env.curSymTab = new SymTab(env.curSymTab);
+        env.setCurSymTab(new SymTab(env.curSymTab()));
         ScopeContext rtn = null;
 
         // ScopeContext tryclause = new ScopeContext(this, now);
@@ -32,7 +32,7 @@ public class Extry extends Try {
         for (Statement s : body) {
             tmp = s.ntcGenCons(env, now);
         }
-        env.curSymTab = env.curSymTab.getParent();
+        env.setCurSymTab(env.curSymTab().getParent());
 
         for (ExceptHandler h : handlers) {
             tmp = h.ntcGenCons(env, parent);

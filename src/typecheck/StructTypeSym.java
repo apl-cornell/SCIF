@@ -5,16 +5,18 @@ import java.util.ArrayList;
 public class StructTypeSym extends TypeSym {
     // Struct type should be initialized in a way like: varName = new typeName(member0, member1, ..., )
     ArrayList<VarSym> members;
+    ScopeContext scopeContext;
 
-    public StructTypeSym(String typeName, ArrayList<VarSym> members) {
+    public StructTypeSym(String typeName, ArrayList<VarSym> members, ScopeContext scopeContext) {
         super(typeName);
         this.members = members;
+        this.scopeContext = scopeContext;
     }
 
     public String getMemberLabel(String name) {
         for (VarSym mb : members) {
-            if (mb.name.equals(name)) {
-                return mb.ifl.toSherrlocFmt("");
+            if (mb.getName().equals(name)) {
+                return mb.ifl.toSherrlocFmt(scopeContext);
             }
         }
         return null;
@@ -22,9 +24,9 @@ public class StructTypeSym extends TypeSym {
 
     public VarSym getMemberVarInfo(String prefix, String memberName) {
         for (VarSym mb : members) {
-            if (mb.name.equals(memberName)) {
+            if (mb.getName().equals(memberName)) {
                 VarSym rtn = new VarSym(mb);
-                rtn.name = prefix + "." + rtn.name;
+                rtn.setName(prefix + "." + rtn.getName());
                 return rtn;
             }
         }

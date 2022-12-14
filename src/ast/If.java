@@ -31,7 +31,7 @@ public class If extends Statement {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
-        env.curSymTab = new SymTab(env.curSymTab);
+        env.setCurSymTab(new SymTab(env.curSymTab()));
         ScopeContext rtn = null;
 
         rtn = test.ntcGenCons(env, now);
@@ -45,7 +45,7 @@ public class If extends Statement {
         for (Statement s : orelse) {
             rtn = s.ntcGenCons(env, now);
         }
-        env.curSymTab = env.curSymTab.getParent();
+        env.setCurSymTab(env.curSymTab().getParent());
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         return now;
     }
@@ -88,7 +88,7 @@ public class If extends Statement {
                     logger.debug(r.toString());
                     //System.err.println(l.toString());
                     //System.err.println(r.toString());
-                    if (l.typeSym.name.equals(Utils.ADDRESSTYPE) && r.typeSym.name.equals(
+                    if (l.typeSym.getName().equals(Utils.ADDRESSTYPE) && r.typeSym.getName().equals(
                             Utils.ADDRESSTYPE)) {
                         /*testedVar = ((TestableVarInfo) l);
                         beforeTestedLabel = testedVar.testedLabel;
@@ -109,11 +109,11 @@ public class If extends Statement {
             }
         }
         env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis,
-                location, env.curContractSym.name,
+                location, env.curContractSym.getName(),
                 "Control flow integrity before this if condition doesn't flow to the one after this condition"));
         env.cons.add(
                 new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location,
-                        env.curContractSym.name,
+                        env.curContractSym.getName(),
                         "Integrity of this condition doesn't flow to the control flow in this if branch"));
 
         /*if (body.size() > 0 || orelse.size() > 0) {

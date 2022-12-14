@@ -1,21 +1,22 @@
-contract Wallet [this] extends BaseContract {
-    map(user, uint{user}) balances; //previously map(user: address, uint{user}) balances
+contract Wallet [this] {
+    map(address, uint) balances; //previously map(user: address, uint{user}) balances
     exception balanceNotEnough();
     exception transferFailure();
 
-    /**
-     *  {BOT -> this; BOT} (t{BOT} name) return {value: this; end_pc: this}
-     *  msg.sender: address{msg.sender}
-     *  amount: uint{msg.sender}
-     */
+//     *
+//     *  {BOT -> this; BOT} (t{BOT} name) return {value: this; end_pc: this}
+//     *  msg.sender: address{msg.sender}
+//     *  amount: uint{msg.sender}
+//     *
     @public
-    void withdraw(uint amount) throws (balanceNotEnough, transferFailure) {
+    void withdraw(uint _amount) throws (balanceNotEnough, transferFailure) {
+        uint amount = endorse(_amount, BOT -> this);
         if (balances[msg.sender] >= amount) {
             // pc: this join msg.sender
             lock(this) {
                 try {
                     send(msg.sender, amount);
-                } catch (error e) {
+                } catchall (error e) {
                     throw transferFailure();
                 }
                 balances[msg.sender] = balances[msg.sender] - amount;

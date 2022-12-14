@@ -16,8 +16,9 @@ public class TestRegularTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "basic/EmptyContract",
-            "basic/ExceptionThrowAndCatch",
+            //"basic/EmptyContract",
+            //"basic/ExceptionThrowAndCatch",
+            "ifcTypechecking/Wallet_lock_exception",
             // "ifcTypechecking/Wallet_lock_exception",
             // "examples/ERC20"
     })
@@ -30,7 +31,13 @@ public class TestRegularTypechecking {
         File NTCConsFile = new File(logDir, "ntc.cons");
         ArrayList<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
-        List<SourceFile> roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
+
+        List<SourceFile> roots = null;
+        try {
+            roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertNotNull(roots);
     }
 
@@ -39,6 +46,7 @@ public class TestRegularTypechecking {
             "regularTypechecking/ExceptionThrowAndCatch_W01",
             "regularTypechecking/ExceptionThrowAndCatch_W02",
             "regularTypechecking/ExceptionThrowAndCatch_W03",
+            "regularTypechecking/LocalTrust_W01"
     })
     void testNegativeRegularTypechecking(String contractName) {
         File logDir = new File("./.scif");

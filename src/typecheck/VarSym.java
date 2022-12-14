@@ -46,7 +46,7 @@ public class VarSym extends Sym {
     }*/
 
     public VarSym(VarSym varSym) {
-        super(varSym.name);
+        super(varSym.getName());
         // this.name = varSym.name;
         this.typeSym = varSym.typeSym;
         this.ifl = varSym.ifl;
@@ -63,23 +63,23 @@ public class VarSym extends Sym {
             return null;
         }
     }
-    public String getLabel(String namespace) {
-        if (ifl != null) {
-            return ifl.toSherrlocFmt(namespace);
-        } else {
-            return null;
-        }
-    }
+//    public String getLabel(String namespace) {
+//        if (ifl != null) {
+//            return ifl.toSherrlocFmt(namespace);
+//        } else {
+//            return null;
+//        }
+//    }
     public boolean isLValue() {
         return true;
     }
 
-    public void replace(String k, String v) {
-        ifl.replace(k, v);
-    }
+//    public void replace(String k, String v) {
+//        ifl.replace(k, v);
+//    }
 
     public String toSherrlocFmt() {
-        return  defContext.getSHErrLocName() + "." + name;
+        return  defContext.getSHErrLocName() + "." + getName();
         // return fullName;// + ".." + "lblVar";
     }
     public String labelToSherrlocFmt() {return  toSherrlocFmt() + ".." + "lbl"; }
@@ -87,9 +87,10 @@ public class VarSym extends Sym {
     static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();
     @Override
     public String toString() {
-        return name + "|" + isStatic + "|" + isFinal + "|" +
+        return getName() + "|" + isStatic + "|" + isFinal + "|" +
                 genson.serialize(typeSym) + "|" +
                 (ifl != null ? ifl.toSherrlocFmt(defContext) + "|" : "") +
                 (location != null ? location.toString() : "");
     }
+
 }

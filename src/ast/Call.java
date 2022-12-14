@@ -49,7 +49,7 @@ public class Call extends TrailerExpr {
                 String varName = ((Name) att.value).id;
                 funcName = att.attr.id;
                 Sym s = env.getCurSym(varName);
-                logger.debug("var " + varName + ": " + s.name);
+                logger.debug("var " + varName + ": " + s.getName());
                 if (!(s instanceof VarSym) || !(((VarSym) s).typeSym instanceof ContractSym)) {
                     System.err.println("a.b not found");
                     return null;
@@ -75,7 +75,7 @@ public class Call extends TrailerExpr {
             }
             if (!(s instanceof FuncSym)) {
                 if (s instanceof ContractSym || s instanceof BuiltinTypeSym) {
-                    env.addCons(now.genCons(s.name, Relation.EQ, env, location));
+                    env.addCons(now.genCons(s.getName(), Relation.EQ, env, location));
                     return now;
                 }
                 // err: type mismatch
@@ -89,16 +89,16 @@ public class Call extends TrailerExpr {
             Expression arg = args.get(i);
             TypeSym paraInfo = funcSym.parameters.get(i).typeSym;
             ScopeContext argContext = arg.ntcGenCons(env, now);
-            String typeName = env.getSymName(paraInfo.name);
+            String typeName = env.getSymName(paraInfo.getName());
             env.addCons(argContext.genCons(typeName, Relation.GEQ, env, arg.location));
         }
-        String rtnTypeName = funcSym.returnType.name;
+        String rtnTypeName = funcSym.returnType.getName();
         env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
 
         for (HashMap.Entry<ExceptionTypeSym, String> tl : funcSym.exceptions.entrySet()) {
             if (!parent.isCheckedException(tl.getKey(), extern)) {
                 System.err.println(
-                        "Unchecked exception: " + tl.getKey().name + " at " + location.toString());
+                        "Unchecked exception: " + tl.getKey().getName() + " at " + location.toString());
                 throw new RuntimeException();
             }
         }
@@ -150,10 +150,10 @@ public class Call extends TrailerExpr {
                 VarSym var = env.getVar(varName);
                 namespace = var.toSherrlocFmt();
                 TypeSym conType = var.typeSym;
-                env.addSigReq(namespace, conType.name);
+                env.addSigReq(namespace, conType.getName());
                 funcName = (att.attr).id;
                 ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-                funcSym = env.getContract(conType.name).getFunc(funcName);
+                funcSym = env.getContract(conType.getName()).getFunc(funcName);
                 if (funcSym instanceof PolyFuncSym) {
                     ((PolyFuncSym) funcSym).apply();
                 }
@@ -161,7 +161,7 @@ public class Call extends TrailerExpr {
                 ifNameFuncCallPcAfter = funcSym.getLabelNameCallPcAfter(namespace);
                 ifNameFuncGammaLock = funcSym.getLabelNameCallGamma(namespace);
                 env.cons.add(new Constraint(new Inequality(ifContRtn, ifNameFuncCallPcBefore),
-                        env.hypothesis, location, env.curContractSym.name,
+                        env.hypothesis, location, env.curContractSym.getName(),
                         "Argument value must be trusted to call this method"));
             } else {
                 return null;
@@ -183,7 +183,7 @@ public class Call extends TrailerExpr {
                     if (!tail_position) {
                         env.cons.add(new Constraint(
                                 new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
-                                env.hypothesis, location, env.curContractSym.name,
+                                env.hypothesis, location, env.curContractSym.getName(),
                                 typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
                     }
                     return new ExpOutcome(ifNameArgValue, psi);
@@ -208,11 +208,11 @@ public class Call extends TrailerExpr {
             String ifNameArgLabel = funcSym.getLabelNameArg(i);
             env.cons.add(
                     new Constraint(new Inequality(ifNameArgValue, Relation.LEQ, ifNameArgLabel),
-                            env.hypothesis, arg.location, env.curContractSym.name,
+                            env.hypothesis, arg.location, env.curContractSym.getName(),
                             "Input to the " + Utils.ordNumString(i + 1)
                                     + " argument must be trusted enough"));
             env.cons.add(new Constraint(new Inequality(ifNamePc, Relation.LEQ, ifNameArgLabel),
-                    env.hypothesis, arg.location, env.curContractSym.name,
+                    env.hypothesis, arg.location, env.curContractSym.getName(),
                     "Current control flow must be trusted to feed the " + Utils.ordNumString(i + 1)
                             + "-th argument value"));
         }
@@ -244,23 +244,23 @@ public class Call extends TrailerExpr {
         typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
         env.cons.add(
                 new Constraint(new Inequality(ifNamePc, ifNameFuncCallPcBefore), env.hypothesis,
-                        location, env.curContractSym.name,
+                        location, env.curContractSym.getName(),
                         "Current control flow must be trusted to call this method"));
         env.cons.add(new Constraint(new Inequality(ifNameFuncCallPcBefore,
                 Utils.joinLabels(ifNameFuncCallPcAfter, beginContext.lambda)), env.hypothesis,
-                location, env.curContractSym.name,
+                location, env.curContractSym.getName(),
                 "Calling this function does not respect static reentrancy locks"));
         env.cons.add(new Constraint(
                 new Inequality(Utils.joinLabels(ifNameFuncCallPcAfter, ifNameFuncGammaLock),
                         Relation.EQ, endContext.lambda), env.hypothesis, location,
-                env.curContractSym.name,
+                env.curContractSym.getName(),
                 "Calling this function does not respect static reentrancy locks"));
         ;
 
         if (!tail_position) {
             env.cons.add(new Constraint(
                     new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
-                    env.hypothesis, location, env.curContractSym.name,
+                    env.hypothesis, location, env.curContractSym.getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 

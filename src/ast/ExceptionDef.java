@@ -24,19 +24,19 @@ public class ExceptionDef extends TopLayerNode {
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         /*if (exceptionType.isLocal(env.curContractSym.name)) {
         }*/
-        exceptionType.setContractName(env.curContractSym.name);
-        env.globalSymTab.add(exceptionType.name,
+        exceptionType.setContractName(env.curContractSym().getName());
+        env.globalSymTab().add(exceptionType.name,
                 env.toExceptionType(exceptionType.name, arguments, parent));
         return true;
     }
 
-    @Override
-    public void findPrincipal(HashSet<String> principalSet) {
-        // TODO
-    }
+//    @Override
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        // TODO
+//    }
 
     public void globalInfoVisit(ContractSym contractSym) {
-        exceptionType.setContractName(contractSym.name);
+        exceptionType.setContractName(contractSym.getName());
         contractSym.addType(exceptionType.name,
                 contractSym.toExceptionType(exceptionType.name, exceptionType.type.ifl, arguments));
         // contractSym.addType(exceptionType, contractSym.toExceptionType(exceptionType, arguments));

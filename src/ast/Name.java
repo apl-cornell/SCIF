@@ -28,8 +28,8 @@ public class Name extends Variable {
         } else if (s instanceof VarSym) {
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
-            logger.debug(s.name);
-            env.addCons(now.genCons(typeSym.name, Relation.EQ, env, location));
+            logger.debug(s.getName());
+            env.addCons(now.genCons(typeSym.getName(), Relation.EQ, env, location));
             logger.debug(now.toString());
             return now;
         } else if (s instanceof TypeSym) {

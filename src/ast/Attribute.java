@@ -22,7 +22,7 @@ public class Attribute extends TrailerExpr {
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         VarSym varSym = getVarInfo(env);
         ScopeContext now = new ScopeContext(this, parent);
-        env.addCons(now.genCons(varSym.typeSym.name, Relation.EQ, env, location));
+        env.addCons(now.genCons(varSym.typeSym.getName(), Relation.EQ, env, location));
         return now;
     }
 
@@ -56,11 +56,11 @@ public class Attribute extends TrailerExpr {
         String ifAttLabel = structType.getMemberLabel(attr.id);
         String ifNameRnt = scopeContext.getSHErrLocName() + ".struct" + location.toString();
         env.cons.add(new Constraint(new Inequality(ifNameRnt, ifAttLabel), env.hypothesis, location,
-                env.curContractSym.name,
+                env.curContractSym.getName(),
                 "Integrity of the member"));
         if (!ifAttLabel.equals(attrValueLabel)) {
             env.cons.add(new Constraint(new Inequality(ifNameRnt, attrValueLabel), env.hypothesis,
-                    location, env.curContractSym.name,
+                    location, env.curContractSym.getName(),
                     "Integrity of the index value must be trusted to indicate the attribute"));
         }
 

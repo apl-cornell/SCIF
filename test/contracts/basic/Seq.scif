@@ -1,0 +1,9 @@
+contract Seq {
+    uint{this} balance;
+
+    @public
+    void foo() {
+        send(msg.sender, 10);
+        balance = 10;
+    }
+}

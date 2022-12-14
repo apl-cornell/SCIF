@@ -20,16 +20,16 @@ public class IfConstraint {
         this.codeLocation = location;
         this.contractName = contractName;
     }
-    public IfConstraint(String op, IfLabel left, IfLabel right, CodeLocation location, String contractName) {
-        this.op = op;
-        this.left = left.toSherrlocFmt(contractName);
-        this.right = right.toSherrlocFmt(contractName);
-        this.left = checkThis(this.left, contractName);
-        this.right = checkThis(this.right, contractName);
-
-        this.codeLocation = location;
-        this.contractName = contractName;
-    }
+//    public IfConstraint(String op, IfLabel left, IfLabel right, CodeLocation location, String contractName) {
+//        this.op = op;
+//        this.left = left.toSherrlocFmt(contractName);
+//        this.right = right.toSherrlocFmt(contractName);
+//        this.left = checkThis(this.left, contractName);
+//        this.right = checkThis(this.right, contractName);
+//
+//        this.codeLocation = location;
+//        this.contractName = contractName;
+//    }
     public String toSherrlocFmt(boolean withPosition) {
         if (op == null) {
             return "";

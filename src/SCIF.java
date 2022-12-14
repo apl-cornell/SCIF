@@ -110,6 +110,13 @@ public class SCIF implements Callable<Integer> {
         return (passNTC && passIFC) ? roots : null;
     }
 
+    /**
+     * SCIF CLI starts and runs one of the following tasks specified by the options <code>m_funcRequest</code>.
+     * 1. compile (default): compile the given SCIF source files to Solidity
+     * 2. typecheck
+     * 3. parse
+     * 4. tokenize
+     */
     @Override
     public Integer call() throws Exception {
 

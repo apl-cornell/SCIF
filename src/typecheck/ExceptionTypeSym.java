@@ -15,7 +15,7 @@ public class ExceptionTypeSym extends TypeSym {
         //this.name = typeName;
         this.ifl = ifl;
         this.parameters = parameters;
-        this.hashCode = Objects.hash(this.name, parameters);
+        this.hashCode = Objects.hash(this.getName(), parameters);
     }
 
     @Override

@@ -166,7 +166,7 @@ nonterminal ast.Map mapType;
 //nonterminal IfLabel maybeAutoendorseIfLabel;
 nonterminal List<String> polyDescription;
 nonterminal List<String> nameList;
-// nonterminal Endorse endorseExpression;
+nonterminal Endorse endorseExpression;
 nonterminal ast.Map depMap;
 nonterminal List<FunctionSig> funcSigs;
 nonterminal FunctionSig funcSig, r_funcSig;
@@ -573,10 +573,10 @@ decorators ::=
     :};
 
 //Information flow specific modification
-// endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from RARROW ifLabel:to RPAR {:
-//        RESULT = new Endorse(a, from, to);
-//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-//    :};
+ endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from RARROW ifLabel:to RPAR {:
+        RESULT = new Endorse(a, from, to);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :};
 
 labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
         //System.out.println("parsed labeledType with label: \n" + b.toString());
@@ -738,20 +738,20 @@ tfpdef ::=
         RESULT.setLoc(new CodeLocation(bleft, bright, filename));
     :};
 
-varDec ::= typeSym:a annassign:b {:
+varDec ::= typeSym:a annassign:b SEMI {:
         logger.debug("variable declaration");
         b.setType(a);
         b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
         RESULT = b;
     :}
-    | FINAL typeSym:a annassign:b {:
+    | FINAL typeSym:a annassign:b SEMI {:
         logger.debug("variable declaration");
         b.setType(a);
         b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
         b.setFinal(true);
         RESULT = b;
     :}
-    | STATIC typeSym:a annassign:b {:
+    | STATIC typeSym:a annassign:b SEMI {:
         logger.debug("variable declaration");
         b.setType(a);
         b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
@@ -771,6 +771,7 @@ small_stmts ::=
         RESULT = list;
     :};
 small_stmt ::=  assign_stmt:a {: RESULT = a; :}
+    | varDec:a {: RESULT = a; :}
     | del_stmt:a {: RESULT = a; :}
     | pass_stmt:a {: RESULT = a; :}  
     | flow_stmt:a {: RESULT = a; :}  
@@ -783,9 +784,9 @@ small_stmt ::=  assign_stmt:a {: RESULT = a; :}
     | try_stmt:a {: RESULT = a; :}
     | extry_stmt:a {: RESULT = a; :}
     | throw_stmt:a {: RESULT = a;:}
-    | endorse_stmt:a {:
-        RESULT = a;
-    :}
+//    | endorse_stmt:a {:
+//        RESULT = a;
+//    :}
     | endorseIf_stmt:a {:
         RESULT = a;
     :}
@@ -812,10 +813,12 @@ endorseIf_stmt ::=
 
 try_stmt ::= TRY:x suite:s except_stmts:es {:
         RESULT = new Try(s, es);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
 extry_stmt ::= TRY:x suite:s exceptall_stmts:es {:
         RESULT = new Extry(s, es);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
 throw_stmt ::= THROW:x trailer_expr:e SEMI{:
@@ -1179,9 +1182,9 @@ atom ::=
         RESULT = new ConstantExpr(Constant.FALSE);
         RESULT.setLoc(new CodeLocation(kleft, kright, filename));
     :}
-//    | endorseExpression:a {:
-//        RESULT = a;
-//    :}
+    | endorseExpression:a {:
+        RESULT = a;
+    :}
     ;
 strings ::=
     STRING:a {:

@@ -46,17 +46,17 @@ public class FunctionDef extends FunctionSig {
         }
         if (funcSym.returnType != null) {
             env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ,
-                    env.getSymName(funcSym.returnType.name)), env.globalHypothesis, location,
-                    env.curContractSym.name,
+                    env.getSymName(funcSym.returnType.getName())), env.globalHypothesis(), location,
+                    env.curContractSym().getName(),
                     "Label of this method's return value"));
         }
 
-        env.setCurSymTab(new SymTab(env.curSymTab));
+        env.setCurSymTab(new SymTab(env.curSymTab()));
         for (Statement stmt : body) {
             // logger.debug("stmt: " + stmt);
             stmt.ntcGenCons(env, now);
         }
-        env.curSymTab = env.curSymTab.getParent();
+        env.setCurSymTab(env.curSymTab().getParent());
         return now;
     }
 
@@ -75,21 +75,21 @@ public class FunctionDef extends FunctionSig {
         String ifNameCall = funcSym.getLabelNameCallPcAfter();
         env.trustCons.add(
                 new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis,
-                        funcLabels.to_pc.location, env.curContractSym.name,
+                        funcLabels.to_pc.location, env.curContractSym.getName(),
                         "Control flow of this method start with its call-after(second) label"));
 
         String ifNameContract = env.curContractSym.getLabelNameContract();
         env.trustCons.add(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis,
-                funcLabels.begin_pc.location, env.curContractSym.name,
+                funcLabels.begin_pc.location, env.curContractSym.getName(),
                 "This contract should be trusted enough to call this method"));
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
         env.trustCons.add(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis,
-                funcLabels.to_pc.location, env.curContractSym.name,
+                funcLabels.to_pc.location, env.curContractSym.getName(),
                 "The statically locked integrity must be at least as trusted as initial pc integrity"));
         env.cons.add(
                 new Constraint(new Inequality(Utils.joinLabels(inLockName, outLockName), ifNameGamma),
-                        env.hypothesis, funcLabels.gamma_label.location, env.curContractSym.name,
+                        env.hypothesis, funcLabels.gamma_label.location, env.curContractSym.getName(),
                         "This function does not maintain reentrancy locks as specified in signature",
                         1));
 

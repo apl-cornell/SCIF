@@ -14,7 +14,7 @@ public class ContractSym extends TypeSym {
     public IfLabel ifl;
     // public ArrayList<TrustConstraint> trustCons;
     public TrustSetting trustSetting;
-    public SourceFile astNode;
+    private Contract astNode;
 
     public ContractSym(String name,
             SymTab symTab,
@@ -32,13 +32,9 @@ public class ContractSym extends TypeSym {
         this.ifl = ifl;
     }
 
-    public ContractSym() {
-        // name = "UNKNOWN";
-        super(Utils.DEBUG_UNKNOWN_CONTRACT_NAME);
-        /*iptContracts = new HashSet<>();
-        typeMap = new HashMap<>();
-        varMap = new HashMap<>();
-        funcMap = new HashMap<>();*/
+    public ContractSym(String contractName, Contract contract) {
+        super(contractName);
+        astNode = contract;
         symTab = new SymTab();
         trustSetting = new TrustSetting();
     }
@@ -68,7 +64,7 @@ public class ContractSym extends TypeSym {
             VarSym tmp = member.toVarInfo(this);
             memberList.add(tmp);
         }
-        return new StructTypeSym(typeName, memberList);
+        return new StructTypeSym(typeName, memberList, astNode.getScopeContext());
     }
 
     public TypeSym toTypeSym(ast.Type astType) {
@@ -147,11 +143,16 @@ public class ContractSym extends TypeSym {
 
 
     public String getLabelNameContract() {
-        return Utils.getLabelNameContract(name);
+        return Utils.getLabelNameContract(getContractNode().getScopeContext());
     }
 
     public String getLabelContract() {
-        return ifl.toSherrlocFmt(name); //TODO
+        return Utils.getLabelNameContract(getContractNode().getScopeContext());
+        // return ifl.toSherrlocFmt(getName());
+    }
+
+    public Contract getContractNode() {
+        return astNode;
     }
 
     public ExceptionTypeSym toExceptionType(String exceptionName, IfLabel ifl, Arguments arguments) {

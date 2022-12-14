@@ -25,12 +25,12 @@ public class GuardBlock extends Statement {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
-        env.curSymTab = new SymTab(env.curSymTab);
+        env.setCurSymTab(new SymTab(env.curSymTab()));
         ScopeContext rtn = null;
         for (Statement s : body) {
             rtn = s.ntcGenCons(env, now);
         }
-        env.curSymTab = env.curSymTab.getParent();
+        env.setCurSymTab(env.curSymTab().getParent());
         return now;
     }
 
@@ -52,7 +52,7 @@ public class GuardBlock extends Statement {
         String guardLabel = l.toSherrlocFmt(scopeContext);
 
         env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, curContext.lambda),
-                beginContext.lambda), env.hypothesis, location, env.curContractSym.name,
+                beginContext.lambda), env.hypothesis, location, env.curContractSym.getName(),
                 "Cannot grant a dynamic reentrancy lock"));
         // String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
@@ -83,10 +83,10 @@ public class GuardBlock extends Statement {
             PsiUnit value = entry.getValue();
             String newPathLabel =
                     scopeContext.getSHErrLocName() + "." + "lock" + location.toString() + "."
-                            + entry.getKey().name;
+                            + entry.getKey().getName();
             env.cons.add(new Constraint(new Inequality(newPathLabel, CompareOperator.Eq,
                     Utils.meetLabels(value.c.lambda, guardLabel)), env.hypothesis, location,
-                    env.curContractSym.name,
+                    env.curContractSym.getName(),
                     "Operations inside lock clause does't respect locks"));
             psiOutcome.set(entry.getKey(),
                     new PsiUnit(new Context(value.c.pc, newPathLabel), value.catchable));
@@ -95,7 +95,7 @@ public class GuardBlock extends Statement {
         if (!tail_position) {
             env.cons.add(new Constraint(
                     new Inequality(psiOutcome.getNormalPath().c.lambda, beginContext.lambda),
-                    env.hypothesis, location, env.curContractSym.name,
+                    env.hypothesis, location, env.curContractSym.getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
         /*env.cons.add(new Constraint(new Inequality(Utils.meetLabels(curContext.lockName, guardLabel), context.lockName), env.hypothesis, location, env.curContractSym.name,
