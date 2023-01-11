@@ -9,6 +9,7 @@ import typecheck.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import typecheck.sherrlocUtils.Relation;
 
 public class TrustSetting extends Node {
 
@@ -57,5 +58,15 @@ public class TrustSetting extends Node {
     @Override
     public String toString() {
         return genson.serialize(dynamicSystemOption) + "\n...";
+    }
+
+    protected void addBuiltIns() {
+        IfLabel labelThis = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
+        IfLabel labelBot = new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM));
+        IfLabel labelTop = new PrimitiveIfLabel(new Name(Utils.LABEL_TOP));
+        TrustConstraint thisFlowsToBot = new TrustConstraint(labelThis, Relation.LEQ, labelBot);
+        TrustConstraint topFlowsToThis = new TrustConstraint(labelTop, Relation.LEQ, labelThis);
+        trust_list.add(thisFlowsToBot);
+        trust_list.add(topFlowsToThis);
     }
 }

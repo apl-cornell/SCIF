@@ -88,7 +88,7 @@ public class SourceFile extends Node {
         }
         // env.setGlobalSymTab(new SymTab());
         env.setCurSymTab(env.globalSymTab());
-        // Utils.addBuiltInSyms(env.globalSymTab, contract.trustSetting);
+        // Utils.addBuiltInASTNode(env.globalSymTab, contract.trustSetting);
         if (!contract.ntcGlobalInfo(env, parent)) {
             logger.debug("GlobalInfo failed with: " + contract);
             return false;
@@ -97,7 +97,6 @@ public class SourceFile extends Node {
     }
 
     public void globalInfoVisit(ContractSym contractSym) {
-        Utils.addBuiltInSyms(contractSym.symTab, null);
         if (contract == null) {
             return;
         }
@@ -151,5 +150,12 @@ public class SourceFile extends Node {
 
     public String getSourceFileName() {
         return sourceFileName;
+    }
+
+    /**
+     * Add built-in variables, trust assumptions, exceptions, and methods in the AST with this as the root.
+     */
+    public void addBuiltIns() {
+        contract.addBuiltIns();
     }
 }

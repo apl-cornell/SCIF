@@ -1,10 +1,12 @@
 package typecheck;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
-    variables, types, functions, contracts
+    variables, types, methods/exceptions, contracts
 */
 
 public class SymTab {
@@ -13,7 +15,7 @@ public class SymTab {
     public SymTab() {
         parent = null;
         table = new HashMap<>();
-        //Utils.addBuiltInSyms(table);
+        //Utils.addBuiltInASTNode(table);
     }
     public SymTab(SymTab parent) {
         this.parent = parent;
@@ -39,10 +41,12 @@ public class SymTab {
         return parent;
     }
 
-    public HashSet<String> getTypeSet() {
-        HashSet<String> rtn = new HashSet<>();
+    public Set<Sym> getTypeSet() {
+        Set<Sym> rtn = new HashSet<>();
         for (Sym sym : table.values()) {
-            rtn.add(sym.getSLCName());
+            if (sym instanceof TypeSym) {
+                rtn.add(sym);
+            }
         }
         return rtn;
     }

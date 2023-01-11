@@ -3,6 +3,8 @@ package typecheck;
 import ast.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ContractSym extends TypeSym {
 
@@ -20,7 +22,8 @@ public class ContractSym extends TypeSym {
             SymTab symTab,
             // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
             TrustSetting trustSetting,
-            IfLabel ifl) {
+            IfLabel ifl,
+            Contract contract) {
         super(name);
         // this.name = name;
         /*this.iptContracts = iptContracts;
@@ -30,6 +33,7 @@ public class ContractSym extends TypeSym {
         this.symTab = symTab;
         this.trustSetting = trustSetting;
         this.ifl = ifl;
+        astNode = contract;
     }
 
     public ContractSym(String contractName, Contract contract) {
@@ -95,7 +99,9 @@ public class ContractSym extends TypeSym {
 
     public VarSym toVarSym(String localName, ast.Type astType, boolean isConst, boolean isFinal,
             CodeLocation loc, ScopeContext scopeContext) {
+        System.err.println("toVarSym: " + localName + " " + astType.getName());
         TypeSym typeSym = toTypeSym(astType);
+        System.err.println("toVarSym: " + localName + " " + typeSym);
         IfLabel ifl = null;
         if (astType instanceof LabeledType) {
             ifl = ((LabeledType) astType).ifl;
@@ -171,5 +177,17 @@ public class ContractSym extends TypeSym {
             return null;
         }
         return (ExceptionTypeSym) sym;
+    }
+
+    public Set<Sym> getPrincipalSet() {
+        Set<Sym> rtn = new HashSet<>();
+        for (Sym sym : symTab.getTypeSet()) {
+            if (sym instanceof VarSym) {
+                if (((VarSym) sym).typeSym.getName().equals(Utils.ADDRESSTYPE) || ((VarSym) sym).typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
+                    rtn.add(sym);
+                }
+            }
+        }
+        return rtn;
     }
 }

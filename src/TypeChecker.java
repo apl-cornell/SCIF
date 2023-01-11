@@ -23,11 +23,18 @@ public class TypeChecker {
         //typecheck(inputFile, outputFile);
     }
 
+    /*
+        Given a list of SCIF source files, this method typechecks all code ignoring information flow control.
+        It generates constraints in SHErrLoc format and put them in outputFile, then runs ShErrLoc to get error info.
+     */
     public static List<SourceFile> regularTypecheck(ArrayList<File> inputFiles, File outputFile,
             boolean DEBUG) {
 
-        logger.trace("typecheck starts");
+        logger.trace("typecheck starts...");
 
+        /*
+            parse all SCIF source files and store AST roots in roots.
+         */
         List<SourceFile> roots = new ArrayList<>();
         for (File inputFile : inputFiles) {
             try {
@@ -97,10 +104,11 @@ public class TypeChecker {
             }
         }
 
-        // Collect global info
+        // Add built-ins and Collect global info
         NTCEnv NTCenv = new NTCEnv(null);
         for (SourceFile root : roots) {
             NTCenv.addSourceFile(root.getContractName(), root);
+            root.addBuiltIns();
             root.passScopeContext(null);
             if (!root.ntcGlobalInfo(NTCenv, null)) {
                 // doesn't typecheck
@@ -114,8 +122,8 @@ public class TypeChecker {
         for (Node root : roots) {
             root.ntcGenCons(NTCenv, null);
         }
-        // Check using SHErrLoc and get a solution
 
+        // Check using SHErrLoc and get a solution
         logger.debug("generating cons file for NTC");
         // constructors: all types
         // assumptions: none or relations between types
@@ -249,6 +257,7 @@ public class TypeChecker {
         for (HashMap.Entry<String, FuncSym> funcPair : contractSym.symTab.getFuncs().entrySet()) {
             FuncSym func = funcPair.getValue();
             //TODO: simplify
+            namespace = "";
             String ifNameCallBeforeLabel = func.getLabelNameCallPcBefore(namespace);
             String ifNameCallAfterLabel = func.getLabelNameCallPcAfter(namespace);
             // String ifNameCallLockLabel = func.getLabelNameCallLock(namespace);
@@ -327,7 +336,7 @@ public class TypeChecker {
             VarSym var = varPair.getValue();
             String varName = var.labelToSherrlocFmt();
             String ifLabel = var.getLabel();
-            if (ifLabel != null) {
+            if (ifLabel != null && varName != null) {
                 env.cons.add(
                         new Constraint(new Inequality(varName, Relation.EQ, ifLabel), var.location,
                                 contractName,
@@ -345,22 +354,22 @@ public class TypeChecker {
         //SigCons curSigCons = env.getSigCons(contractName);
         //env.trustCons.addAll(curSigCons.trustcons);
         //env.cons.addAll(curSigCons.cons);
-        System.out.println("before prinSet size: " + env.principalSet.size());
+        System.out.println("before prinSet size: " + env.principalSet().size());
 
         Node tmp = root;
         SourceFile sourceFile = (SourceFile) tmp;
         // env.varNameMap = new LookupMaps(varMap);
 
         sourceFile.genConsVisit(env, true);
-        System.out.println("mid prinSet size: " + env.principalSet.size());
+        System.out.println("mid prinSet size: " + env.principalSet().size());
         buildSignatureConstraints(sourceFile.getContractName(), env, sourceFile.getContractName(),
                 sourceFile.getContractName());
         env.sigReq.forEach((name, curContractName) -> {
             buildSignatureConstraints(curContractName, env, name, sourceFile.getContractName());
         });
 
-        System.out.println("prinSet size: " + env.principalSet.size());
-        if (!Utils.writeCons2File(env.principalSet, env.trustCons, env.cons, outputFile, true)) {
+        System.out.println("prinSet size: " + env.principalSet().size());
+        if (!Utils.writeCons2File(env.curContractSym.getPrincipalSet(), env.trustCons, env.cons, outputFile, true)) {
             return true;
         }
         boolean result = false;

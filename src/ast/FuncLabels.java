@@ -45,7 +45,12 @@ public class FuncLabels extends Node {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        return null;
+        begin_pc.ntcGenCons(env, parent);
+        to_pc.ntcGenCons(env, parent);
+        gamma_label.ntcGenCons(env, parent);
+        // TODO: set end pc
+        if (end_pc != null) end_pc.ntcGenCons(env, parent);
+        return parent;
     }
 
     @Override

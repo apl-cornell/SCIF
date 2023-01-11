@@ -42,6 +42,8 @@ public class Utils {
 
     public static final String ADDRESSTYPE = "address";
     public static final String PUBLIC_DECORATOR = "public";
+    public static final String PROTECTED_DECORATOR = "protected";
+    public static final String FINAL_DECORATOR = "final";
     public static final String PAYABLE_DECORATOR = "payable";
 
     public static final String TRUSTCENTER_NAME = "trustCenter";
@@ -54,6 +56,11 @@ public class Utils {
     public static final String DEBUG_UNKNOWN_CONTRACT_NAME = "UNKNOWN";
     public static final String ANONYMOUS_VARIABLE_NAME = "ANONYMOUS";
     public static final String PRINCIPAL_TYPE = "principal";
+    public static final String EXCEPTION_ERROR_NAME = "Error";
+    public static final String METHOD_SEND_NAME = "send";
+    public static final String METHOD_BALANCE_NAME = "balance";
+    public static final CodeLocation BUILTIN_LOCATION = new CodeLocation(0, 0, "BUILTIN");
+    public static final String LABEL_PAYVALUE = "value";
 
     public static final boolean isPrimitiveType(String x) {
         return BUILTIN_TYPES.contains(x);
@@ -207,7 +214,7 @@ public class Utils {
         }
     }
 
-    public static boolean writeCons2File(HashSet<String> constructors, List<Constraint> assumptions,
+    public static boolean writeCons2File(Set<Sym> constructors, List<Constraint> assumptions,
             List<Constraint> constraints, File outputFile, boolean isIFC) {
         try {
             // transform every "this" to "contractName.this"
@@ -217,30 +224,40 @@ public class Utils {
             }
             logger.debug("Writing the constraints of size {}", constraints.size());
             //System.err.println("Writing the constraints of size " + env.cons.size());
-            if (!constructors.contains("BOT") && isIFC) {
-                constructors.add("BOT");
-            }
-            if (!constructors.contains("TOP") && isIFC) {
-                constructors.add("TOP");
-            }
+//            VarSym bot = new VarSym();
+//            if (!constructors.contains("BOT") && isIFC) {
+//                constructors.add("BOT");
+//            }
+//            if (!constructors.contains("TOP") && isIFC) {
+//                constructors.add("TOP");
+//            }
             /*if (!constructors.contains("this") && isIFC) {
                 constructors.add("this");
             }*/
 
+            Sym bot = null, top = null;
             if (!constructors.isEmpty()) {
-                for (String principal : constructors) {
-                    consFile.write("CONSTRUCTOR " + principal + " 0\n");
+                for (Sym principal : constructors) {
+                    if (principal.getName().equals("BOT")) {
+                        bot = principal;
+                    }
+                    if (principal.getName().equals("TOP")) {
+                        top = principal;
+                    }
+                    consFile.write("CONSTRUCTOR " + principal.toSherrlocFmt() + " 0\n");
                 }
             }
             if (!assumptions.isEmpty() || isIFC) {
                 consFile.write("%%\n");
+                assert bot != null;
+                assert top != null;
                 if (isIFC) {
-                    for (String x : constructors) {
-                        if (!x.equals("BOT") && !x.equals("TOP")) {
-                            consFile.write("BOT" + " >= " + x + ";" + "\n");
+                    for (Sym x : constructors) {
+                        if (!x.equals(bot) && !x.equals(top)) {
+                            consFile.write(bot.toSherrlocFmt() + " >= " + x.toSherrlocFmt() + ";" + "\n");
                         }
-                        if (!x.equals("TOP")) {
-                            consFile.write("TOP" + " <= " + x + ";" + "\n");
+                        if (!x.equals(top)) {
+                            consFile.write(top.toSherrlocFmt() + " <= " + x.toSherrlocFmt() + ";" + "\n");
                         }
                     }
                 }
@@ -341,112 +358,22 @@ public class Utils {
         return (TypeSym) s.lookup(typeName);
     }
 
-    public static VarSym createBuiltInVarInfo(String localName, String typeName,
-            ScopeContext context, SymTab s) {
-        return new VarSym(
-                localName,
-                ((TypeSym) s.lookup(typeName)), new PrimitiveIfLabel(new Name("this")), null,
-                context, false, false);
-    }
-
-    public static void addBuiltInSyms(SymTab globalSymTab, TrustSetting trustSetting) {
-        for (BuiltInT t : BuiltInT.values()) {
-            String typeName = Utils.BuiltinType2ID(t);
-            TypeSym s = new BuiltinTypeSym(typeName);
-            globalSymTab.add(typeName, s);
-        }
-        globalSymTab.add("error", builtin_error_sym());
-        ArrayList<VarSym> members = new ArrayList<>();
-
-
-        /*
-            add address type as a contract type
-         */
-
-        /*String contractName = "address";
-        ArrayList<TrustConstraint> trustCons = new ArrayList<>();
-        SymTab symTab = new SymTab();
-
-
-        ContractSym contractSym = new ContractSym(contractName, symTab, trustCons);*/
-
-        /* msg:
-         *   sender - address
-         *   value - uint
-         * */
-        members = new ArrayList<>();
-        ScopeContext emptyContext = new ScopeContext("");
-        ScopeContext universalContext = new ScopeContext("UNIVERSAL");
-        VarSym sender = createBuiltInVarInfo("sender", "address", emptyContext, globalSymTab);
-        members.add(sender);
-        VarSym value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
-        members.add(value);
-        StructTypeSym msgT = new StructTypeSym("msgT", members, universalContext);
-        VarSym msg = new VarSym("msg",
-                msgT, null,
-                null, universalContext, false, false);
-        globalSymTab.add("msg", new VarSym(msg));
-
-        /* send(address, value) */
-
-        HashMap<ExceptionTypeSym, String> exceptions = new HashMap<>();
-        members = new ArrayList<>();
-        VarSym recipient = createBuiltInVarInfo("recipient", "address", emptyContext, globalSymTab);
-        value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
-        members.add(recipient);
-        members.add(value);
-        IfLabel thisLabel = new PrimitiveIfLabel(new Name("this"));
-        IfLabel botLabel = new PrimitiveIfLabel(new Name("BOT"));
-        FuncLabels funcLabels = new FuncLabels(thisLabel, thisLabel, botLabel, botLabel);
-        exceptions.put(builtin_error_sym(), "BOT");
-        FuncSym sendFuncSym = new FuncSym("send", funcLabels, members,
-                getBuiltinTypeInfo("bool", globalSymTab), thisLabel, new ScopeContext("send"),
-                null);
-        globalSymTab.add("send", sendFuncSym);
-
-        /* trustedSend(address, value) */
-        members = new ArrayList<>();
-        recipient = createBuiltInVarInfo("recipient", "address", emptyContext, globalSymTab);
-        value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
-        members.add(recipient);
-        members.add(value);
-        IfLabel trustedSendLabel = new PrimitiveIfLabel(new Name("trustedSend"));
-        funcLabels = new FuncLabels(trustedSendLabel, trustedSendLabel, trustedSendLabel,
-                trustedSendLabel);
-        FuncSym trustedSendFuncSym = new FuncSym("trustedSend", funcLabels, members,
-                getBuiltinTypeInfo("bool", globalSymTab), thisLabel,
-                new ScopeContext("trustedSend"), null);
-        globalSymTab.add("trustedSend", trustedSendFuncSym);
-
-        /* built-in for dynamic options */
-        // TODO: change to importing style
-        //if (trustSetting != null) {
-        //if (trustSetting.dynamicSystemOption == DynamicSystemOption.BaseContractCentralized) {
-        // setTrust(address trustee)
-        members = new ArrayList<>();
-        VarSym trustee = createBuiltInVarInfo("trustee", "address", emptyContext, globalSymTab);
-        members.add(trustee);
-        funcLabels = new FuncLabels(thisLabel, thisLabel, thisLabel, thisLabel);
-        FuncSym setTrustSym = new FuncSym("setTrust", funcLabels, members,
-                getBuiltinTypeInfo("bool", globalSymTab), thisLabel, new ScopeContext("setTrust"),
-                null);
-        globalSymTab.add("setTrust", setTrustSym);
-        //}
-        //}
-    }
-
-    private static ExceptionTypeSym builtin_error_sym() {
+    /*private static ExceptionTypeSym builtin_error_sym() {
         return new ExceptionTypeSym("error", new PrimitiveIfLabel(new Name(LABEL_BOTTOM)), new ArrayList<>());
     }
 
-    public static boolean isBuiltinFunc(String funcName) {
+     */
+
+  /*  public static boolean isBuiltinFunc(String funcName) {
         if (funcName.equals("send") || funcName.equals("setTrust")) {
             return true;
         }
         return false;
     }
 
-    public static String transBuiltinFunc(String funcName, Call call) {
+   */
+
+ /*   public static String transBuiltinFunc(String funcName, Call call) {
         if (funcName.equals("send")) {
             String recipient = call.getArgAt(0).toSolCode();
             String value = call.getArgAt(1).toSolCode();
@@ -458,6 +385,8 @@ public class Utils {
             return "unknown built-in function";
         }
     }
+
+  */
 
     public static boolean emptyFile(String outputFileName) {
         File file = new File(outputFileName);
@@ -645,6 +574,14 @@ public class Utils {
 
     public static ExceptionTypeSym getReturnPathException() {
         return new ExceptionTypeSym("*r", null, new ArrayList<>());
+    }
+
+    public static void addBuiltInTypes(SymTab symTab) {
+        for (BuiltInT t : BuiltInT.values()) {
+            String typeName = Utils.BuiltinType2ID(t);
+            TypeSym s = new BuiltinTypeSym(typeName);
+            symTab.add(typeName, s);
+        }
     }
 }
 

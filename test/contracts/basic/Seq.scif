@@ -2,8 +2,13 @@ contract Seq {
     uint{this} balance;
 
     @public
-    void foo() {
-        send(msg.sender, 10);
+    void foo{BOT -> this; this}() {
+        bar();
         balance = 10;
+    }
+
+    @public
+    void bar{BOT -> BOT; BOT}() {
+
     }
 }

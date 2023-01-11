@@ -27,6 +27,11 @@ public abstract class Sym {
         return this.hashCode() == other.hashCode();
     }
 
+    public String toSherrlocFmt() {
+        return getName();
+        // return fullName;// + ".." + "lblVar";
+    }
+
     protected void setName(String s) {
         name = s;
     }

@@ -136,6 +136,8 @@ public class ComplexIfLabel extends IfLabel {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        return null;
+        left.ntcGenCons(env, parent);
+        right.ntcGenCons(env, parent);
+        return parent;
     }
 }

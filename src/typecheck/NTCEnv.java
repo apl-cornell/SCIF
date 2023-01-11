@@ -2,6 +2,7 @@ package typecheck;
 
 import ast.*;
 import java.util.List;
+import java.util.Set;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 
@@ -100,9 +101,14 @@ public class NTCEnv {
         return curSymTab.lookup(id).getSLCName();
     }
 
+    public Sym getSym(BuiltInT type) {
+        Sym symbol = curSymTab.lookup(Utils.BuiltinType2ID(type));
+        return symbol;
+    }
+
     public String getSymName(BuiltInT type) {
         Sym symbol = curSymTab.lookup(Utils.BuiltinType2ID(type));
-        return symbol.getSLCName();
+        return symbol.getName();
     }
 
     public Sym getCurSym(String name) {
@@ -133,10 +139,10 @@ public class NTCEnv {
         curSymTab.add(name, sym);
     }
 
-    public HashSet<String> getTypeSet() {
-        HashSet<String> rtn = globalSymTab.getTypeSet();
+    public Set<Sym> getTypeSet() {
+        Set<Sym> rtn = globalSymTab.getTypeSet();
         for (BuiltInT builtInT : BuiltInT.values()) {
-            rtn.add(getSymName(builtInT));
+            rtn.add(getSym(builtInT));
         }
         return rtn;
     }

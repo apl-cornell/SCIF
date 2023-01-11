@@ -75,7 +75,7 @@ public class Arg extends Node {
         // env.varNameMap.add(name, ifName, varSym);
 
         if (varSym.typeSym.getName().equals(Utils.ADDRESSTYPE)) {
-            env.principalSet.add(varSym.toSherrlocFmt());
+            env.principalSet().add(varSym);
         }
 
     }

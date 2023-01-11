@@ -20,6 +20,11 @@ public class FunctionDef extends FunctionSig {
         super(name, funcLabels, args, decoratorList, rtn, isConstructor);
         this.body = body;
     }
+    public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
+            List<Statement> body, List<String> decoratorList, Type rtn, boolean isConstructor, boolean isBuiltIn) {
+        super(name, funcLabels, args, decoratorList, rtn, isConstructor, isBuiltIn);
+        this.body = body;
+    }
 
     public FunctionDef(FunctionSig funcSig, List<Statement> body) {
         super(funcSig);
@@ -28,6 +33,8 @@ public class FunctionDef extends FunctionSig {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        if (isBuiltIn()) return parent;
+        env.setCurSymTab(new SymTab(env.curSymTab()));
         // add args to local sym;
         String funcName = this.name;
         logger.debug("func: " + funcName);
@@ -41,9 +48,13 @@ public class FunctionDef extends FunctionSig {
         ScopeContext now = new ScopeContext(this, parent, exceptionTypeSyms);
         // now.printExceptionSet();
 
-        for (Arg arg : this.args.args) {
+        // add built-in vars
+        addBuiltInVars(env.curSymTab(), now);
+
+        for (Arg arg : this.args.args()) {
             arg.ntcGenCons(env, now);
         }
+        funcLabels.ntcGenCons(env, now);
         if (funcSym.returnType != null) {
             env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ,
                     env.getSymName(funcSym.returnType.getName())), env.globalHypothesis(), location,
@@ -51,7 +62,6 @@ public class FunctionDef extends FunctionSig {
                     "Label of this method's return value"));
         }
 
-        env.setCurSymTab(new SymTab(env.curSymTab()));
         for (Statement stmt : body) {
             // logger.debug("stmt: " + stmt);
             stmt.ntcGenCons(env, now);
@@ -60,8 +70,37 @@ public class FunctionDef extends FunctionSig {
         return now;
     }
 
+    private void addBuiltInVars(SymTab curSymTab, ScopeContext now) {
+        // final address{sender} sender;
+        curSymTab.add(Utils.LABEL_SENDER,
+                new VarSym(
+                        Utils.LABEL_SENDER,
+                        (TypeSym) curSymTab.lookup(Utils.ADDRESSTYPE),
+                        new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER)),
+                        Utils.BUILTIN_LOCATION,
+                        now,
+                        true,
+                        true
+                        ));
+        // final uint{sender} value;
+        curSymTab.add(Utils.LABEL_PAYVALUE,
+                new VarSym(
+                        Utils.LABEL_PAYVALUE,
+                        (TypeSym) curSymTab.lookup(Utils.BuiltinType2ID(BuiltInT.UINT)),
+                        new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER)),
+                        Utils.BUILTIN_LOCATION,
+                        now,
+                        true,
+                        true
+                ));
+
+    }
+
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        if (isBuiltIn()) return null;
+        env.incScopeLayer();
+        addBuiltInVars(env.curSymTab, scopeContext);
         String funcName = name;
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
@@ -104,7 +143,6 @@ public class FunctionDef extends FunctionSig {
         // env.inContext = funcBeginContext;
         // env.outContext = funcEndContext;
 
-        env.incScopeLayer();
         args.genConsVisit(env, false);
         // Context prev = new Context(env.prevContext);//, prev2 = null;
         CodeLocation loc = null;

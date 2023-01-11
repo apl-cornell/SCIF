@@ -15,11 +15,11 @@ public class PolyFunctionDef extends FunctionDef {
         super(name, funcLabels, args, body, decoratorList, rnt, isContructor);
         this.polyArgs = new ArrayList<>();
         HashMap<String, Integer> argToIndex = new HashMap<>();
-        for (int i = 0; i < args.args.size(); ++i) {
-            Arg arg = args.args.get(i);
-            argToIndex.put(arg.name, i);
-            logger.debug("argToIndex: " + arg.name + " " + i);
-        }
+//        for (int i = 0; i < args.args.size(); ++i) {
+//            Arg arg = args.args.get(i);
+//            argToIndex.put(arg.name, i);
+//            logger.debug("argToIndex: " + arg.name + " " + i);
+//        }
         for (String polyArgName : polyArgs) {
             //TODO: error handling : no such argName
             logger.debug("lookupIndex: " + polyArgName);

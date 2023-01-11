@@ -273,9 +273,9 @@ public class Call extends TrailerExpr {
     public String toSolCode() {
         logger.debug("toSOl: Call");
         String funcName = value.toSolCode();
-        if (Utils.isBuiltinFunc(funcName)) {
-            return Utils.transBuiltinFunc(funcName, this);
-        }
+//        if (Utils.isBuiltinFunc(funcName)) {
+//            return Utils.transBuiltinFunc(funcName, this);
+//        }
         String argsCode = "";
         boolean first = true;
         for (Expression exp : args) {

@@ -30,7 +30,7 @@ public class Interface extends TopLayerNode {
             }
         }
         ContractSym contractSym = new ContractSym(contractName, env.globalSymTab(), trustSetting,
-                null); //TODO ifl should be included in interface
+                null, null); //TODO ifl should be included in interface
         env.addSym(contractName, contractSym);
         return true;
     }

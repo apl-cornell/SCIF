@@ -29,6 +29,8 @@ public class FunctionSig extends TopLayerNode {
     List<ExceptionType> exceptionList;
     boolean isConstructor;
 
+    final private boolean isBuiltIn;
+
     /**
      * @param name          local name of this method
      * @param funcLabels    information flow labels of this method <code>{a -> b; c; d}</code>
@@ -46,7 +48,19 @@ public class FunctionSig extends TopLayerNode {
         this.rtn = rtn;
         this.exceptionList = new ArrayList<>();
         this.isConstructor = isConstructor;
-
+        this.isBuiltIn = false;
+        setDefault();
+    }
+    public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
+            List<String> decoratorList, Type rtn, boolean isConstructor, boolean isBuiltIn) {
+        this.name = name;
+        this.funcLabels = funcLabels;
+        this.args = args;
+        this.decoratorList = setToDefault(decoratorList);
+        this.rtn = rtn;
+        this.exceptionList = new ArrayList<>();
+        this.isConstructor = isConstructor;
+        this.isBuiltIn = isBuiltIn;
         setDefault();
     }
 
@@ -86,7 +100,7 @@ public class FunctionSig extends TopLayerNode {
         this.rtn = rtn;
         this.exceptionList = exceptionList;
         this.isConstructor = isConstructor;
-
+        this.isBuiltIn = false;
         setDefault();
     }
 
@@ -98,12 +112,8 @@ public class FunctionSig extends TopLayerNode {
         this.rtn = funcSig.rtn;
         this.exceptionList = funcSig.exceptionList;
         this.isConstructor = funcSig.isConstructor;
-
+        this.isBuiltIn = false;
         setDefault();
-    }
-
-    public void setDecoratorList(List<String> decoratorList) {
-        this.decoratorList = decoratorList;
     }
 
     @Override
@@ -235,5 +245,9 @@ public class FunctionSig extends TopLayerNode {
             return false;
         }
         return true;
+    }
+
+    public boolean isBuiltIn() {
+        return isBuiltIn;
     }
 }

@@ -126,8 +126,8 @@ public class AnnAssign extends Statement {
         SLCNameVar = varSym.toSherrlocFmt();
         SLCNameVarLbl = varSym.labelToSherrlocFmt();
         logger.debug(varSym.typeSym.getName());
-        if (varSym.typeSym.getName().equals(Utils.ADDRESSTYPE)) {
-            env.principalSet.add(varSym.toSherrlocFmt());
+        if (varSym.typeSym.getName().equals(Utils.ADDRESSTYPE) || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
+            env.principalSet().add(varSym);
         }
 
 //        if (annotation instanceof LabeledType) {

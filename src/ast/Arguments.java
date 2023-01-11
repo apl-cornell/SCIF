@@ -1,19 +1,19 @@
 package ast;
 
 import compile.SolCode;
+import java.util.List;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class Arguments extends Node {
 
-    ArrayList<Arg> args;
-    ArrayList<Expression> defaults; //corresponds to the last size(defualts) args
+    private List<Arg> args;
+    private List<Expression> defaults; //corresponds to the last size(defualts) args
 
     //TODO: deaults cons generate
     //TODO: kwonlyargs, varargs and kwarg
-    public Arguments(ArrayList<Arg> args, ArrayList<Expression> defaults) {
+    public Arguments(List<Arg> args, List<Expression> defaults) {
         this.args = args;
         this.defaults = defaults;
     }
@@ -138,5 +138,9 @@ public class Arguments extends Node {
         }
 
         return true;
+    }
+
+    public Iterable<Arg> args() {
+        return args;
     }
 }

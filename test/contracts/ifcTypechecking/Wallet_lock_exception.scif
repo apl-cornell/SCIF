@@ -11,15 +11,15 @@ contract Wallet [this] {
     @public
     void withdraw(uint _amount) throws (balanceNotEnough, transferFailure) {
         uint amount = endorse(_amount, BOT -> this);
-        if (balances[msg.sender] >= amount) {
+        if (balances[sender] >= amount) {
             // pc: this join msg.sender
             lock(this) {
                 try {
-                    send(msg.sender, amount);
-                } catchall (error e) {
+                    send(sender, amount);
+                } catchall (Error e) {
                     throw transferFailure();
                 }
-                balances[msg.sender] = balances[msg.sender] - amount;
+                balances[sender] = balances[sender] - amount;
             }
         } else {
             // pc: this join msg.sender
@@ -30,6 +30,6 @@ contract Wallet [this] {
     @public
     @payable
     void deposit() {
-        balances[msg.sender] = balances[msg.sender] + msg.value;
+        balances[sender] = balances[sender] + value;
     }
 }

@@ -33,6 +33,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         this.value = value;
         this.isStatic = isConst;
         this.isFinal = isFinal;
+        this.location = Utils.BUILTIN_LOCATION;
         this.type.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
 
@@ -141,7 +142,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         SLCNameVarLbl = varSym.labelToSherrlocFmt();
         logger.debug(varSym.typeSym.getName());
         if (varSym.typeSym.getName().equals(Utils.ADDRESSTYPE) || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
-            env.principalSet.add(varSym.toSherrlocFmt());
+            env.principalSet().add(varSym);
         }
 
         /*if (type instanceof LabeledType) {

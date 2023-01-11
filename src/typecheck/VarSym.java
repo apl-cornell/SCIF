@@ -78,7 +78,9 @@ public class VarSym extends Sym {
 //        ifl.replace(k, v);
 //    }
 
+    @Override
     public String toSherrlocFmt() {
+        System.out.println(getName());
         return  defContext.getSHErrLocName() + "." + getName();
         // return fullName;// + ".." + "lblVar";
     }
@@ -88,8 +90,8 @@ public class VarSym extends Sym {
     @Override
     public String toString() {
         return getName() + "|" + isStatic + "|" + isFinal + "|" +
-                genson.serialize(typeSym) + "|" +
-                (ifl != null ? ifl.toSherrlocFmt(defContext) + "|" : "") +
+                typeSym + "|" +
+                // (ifl != null ? ifl.toSherrlocFmt(defContext) + "|" : "") +
                 (location != null ? location.toString() : "");
     }
 

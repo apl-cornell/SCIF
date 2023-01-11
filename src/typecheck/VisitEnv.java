@@ -7,6 +7,7 @@ import typecheck.sherrlocUtils.Hypothesis;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 
 public class VisitEnv {
@@ -19,7 +20,7 @@ public class VisitEnv {
     public SymTab globalSymTab;
     public SymTab curSymTab;
     public Hypothesis hypothesis;
-    public HashSet<String> principalSet; // TODO: better imp
+    private HashSet<Sym> principalSet; // TODO: better imp
     public ContractSym curContractSym;
     // public HashMap<String, ContractInfo> contractMap;
     //public HashMap<String, SigCons> sigConsMap;
@@ -37,7 +38,7 @@ public class VisitEnv {
                     SymTab globalSymTab,
                     SymTab curSymTab,
                     Hypothesis hypothesis,
-                    HashSet<String> principalSet,
+                    HashSet<Sym> principalSet,
                     ContractSym curContractSym,
                     HashMap<String, SourceFile> programMap
                     // HashMap<ExceptionTypeSym, PsiUnit> psi
@@ -169,5 +170,9 @@ public class VisitEnv {
 
     public ScopeContext getScopeContext() {
         return curContractSym.getContractNode().getScopeContext();
+    }
+
+    public Set<Sym> principalSet() {
+        return principalSet;
     }
 }

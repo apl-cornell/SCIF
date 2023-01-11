@@ -29,9 +29,7 @@ public class FuncSym extends Sym {
                    ScopeContext scopeContext,
                    CodeLocation location) {
         super(funcName);
-        // this.typeName = funcName;
         this.funcName = funcName;
-        // this.name = funcName;
         this.funcLabels = funcLabels;
         this.parameters = parameters;
         this.returnType = returnType;
@@ -64,7 +62,7 @@ public class FuncSym extends Sym {
         return Utils.getLabelNameFuncCallPcBefore(scopeContext.getSHErrLocName());
     }
     public String getLabelNameCallPcBefore(String namespace) {
-        if (namespace != "")
+        if (!Objects.equals(namespace, ""))
             namespace += ".";
         return namespace + Utils.getLabelNameFuncCallPcBefore(scopeContext.getSHErrLocName());
     }
@@ -112,8 +110,9 @@ public class FuncSym extends Sym {
         return Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(), exp.getName());
     }
     public String getCallPcLabel(String namespace) {
+        assert funcLabels.begin_pc != null;
         if (funcLabels != null && funcLabels.begin_pc != null) {
-            return namespace + "." + funcLabels.begin_pc.toSherrlocFmt(scopeContext);
+            return (!Objects.equals(namespace, "") ? namespace + "." : "") + funcLabels.begin_pc.toSherrlocFmt(scopeContext);
         }
         else {
             return null;
@@ -123,7 +122,7 @@ public class FuncSym extends Sym {
 
     public String getCallLockLabel(String namespace) {
         if (funcLabels != null && funcLabels.gamma_label != null) {
-            return namespace + "." + funcLabels.gamma_label.toSherrlocFmt(scopeContext);
+            return (!Objects.equals(namespace, "") ? namespace + "." : "") + funcLabels.gamma_label.toSherrlocFmt(scopeContext);
         }
         else {
             return null;
@@ -157,7 +156,7 @@ public class FuncSym extends Sym {
 
     public String getCallAfterLabel(String namespace) {
         if (funcLabels != null && funcLabels.to_pc != null) {
-            return namespace + "." + funcLabels.to_pc.toSherrlocFmt(scopeContext);
+            return (!Objects.equals(namespace, "") ? namespace + "." : "") + funcLabels.to_pc.toSherrlocFmt(scopeContext);
         }
         else {
             return null;
@@ -166,7 +165,7 @@ public class FuncSym extends Sym {
 
     public String getRtnValueLabel(String namespace) {
         if (returnLabel != null) {
-            return namespace + "." + returnLabel.toSherrlocFmt(scopeContext);
+            return (!Objects.equals(namespace, "") ? namespace + "." : "") + returnLabel.toSherrlocFmt(scopeContext);
         } else {
             return null;
         }
@@ -179,7 +178,7 @@ public class FuncSym extends Sym {
     static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();
     @Override
     public String toString() {
-        return genson.serialize(this);
+        return getName();//genson.serialize(this);
     }
 
     public String getLabelNameCallGamma() {

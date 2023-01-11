@@ -2,11 +2,11 @@ package ast;
 
 import compile.SolCode;
 import java.util.List;
+import jdk.jshell.execution.Util;
 import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class Contract extends Node {
 
@@ -65,16 +65,18 @@ public class Contract extends Node {
 
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        env.setCurSymTab(new SymTab(env.curSymTab()));
-        Utils.addBuiltInSyms(env.globalSymTab(), trustSetting);
+        SymTab curSymTab = new SymTab(env.curSymTab());
+        Utils.addBuiltInTypes(curSymTab);
+        env.setCurSymTab(curSymTab);
         /*
             add built-in variable "this"
          */
         //String name = "this";
         //env.globalSymTab.add(name, new VarSym(env.toVarSym(name, new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, new CodeLocation(), now)));
-        ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), trustSetting, ifl);
+        ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), trustSetting, ifl, this);
         env.addGlobalSym(contractName, contractSym);
         env.setCurContractSym(contractSym);
+        // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
 
         for (StateVariableDeclaration dec : varDeclarations) {
             if (!dec.ntcGlobalInfo(env, now)) {
@@ -123,10 +125,15 @@ public class Contract extends Node {
         contractSym.trustSetting = trustSetting;
         contractSym.ifl = ifl;
         contractSym.addContract(contractName, contractSym);
-        String name = "this";
+        Utils.addBuiltInTypes(contractSym.symTab);
+        /*String name = "this";
         contractSym.addVar(name, contractSym.toVarSym(name,
                 new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, false,
                 null, scopeContext));
+
+         */
+
+        // Utils.addBuiltInSymsIfc(contractSym);
 
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.globalInfoVisit(contractSym);
@@ -307,4 +314,130 @@ public class Contract extends Node {
     public String getContractName() {
         return contractName;
     }
+
+    protected void addBuiltIns() {
+        addBuiltInTrustSettings();
+        addBuiltInVars();
+        addBuiltInExceptions();
+        addBuiltInMethods();
+    }
+
+    private void addBuiltInMethods() {
+        // add methods:
+        final IfLabel labelThis = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
+        final IfLabel labelTop = new PrimitiveIfLabel(new Name(Utils.LABEL_TOP));
+        final IfLabel labelBot = new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM));
+
+        // @protected
+        // @final
+        // void send{this -> TOP; BOT}(address target, uint amount);
+        List<Arg> args = new ArrayList<>();
+        args.add(new Arg(
+                "target",
+                new LabeledType(Utils.ADDRESSTYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
+                false,
+                true
+        ));
+        args.add(new Arg(
+                "amount",
+                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
+                false,
+                true
+        ));
+        List<String> decs = new ArrayList<>();
+        decs.add(Utils.PROTECTED_DECORATOR);
+        decs.add(Utils.FINAL_DECORATOR);
+        FunctionDef sendDef = new FunctionDef(
+                Utils.METHOD_SEND_NAME,
+                new FuncLabels(
+                        labelThis,
+                        labelTop,
+                        labelBot,
+                        labelBot
+                ),
+                new Arguments(args, null),
+                new ArrayList<>(),
+                decs,
+                new Type(Utils.BuiltinType2ID(BuiltInT.VOID)),
+                false,
+                true
+        );
+        methodDeclarations.add(sendDef);
+
+        // @public
+        // final
+        // uint{TOP} balance{BOT -> TOP; TOP}(final address addr);
+        args = new ArrayList<>();
+        args.add(new Arg(
+                "addr",
+                new LabeledType(Utils.ADDRESSTYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
+                false,
+                true
+        ));
+        decs = new ArrayList<>();
+        decs.add(Utils.PUBLIC_DECORATOR);
+        decs.add(Utils.FINAL_DECORATOR);
+        FunctionDef balanceDef = new FunctionDef(
+                Utils.METHOD_BALANCE_NAME,
+                new FuncLabels(
+                        labelBot,
+                        labelTop,
+                        labelTop,
+                        labelTop
+                ),
+                new Arguments(args, null),
+                new ArrayList<>(),
+                decs,
+                new Type(Utils.BuiltinType2ID(BuiltInT.UINT)),
+                false,
+                true
+        );
+        methodDeclarations.add(balanceDef);
+    }
+
+    private void addBuiltInExceptions() {
+        // add exceptions:
+        // exception{BOT} Error();
+        ExceptionDef error = new ExceptionDef(
+                Utils.EXCEPTION_ERROR_NAME,
+                new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)),
+                new Arguments()
+        );
+        exceptionDefs.add(error);
+    }
+
+    private void addBuiltInVars() {
+        // add variables:
+        // final This{this} this;
+        StateVariableDeclaration thisDec = new StateVariableDeclaration(
+                new Name(Utils.LABEL_THIS),
+                new LabeledType(contractName, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS))),
+                null,
+                true,
+                true
+        );
+        StateVariableDeclaration topDec = new StateVariableDeclaration(
+                new Name(Utils.LABEL_TOP),
+                new LabeledType(Utils.PRINCIPAL_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
+                null,
+                true,
+                true
+        );
+        StateVariableDeclaration botDec = new StateVariableDeclaration(
+                new Name(Utils.LABEL_BOTTOM),
+                new LabeledType(Utils.PRINCIPAL_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM))),
+                null,
+                true,
+                true
+        );
+        varDeclarations.add(thisDec);
+        varDeclarations.add(topDec);
+        varDeclarations.add(botDec);
+    }
+
+    private void addBuiltInTrustSettings() {
+        trustSetting.addBuiltIns();
+    }
+    
+    
 }
