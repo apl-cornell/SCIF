@@ -7,8 +7,8 @@ public class DepMapTypeSym extends MapTypeSym {
     public TypeSym keyType;
     public TypeSym valueType;
 
-    public DepMapTypeSym(TypeSym keyType, TypeSym valueType) {
-        super(keyType, valueType);
+    public DepMapTypeSym(TypeSym keyType, TypeSym valueType, ScopeContext defContext) {
+        super(keyType, valueType, defContext);
     }
 
     public DepMapTypeSym(DepMapTypeSym depMapTypeInfo) {

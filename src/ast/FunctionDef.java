@@ -33,7 +33,6 @@ public class FunctionDef extends FunctionSig {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        if (isBuiltIn()) return parent;
         env.setCurSymTab(new SymTab(env.curSymTab()));
         // add args to local sym;
         String funcName = this.name;
@@ -56,74 +55,53 @@ public class FunctionDef extends FunctionSig {
         }
         funcLabels.ntcGenCons(env, now);
         if (funcSym.returnType != null) {
-            env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ,
-                    env.getSymName(funcSym.returnType.getName())), env.globalHypothesis(), location,
+            env.addCons(new Constraint(new Inequality(funcSym.returnTypeSLC(), Relation.EQ,
+                    funcSym.returnType.toSHErrLocFmt()), env.globalHypothesis(), location,
                     env.curContractSym().getName(),
                     "Label of this method's return value"));
         }
 
-        for (Statement stmt : body) {
-            // logger.debug("stmt: " + stmt);
-            stmt.ntcGenCons(env, now);
+        if (!isBuiltIn()) {
+            // TODO: add support for signatures
+            for (Statement stmt : body) {
+                // logger.debug("stmt: " + stmt);
+                stmt.ntcGenCons(env, now);
+            }
         }
         env.setCurSymTab(env.curSymTab().getParent());
         return now;
     }
 
-    private void addBuiltInVars(SymTab curSymTab, ScopeContext now) {
-        // final address{sender} sender;
-        curSymTab.add(Utils.LABEL_SENDER,
-                new VarSym(
-                        Utils.LABEL_SENDER,
-                        (TypeSym) curSymTab.lookup(Utils.ADDRESSTYPE),
-                        new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER)),
-                        Utils.BUILTIN_LOCATION,
-                        now,
-                        true,
-                        true
-                        ));
-        // final uint{sender} value;
-        curSymTab.add(Utils.LABEL_PAYVALUE,
-                new VarSym(
-                        Utils.LABEL_PAYVALUE,
-                        (TypeSym) curSymTab.lookup(Utils.BuiltinType2ID(BuiltInT.UINT)),
-                        new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER)),
-                        Utils.BUILTIN_LOCATION,
-                        now,
-                        true,
-                        true
-                ));
-
-    }
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         if (isBuiltIn()) return null;
         env.incScopeLayer();
         addBuiltInVars(env.curSymTab, scopeContext);
-        String funcName = name;
+        String funcLocalName = name;
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        FuncSym funcSym = env.getFunc(funcName);
+        FuncSym funcSym = env.getFunc(funcLocalName);
+        String funcFullName = funcSym.toSHErrLocFmt();
         // Context curContext = new Context(ifNamePc, Utils.getLabelNameFuncRtnLock(funcName), Utils.getLabelNameInLock(location));
-        String inLockName = Utils.getLabelNameInLock(location);
-        String outLockName = Utils.getLabelNameFuncRtnLock(funcName);
-        String outPcName = Utils.getLabelNameFuncRtnPc(funcName);
+        String inLockName = Utils.getLabelNameInLock(funcFullName);
+        String outLockName = Utils.getLabelNameFuncRtnLock(funcFullName);
+        String outPcName = Utils.getLabelNameFuncRtnPc(funcFullName);
         Context curContext = new Context(ifNamePc, inLockName);
 
-        String ifNameCall = funcSym.getLabelNameCallPcAfter();
-        env.trustCons.add(
+        String ifNameCall = funcSym.internalPcSLC();
+        env.addTrustConstraint(
                 new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis,
                         funcLabels.to_pc.location, env.curContractSym.getName(),
                         "Control flow of this method start with its call-after(second) label"));
 
         String ifNameContract = env.curContractSym.getLabelNameContract();
-        env.trustCons.add(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis,
+        env.addTrustConstraint(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis,
                 funcLabels.begin_pc.location, env.curContractSym.getName(),
                 "This contract should be trusted enough to call this method"));
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
-        env.trustCons.add(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis,
+        env.addTrustConstraint(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis,
                 funcLabels.to_pc.location, env.curContractSym.getName(),
                 "The statically locked integrity must be at least as trusted as initial pc integrity"));
         env.cons.add(
@@ -135,7 +113,8 @@ public class FunctionDef extends FunctionSig {
         HashMap<ExceptionTypeSym, PsiUnit> psi = new HashMap<>();
         for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
             psi.put(exp.getKey(), new PsiUnit(
-                    new Context(funcSym.getLabelNameException(exp.getKey()), ifNameGamma), true));
+                    //new Context(funcSym.getLabelNameException(exp.getKey()), ifNameGamma), true));
+                    new Context(exp.getKey().labelNameSLC(), ifNameGamma), true));
         }
 
         Context funcBeginContext = curContext;
@@ -233,4 +212,9 @@ public class FunctionDef extends FunctionSig {
         rtn.addAll(body);
         return rtn;
     }
+//
+//    @Override
+//    public String toSHErrLocFmt() {
+//        return this.getClass().getSimpleName() + "." + getName() + "." + location;
+//    }
 }

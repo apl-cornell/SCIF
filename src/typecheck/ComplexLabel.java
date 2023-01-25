@@ -1,0 +1,26 @@
+package typecheck;
+
+import ast.IfOperator;
+
+public class ComplexLabel extends Label {
+    private final Label left, right;
+    private final IfOperator op;
+
+    public ComplexLabel(Label left, IfOperator op, Label right, CodeLocation location) {
+        super(location);
+        this.left = left;
+        this.right = right;
+        this.op = op;
+    }
+
+    @Override
+    public String toSHErrLocFmt() {
+        String l = left.toSHErrLocFmt();
+        String r = right.toSHErrLocFmt();
+        return switch (op) {
+            case JOIN -> "(" + l + " ⊔ " + r + ")";
+            case MEET -> "(" + l + " ⊓ " + r + ")";
+        };
+    }
+
+}

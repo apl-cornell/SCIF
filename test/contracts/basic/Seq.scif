@@ -1,10 +1,10 @@
 contract Seq {
-    uint{this} balance;
+    uint{this} bal;
 
     @public
     void foo{BOT -> this; this}() {
         bar();
-        balance = 10;
+        bal = 10;
     }
 
     @public

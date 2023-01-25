@@ -159,6 +159,7 @@ nonterminal Setmaker setmaker;
 nonterminal Call arglist;
 nonterminal LabeledType labeledType;
 nonterminal IfLabel ifLabel, unitIfLabel;
+nonterminal PrimitiveIfLabel primitiveIfLabel;
 nonterminal LabeledType typeSym;
 nonterminal List<LabeledType> typeSyms;
 nonterminal ast.Map mapType;
@@ -340,7 +341,7 @@ trust_decs ::=
     :};
 
 trust_dec ::=
-    ifLabel:lhs trust_operator:optor ifLabel:rhs SEMI {:
+    primitiveIfLabel:lhs trust_operator:optor primitiveIfLabel:rhs SEMI {:
         TrustConstraint cons = new TrustConstraint(lhs, optor, rhs);
         RESULT = cons;
         RESULT.setLoc(new CodeLocation(lhsleft, lhsright, filename));
@@ -617,15 +618,18 @@ ifLabel ::= unitIfLabel:a {:
         RESULT = new ComplexIfLabel(a, IfOperator.JOIN, b);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
-unitIfLabel ::= NAME:a {:
-        Name name = new Name((String)a);
-        name.setLoc(new CodeLocation(aleft, aright, filename));
-        RESULT = new PrimitiveIfLabel(name);
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+unitIfLabel ::= primitiveIfLabel:a {:
+        RESULT = a;
     :}
     | LPAR ifLabel:a RPAR {:
         RESULT = a;
     :};
+primitiveIfLabel ::= NAME:a {:
+        Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright, filename));
+        RESULT = new PrimitiveIfLabel(name);
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+                         :};
 
 funcdef ::=
     r_funcSig:funcSig suite:d {:

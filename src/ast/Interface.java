@@ -29,8 +29,8 @@ public class Interface extends TopLayerNode {
                 return false;
             }
         }
-        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab(), trustSetting,
-                null, null); //TODO ifl should be included in interface
+        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab(), new ArrayList<>(),
+                null);
         env.addSym(contractName, contractSym);
         return true;
     }
@@ -38,7 +38,8 @@ public class Interface extends TopLayerNode {
 
     public void globalInfoVisit(ContractSym contractSym) {
         // contractSym.name = contractName;
-        contractSym.trustSetting = trustSetting;
+        // contractSym.trustSetting = trustSetting;
+        trustSetting.globalInfoVisit(contractSym);
         for (FunctionSig stmt : funcSigs) {
             stmt.globalInfoVisit(contractSym);
         }

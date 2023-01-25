@@ -2,8 +2,11 @@ package typecheck;
 
 import ast.*;
 
+import java.beans.JavaBean;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 public class ContractSym extends TypeSym {
@@ -13,34 +16,29 @@ public class ContractSym extends TypeSym {
     public HashMap<String, VarInfo> varMap;
     public HashMap<String, FuncInfo> funcMap;*/
     public SymTab symTab;
-    public IfLabel ifl;
+    // private Label label;
     // public ArrayList<TrustConstraint> trustCons;
-    public TrustSetting trustSetting;
-    private Contract astNode;
+    private List<Assumption> assumptions;
+    private final Contract astNode;
 
     public ContractSym(String name,
             SymTab symTab,
             // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
-            TrustSetting trustSetting,
-            IfLabel ifl,
+            List<Assumption> assumptions,
+            // Label label,
             Contract contract) {
-        super(name);
-        // this.name = name;
-        /*this.iptContracts = iptContracts;
-        this.typeMap = typeMap;
-        this.varMap = varMap;
-        this.funcMap = funcMap;*/
+        super(name, contract.getScopeContext());
         this.symTab = symTab;
-        this.trustSetting = trustSetting;
-        this.ifl = ifl;
+        this.assumptions = assumptions;
+        // this.label = label;
         astNode = contract;
     }
 
     public ContractSym(String contractName, Contract contract) {
-        super(contractName);
+        super(contractName, contract.getScopeContext());
         astNode = contract;
         symTab = new SymTab();
-        trustSetting = new TrustSetting();
+        assumptions = new ArrayList<>();
     }
 
     public TypeSym toType(String typeName) {
@@ -71,7 +69,7 @@ public class ContractSym extends TypeSym {
         return new StructTypeSym(typeName, memberList, astNode.getScopeContext());
     }
 
-    public TypeSym toTypeSym(ast.Type astType) {
+    public TypeSym toTypeSym(ast.Type astType, ScopeContext defContext) {
         if (astType == null) {
             return new BuiltinTypeSym("void");
         }
@@ -85,10 +83,10 @@ public class ContractSym extends TypeSym {
             LabeledType lt = (LabeledType) astType;
             if (lt instanceof DepMap) {
                 DepMap depMap = (DepMap) lt;
-                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType), toTypeSym(depMap.valueType));
+                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType, defContext), toTypeSym(depMap.valueType, defContext), defContext);
             } else if (lt instanceof Map) {
                 Map map = (Map) lt;
-                typeSym = new MapTypeSym(toTypeSym(map.keyType), toTypeSym(map.valueType));
+                typeSym = new MapTypeSym(toTypeSym(map.keyType, defContext), toTypeSym(map.valueType, defContext), defContext);
             }
 
         }
@@ -98,15 +96,32 @@ public class ContractSym extends TypeSym {
 
 
     public VarSym toVarSym(String localName, ast.Type astType, boolean isConst, boolean isFinal,
-            CodeLocation loc, ScopeContext scopeContext) {
+            CodeLocation loc, ScopeContext defContext) {
         System.err.println("toVarSym: " + localName + " " + astType.getName());
-        TypeSym typeSym = toTypeSym(astType);
+        TypeSym typeSym = toTypeSym(astType, defContext);
         System.err.println("toVarSym: " + localName + " " + typeSym);
-        IfLabel ifl = null;
+        Label ifl;
         if (astType instanceof LabeledType) {
-            ifl = ((LabeledType) astType).ifl;
+            ifl = toLabel(((LabeledType) astType).ifl);
+        } else {
+            throw new RuntimeException("Not a labeled type: " + localName);
         }
-        return new VarSym(localName, typeSym, ifl, loc, scopeContext, isConst, isFinal);
+        return new VarSym(localName, typeSym, ifl, loc, defContext, isConst, isFinal);
+    }
+
+    public Label toLabel(IfLabel ifl) {
+        if (ifl instanceof PrimitiveIfLabel) {
+            VarSym label = (VarSym) lookupSym(((PrimitiveIfLabel) ifl).value().id);
+            if (label == null) return null;
+            return new PrimitiveLabel(label, ifl.getLocation());
+        } else if (ifl instanceof ComplexIfLabel) {
+            return new ComplexLabel(toLabel(((ComplexIfLabel) ifl).getLeft()),
+                    ((ComplexIfLabel) ifl).getOp(),
+                    toLabel(((ComplexIfLabel) ifl).getRight()),
+                    ifl.getLocation());
+        } else {
+            throw new RuntimeException();
+        }
     }
 
     public void addVar(String varname, VarSym varSym) {
@@ -154,21 +169,21 @@ public class ContractSym extends TypeSym {
 
     public String getLabelContract() {
         return Utils.getLabelNameContract(getContractNode().getScopeContext());
-        // return ifl.toSherrlocFmt(getName());
+        // return ifl.toSHErrLocFmt(getName());
     }
 
     public Contract getContractNode() {
         return astNode;
     }
 
-    public ExceptionTypeSym toExceptionType(String exceptionName, IfLabel ifl, Arguments arguments) {
+    public ExceptionTypeSym toExceptionType(String exceptionName, IfLabel ifl, Arguments arguments, ScopeContext defContext) {
 
         ExceptionTypeSym sym = getExceptionSym(exceptionName);
         if (sym != null) {
             return sym;
         }
         ArrayList<VarSym> memberList = arguments.parseArgs(this);
-        return new ExceptionTypeSym(exceptionName, ifl, memberList);
+        return new ExceptionTypeSym(exceptionName, toLabel(ifl), memberList, defContext);
     }
 
     public ExceptionTypeSym getExceptionSym(String exceptionName) {
@@ -179,15 +194,31 @@ public class ContractSym extends TypeSym {
         return (ExceptionTypeSym) sym;
     }
 
+    /**
+     * Get all principals and addresses
+     * @return
+     */
     public Set<Sym> getPrincipalSet() {
         Set<Sym> rtn = new HashSet<>();
-        for (Sym sym : symTab.getTypeSet()) {
-            if (sym instanceof VarSym) {
-                if (((VarSym) sym).typeSym.getName().equals(Utils.ADDRESSTYPE) || ((VarSym) sym).typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
-                    rtn.add(sym);
-                }
+        for (Entry<String, VarSym> entry : symTab.getVars().entrySet()) {
+            //if (sym instanceof VarSym) {
+            VarSym sym = entry.getValue();
+            if (sym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)
+                    || (sym.isFinal
+                    && (sym.typeSym instanceof ContractSym
+                        || sym.typeSym.getName().equals(Utils.ADDRESSTYPE)))) {
+                rtn.add(sym);
             }
+            //}
         }
         return rtn;
+    }
+
+    public Iterable<Assumption> assumptions() {
+        return assumptions;
+    }
+
+    public void updateAssumptions(List<Assumption> assumptions) {
+        this.assumptions = assumptions;
     }
 }

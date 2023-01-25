@@ -1,6 +1,7 @@
 package compile;
 
 import ast.*;
+import java.util.HashMap;
 import java.util.List;
 import typecheck.*;
 
@@ -8,7 +9,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class SolCode {
@@ -18,7 +19,7 @@ public class SolCode {
     String unitIndent;
     String currentIndent;
     public List<String> code; //each line with no newline char
-    public HashMap<String, String> labelTable; // map label names to on-chain addresses
+    public Map<String, String> labelTable; // map label names to on-chain addresses
     public typecheck.DynamicSystemOption dynamicSystemOption;
 
     public SolCode() {

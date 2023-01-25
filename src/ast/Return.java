@@ -29,15 +29,15 @@ public class Return extends Statement {
         }
 
         env.addCons(
-                now.genCons(env.getSymName(funcSym.returnType.getName()), Relation.EQ, env, location));
+                now.genCons(funcSym.returnTypeSLC(), Relation.EQ, env, location));
         return now;
     }
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         // String prevLock = env.prevContext.lambda;
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
@@ -46,7 +46,7 @@ public class Return extends Statement {
         String funcName = scopeContext.getFuncName();
         FuncSym funcSym = env.getFunc(funcName);
         // String ifNameRtnLock = funcSym.getLabelNameRtnLock();
-        String ifNameRtnValue = funcSym.getLabelNameRtnValue();
+        String ifNameRtnValue = funcSym.returnSLC();
         String ifRtnLockName = funcSym.getLabelNameCallGamma();
         PathOutcome psi = new PathOutcome();
         if (value == null) {

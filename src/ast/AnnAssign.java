@@ -1,15 +1,12 @@
 package ast;
 
 import compile.SolCode;
-import java.awt.Label;
-import sherrloc.constraint.ast.Top;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class AnnAssign extends Statement {
 
@@ -93,8 +90,8 @@ public class AnnAssign extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         logger.debug("entering AnnAssign: \n");
         // logger.debug(this.toString() + "\n");
@@ -106,15 +103,15 @@ public class AnnAssign extends Statement {
             CodeLocation loc = location;
             varSym = env.curContractSym.toVarSym(id, annotation, isStatic, isFinal, loc,
                     scopeContext);
-            // ifNameTgt = varSym.toSherrlocFmt();
+            // ifNameTgt = varSym.toSHErrLocFmt();
             // (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
             // varSym = env.contractInfo.toVarInfo(id, annotation, isConst, loc);
             env.addVar(id, varSym);
             // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
             if (annotation instanceof LabeledType) {
-                String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt(scopeContext);
+                // String ifLabel = ((LabeledType) annotation).ifl.toSHErrLocFmt(scopeContext);
                 env.cons.add(new Constraint(
-                        new Inequality(ifLabel, Relation.EQ, varSym.labelToSherrlocFmt()),
+                        new Inequality(varSym.labelNameSLC(), Relation.EQ, varSym.labelValueSLC()),
                         env.hypothesis, location, env.curContractSym.getName(),
                         "Variable " + varSym.getName() + " may be labeled incorrectly"));
             }
@@ -123,8 +120,8 @@ public class AnnAssign extends Statement {
             varSym = env.getVar(id);
         }
         logger.debug(varSym.getName());
-        SLCNameVar = varSym.toSherrlocFmt();
-        SLCNameVarLbl = varSym.labelToSherrlocFmt();
+        SLCNameVar = varSym.toSHErrLocFmt();
+        SLCNameVarLbl = varSym.labelNameSLC();
         logger.debug(varSym.typeSym.getName());
         if (varSym.typeSym.getName().equals(Utils.ADDRESSTYPE) || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
             env.principalSet().add(varSym);

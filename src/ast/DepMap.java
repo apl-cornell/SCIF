@@ -12,7 +12,7 @@ public class DepMap extends LabeledType {
     }
 
 //    public String toSherrloc(String name, String value) {
-//        return ifl.toSherrlocFmt(name, value);
+//        return ifl.toSHErrLocFmt(name, value);
 //    }
 
 //    @Override

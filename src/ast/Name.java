@@ -39,16 +39,16 @@ public class Name extends Variable {
     }
 
     @Override
-    public VarSym getVarInfo(NTCEnv env) {
-        return ((VarSym) env.getCurSym(id));
-    }
-
-    @Override
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         // assuming the name would be a variable name
         logger.debug("Name: " + id);
-        String ifNameRtn = env.getVar(id).labelToSherrlocFmt();
+        String ifNameRtn = env.getVar(id).labelNameSLC();
         return new ExpOutcome(ifNameRtn, new PathOutcome(new PsiUnit(env.inContext)));
+    }
+
+    @Override
+    public VarSym getVarInfo(NTCEnv env) {
+        return ((VarSym) env.getCurSym(id));
     }
 
     public VarSym getVarInfo(VisitEnv env, boolean tail_position) {

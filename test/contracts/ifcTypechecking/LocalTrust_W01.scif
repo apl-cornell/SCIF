@@ -1,7 +1,7 @@
 contract LocalTrust {
 
     assume {
-        low => high;
+        high => low;
     }
 
     principal high;
@@ -11,7 +11,7 @@ contract LocalTrust {
     uint{low} b;
 
     @public
-    void assignAtoB() {
-        b = a;
+    void assignBtoA() {
+        a = b;
     }
 }

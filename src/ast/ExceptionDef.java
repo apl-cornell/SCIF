@@ -18,27 +18,27 @@ public class ExceptionDef extends TopLayerNode {
         } else {
             this.exceptionType = new ExceptionType(new LabeledType(name, ifl));
         }
+        arguments.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
 
-
+    @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
-        /*if (exceptionType.isLocal(env.curContractSym.name)) {
-        }*/
         exceptionType.setContractName(env.curContractSym().getName());
         env.globalSymTab().add(exceptionType.name,
                 env.toExceptionType(exceptionType.name, arguments, parent));
         return true;
     }
 
-//    @Override
-//    public void findPrincipal(HashSet<String> principalSet) {
-//        // TODO
-//    }
-
+    /**
+     * Collecting global info.
+     * Creating an exception symbol in the symbol table of the current contract
+     * @param contractSym
+     */
+    @Override
     public void globalInfoVisit(ContractSym contractSym) {
         exceptionType.setContractName(contractSym.getName());
         contractSym.addType(exceptionType.name,
-                contractSym.toExceptionType(exceptionType.name, exceptionType.type.ifl, arguments));
+                contractSym.toExceptionType(exceptionType.name, exceptionType.type.ifl, arguments, contractSym.defContext()));
         // contractSym.addType(exceptionType, contractSym.toExceptionType(exceptionType, arguments));
 
     }

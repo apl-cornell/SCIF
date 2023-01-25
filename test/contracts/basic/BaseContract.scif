@@ -2,6 +2,4 @@ contract BaseContract {
 //[this] {
 //}
 
-    constructor(address trustOracle, address lockOracle) {
-    }
 }

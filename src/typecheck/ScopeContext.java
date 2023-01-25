@@ -15,10 +15,10 @@ import java.util.Map;
  * */
 public class ScopeContext {
 
-    Node cur;
-    HashMap<ExceptionTypeSym, Boolean> funcExceptionMap;
-    ScopeContext parent;
-    private String SHErrLocName;
+    private Node cur;
+    private HashMap<ExceptionTypeSym, Boolean> funcExceptionMap;
+    private ScopeContext parent;
+    private final String SHErrLocName;
 
     public ScopeContext(String specifiedName) {
         cur = null;
@@ -47,6 +47,9 @@ public class ScopeContext {
     }
 
     private String calcSHErrLocName() {
+        if (cur == null && parent == null) {
+            return "global";
+        }
 
         String localPostfix;
         if (cur instanceof Contract) {
@@ -61,10 +64,14 @@ public class ScopeContext {
             localPostfix = ((Interface) cur).contractName;
         } else if (cur instanceof GuardBlock) {
             localPostfix = "guardBlock" + cur.locToString();
+        } else if (cur instanceof Try) {
+            localPostfix = "try" + cur.locToString();
         } else if (cur instanceof SourceFile) {
-            localPostfix = ((SourceFile) cur).getSourceFileName();
+            localPostfix = ((SourceFile) cur).getSourceFileId();
         } else {
+            assert cur != null;
             localPostfix = cur.toSHErrLocFmt();
+            //throw new RuntimeException();
         }
 
         if (parent != null) {
@@ -134,5 +141,13 @@ public class ScopeContext {
         for (Map.Entry<ExceptionTypeSym, Boolean> t : funcExceptionMap.entrySet()) {
             System.err.println(t + t.getKey().getName());
         }
+    }
+
+    public Node cur() {
+        return cur;
+    }
+
+    public ScopeContext parent() {
+        return parent;
     }
 }

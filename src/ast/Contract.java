@@ -2,6 +2,7 @@ package ast;
 
 import compile.SolCode;
 import java.util.List;
+import javax.swing.plaf.nimbus.State;
 import jdk.jshell.execution.Util;
 import typecheck.*;
 
@@ -68,12 +69,7 @@ public class Contract extends Node {
         SymTab curSymTab = new SymTab(env.curSymTab());
         Utils.addBuiltInTypes(curSymTab);
         env.setCurSymTab(curSymTab);
-        /*
-            add built-in variable "this"
-         */
-        //String name = "this";
-        //env.globalSymTab.add(name, new VarSym(env.toVarSym(name, new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, new CodeLocation(), now)));
-        ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), trustSetting, ifl, this);
+        ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), new ArrayList<>(), this);
         env.addGlobalSym(contractName, contractSym);
         env.setCurContractSym(contractSym);
         // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
@@ -109,6 +105,8 @@ public class Contract extends Node {
             dec.ntcGenCons(env, now);
         }
 
+        trustSetting.ntcGenCons(env, now);
+
         for (ExceptionDef def : exceptionDefs) {
             def.ntcGenCons(env, now);
         }
@@ -122,8 +120,8 @@ public class Contract extends Node {
 
     public void globalInfoVisit(ContractSym contractSym) {
         // contractSym.name = contractName;
-        contractSym.trustSetting = trustSetting;
-        contractSym.ifl = ifl;
+//        contractSym.trustSetting = trustSetting;
+        // contractSym.ifl = ifl;
         contractSym.addContract(contractName, contractSym);
         Utils.addBuiltInTypes(contractSym.symTab);
         /*String name = "this";
@@ -138,6 +136,8 @@ public class Contract extends Node {
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.globalInfoVisit(contractSym);
         }
+
+        trustSetting.globalInfoVisit(contractSym);
 
         for (ExceptionDef expDef : exceptionDefs) {
             expDef.globalInfoVisit(contractSym);
@@ -155,6 +155,7 @@ public class Contract extends Node {
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.genConsVisit(env, tail_position);
         }
+        trustSetting.genConsVisit(env, tail_position);
 
         for (ExceptionDef expDef : exceptionDefs) {
             expDef.genConsVisit(env, tail_position);
@@ -334,13 +335,13 @@ public class Contract extends Node {
         List<Arg> args = new ArrayList<>();
         args.add(new Arg(
                 "target",
-                new LabeledType(Utils.ADDRESSTYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
+                new LabeledType(Utils.ADDRESSTYPE, labelThis),
                 false,
                 true
         ));
         args.add(new Arg(
                 "amount",
-                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
+                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), labelThis),
                 false,
                 true
         ));
@@ -370,7 +371,7 @@ public class Contract extends Node {
         args = new ArrayList<>();
         args.add(new Arg(
                 "addr",
-                new LabeledType(Utils.ADDRESSTYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
+                new LabeledType(Utils.ADDRESSTYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM))),
                 false,
                 true
         ));
@@ -430,9 +431,12 @@ public class Contract extends Node {
                 true,
                 true
         );
-        varDeclarations.add(thisDec);
-        varDeclarations.add(topDec);
-        varDeclarations.add(botDec);
+        ArrayList<StateVariableDeclaration> newDecs = new ArrayList<>();
+        newDecs.add(topDec);
+        newDecs.add(botDec);
+        newDecs.add(thisDec);
+        newDecs.addAll(varDeclarations);
+        varDeclarations = newDecs;
     }
 
     private void addBuiltInTrustSettings() {

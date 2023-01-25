@@ -9,8 +9,8 @@ import java.util.HashSet;
 
 public class ComplexIfLabel extends IfLabel {
 
-    IfOperator op;
-    IfLabel left, right;
+    private final IfOperator op;
+    private final IfLabel left, right;
 
     public IfOperator getOp() {
         return op;
@@ -30,10 +30,11 @@ public class ComplexIfLabel extends IfLabel {
         this.right = right;
     }
 
+    /*
     @Override
-    public String toSherrlocFmt(ScopeContext defContext) {
-        String l = left.toSherrlocFmt(defContext);
-        String r = right.toSherrlocFmt(defContext);
+    public String toSHErrLocFmt(ScopeContext defContext) {
+        String l = left.toSHErrLocFmt(defContext);
+        String r = right.toSHErrLocFmt(defContext);
         String rnt = "";
         switch (op) {
             case JOIN:
@@ -47,9 +48,10 @@ public class ComplexIfLabel extends IfLabel {
         return rnt;
     }
 
-//    public String toSherrlocFmt(String namespace) {
-//        String l = left.toSherrlocFmt(namespace);
-//        String r = right.toSherrlocFmt(namespace);
+     */
+//    public String toSHErrLocFmt(String namespace) {
+//        String l = left.toSHErrLocFmt(namespace);
+//        String r = right.toSHErrLocFmt(namespace);
 //        String rnt = "";
 //        switch (op) {
 //            case JOIN:
@@ -63,9 +65,9 @@ public class ComplexIfLabel extends IfLabel {
 //        return rnt;
 //    }
 
-//    public String toSherrlocFmt(String k, String v) {
-//        String l = left.toSherrlocFmt(k, v);
-//        String r = right.toSherrlocFmt(k, v);
+//    public String toSHErrLocFmt(String k, String v) {
+//        String l = left.toSHErrLocFmt(k, v);
+//        String r = right.toSHErrLocFmt(k, v);
 //        String rnt = "";
 //        switch (op) {
 //            case JOIN:

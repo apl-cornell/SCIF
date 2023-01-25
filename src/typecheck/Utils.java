@@ -74,15 +74,7 @@ public class Utils {
         return new IfConstraint();
     }*/
 
-    public static String getLabelNamePc(String prefix) {
-        if (prefix.equals("")) {
-            return "PC";
-        } else {
-            return prefix + "." + "PC";
-        }
-    }
-
-    public static String getLabelNamePc(CodeLocation location) {
+    public static String getLabelNamePc(String location) {
         if (location == null) {
             return "PC";
         } else {
@@ -90,7 +82,7 @@ public class Utils {
         }
     }
 
-    public static String getLabelNameLock(CodeLocation location) {
+    public static String getLabelNameLock(String location) {
         if (location == null) {
             return "LK";
         } else {
@@ -103,33 +95,33 @@ public class Utils {
         }*/
     }
 
-    public static String getLabelNameInLock(CodeLocation location) {
-        if (location == null) {
+    public static String getLabelNameInLock(String funcFullName) {
+        if (funcFullName == null) {
             return "ILK";
         } else {
-            return location.toString() + "." + "ILK";
+            return funcFullName + "." + "ILK";
         }
     }
 
-    public static String getLabelNameFuncCallPcBefore(String funcName) {
+    /*public static String getLabelNameFuncCallPcBefore(String funcName) {
         return funcName + "." + "call.pc.bfr";
-    }
+    }*/
 
-    public static String getLabelNameFuncCallPcAfter(String funcName) {
-        return funcName + "." + "call.pc.aft";
-    }
+//    public static String getLabelNameFuncCallPcAfter(String funcName) {
+//        return funcName + "." + "call.pc.aft";
+//    }
 
-    public static String getLabelNameCallPcEnd(String funcName) {
-        return funcName + "." + "call.pc.end";
-    }
+//    public static String getLabelNameCallPcEnd(String funcName) {
+//        return funcName + "." + "call.pc.end";
+//    }
 
     public static String getLabelNameFuncCallLock(String funcName) {
         return funcName + "." + "call.lk";
     }
 
-    public static String getLabelNameFuncCallGamma(String funcName) {
-        return funcName + "." + "gamma.lk";
-    }
+//    public static String getLabelNameFuncCallGamma(String funcName) {
+//        return funcName + "." + "gamma.lk";
+//    }
 
     /*public static String getLabelNameFuncCallBefore(String funcName) {
         return funcName + ".." + "call.before";
@@ -244,7 +236,7 @@ public class Utils {
                     if (principal.getName().equals("TOP")) {
                         top = principal;
                     }
-                    consFile.write("CONSTRUCTOR " + principal.toSherrlocFmt() + " 0\n");
+                    consFile.write("CONSTRUCTOR " + principal.toSHErrLocFmt() + " 0\n");
                 }
             }
             if (!assumptions.isEmpty() || isIFC) {
@@ -254,10 +246,10 @@ public class Utils {
                 if (isIFC) {
                     for (Sym x : constructors) {
                         if (!x.equals(bot) && !x.equals(top)) {
-                            consFile.write(bot.toSherrlocFmt() + " >= " + x.toSherrlocFmt() + ";" + "\n");
+                            consFile.write(bot.toSHErrLocFmt() + " >= " + x.toSHErrLocFmt() + ";" + "\n");
                         }
                         if (!x.equals(top)) {
-                            consFile.write(top.toSherrlocFmt() + " <= " + x.toSherrlocFmt() + ";" + "\n");
+                            consFile.write(top.toSHErrLocFmt() + " <= " + x.toSHErrLocFmt() + ";" + "\n");
                         }
                     }
                 }
@@ -324,7 +316,7 @@ public class Utils {
                     }
                 }
                 for (Constraint con : assumptions) {
-                    //  consFile.write(con.toSherrlocFmt(false) + "\n");
+                    //  consFile.write(con.toSHErrLocFmt(false) + "\n");
                 }
                 //consFile.write("%%\n");
             } else {
@@ -332,7 +324,7 @@ public class Utils {
             }
             if (!constraints.isEmpty()) {
                 for (Constraint con : constraints) {
-                    //consFile.write(con.toSherrlocFmt(true) + "\n");
+                    //consFile.write(con.toSHErrLocFmt(true) + "\n");
                 }
             }
             //consFile.close();
@@ -346,10 +338,10 @@ public class Utils {
     protected static final Logger logger = LogManager.getLogger();
 
     public static FuncSym getCurrentFuncInfo(NTCEnv env, ScopeContext now) {
-        while (!(now.cur instanceof FunctionDef)) {
-            now = now.parent;
+        while (!(now.cur() instanceof FunctionDef)) {
+            now = now.parent();
         }
-        FunctionDef funcNode = (FunctionDef) now.cur;
+        FunctionDef funcNode = (FunctionDef) now.cur();
         Sym sym = env.getCurSym(funcNode.getName());
         return ((FuncSym) sym);
     }
@@ -471,7 +463,7 @@ public class Utils {
         SourceFile program = programMap.get(contractName);
 
         String rtn =
-                program.getSourceFileName() + "(" + slin + "," + scol + "): " + explanation + ".\n";
+                program.getSourceFileId() + "(" + slin + "," + scol + "): " + explanation + ".\n";
         rtn += program.getSourceCodeLine(lin - 1) + "\n";
         for (int i = 1; i < col; ++i) {
             rtn += " ";
@@ -527,7 +519,7 @@ public class Utils {
         SourceFile program = programMap.get(contractName);
 
         String rtn =
-                program.getSourceFileName() + "(" + slin + "," + scol + "): " + explanation + ".\n";
+                program.getSourceFileId() + "(" + slin + "," + scol + "): " + explanation + ".\n";
         rtn += program.getSourceCodeLine(lin - 1) + "\n";
         for (int i = 1; i < col; ++i) {
             rtn += " ";
@@ -551,17 +543,17 @@ public class Utils {
 
     public static void contextFlow(VisitEnv env, Context outContext, Context funcEndContext,
             CodeLocation location) {
-        env.trustCons.add(new Constraint(new Inequality(outContext.lambda, funcEndContext.lambda),
+        env.addTrustConstraint(new Constraint(new Inequality(outContext.lambda, funcEndContext.lambda),
                 env.hypothesis, location, env.curContractSym.getName(),
                 "actually-maintained lock of the last sub-statement flows to parent-statement's one"));
-        env.trustCons.add(
+        env.addTrustConstraint(
                 new Constraint(new Inequality(outContext.pc, funcEndContext.pc), env.hypothesis,
                         location, env.curContractSym.getName(),
                         "normal termination control flow of the last sub-statement flows to parent-statement's one"));
     }
 
     public static ExceptionTypeSym getNormalPathException() {
-        return new ExceptionTypeSym("*n", null, new ArrayList<>());
+        return new ExceptionTypeSym("*n", null, new ArrayList<>(), globalScopeContext());
     }
 
     public static PsiUnit joinPsiUnit(PsiUnit u1, PsiUnit u2) {
@@ -573,7 +565,7 @@ public class Utils {
     }
 
     public static ExceptionTypeSym getReturnPathException() {
-        return new ExceptionTypeSym("*r", null, new ArrayList<>());
+        return new ExceptionTypeSym("*r", null, new ArrayList<>(), globalScopeContext());
     }
 
     public static void addBuiltInTypes(SymTab symTab) {
@@ -582,6 +574,14 @@ public class Utils {
             TypeSym s = new BuiltinTypeSym(typeName);
             symTab.add(typeName, s);
         }
+    }
+
+    public static CodeLocation placeholder() {
+        return new CodeLocation();
+    }
+
+    public static ScopeContext globalScopeContext() {
+        return new ScopeContext(null, null);
     }
 }
 

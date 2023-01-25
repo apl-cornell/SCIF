@@ -4,30 +4,51 @@ import compile.SolCode;
 import typecheck.*;
 
 import java.util.*;
+import java.util.Map;
 
 // A program only contains one contract
 public class SourceFile extends Node {
+    static Map<String, String> sourceFileNameIds = new HashMap<>();
+    static int idCounter = 0;
 
-    String sourceFileName; // e.g., "A.scif"
-    Set<String> iptContracts; // imported contracts
-    Contract contract;
-    String contractName;
-    String filePath;
+    private String sourceFileFullName; // e.g., "A.scif"
+    private String sourceFileNameId;
+    private Set<String> iptContracts; // imported contracts
+    private Contract contract;
+    private String contractName;
+    private String filePath;
 
     /*
         @sourceCode represents the source code in lines
      */
-    List<String> sourceCode;
+    private List<String> sourceCode;
 
     public SourceFile(String sourceFileName, Set<String> iptContracts, Contract contract) {
-        this.sourceFileName = sourceFileName;
+        this.sourceFileFullName = sourceFileName;
+        this.sourceFileNameId = sourceFileNameId(sourceFileName);
         contractName = contract.contractName;
         this.iptContracts = iptContracts;
         this.contract = contract;
         sourceCode = null;
     }
 
+    /**
+     * return s + id
+     * @param sourceFileName
+     * @return
+     */
+    private static String sourceFileNameId(String sourceFileName) {
+        if (!sourceFileNameIds.containsKey(sourceFileName)) {
+            String id = "s" + idCounter;
+            ++idCounter;
+            sourceFileNameIds.put(sourceFileName, id);
+        }
+        return sourceFileNameIds.get(sourceFileName);
+    }
+
     public SourceFile(String sourceFileName, Contract contract) {
+        this.sourceFileFullName = sourceFileName;
+        this.sourceFileNameId = sourceFileNameId(sourceFileName);
         contractName = contract.contractName;
         this.iptContracts = new HashSet<>();
         this.contract = contract;
@@ -80,6 +101,7 @@ public class SourceFile extends Node {
     }
 
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
         for (String iptContract : iptContracts) {
             if (!env.containsContract(iptContract)) {
                 logger.debug("not containing imported contract: " + iptContract);
@@ -89,7 +111,7 @@ public class SourceFile extends Node {
         // env.setGlobalSymTab(new SymTab());
         env.setCurSymTab(env.globalSymTab());
         // Utils.addBuiltInASTNode(env.globalSymTab, contract.trustSetting);
-        if (!contract.ntcGlobalInfo(env, parent)) {
+        if (!contract.ntcGlobalInfo(env, now)) {
             logger.debug("GlobalInfo failed with: " + contract);
             return false;
         }
@@ -148,8 +170,8 @@ public class SourceFile extends Node {
         return contract;
     }
 
-    public String getSourceFileName() {
-        return sourceFileName;
+    public String getSourceFileFullName() {
+        return sourceFileFullName;
     }
 
     /**
@@ -157,5 +179,19 @@ public class SourceFile extends Node {
      */
     public void addBuiltIns() {
         contract.addBuiltIns();
+    }
+
+    public String getSourceFileId() {
+        return sourceFileNameId;
+    }
+
+    @Override
+    public void passScopeContext(ScopeContext parent) {
+        scopeContext = new ScopeContext(this, parent);
+        for (Node node : children()) {
+            if (node != null) {
+                node.passScopeContext(scopeContext);
+            }
+        }
     }
 }

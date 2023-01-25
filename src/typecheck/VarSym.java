@@ -1,6 +1,6 @@
 package typecheck;
 
-import ast.IfLabel;
+import ast.LabeledType;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 
@@ -11,11 +11,11 @@ public class VarSym extends Sym {
     public boolean isStatic;
     public boolean isFinal;
     public TypeSym typeSym;
-    public IfLabel ifl;
+    public Label ifl;
 
-    public CodeLocation location; // where it is defined
-    public ScopeContext defContext;
+    public CodeLocation location; // where it is declared
 
+    /*
     public VarSym() {
         super(Utils.ANONYMOUS_VARIABLE_NAME);
         this.typeSym = null;
@@ -24,15 +24,14 @@ public class VarSym extends Sym {
         this.isStatic = false;
         this.isFinal = false;
         this.ifl = null;
-    }
+    }*/
 
-    public VarSym(String localName, TypeSym type, IfLabel ifl, CodeLocation location, ScopeContext context, boolean isConst, boolean isFinal) {
-        super(localName);
+    public VarSym(String localName, TypeSym type, Label ifl, CodeLocation location, ScopeContext context, boolean isConst, boolean isFinal) {
+        super(localName, context);
         // this.name = localName;
         this.typeSym = type;
         this.ifl = ifl;
         this.location = location;
-        this.defContext = context;
         this.isStatic = isConst;
         this.isFinal = isFinal;
     }
@@ -46,26 +45,25 @@ public class VarSym extends Sym {
     }*/
 
     public VarSym(VarSym varSym) {
-        super(varSym.getName());
+        super(varSym.getName(), varSym.defContext());
         // this.name = varSym.name;
         this.typeSym = varSym.typeSym;
         this.ifl = varSym.ifl;
         this.location = varSym.location;
-        this.defContext = varSym.defContext;
         this.isStatic = varSym.isStatic;
         this.isFinal = varSym.isFinal;
     }
 
-    public String getLabel() {
-        if (ifl != null) {
-            return ifl.toSherrlocFmt(defContext);
-        } else {
-            return null;
-        }
-    }
-//    public String getLabel(String namespace) {
+    /**
+     * Return the value of this symbol's label in SHErrLoc format
+     * @return
+     */
+    // public String getLabelValueSLC() {
+        //return ifl.toSHErrLocFmt();
+    //}
+//    public String getLabelValueSLC(String namespace) {
 //        if (ifl != null) {
-//            return ifl.toSherrlocFmt(namespace);
+//            return ifl.toSHErrLocFmt(namespace);
 //        } else {
 //            return null;
 //        }
@@ -78,21 +76,23 @@ public class VarSym extends Sym {
 //        ifl.replace(k, v);
 //    }
 
-    @Override
-    public String toSherrlocFmt() {
-        System.out.println(getName());
-        return  defContext.getSHErrLocName() + "." + getName();
-        // return fullName;// + ".." + "lblVar";
-    }
-    public String labelToSherrlocFmt() {return  toSherrlocFmt() + ".." + "lbl"; }
+    public String labelNameSLC() {return  toSHErrLocFmt() + ".." + "lbl"; }
+    public String labelValueSLC() {return ifl.toSHErrLocFmt(); }
 
     static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();
     @Override
     public String toString() {
         return getName() + "|" + isStatic + "|" + isFinal + "|" +
                 typeSym + "|" +
-                // (ifl != null ? ifl.toSherrlocFmt(defContext) + "|" : "") +
+                // (ifl != null ? ifl.toSHErrLocFmt(defContext) + "|" : "") +
                 (location != null ? location.toString() : "");
     }
 
+    public CodeLocation labelLocation() {
+        return ifl.location();
+    }
+
+    public void setLabel(Label label) {
+        ifl = label;
+    }
 }

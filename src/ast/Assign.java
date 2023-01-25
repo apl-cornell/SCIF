@@ -34,8 +34,8 @@ public class Assign extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         // Context prevContext = env.prevContext;
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
@@ -44,7 +44,7 @@ public class Assign extends Statement {
         String ifNameTgt = "";
         if (target instanceof Name) {
             //Assuming target is Name
-            ifNameTgt = env.getVar(((Name) target).id).labelToSherrlocFmt();
+            ifNameTgt = env.getVar(((Name) target).id).labelNameSLC();
         } else if (target instanceof Subscript || target instanceof Attribute) {
             // env.prevContext = valueContext;
             /*env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, valueContext.lambda), env.hypothesis, value.location, env.curContractSym.name,

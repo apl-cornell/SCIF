@@ -44,10 +44,10 @@ public class Subscript extends TrailerExpr {
     @Override
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         VarSym valueVarSym = value.getVarInfo(env, false);
-        String ifNameValue = valueVarSym.labelToSherrlocFmt();
+        String ifNameValue = valueVarSym.labelNameSLC();
         String ifNameRtnValue = ifNameValue + "." + "Subscript" + location.toString();
 
         // String ifNameRtnLock = "";
@@ -57,11 +57,11 @@ public class Subscript extends TrailerExpr {
             logger.debug("subscript/DepMap:");
             logger.debug("lookup at: " + index.toString());
             logger.debug(indexVarSym.toString());
-            String ifNameIndex = indexVarSym.toSherrlocFmt();
+            String ifNameIndex = indexVarSym.toSHErrLocFmt();
 
             if (indexVarSym.typeSym.getName().equals(Utils.ADDRESSTYPE)) {
                 logger.debug("typename {} to {}", valueVarSym.typeSym.getName(), ifNameIndex);
-//                String ifDepMapValue = (valueVarSym).ifl.toSherrlocFmt(valueVarSym.typeSym.getName(),
+//                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(valueVarSym.typeSym.getName(),
 //                        ifNameIndex);
 
 //                env.cons.add(
@@ -95,19 +95,19 @@ public class Subscript extends TrailerExpr {
     public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
         VarSym rtnVarSym = null;
         VarSym valueVarSym = value.getVarInfo(env, false);
-        String ifNameValue = valueVarSym.labelToSherrlocFmt();
+        String ifNameValue = valueVarSym.labelNameSLC();
         String ifNameRtn = ifNameValue + "." + "Subscript" + location.toString();
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
             assert false;
             VarSym indexVarSym = index.getVarInfo(env, tail_position);
-            String ifNameIndex = indexVarSym.toSherrlocFmt();
+            String ifNameIndex = indexVarSym.toSHErrLocFmt();
             if (indexVarSym.typeSym.getName().equals(Utils.ADDRESSTYPE)) {
 
                 TypeSym rtnTypeSym = ((DepMapTypeSym) valueVarSym.typeSym).valueType;
                 rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
-                        valueVarSym.defContext, false, false);
+                        valueVarSym.defContext(), false, false);
 
-//                String ifDepMapValue = (valueVarSym).ifl.toSherrlocFmt(valueVarSym.typeSym.getName(),
+//                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(valueVarSym.typeSym.getName(),
 //                        ifNameIndex);
 
 //                env.cons.add(
@@ -137,9 +137,14 @@ public class Subscript extends TrailerExpr {
             TypeSym rtnTypeSym = new BuiltinTypeSym(ifNameRtn);
             //TODO: more careful thoughts
             rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
-                    valueVarSym.defContext, false, false);
+                    valueVarSym.defContext(), false, false);
         }
         return rtnVarSym;
+    }
+
+    @Override
+    public VarSym getVarInfo(NTCEnv env) {
+        return null;
     }
 
     @Override

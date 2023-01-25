@@ -25,8 +25,8 @@ public class ConstantExpr extends Expression {
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
 
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         //env.outContext = endContext;
         env.cons.add(new Constraint(new Inequality(beginContext.pc, endContext.pc), env.hypothesis,
                 location, env.curContractSym.getName(),

@@ -15,11 +15,10 @@ public class TestIfcTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            // "basic/EmptyContract",
-            // "basic/ExceptionThrowAndCatch",
-            // "ifcTypechecking/LocalTrust",
-            // "ifcTypechecking/Wallet_lock_exception",
-            // "ifcTypechecking/Wallet_lock_exception_W01",
+            "basic/EmptyContract",
+            "basic/ExceptionThrowAndCatch",
+            "ifcTypechecking/LocalTrust",
+            "ifcTypechecking/Wallet_lock_exception",
             "basic/Seq",
             // "examples/ERC20"
     })
@@ -59,7 +58,7 @@ public class TestIfcTypechecking {
     @ParameterizedTest
     @ValueSource(strings = {
             "ifcTypechecking/LocalTrust_W01",
-            // "ifcTypechecking/Wallet_lock_exception",
+            "ifcTypechecking/Wallet_lock_exception_W01",
             // "examples/ERC20"
     })
     void testNegtiveIfcTypechecking(String contractName) {

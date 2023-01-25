@@ -39,10 +39,10 @@ public class Arguments extends Node {
     }
 
     public ArrayList<VarSym> parseArgs(NTCEnv env, ScopeContext parent) {
-        ScopeContext now = new ScopeContext(this, parent);
+        // ScopeContext now = new ScopeContext(this, parent);
         ArrayList<VarSym> rnt = new ArrayList<>();
         for (Arg arg : args) {
-            rnt.add(arg.parseArg(env, now));
+            rnt.add(arg.parseArg(env, parent));
         }
         return rnt;
     }

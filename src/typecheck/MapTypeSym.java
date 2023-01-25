@@ -11,15 +11,15 @@ public class MapTypeSym extends TypeSym {
     /*public MapTypeSym() {
     }*/
 
-    public MapTypeSym(TypeSym keyType, TypeSym valueType) {
-        super(getMapName(keyType, valueType));
+    public MapTypeSym(TypeSym keyType, TypeSym valueType, ScopeContext defContext) {
+        super(getMapName(keyType, valueType), defContext);
         this.keyType = keyType;
         this.valueType = valueType;
         // this.name = getName();
     }
 
     public MapTypeSym(MapTypeSym depMapTypeInfo) {
-        super(depMapTypeInfo.getName());
+        super(depMapTypeInfo.getName(), depMapTypeInfo.defContext());
         keyType = depMapTypeInfo.keyType;
         valueType = depMapTypeInfo.valueType;
         // name = getName();

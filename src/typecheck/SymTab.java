@@ -34,6 +34,9 @@ public class SymTab {
     public void add(String id, Sym sym) {
         // System.out.println("sym add: " + id + " @" + this);
         // System.out.println(sym.name);
+        if (table.containsKey(id)) {
+            throw new RuntimeException("SymTab adding a symbol that existed: " + id);
+        }
         table.put(id, sym);
     }
 

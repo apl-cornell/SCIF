@@ -22,8 +22,8 @@ public class IfConstraint {
     }
 //    public IfConstraint(String op, IfLabel left, IfLabel right, CodeLocation location, String contractName) {
 //        this.op = op;
-//        this.left = left.toSherrlocFmt(contractName);
-//        this.right = right.toSherrlocFmt(contractName);
+//        this.left = left.toSHErrLocFmt(contractName);
+//        this.right = right.toSHErrLocFmt(contractName);
 //        this.left = checkThis(this.left, contractName);
 //        this.right = checkThis(this.right, contractName);
 //
@@ -35,8 +35,8 @@ public class IfConstraint {
             return "";
         }
         String rnt = "";
-        String l = left;//.toSherrlocFmt();
-        String r = right;//.toSherrlocFmt();
+        String l = left;//.toSHErrLocFmt();
+        String r = right;//.toSHErrLocFmt();
         rnt = l + " " + op + " " + r + "; ";
         if (withPosition && codeLocation.valid())
             rnt += "[" + codeLocation.toSherrlocFmt() + "]\n";

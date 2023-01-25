@@ -140,7 +140,7 @@ public class TypeChecker {
             return null;
         }
 
-        return result == true ? roots : null;
+        return result ? roots : null;
     }
 
     public static boolean ifcTypecheck(List<SourceFile> roots, List<File> outputFiles,
@@ -217,37 +217,45 @@ public class TypeChecker {
         return true;
     }
 
+    /**
+     * Create constraints for the signature of a contract.
+     * TODO: more detailed doc
+     * @param contractName
+     * @param env
+     * @param namespace
+     * @param curContractName
+     */
     private static void buildSignatureConstraints(String contractName, VisitEnv env,
             String namespace, String curContractName) {
         List<Constraint> cons = env.cons;
-        List<Constraint> trustCons = env.trustCons;
+        // List<Constraint> trustCons = env.trustCons;
         // String contractName = root.getContractName();//contractNames.get(fileIdx);
         ContractSym contractSym = env.getContract(contractName);
-        logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n"
+        logger.debug("current Contract: " + contractName + "\n" + contractSym + "\n"
                 + env.curSymTab.getTypeSet());
         // generate trust relationship dec constraints
 
-        if (!namespace.equals("")) {
-            trustCons.add(
-                    new Constraint(new Inequality(namespace, Relation.EQ, namespace + "..this"),
-                            null, curContractName,
-                            "TODO"));
-        }
-        String ifNameContract = contractSym.getLabelNameContract();
-        String ifContract = contractSym.getLabelContract();
-        if (namespace.equals("")) {
-            cons.add(new Constraint(new Inequality(ifNameContract, Relation.EQ, ifContract),
-                    contractSym.ifl.getLocation(), contractName,
-                    "The Code integrity label of contract " + ifNameContract + " may be incorrect"));
+//        if (!namespace.equals("")) {
+//            env.addTrustConstraint(
+//                    new Constraint(new Inequality(namespace, Relation.EQ, namespace + "..this"),
+//                            null, curContractName,
+//                            "TODO"));
+//        }
+        // String ifNameContract = contractSym.getLabelNameContract();
+        // String ifContract = contractSym.getLabelContract();
+        if (namespace.equals(curContractName)) {
+//            cons.add(new Constraint(new Inequality(ifNameContract, Relation.EQ, ifContract),
+//                    Utils.placeholder(), contractName,
+//                    "The Code integrity label of contract " + ifNameContract + " may be incorrect"));
 
-            for (TrustConstraint trustConstraint : contractSym.trustSetting.getTrust_list()) {
-                trustCons.add(new Constraint(
-                        new Inequality(trustConstraint.lhs.toSherrlocFmt(env.getScopeContext()),
-                                trustConstraint.optor,
-                                trustConstraint.rhs.toSherrlocFmt(env.getScopeContext())),
-                        trustConstraint.getLocation(), contractName,
+            for (Assumption assumption : contractSym.assumptions()) {
+                env.addTrustConstraint(new Constraint(
+                        assumption.toInequality(),
+                        assumption.location(), contractName,
                         "Static trust relationship"));
             }
+        } else {
+            // TODO: handle the assumptions of other contracts
         }
 
         env.curContractSym = contractSym;
@@ -256,39 +264,39 @@ public class TypeChecker {
 
         for (HashMap.Entry<String, FuncSym> funcPair : contractSym.symTab.getFuncs().entrySet()) {
             FuncSym func = funcPair.getValue();
+            logger.debug("add func's sig constraints: [" + func.funcName + "]");
             //TODO: simplify
             namespace = "";
-            String ifNameCallBeforeLabel = func.getLabelNameCallPcBefore(namespace);
-            String ifNameCallAfterLabel = func.getLabelNameCallPcAfter(namespace);
+            String ifNameCallBeforeLabel = func.externalPcSLC();
+            String ifNameCallAfterLabel = func.internalPcSLC();
             // String ifNameCallLockLabel = func.getLabelNameCallLock(namespace);
-            String ifNameCallGammaLabel = func.getLabelNameCallGamma(namespace);
+            String ifNameCallGammaLabel = func.getLabelNameCallGamma();
             String ifCallBeforeLabel = func.getCallPcLabel(namespace);
             String ifCallAfterLabel = func.getCallAfterLabel(namespace);
             String ifCallLockLabel = func.getCallLockLabel(namespace);
-            logger.debug("add func's sig constraints: [" + func.funcName + "]");
             // logger.debug(ifNameCallBeforeLabel + "\n" + ifNameCallAfterLabel + "\n" + ifNameCallLockLabel + "\n" + ifCallAfterLabel + "\n" +ifCallLockLabel);
             if (ifCallBeforeLabel != null) {
                 cons.add(new Constraint(
                         new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel),
-                        func.funcLabels.begin_pc.getLocation(), contractName,
+                        func.external_pc.location(), contractName,
                         "Integrity requirement to call this method may be incorrect"));
             }
             if (ifCallAfterLabel != null) {
                 cons.add(new Constraint(
                         new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel),
-                        func.funcLabels.to_pc.getLocation(), contractName,
+                        func.internal_pc.location(), contractName,
                         "Integrity pc level autoendorsed to when calling this method may be incorrect"));
             }
 
             if (ifCallLockLabel != null) {
                 cons.add(new Constraint(
                         new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallGammaLabel),
-                        func.funcLabels.gamma_label.getLocation(), contractName,
+                        func.gamma.location(), contractName,
                         "The final reentrancy lock label may be declared incorrectly"));
 
             }
 
-            String ifNameReturnLabel = func.getLabelNameRtnValue();
+            String ifNameReturnLabel = func.returnSLC();
             String ifReturnLabel = func.getRtnValueLabel(namespace);
             if (ifReturnLabel != null) {
                 cons.add(new Constraint(
@@ -299,15 +307,17 @@ public class TypeChecker {
 
             for (int i = 0; i < func.parameters.size(); ++i) {
                 VarSym arg = func.parameters.get(i);
-                String ifNameArgLabel = func.getLabelNameArg(namespace, i);
-                String ifArgLabel = namespace + "." + arg.getLabel();
+                String ifNameArgLabel = func.getLabelNameArg(i);
+//                String ifArgLabel = namespace + "." + arg.getLabelValueSLC();
+                String ifArgLabel = arg.labelValueSLC();
+
                 if (ifArgLabel != null) {
                     cons.add(new Constraint(new Inequality(ifNameArgLabel, Relation.EQ, ifArgLabel),
-                            arg.ifl.getLocation(), contractName,
+                            arg.labelLocation(), contractName,
                             "Argument " + arg.getName() + " may be labeled incorrectly"));
-                    trustCons.add(
+                    env.addTrustConstraint(
                             new Constraint(new Inequality(ifNameCallBeforeLabel, ifNameArgLabel),
-                                    arg.ifl.getLocation(), contractName,
+                                    arg.labelLocation(), contractName,
                                     "Argument " + arg.getName()
                                             + " must be no more trusted than caller's integrity"));
                 }
@@ -334,8 +344,9 @@ public class TypeChecker {
         //System.err.println("Display varMap:\n");
         for (HashMap.Entry<String, VarSym> varPair : contractSym.symTab.getVars().entrySet()) {
             VarSym var = varPair.getValue();
-            String varName = var.labelToSherrlocFmt();
-            String ifLabel = var.getLabel();
+            String varName = var.labelNameSLC();
+            logger.debug(varName);
+            String ifLabel = var.labelValueSLC();
             if (ifLabel != null && varName != null) {
                 env.cons.add(
                         new Constraint(new Inequality(varName, Relation.EQ, ifLabel), var.location,
@@ -345,7 +356,6 @@ public class TypeChecker {
                 //env.cons.add(new Constraint(new Inequality(if Label, varName), var.location));
 
             }
-            logger.debug(varName);
             logger.debug(": {}", var);
             //System.err.println(varName);
             //System.err.println(": " + var + "\n");
@@ -369,7 +379,7 @@ public class TypeChecker {
         });
 
         System.out.println("prinSet size: " + env.principalSet().size());
-        if (!Utils.writeCons2File(env.curContractSym.getPrincipalSet(), env.trustCons, env.cons, outputFile, true)) {
+        if (!Utils.writeCons2File(env.curContractSym.getPrincipalSet(), env.trustCons(), env.cons, outputFile, true)) {
             return true;
         }
         boolean result = false;

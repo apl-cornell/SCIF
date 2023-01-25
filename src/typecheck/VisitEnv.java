@@ -2,6 +2,8 @@ package typecheck;
 
 import ast.ExceptionType;
 import ast.SourceFile;
+import java.util.Collections;
+import typecheck.exceptions.NameNotFoundException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 
@@ -15,7 +17,7 @@ public class VisitEnv {
     // public PathOutcome outContext;
     // public HashMap<String, FuncInfo> funcMap;
     public List<Constraint> cons;
-    public List<Constraint> trustCons;
+    private List<Constraint> trustCons;
     // public LookupMaps varNameMap;
     public SymTab globalSymTab;
     public SymTab curSymTab;
@@ -62,35 +64,22 @@ public class VisitEnv {
         // this.sigConsMap = sigConsMap;
     }
 
-    /*public VisitEnv() {
-        // ctxt = null;
-        inContext = new Context();
-        outContext = new PsiUnit();
-        // funcMap = new HashMap<>();
-        cons = new ArrayList<>();
-        trustCons = new ArrayList<>();
-        globalSymTab = new SymTab();
-        curSymTab = globalSymTab;
-        // varNameMap = new LookupMaps();
-        hypothesis = new Hypothesis();
-        principalSet = new HashSet<>();
-        curContractSym = null;
-        programMap = new HashMap<>();
-        psi = new HashMap<>();
-        // contractMap = new HashMap<>();
-        //sigConsMap = new HashMap<>();
-    }*/
-
     public void addVar(String id, VarSym varSym) {
-        curContractSym.addVar(id, varSym);
+        curSymTab.add(id, varSym);
     }
 
-    public VarSym getVar(String id) {
+    /**
+     * Should never fail
+     * @param id
+     * @return
+     */
+    public VarSym getVar(String id)  {
         Sym sym = curSymTab.lookup(id);
         if (sym instanceof VarSym)
             return (VarSym) sym;
-        else
-            return null;
+        else {
+            throw new RuntimeException("VisitEnv getVar failure:" + id + " " + sym);
+        }
     }
 
     public ContractSym getContract(String id) {
@@ -174,5 +163,13 @@ public class VisitEnv {
 
     public Set<Sym> principalSet() {
         return principalSet;
+    }
+
+    public List<Constraint> trustCons() {
+        return Collections.unmodifiableList(trustCons);
+    }
+
+    public void addTrustConstraint(Constraint constraint) {
+        trustCons.add(constraint);
     }
 }

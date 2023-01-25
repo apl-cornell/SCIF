@@ -2,7 +2,6 @@ package ast;
 
 import compile.SolCode;
 import java.util.ArrayList;
-import java.util.HashSet;
 import typecheck.CodeLocation;
 import typecheck.Context;
 import typecheck.ContractSym;
@@ -18,6 +17,10 @@ import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 
+/**
+ * A node that represents a state variable declaration in a contract.
+ * Should be labeled or be assigned a default label.
+ */
 public class StateVariableDeclaration extends TopLayerNode {
 
     Name name;
@@ -59,22 +62,14 @@ public class StateVariableDeclaration extends TopLayerNode {
         this.isStatic = isStatic;
     }
 
-    public VarSym toVarInfo(ContractSym contractSym) {
-        IfLabel ifl = null;
-        if (type instanceof LabeledType) {
-            ifl = ((LabeledType) type).ifl;
-        }
-        return contractSym.toVarSym(name.id, type, isStatic, isFinal, location,
-                scopeContext);
-    }
-
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
-        ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext tgt = new ScopeContext(name, now);
+        // ScopeContext now = new ScopeContext(this, parent);
+        // ScopeContext tgt = new ScopeContext(name, now);
 
         String vname = name.id;
-        env.globalSymTab().add(vname,
-                env.toVarSym(vname, type, isStatic, isFinal, location, tgt));
+        VarSym varSym = env.toVarSym(vname, type, isStatic, isFinal, location, parent);
+        // assert varSym.ifl != null;
+        env.globalSymTab().add(vname, varSym);
         return true;
     }
 
@@ -82,9 +77,9 @@ public class StateVariableDeclaration extends TopLayerNode {
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         // if (!parent.isContractLevel()) {
-        String vname = name.id;
-        env.addSym(vname,
-                new VarSym(env.toVarSym(vname, type, isStatic, isFinal, location, now)));
+//        String vname = name.id;
+//        env.addSym(vname,
+//                new VarSym(env.toVarSym(vname, type, isStatic, isFinal, location, now)));
         // }
         ScopeContext vtype = type.ntcGenCons(env, now);
         ScopeContext tgt = name.ntcGenCons(env, now);
@@ -102,14 +97,18 @@ public class StateVariableDeclaration extends TopLayerNode {
     public void globalInfoVisit(ContractSym contractSym) {
         String id = name.id;
         CodeLocation loc = location;
-        contractSym.addVar(id,
-                contractSym.toVarSym(id, type, isStatic, isFinal, loc, scopeContext));
+        System.err.println(id + " " + type.ifl);
+        VarSym varSym =
+                contractSym.toVarSym(id, type, isStatic, isFinal, loc, contractSym.defContext());
+        contractSym.addVar(id, varSym);
+        varSym.setLabel(contractSym.toLabel(type.ifl));
+        assert varSym.ifl != null;
     }
 
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         logger.debug("entering AnnAssign: \n");
         // logger.debug(this.toString() + "\n");
@@ -117,29 +116,29 @@ public class StateVariableDeclaration extends TopLayerNode {
         VarSym varSym;
         String id = name.id;
         logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
-        if (!scopeContext.isContractLevel()) {
-            CodeLocation loc = location;
-            varSym = env.curContractSym.toVarSym(id, type, isStatic, isFinal, loc,
-                    scopeContext);
-            // ifNameTgt = varSym.toSherrlocFmt();
-            // (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
-            // varSym = env.contractInfo.toVarInfo(id, annotation, isConst, loc);
-            env.addVar(id, varSym);
-            // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
-            if (type instanceof LabeledType) {
-                String ifLabel = ((LabeledType) type).ifl.toSherrlocFmt(scopeContext);
-                env.cons.add(new Constraint(
-                        new Inequality(ifLabel, Relation.EQ, varSym.labelToSherrlocFmt()),
-                        env.hypothesis, location, env.curContractSym.getName(),
-                        "Variable " + varSym.getName() + " may be labeled incorrectly"));
-            }
-        } else {
+//        if (!scopeContext.isContractLevel()) {
+//            CodeLocation loc = location;
+//            varSym = env.curContractSym.toVarSym(id, type, isStatic, isFinal, loc,
+//                    scopeContext);
+//            // ifNameTgt = varSym.toSHErrLocFmt();
+//            // (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
+//            // varSym = env.contractInfo.toVarInfo(id, annotation, isConst, loc);
+//            env.addVar(id, varSym);
+//            // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
+//            if (type instanceof LabeledType) {
+//                // String ifLabelValue = ((LabeledType) type).ifl.toSHErrLocFmt(scopeContext);
+//                env.cons.add(new Constraint(
+//                        new Inequality(varSym.labelNameSLC(), Relation.EQ, varSym.labelValueSLC()),
+//                        env.hypothesis, location, env.curContractSym.getName(),
+//                        "Variable " + varSym.getName() + " may be labeled incorrectly"));
+//            }
+//        } else {
             // ifNameTgt = ((Name) target).id;
             varSym = env.getVar(id);
-        }
+//        }
         logger.debug(varSym.getName());
-        SLCNameVar = varSym.toSherrlocFmt();
-        SLCNameVarLbl = varSym.labelToSherrlocFmt();
+        SLCNameVar = varSym.toSHErrLocFmt();
+        SLCNameVarLbl = varSym.labelNameSLC();
         logger.debug(varSym.typeSym.getName());
         if (varSym.typeSym.getName().equals(Utils.ADDRESSTYPE) || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
             env.principalSet().add(varSym);

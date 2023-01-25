@@ -58,7 +58,7 @@ public class Throw extends Statement {
             exceptionSym = ((ExceptionTypeSym) s);
         }
         // check if the parameter number matches
-        if (exceptionSym.parameters.size() != exception.args.size()) {
+        if (exceptionSym.parameters().size() != exception.args.size()) {
             System.err.println("Throwing an exception " + exceptionSym.getName() + " with unmatched parameter number at " + "location: "
                     + location.toString());
             throw new RuntimeException();
@@ -67,10 +67,10 @@ public class Throw extends Statement {
         // typecheck arguments
         for (int i = 0; i < exception.args.size(); ++i) {
             Expression arg = exception.args.get(i);
-            TypeSym paraInfo = exceptionSym.parameters.get(i).typeSym;
+            TypeSym paraInfo = exceptionSym.parameters().get(i).typeSym;
             ScopeContext argContext = arg.ntcGenCons(env, now);
-            String typeName = env.getSymName(paraInfo.getName());
-            Constraint argCon = argContext.genCons(typeName, Relation.GEQ, env, arg.location);
+            String typeNameSLC = paraInfo.toSHErrLocFmt();
+            Constraint argCon = argContext.genCons(typeNameSLC, Relation.GEQ, env, arg.location);
             env.addCons(argCon);
             System.out.println(paraInfo.getName());
             System.out.println(argCon.toSherrlocFmt(true));
@@ -94,8 +94,8 @@ public class Throw extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         PathOutcome psi = new PathOutcome(new PsiUnit(beginContext));
         ExpOutcome ao = null;
 
@@ -112,7 +112,7 @@ public class Throw extends Statement {
         ExceptionTypeSym expSym = env.getExp(expName);
 
         PsiUnit expUnit = new PsiUnit(
-                new Context(Utils.joinLabels(beginContext.pc, expSym.ifl.toSherrlocFmt(scopeContext)),
+                new Context(Utils.joinLabels(beginContext.pc, expSym.getLabelValueSLC()),
                         psi.getNormalPath().c.lambda),
                 false);
         PathOutcome psi2 = new PathOutcome();

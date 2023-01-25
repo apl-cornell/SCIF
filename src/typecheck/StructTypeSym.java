@@ -8,7 +8,7 @@ public class StructTypeSym extends TypeSym {
     ScopeContext scopeContext;
 
     public StructTypeSym(String typeName, ArrayList<VarSym> members, ScopeContext scopeContext) {
-        super(typeName);
+        super(typeName, scopeContext);
         this.members = members;
         this.scopeContext = scopeContext;
     }
@@ -16,7 +16,7 @@ public class StructTypeSym extends TypeSym {
     public String getMemberLabel(String name) {
         for (VarSym mb : members) {
             if (mb.getName().equals(name)) {
-                return mb.ifl.toSherrlocFmt(scopeContext);
+                return mb.ifl.toSHErrLocFmt();
             }
         }
         return null;

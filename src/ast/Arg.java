@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import java.util.List;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -37,12 +38,13 @@ public class Arg extends Node {
     }
 
     public VarSym parseArg(NTCEnv env, ScopeContext parent) {
-        ScopeContext now = new ScopeContext(this, parent);
-        return env.toVarSym(name, annotation, false, false, location, now);
+        // ScopeContext now = new ScopeContext(this, parent);
+        return env.toVarSym(name, annotation, false, false, location, parent);
     }
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        // System.err.println(scopeContext);
         ScopeContext now = new ScopeContext(this, parent);
 
         ScopeContext type = annotation.ntcGenCons(env, now);
@@ -92,7 +94,7 @@ public class Arg extends Node {
     }
 
     @Override
-    public ArrayList<Node> children() {
+    public List<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(annotation);
         return rtn;

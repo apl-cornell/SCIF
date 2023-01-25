@@ -38,8 +38,8 @@ public class GuardBlock extends Statement {
         Context beginContext = env.inContext;
         Context curContext = new Context(beginContext.pc,
                 scopeContext.getSHErrLocName() + "." + "lockin" + location.toString());
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".guardBlock" + location.toString();
@@ -49,7 +49,8 @@ public class GuardBlock extends Statement {
 
         // env.prevContext.lambda = newLockLabel;
 
-        String guardLabel = l.toSherrlocFmt(scopeContext);
+        Label label = env.curContractSym.toLabel(l);
+        String guardLabel = label.toSHErrLocFmt();
 
         env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, curContext.lambda),
                 beginContext.lambda), env.hypothesis, location, env.curContractSym.getName(),
@@ -113,7 +114,7 @@ public class GuardBlock extends Statement {
             String rtnLockName = "";
             if (target instanceof Name) {
                 //Assuming target is Name
-                ifNameTgt = env.getVar(((Name) target).id).toSherrlocFmt();
+                ifNameTgt = env.getVar(((Name) target).id).toSHErrLocFmt();
                 rtnLockName = lastContext.lambda;
             } else if (target instanceof Subscript) {
                 env.prevContext = lastContext;

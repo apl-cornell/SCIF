@@ -13,8 +13,17 @@ public class PolyFuncSym extends FuncSym {
     HashSet<String> polyArgs;
     int applyCounter;
 
-    public PolyFuncSym(String funcName, FuncLabels funcLabels, ArrayList<Integer> polyArgList, ArrayList<VarSym> parameters, TypeSym returnType, IfLabel returnLabel, ScopeContext scopeContext, CodeLocation location) {
-        super(funcName, funcLabels, parameters, returnType, returnLabel, scopeContext, location);
+    public PolyFuncSym(String funcName,
+            Label external_pc,
+            Label internal_pc,
+            Label gamma, ArrayList<Integer> polyArgList, ArrayList<VarSym> parameters, TypeSym returnType,
+
+            Label returnLabel, ScopeContext scopeContext, CodeLocation location) {
+        super(funcName,
+                external_pc,
+                internal_pc,
+                gamma,
+                parameters, returnType, returnLabel, scopeContext, location);
         this.polyArgList = polyArgList;
         this.polyArgs = new HashSet<>();
         for (int i : polyArgList) {
@@ -28,9 +37,8 @@ public class PolyFuncSym extends FuncSym {
         applyCounter += 1;
     }
 
-    @Override
     public String getLabelNameCallPcAfter() {
-        String rtn = super.getLabelNameCallPcAfter();
+        String rtn = super.internalPcSLC();
         if (applyCounter > 0)
             return rtn + ".apply" + applyCounter;
         else
@@ -44,9 +52,8 @@ public class PolyFuncSym extends FuncSym {
         else
             return rtn;
     }*/
-    @Override
     public String getLabelNameRtnValue() {
-        String rtn = super.getLabelNameRtnValue();
+        String rtn = super.returnSLC();
         if (applyCounter > 0)
             return rtn + ".apply" + applyCounter;
         else

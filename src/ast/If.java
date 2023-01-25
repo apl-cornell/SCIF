@@ -53,8 +53,8 @@ public class If extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         // String originalCtxt = env.ctxt;
 
         // curContext.lambda = env.prevContext.lambda;
@@ -93,11 +93,11 @@ public class If extends Statement {
                         /*testedVar = ((TestableVarInfo) l);
                         beforeTestedLabel = testedVar.testedLabel;
                         tested = testedVar.tested;
-                        testedVar.setTested(r.toSherrlocFmt());*/
+                        testedVar.setTested(r.toSHErrLocFmt());*/
 
                         createdHypo = true;
-                        Inequality hypo = new Inequality(l.toSherrlocFmt(), bo.op,
-                                r.toSherrlocFmt());
+                        Inequality hypo = new Inequality(l.toSHErrLocFmt(), bo.op,
+                                r.toSHErrLocFmt());
 
                         env.hypothesis.add(hypo);
                         //System.err.println("testing label");

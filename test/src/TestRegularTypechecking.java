@@ -16,10 +16,10 @@ public class TestRegularTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            //"basic/EmptyContract",
-            //"basic/ExceptionThrowAndCatch",
+            "basic/EmptyContract",
+            "basic/ExceptionThrowAndCatch",
             "ifcTypechecking/Wallet_lock_exception",
-            // "ifcTypechecking/Wallet_lock_exception",
+             "ifcTypechecking/Wallet_lock_exception",
             // "examples/ERC20"
     })
     void testPositiveRegularTypechecking(String contractName) {

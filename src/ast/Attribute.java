@@ -33,7 +33,7 @@ public class Attribute extends TrailerExpr {
         VarSym rtnVarSym;
         VarSym parentVarSym = value.getVarInfo(env);
         StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;
-        rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSherrlocFmt(), attr.id);
+        rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
         return rtnVarSym;
     }
 
@@ -74,7 +74,7 @@ public class Attribute extends TrailerExpr {
         VarSym rtnVarSym;
         VarSym parentVarSym = value.getVarInfo(env, tail_position);
         StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;
-        rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSherrlocFmt(), attr.id);
+        rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
         return rtnVarSym;
     }
 

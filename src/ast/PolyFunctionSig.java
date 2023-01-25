@@ -46,9 +46,10 @@ public class PolyFunctionSig extends FunctionSig {
         if (rtn instanceof LabeledType) {
             ifl = ((LabeledType) rtn).ifl;
         }
-        contractSym.addFunc(funcId,
-                new PolyFuncSym(funcId, funcLabels, polyArgs, argsInfo, contractSym.toTypeSym(rtn),
-                        ifl, scopeContext, location));
+        assert false;
+//        contractSym.addFunc(funcId,
+//                new PolyFuncSym(funcId, funcLabels, polyArgs, argsInfo, contractSym.toTypeSym(rtn, scopeContext),
+//                        ifl, scopeContext, location));
     }
 
 

@@ -21,7 +21,7 @@ import typecheck.sherrlocUtils.Relation;
 
 public class PrimitiveIfLabel extends IfLabel {
 
-    Name value;
+    private final Name value;
     VarSym valueSym;
 
     public PrimitiveIfLabel(Name value) {
@@ -29,25 +29,28 @@ public class PrimitiveIfLabel extends IfLabel {
         location = Utils.BUILTIN_LOCATION;
     }
 
-
-    @Override
-    public String toSherrlocFmt(ScopeContext defContext) {
-        // TODO:
-        String rnt = null;
-        assert valueSym != null;
-        if (valueSym != null) {
-            String name = value.id;
-//            if (name.equals(Utils.LABEL_BOTTOM)) {
-//                rnt = Utils.SHERRLOC_BOTTOM;
-//            } else if (name.equals(Utils.LABEL_TOP)) {
-//                rnt = Utils.SHERRLOC_TOP;
-//            } else {
-//                rnt = valueSym.defContext.getSHErrLocName() + "." + name;
-//            }
-            return valueSym.toSherrlocFmt();
-        }
-        return rnt;
+    public Name value() {
+        return value;
     }
+//
+//    @Override
+//    public String toSHErrLocFmt(ScopeContext defContext) {
+//        // TODO:
+//        String rnt = null;
+//        assert valueSym != null;
+//        if (valueSym != null) {
+//            String name = value.id;
+////            if (name.equals(Utils.LABEL_BOTTOM)) {
+////                rnt = Utils.SHERRLOC_BOTTOM;
+////            } else if (name.equals(Utils.LABEL_TOP)) {
+////                rnt = Utils.SHERRLOC_TOP;
+////            } else {
+////                rnt = valueSym.defContext.getSHErrLocName() + "." + name;
+////            }
+//            return valueSym.toSHErrLocFmt();
+//        }
+//        return rnt;
+//    }
 
     public String toSherrlocFmt(String namespace) {
         String rnt = "";
@@ -150,23 +153,21 @@ public class PrimitiveIfLabel extends IfLabel {
 //        }
         Sym s = env.getCurSym(value.id);
         logger.debug("Label Name: " + value.id);
-        // logger.debug(s.toString());
+        logger.debug(s.toString());
         if (s instanceof VarSym) {
             valueSym = (VarSym) s;
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
             logger.debug(s.getName());
             if (!typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.PRINCIPAL)) && !typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.ADDRESS)) && !(typeSym instanceof ContractSym)) {
-                System.err.println("Primitive non-address/principal ifc label " + value.id + " at " + "location: "
-                    + location.toString());
-                throw new RuntimeException();
+                throw new RuntimeException("Primitive non-address/principal ifc label " + value.id + " at " + "location: "
+                        + location.toString());
             }
             logger.debug(now.toString());
             return now;
         } else {
-            System.err.println("Primitive undefined ifc label " + value.id + " at " + "location: "
+            throw new RuntimeException("Primitive undefined ifc label " + value.id + " at " + "location: "
                     + location.toString());
-            throw new RuntimeException();
         }
     }
 

@@ -67,6 +67,12 @@ public class FunctionSig extends TopLayerNode {
     private void setDefault() {
         funcLabels.setToDefault(isConstructor, this.decoratorList);
         args.setToDefault(funcLabels.begin_pc);
+        if (rtn instanceof LabeledType && ((LabeledType) rtn).ifl != null) {
+
+        } else {
+            rtn = new LabeledType(rtn.name,
+                        new PrimitiveIfLabel(new Name(typecheck.Utils.LABEL_THIS)));
+        }
     }
 
     private List<String> setToDefault(List<String> decoratorList) {
@@ -118,7 +124,10 @@ public class FunctionSig extends TopLayerNode {
 
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+        SymTab contractSymTab = env.curSymTab();
+        env.setCurSymTab(new SymTab(env.curSymTab()));
         ScopeContext now = new ScopeContext(this, parent);
+        addBuiltInVars(env.curSymTab(), now);
         ArrayList<VarSym> argsInfo = args.parseArgs(env, now);
         HashMap<ExceptionTypeSym, String> exceptions = new HashMap<>();
         for (ExceptionType t : exceptionList) {
@@ -129,19 +138,30 @@ public class FunctionSig extends TopLayerNode {
             // ExceptionTypeSym exceptionType = env.get(t);
             exceptions.put(t1, null);
         }
-        env.addSym(name,
-                new FuncSym(name, funcLabels, argsInfo, env.toTypeSym(rtn), null, exceptions,
-                        scopeContext, location));
+        System.err.println(((LabeledType) rtn).ifl);
+        contractSymTab.add(name,
+                new FuncSym(name,
+                        env.toLabel(funcLabels.begin_pc),
+                        env.toLabel(funcLabels.to_pc),
+                        env.toLabel(funcLabels.gamma_label),
+                        argsInfo, env.toTypeSym(rtn, now),
+                        env.toLabel(((LabeledType) rtn).ifl),
+                        exceptions,
+                        parent, location));
+        env.setCurSymTab(env.curSymTab().getParent());
         return true;
 
     }
 
     @Override
     public void globalInfoVisit(ContractSym contractSym) {
+        SymTab realContractSymTab = contractSym.symTab;
+        contractSym.symTab = new SymTab(contractSym.symTab);
+        addBuiltInVars(contractSym.symTab, scopeContext);
         ArrayList<VarSym> argsInfo = args.parseArgs(contractSym);
-        IfLabel ifl = null;
+        Label ifl = null;
         if (rtn instanceof LabeledType) {
-            ifl = ((LabeledType) rtn).ifl;
+            ifl = contractSym.toLabel(((LabeledType) rtn).ifl);
         }
         HashMap<ExceptionTypeSym, String> exceptions = new HashMap<>();
         for (ExceptionType t : exceptionList) {
@@ -154,29 +174,19 @@ public class FunctionSig extends TopLayerNode {
                     typecheck.Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(),
                             t.getName()));
         }
-        contractSym.symTab.add(name,
-                new FuncSym(name, funcLabels, argsInfo, contractSym.toTypeSym(rtn), ifl, exceptions,
-                        scopeContext, location));
+        realContractSymTab.add(name,
+                new FuncSym(name,
+                        contractSym.toLabel(funcLabels.begin_pc),
+                        contractSym.toLabel(funcLabels.to_pc),
+                        contractSym.toLabel(funcLabels.gamma_label),
+                        argsInfo, contractSym.toTypeSym(rtn, scopeContext), ifl, exceptions,
+                        contractSym.getContractNode().scopeContext, location));
+        contractSym.symTab = contractSym.symTab.getParent();
     }
 
-//    public void findPrincipal(HashSet<String> principalSet) {
-//        if (funcLabels != null) {
-//            funcLabels.findPrincipal(principalSet);
-//        }
-//        args.findPrincipal(principalSet);
-//
-//        if (rtn instanceof LabeledType) {
-//            if (rtn instanceof DepMap) {
-//                ((DepMap) rtn).findPrincipal(principalSet);
-//            } else {
-//                ((LabeledType) rtn).ifl.findPrincipal(principalSet);
-//            }
-//        }
+//    public String rtnToSHErrLocFmt() {
+//        return toSHErrLocFmt() + ".RTN";
 //    }
-
-    public String rtnToSHErrLocFmt() {
-        return toSHErrLocFmt() + ".RTN";
-    }
 
     @Override
     public void passScopeContext(ScopeContext parent) {
@@ -249,5 +259,36 @@ public class FunctionSig extends TopLayerNode {
 
     public boolean isBuiltIn() {
         return isBuiltIn;
+    }
+
+
+    protected void addBuiltInVars(SymTab curSymTab, ScopeContext now) {
+        // final address{sender} sender;
+        VarSym varSender =
+                new VarSym(
+                        typecheck.Utils.LABEL_SENDER,
+                        (TypeSym) curSymTab.lookup(typecheck.Utils.ADDRESSTYPE),
+                        null,
+                        typecheck.Utils.BUILTIN_LOCATION,
+                        now,
+                        true,
+                        true
+                );
+        PrimitiveLabel labelSender = new PrimitiveLabel(varSender, typecheck.Utils.BUILTIN_LOCATION);
+        varSender.setLabel(labelSender);
+        curSymTab.add(typecheck.Utils.LABEL_SENDER, varSender);
+
+        // final uint{sender} value;
+        curSymTab.add(typecheck.Utils.LABEL_PAYVALUE,
+                new VarSym(
+                        typecheck.Utils.LABEL_PAYVALUE,
+                        (TypeSym) curSymTab.lookup(typecheck.Utils.BuiltinType2ID(BuiltInT.UINT)),
+                        labelSender,
+                        typecheck.Utils.BUILTIN_LOCATION,
+                        now,
+                        true,
+                        true
+                ));
+
     }
 }

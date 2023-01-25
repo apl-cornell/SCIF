@@ -89,11 +89,11 @@ public class Call extends TrailerExpr {
             Expression arg = args.get(i);
             TypeSym paraInfo = funcSym.parameters.get(i).typeSym;
             ScopeContext argContext = arg.ntcGenCons(env, now);
-            String typeName = env.getSymName(paraInfo.getName());
+            String typeName = paraInfo.toSHErrLocFmt();
             env.addCons(argContext.genCons(typeName, Relation.GEQ, env, arg.location));
         }
-        String rtnTypeName = funcSym.returnType.getName();
-        env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
+        String rtnTypeName = funcSym.returnType.toSHErrLocFmt();
+        env.addCons(now.genCons(rtnTypeName, Relation.EQ, env, location));
 
         for (HashMap.Entry<ExceptionTypeSym, String> tl : funcSym.exceptions.entrySet()) {
             if (!parent.isCheckedException(tl.getKey(), extern)) {
@@ -109,8 +109,8 @@ public class Call extends TrailerExpr {
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         //TODO: Assuming value is a Name for now
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         ArrayList<String> argValueLabelNames = new ArrayList<>();
 
@@ -148,7 +148,7 @@ public class Call extends TrailerExpr {
                 //TODO: assuming a's depth is 1
                 String varName = ((Name) att.value).id;
                 VarSym var = env.getVar(varName);
-                namespace = var.toSherrlocFmt();
+                namespace = var.toSHErrLocFmt();
                 TypeSym conType = var.typeSym;
                 env.addSigReq(namespace, conType.getName());
                 funcName = (att.attr).id;
@@ -157,9 +157,9 @@ public class Call extends TrailerExpr {
                 if (funcSym instanceof PolyFuncSym) {
                     ((PolyFuncSym) funcSym).apply();
                 }
-                ifNameFuncCallPcBefore = funcSym.getLabelNameCallPcBefore(namespace);
-                ifNameFuncCallPcAfter = funcSym.getLabelNameCallPcAfter(namespace);
-                ifNameFuncGammaLock = funcSym.getLabelNameCallGamma(namespace);
+                ifNameFuncCallPcBefore = funcSym.externalPcSLC();
+                ifNameFuncCallPcAfter = funcSym.internalPcSLC();
+                ifNameFuncGammaLock = funcSym.getLabelNameCallGamma();
                 env.cons.add(new Constraint(new Inequality(ifContRtn, ifNameFuncCallPcBefore),
                         env.hypothesis, location, env.curContractSym.getName(),
                         "Argument value must be trusted to call this method"));
@@ -196,8 +196,8 @@ public class Call extends TrailerExpr {
                 ((PolyFuncSym) funcSym).apply();
             }
 
-            ifNameFuncCallPcBefore = funcSym.getLabelNameCallPcBefore();
-            ifNameFuncCallPcAfter = funcSym.getLabelNameCallPcAfter();
+            ifNameFuncCallPcBefore = funcSym.externalPcSLC();
+            ifNameFuncCallPcAfter = funcSym.internalPcSLC();
             ifNameFuncGammaLock = funcSym.getLabelNameCallGamma();
         }
 
@@ -221,8 +221,8 @@ public class Call extends TrailerExpr {
         }
 
         PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
-                Utils.joinLabels(psi.getNormalPath().c.pc, funcSym.getLabelNameCallPcEnd()),
-                Utils.joinLabels(funcSym.getLabelNameCallGamma(), funcSym.getLabelNameCallPcAfter())
+                Utils.joinLabels(psi.getNormalPath().c.pc, funcSym.endPcSLC()),
+                Utils.joinLabels(funcSym.getLabelNameCallGamma(), funcSym.internalPcSLC())
         )));
 
         for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
@@ -230,9 +230,9 @@ public class Call extends TrailerExpr {
             String expLabelName = exp.getValue();
             expPsi.set(curSym, new PsiUnit(
                     new Context(
-                            Utils.joinLabels(expLabelName, funcSym.getLabelNameCallPcBefore()),
+                            Utils.joinLabels(expLabelName, funcSym.externalPcSLC()),
                             Utils.joinLabels(funcSym.getLabelNameCallGamma(),
-                                    funcSym.getLabelNameCallPcAfter())),
+                                    funcSym.internalPcSLC())),
                     true));
             //PsiUnit psiUnit = env.psi.get(curSym);
             //env.cons.add(new Constraint(new Inequality(Utils.makeJoin(expLabelName, ifNameFuncCallPcAfter), psiUnit.pc), env.hypothesis, location, env.curContractSym.name,
@@ -264,7 +264,7 @@ public class Call extends TrailerExpr {
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 
-        String ifNameFuncRtnValue = funcSym.getLabelNameRtnValue(namespace);
+        String ifNameFuncRtnValue = funcSym.returnSLC();
         // String ifNameFuncRtnLock = funcSym.getLabelNameRtnLock();
         psi.joinExe(expPsi);
         return new ExpOutcome(ifNameFuncRtnValue, psi);

@@ -1,5 +1,6 @@
 package ast;
 
+import typecheck.Label;
 import typecheck.ScopeContext;
 import typecheck.VisitEnv;
 
@@ -9,14 +10,13 @@ public abstract class IfLabel extends Expression {
 
     /**
      * Generate a corresponding name in ShErrLoc format for this label's value
-     * @param defContext
      * @return
      */
-    public abstract String toSherrlocFmt(ScopeContext defContext);
+    // public abstract String toSHErrLocFmt();
 
-    // public abstract String toSherrlocFmt(String namespace);
+    // public abstract String toSHErrLocFmt(String namespace);
 
-    // public abstract String toSherrlocFmt(String k, String v);
+    // public abstract String toSHErrLocFmt(String k, String v);
 
     // public abstract String toSherrlocFmtApply(HashSet<String> strSet, int no);
 
