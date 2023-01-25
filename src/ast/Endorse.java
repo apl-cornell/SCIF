@@ -56,10 +56,10 @@ public class Endorse extends Expression {
     }
 
     private String fromNameSLC() {
-        return scopeContext + "endorse" + "." + "from" + from.location;
+        return scopeContext + ".endorse" + "." + "from" + from.location;
     }
     private String toNameSLC() {
-        return scopeContext + "endorse" + "." + "to" + from.location;
+        return scopeContext + ".endorse" + "." + "to" + from.location;
     }
 
     @Override

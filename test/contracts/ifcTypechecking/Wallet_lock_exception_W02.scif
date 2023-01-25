@@ -1,0 +1,15 @@
+contract Wallet [this] {
+    uint highV;
+
+//     *
+//     *  {BOT -> this; BOT} (t{BOT} name) return {value: this; end_pc: this}
+//     *  msg.sender: address{msg.sender}
+//     *  amount: uint{msg.sender}
+//     *
+    @public
+    void withdraw{BOT -> this; this}(uint _amount) {
+        uint amount = endorse(_amount, BOT -> this);
+        send(sender, amount);
+        highV = amount;
+    }
+}

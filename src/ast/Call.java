@@ -114,7 +114,7 @@ public class Call extends TrailerExpr {
 
         ArrayList<String> argValueLabelNames = new ArrayList<>();
 
-        PathOutcome psi = new PathOutcome(new PsiUnit(beginContext));
+        PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
         ExpOutcome ao = null;
 
         for (int i = 0; i < args.size(); ++i) {
@@ -255,7 +255,6 @@ public class Call extends TrailerExpr {
                         Relation.EQ, endContext.lambda), env.hypothesis, location,
                 env.curContractSym.getName(),
                 "Calling this function does not respect static reentrancy locks"));
-        ;
 
         if (!tail_position) {
             env.cons.add(new Constraint(

@@ -59,6 +59,7 @@ public class TestIfcTypechecking {
     @ValueSource(strings = {
             "ifcTypechecking/LocalTrust_W01",
             "ifcTypechecking/Wallet_lock_exception_W01",
+            "ifcTypechecking/Wallet_lock_exception_W02",
             // "examples/ERC20"
     })
     void testNegtiveIfcTypechecking(String contractName) {

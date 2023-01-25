@@ -1,5 +1,6 @@
 contract Wallet [this] {
     map(address, uint) balances; //previously map(user: address, uint{user}) balances
+    uint highV;
     exception balanceNotEnough();
     exception transferFailure();
 
@@ -18,7 +19,9 @@ contract Wallet [this] {
             } catchall (transferFailure e) { //TODO: support errors
                 throw transferFailure();
             }
-            balances[sender] = balances[sender] - amount;
+            // balances[sender] = balances[sender] - amount;
+            highV = highV - amount;
+
         } else {
             // pc: this join sender
             throw balanceNotEnough();
