@@ -77,6 +77,10 @@ export default async () => defineConfig({
                         link: '/LanguageBasics/contracts'
                     },
                     {
+                        text: 'Exceptions and Failures',
+                        link: '/LanguageBasics/exceptions-and-failures'
+                    },
+                    {
                         text: 'Expressions and Statements',
                         link: '/LanguageBasics/expressions-and-statements'
                     },
