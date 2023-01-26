@@ -14,18 +14,6 @@ public class LabeledType extends Type {
         this.ifl = ifl;
     }
 
-    public String toSherrloc(String k, String v) {
-        return "";
-    }
-
-//    public void findPrincipal(HashSet<String> principalSet) {
-//        ifl.findPrincipal(principalSet);
-//    }
-
-//    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
-//        ifl.findPrincipal(principalSet, getRidOf);
-//    }
-
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();

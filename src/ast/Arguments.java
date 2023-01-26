@@ -9,18 +9,15 @@ import java.util.ArrayList;
 public class Arguments extends Node {
 
     private List<Arg> args;
-    private List<Expression> defaults; //corresponds to the last size(defualts) args
 
     //TODO: deaults cons generate
     //TODO: kwonlyargs, varargs and kwarg
-    public Arguments(List<Arg> args, List<Expression> defaults) {
+    public Arguments(List<Arg> args) {
         this.args = args;
-        this.defaults = defaults;
     }
 
     public Arguments() {
         this.args = new ArrayList<>();
-        this.defaults = null;
     }
 
     public void setToDefault(IfLabel ifl) {
@@ -32,9 +29,6 @@ public class Arguments extends Node {
     public void merge(Arguments y) {
         if (y.args != null) {
             this.args.addAll(y.args);
-        }
-        if (y.defaults != null) {
-            this.defaults.addAll(y.defaults);
         }
     }
 
@@ -100,15 +94,11 @@ public class Arguments extends Node {
         if (args != null) {
             rtn.addAll(args);
         }
-        if (defaults != null) {
-            rtn.addAll(defaults);
-        }
         return rtn;
     }
 
     public boolean typeMatch(Arguments arguments) {
         boolean bothArgsNull = arguments.args == null && args == null;
-        boolean bothDefaultsNull = defaults == null && arguments.defaults == null;
 
         if (!bothArgsNull) {
             if (args == null || arguments.args == null || args.size() != arguments.args.size()) {
@@ -122,21 +112,6 @@ public class Arguments extends Node {
                 ++index;
             }
         }
-
-        if (!bothDefaultsNull) {
-            if (defaults == null || arguments.defaults == null
-                    || defaults.size() != arguments.defaults.size()) {
-                return false;
-            }
-            int index = 0;
-            while (index < defaults.size()) {
-                if (!defaults.get(index).typeMatch(arguments.defaults.get(index))) {
-                    return false;
-                }
-                ++index;
-            }
-        }
-
         return true;
     }
 

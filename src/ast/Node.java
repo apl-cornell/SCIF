@@ -45,6 +45,9 @@ public abstract class Node {
 
     public abstract void solidityCodeGen(SolCode code);
 
+    /**
+     * Return a list of AST nodes that are the current node's kids
+     */
     public List<Node> children() {
         return new ArrayList<>();
     }

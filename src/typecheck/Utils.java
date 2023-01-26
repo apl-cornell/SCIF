@@ -40,7 +40,8 @@ public class Utils {
     public static final String TYPECHECK_NORESULT_MSG = "No result from ShErrLoc.";
 
 
-    public static final String ADDRESSTYPE = "address";
+    public static final String ADDRESS_TYPE = "address";
+    public static final String MAP_TYPE = "map";
     public static final String PUBLIC_DECORATOR = "public";
     public static final String PROTECTED_DECORATOR = "protected";
     public static final String FINAL_DECORATOR = "final";

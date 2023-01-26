@@ -297,7 +297,6 @@ public class Call extends TrailerExpr {
         return rtn;
     }
 
-
     @Override
     public boolean typeMatch(Expression expression) {
         if (!(expression instanceof Call &&

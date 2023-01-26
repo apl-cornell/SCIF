@@ -103,18 +103,6 @@ public class ComplexIfLabel extends IfLabel {
         return null;
     }
 
-//    @Override
-//    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
-//        left.findPrincipal(principalSet, getRidOf);
-//        right.findPrincipal(principalSet, getRidOf);
-//    }
-
-//    @Override
-//    public void findPrincipal(HashSet<String> principalSet) {
-//        left.findPrincipal(principalSet);
-//        right.findPrincipal(principalSet);
-//    }
-
     @Override
     public boolean typeMatch(IfLabel begin_pc) {
         if (!(begin_pc instanceof ComplexIfLabel)) {

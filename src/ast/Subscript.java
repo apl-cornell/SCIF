@@ -7,11 +7,15 @@ import typecheck.*;
 
 import java.util.ArrayList;
 
+/**
+ * Represent an expression value[index].
+ * value is of type map or array, and index's type should be right accordingly.
+ */
 public class Subscript extends TrailerExpr {
 
-    Expression index; //TODO: to be slice
+    Expression index;
 
-    public Subscript(Expression v, Expression i, Context c) {
+    public Subscript(Expression v, Expression i) {
         value = v;
         index = i;
     }
@@ -52,6 +56,7 @@ public class Subscript extends TrailerExpr {
 
         // String ifNameRtnLock = "";
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
+            // value[index] where value is of dependent map type
             assert false;
             VarSym indexVarSym = index.getVarInfo(env, tail_position);
             logger.debug("subscript/DepMap:");
@@ -59,7 +64,7 @@ public class Subscript extends TrailerExpr {
             logger.debug(indexVarSym.toString());
             String ifNameIndex = indexVarSym.toSHErrLocFmt();
 
-            if (indexVarSym.typeSym.getName().equals(Utils.ADDRESSTYPE)) {
+            if (indexVarSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)) {
                 logger.debug("typename {} to {}", valueVarSym.typeSym.getName(), ifNameIndex);
 //                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(valueVarSym.typeSym.getName(),
 //                        ifNameIndex);
@@ -101,7 +106,7 @@ public class Subscript extends TrailerExpr {
             assert false;
             VarSym indexVarSym = index.getVarInfo(env, tail_position);
             String ifNameIndex = indexVarSym.toSHErrLocFmt();
-            if (indexVarSym.typeSym.getName().equals(Utils.ADDRESSTYPE)) {
+            if (indexVarSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)) {
 
                 TypeSym rtnTypeSym = ((DepMapTypeSym) valueVarSym.typeSym).valueType;
                 rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,

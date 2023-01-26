@@ -88,8 +88,8 @@ public class If extends Statement {
                     logger.debug(r.toString());
                     //System.err.println(l.toString());
                     //System.err.println(r.toString());
-                    if (l.typeSym.getName().equals(Utils.ADDRESSTYPE) && r.typeSym.getName().equals(
-                            Utils.ADDRESSTYPE)) {
+                    if (l.typeSym.getName().equals(Utils.ADDRESS_TYPE) && r.typeSym.getName().equals(
+                            Utils.ADDRESS_TYPE)) {
                         /*testedVar = ((TestableVarInfo) l);
                         beforeTestedLabel = testedVar.testedLabel;
                         tested = testedVar.tested;

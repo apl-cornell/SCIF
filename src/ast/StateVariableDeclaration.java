@@ -23,11 +23,11 @@ import typecheck.sherrlocUtils.Relation;
  */
 public class StateVariableDeclaration extends TopLayerNode {
 
-    Name name;
-    LabeledType type;
-    Expression value;
-    boolean isStatic;
-    boolean isFinal;
+    private Name name;
+    private LabeledType type;
+    private Expression value;
+    private boolean isStatic;
+    private boolean isFinal;
 
     public StateVariableDeclaration(Name name, LabeledType type, Expression value,
             boolean isConst, boolean isFinal) {
@@ -40,19 +40,9 @@ public class StateVariableDeclaration extends TopLayerNode {
         this.type.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
 
-//    public void setType(LabeledType type) {
-//        this.type = type;
-//    }
-
     private void setToDefault(IfLabel lbl) {
         type.setToDefault(lbl);
     }
-
-    /*
-    public void setTarget(Expression target) {
-        this.target = target;
-    }
-    */
 
     public void setFinal(boolean isFinal) {
         this.isFinal = isFinal;
@@ -76,11 +66,7 @@ public class StateVariableDeclaration extends TopLayerNode {
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        // if (!parent.isContractLevel()) {
-//        String vname = name.id;
-//        env.addSym(vname,
-//                new VarSym(env.toVarSym(vname, type, isStatic, isFinal, location, now)));
-        // }
+
         ScopeContext vtype = type.ntcGenCons(env, now);
         ScopeContext tgt = name.ntcGenCons(env, now);
 
@@ -116,41 +102,16 @@ public class StateVariableDeclaration extends TopLayerNode {
         VarSym varSym;
         String id = name.id;
         logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
-//        if (!scopeContext.isContractLevel()) {
-//            CodeLocation loc = location;
-//            varSym = env.curContractSym.toVarSym(id, type, isStatic, isFinal, loc,
-//                    scopeContext);
-//            // ifNameTgt = varSym.toSHErrLocFmt();
-//            // (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
-//            // varSym = env.contractInfo.toVarInfo(id, annotation, isConst, loc);
-//            env.addVar(id, varSym);
-//            // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
-//            if (type instanceof LabeledType) {
-//                // String ifLabelValue = ((LabeledType) type).ifl.toSHErrLocFmt(scopeContext);
-//                env.cons.add(new Constraint(
-//                        new Inequality(varSym.labelNameSLC(), Relation.EQ, varSym.labelValueSLC()),
-//                        env.hypothesis, location, env.curContractSym.getName(),
-//                        "Variable " + varSym.getName() + " may be labeled incorrectly"));
-//            }
-//        } else {
-            // ifNameTgt = ((Name) target).id;
-            varSym = env.getVar(id);
-//        }
+
+        varSym = env.getVar(id);
         logger.debug(varSym.getName());
         SLCNameVar = varSym.toSHErrLocFmt();
         SLCNameVarLbl = varSym.labelNameSLC();
         logger.debug(varSym.typeSym.getName());
-        if (varSym.typeSym.getName().equals(Utils.ADDRESSTYPE) || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
+        if (varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE) || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
             env.principalSet().add(varSym);
         }
 
-        /*if (type instanceof LabeledType) {
-            if (type instanceof DepMap) {
-                ((DepMap) type).findPrincipal(env.principalSet);
-            } else {
-                ((LabeledType) type).ifl.findPrincipal(env.principalSet);
-            }
-        }*/
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         // String ifNameTgtLbl = ifNameTgt + "..lbl";
         // Context prevContext = env.prevContext;
@@ -183,12 +144,6 @@ public class StateVariableDeclaration extends TopLayerNode {
 
     }
 
-//    public void findPrincipal(HashSet<String> principalSet) {
-//        if (type instanceof LabeledType) {
-//            ((LabeledType) type).ifl.findPrincipal(principalSet);
-//        }
-//    }
-
     public void solidityCodeGen(SolCode code) {
         if (value != null) {
             code.addVarDef(type.toSolCode(), type.toSolCode(), isStatic, value.toSolCode());
@@ -206,6 +161,10 @@ public class StateVariableDeclaration extends TopLayerNode {
             rtn.add(value);
         }
         return rtn;
+    }
+
+    public Name name() {
+        return name;
     }
 
     /*public boolean typeMatch(AnnAssign a) {

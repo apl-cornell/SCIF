@@ -206,7 +206,7 @@ public class ContractSym extends TypeSym {
             if (sym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)
                     || (sym.isFinal
                     && (sym.typeSym instanceof ContractSym
-                        || sym.typeSym.getName().equals(Utils.ADDRESSTYPE)))) {
+                        || sym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))) {
                 rtn.add(sym);
             }
             //}

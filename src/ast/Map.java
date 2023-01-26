@@ -2,6 +2,7 @@ package ast;
 
 import java.awt.*;
 import java.util.ArrayList;
+import typecheck.Utils;
 
 public class Map extends LabeledType {
 
@@ -9,17 +10,10 @@ public class Map extends LabeledType {
     public Type valueType;
 
     public Map(Type keyType, Type valueType, IfLabel ifl) {
-        super("map", ifl);
+        super(Utils.MAP_TYPE, ifl);
         this.keyType = keyType;
         this.valueType = valueType;
     }
-
-    public Map(String keyName, LabeledType keyType, LabeledType valueType, IfLabel ifl) {
-        super(keyName, ifl);
-        this.keyType = keyType;
-        this.valueType = valueType;
-    }
-
     @Override
     public String toSolCode() {
         String rtn = "mapping";

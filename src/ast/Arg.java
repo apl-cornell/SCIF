@@ -10,7 +10,7 @@ import java.util.HashSet;
 
 public class Arg extends Node {
 
-    String name;
+    private String name;
     LabeledType annotation;
     boolean isStatic;
     boolean isFinal;
@@ -63,31 +63,15 @@ public class Arg extends Node {
 
     public void genConsVisit(VisitEnv env, boolean tail_position) {
 
-//        if (annotation instanceof LabeledType) {
-//            if (annotation instanceof DepMap) {
-//                ((DepMap) annotation).findPrincipal(env.principalSet);
-//            } else {
-//                ((LabeledType) annotation).ifl.findPrincipal(env.principalSet);
-//            }
-//        }
-        // String ifName = env.ctxt + "." + name;
         VarSym varSym = env.curContractSym.toVarSym(name, annotation, false, false, location,
                 scopeContext);
         env.addVar(name, varSym);
-        // env.varNameMap.add(name, ifName, varSym);
 
-        if (varSym.typeSym.getName().equals(Utils.ADDRESSTYPE)) {
+        if (varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)) {
             env.principalSet().add(varSym);
         }
 
     }
-
-//    public void findPrincipal(HashSet<String> principalSet) {
-//        if (annotation instanceof LabeledType) {
-//            ((LabeledType) annotation).ifl.findPrincipal(principalSet);
-//        }
-//    }
-
 
     public String toSolCode() {
         return annotation.toSolCode() + " " + name;

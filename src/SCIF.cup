@@ -168,7 +168,7 @@ nonterminal ast.Map mapType;
 nonterminal List<String> polyDescription;
 nonterminal List<String> nameList;
 nonterminal Endorse endorseExpression;
-nonterminal ast.Map depMap;
+nonterminal ast.DepMap depMap;
 nonterminal List<FunctionSig> funcSigs;
 nonterminal FunctionSig funcSig, r_funcSig;
 //nonterminal StructDef structDef;
@@ -587,9 +587,11 @@ labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
     :};
 
 depMap ::=
-    MAP:x LPAR NAME:keyName COLON labeledType:keyType COMMA labeledType:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
-        String name = (String)keyName;
-        RESULT = new ast.Map(name, keyType, valueType, mapLabel);
+    MAP:x LPAR NAME:keyName COLON NAME:keyTypeName COMMA NAME:valueTypeName LBRACE ifLabel:valueLabel RBRACE RPAR LBRACE ifLabel:mapLabel RBRACE {:
+        String name = (String) keyName;
+        Type keyType = new Type((String) keyTypeName);
+        Type valueType = new Type((String) valueTypeName);
+        RESULT = new ast.DepMap(keyType, keyName, valueType, valueLabel, mapLabel);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
@@ -723,16 +725,15 @@ probinittfpdef ::=
     tfpdef:a  {:
         ArrayList<Arg> args = new ArrayList<Arg>();
         args.add(a);
-        RESULT = new Arguments(args, null);
+        RESULT = new Arguments(args);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}
-    | tfpdef:a EQUAL expr:b {:
-        ArrayList<Arg> args = new ArrayList<Arg>();
-        ArrayList<Expression> defaults = new ArrayList<Expression>();
-        args.add(a);
-        defaults.add(b);
-        RESULT = new Arguments(args, defaults);
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+//    | tfpdef:a EQUAL expr:b {:
+//        ArrayList<Arg> args = new ArrayList<Arg>();
+//        ArrayList<Expression> defaults = new ArrayList<Expression>();
+//        args.add(a);
+//        defaults.add(b);
+//        RESULT = new Arguments(args, defaults);
+//        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 tfpdef ::= 
      modifiers:m typeSym:b NAME:a{:
@@ -1216,7 +1217,7 @@ trailer ::=
         RESULT = a;
     :}
     | LSQB expr:a RSQB {:
-        RESULT = new Subscript(null, a, null);
+        RESULT = new Subscript(null, a);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | DOT NAME:a {:

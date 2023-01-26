@@ -250,7 +250,7 @@ public class Contract extends Node {
         HashMap<String, FunctionSig> funcNames = new HashMap<>();
 
         for (StateVariableDeclaration a : varDeclarations) {
-            Name x = a.name;
+            Name x = a.name();
             if (varNames.containsKey(x.id)) {
                 //TODO: duplicate names
                 return false;
@@ -270,7 +270,7 @@ public class Contract extends Node {
         ArrayList<FunctionDef> newFuncDefs = new ArrayList<>();
 
         for (StateVariableDeclaration a : superContract.varDeclarations) {
-            Name x = a.name;
+            Name x = a.name();
             if (varNames.containsKey(x.id)) {
                 // TODO: var being overridden
                 return false;
@@ -335,7 +335,7 @@ public class Contract extends Node {
         List<Arg> args = new ArrayList<>();
         args.add(new Arg(
                 "target",
-                new LabeledType(Utils.ADDRESSTYPE, labelThis),
+                new LabeledType(Utils.ADDRESS_TYPE, labelThis),
                 false,
                 true
         ));
@@ -356,7 +356,7 @@ public class Contract extends Node {
                         labelBot,
                         labelBot
                 ),
-                new Arguments(args, null),
+                new Arguments(args),
                 new ArrayList<>(),
                 decs,
                 new Type(Utils.BuiltinType2ID(BuiltInT.VOID)),
@@ -371,7 +371,7 @@ public class Contract extends Node {
         args = new ArrayList<>();
         args.add(new Arg(
                 "addr",
-                new LabeledType(Utils.ADDRESSTYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM))),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM))),
                 false,
                 true
         ));
@@ -386,7 +386,7 @@ public class Contract extends Node {
                         labelTop,
                         labelTop
                 ),
-                new Arguments(args, null),
+                new Arguments(args),
                 new ArrayList<>(),
                 decs,
                 new Type(Utils.BuiltinType2ID(BuiltInT.UINT)),

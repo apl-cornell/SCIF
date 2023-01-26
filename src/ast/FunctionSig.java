@@ -267,7 +267,7 @@ public class FunctionSig extends TopLayerNode {
         VarSym varSender =
                 new VarSym(
                         typecheck.Utils.LABEL_SENDER,
-                        (TypeSym) curSymTab.lookup(typecheck.Utils.ADDRESSTYPE),
+                        (TypeSym) curSymTab.lookup(typecheck.Utils.ADDRESS_TYPE),
                         null,
                         typecheck.Utils.BUILTIN_LOCATION,
                         now,

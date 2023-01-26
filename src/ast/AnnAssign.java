@@ -10,11 +10,11 @@ import java.util.ArrayList;
 
 public class AnnAssign extends Statement {
 
-    Expression target;
-    LabeledType annotation;
-    Expression value;
-    boolean isStatic;
-    boolean isFinal;
+    private final Expression target;
+    private LabeledType annotation;
+    private Expression value;
+    private boolean isStatic;
+    private boolean isFinal;
 
     public AnnAssign(Expression target, LabeledType annotation, Expression value,
             boolean isConst, boolean isFinal) {
@@ -31,10 +31,6 @@ public class AnnAssign extends Statement {
 
     public void setToDefault(IfLabel lbl) {
         annotation.setToDefault(lbl);
-    }
-
-    public void setTarget(Expression target) {
-        this.target = target;
     }
 
     public void setFinal(boolean isFinal) {
@@ -103,47 +99,30 @@ public class AnnAssign extends Statement {
             CodeLocation loc = location;
             varSym = env.curContractSym.toVarSym(id, annotation, isStatic, isFinal, loc,
                     scopeContext);
-            // ifNameTgt = varSym.toSHErrLocFmt();
-            // (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
-            // varSym = env.contractInfo.toVarInfo(id, annotation, isConst, loc);
             env.addVar(id, varSym);
-            // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
             if (annotation instanceof LabeledType) {
-                // String ifLabel = ((LabeledType) annotation).ifl.toSHErrLocFmt(scopeContext);
                 env.cons.add(new Constraint(
                         new Inequality(varSym.labelNameSLC(), Relation.EQ, varSym.labelValueSLC()),
                         env.hypothesis, location, env.curContractSym.getName(),
                         "Variable " + varSym.getName() + " may be labeled incorrectly"));
             }
         } else {
-            // ifNameTgt = ((Name) target).id;
             varSym = env.getVar(id);
         }
         logger.debug(varSym.getName());
         SLCNameVar = varSym.toSHErrLocFmt();
         SLCNameVarLbl = varSym.labelNameSLC();
         logger.debug(varSym.typeSym.getName());
-        if (varSym.typeSym.getName().equals(Utils.ADDRESSTYPE) || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
+        if (varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE) || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
             env.principalSet().add(varSym);
         }
 
-//        if (annotation instanceof LabeledType) {
-//            if (annotation instanceof DepMap) {
-//                ((DepMap) annotation).findPrincipal(env.principalSet);
-//            } else {
-//                ((LabeledType) annotation).ifl.findPrincipal(env.principalSet);
-//            }
-//        }
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        // String ifNameTgtLbl = ifNameTgt + "..lbl";
-        // Context prevContext = env.prevContext;
 
         env.cons.add(
                 new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis, location,
                         env.curContractSym.getName(),
                         "Integrity of control flow must be trusted to allow this assignment"));
-
-        //env.outContext = endContext;
 
         if (!tail_position) {
             env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
