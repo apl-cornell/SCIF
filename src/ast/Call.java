@@ -14,7 +14,6 @@ public class Call extends TrailerExpr {
 
     ArrayList<Expression> args;
 
-    //TODO: starargs, kwargs
     public Call() {
         this.args = new ArrayList<>();
     }

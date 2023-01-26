@@ -27,9 +27,12 @@ public class Subscript extends TrailerExpr {
         VarSym valueVarSym = value.getVarInfo(env);
         ScopeContext idx = index.ntcGenCons(env, now);
         value.ntcGenCons(env, now);
+        int a = 10;
+        final int b = a;
         //TODO: support DepMap
 
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
+            // index must match, and must be a final
             System.err.println("Subscript: DepMap to be support");
             return null;
         } else if (valueVarSym.typeSym instanceof MapTypeSym) {

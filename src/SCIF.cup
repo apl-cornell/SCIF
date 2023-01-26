@@ -95,16 +95,6 @@ terminal TRY, EXTRY, CATCH, CATCHALL, EXCEPTION, THROW, THROWS, ALL;
 terminal DELETE;
 terminal ERROR, CONSTRUCTOR;//, PERCENTEQUAL;
 terminal ASSUME;
-/* unused terminals
-PERCENTEQUAL, STRUCT, PLUSEQUAL, CLASS, SUPER, WHILE, , DOUBLESLASHEQUAL
-terminal INTERFACE;FOR,
-terminal LEFTSHIFTEQUAL, RIGHTSHIFTEQUAL;
-terminal INT;
-AUTOENDORSE,MINEQUAL, CIRCUMFLEXEQUAL, VBAREQUAL,FINALLY, , DOUBLESTAR, STAREQUAL, DOUBLESLASH, SLASHEQUAL
-terminal NEW;
-terminal WITH;
-terminal AMPEREQUAL, ATEQUAL;
-*/
 
 nonterminal SourceFile sourceCode;
 // nonterminal Interface interface;
@@ -347,18 +337,6 @@ trust_dec ::=
         RESULT.setLoc(new CodeLocation(lhsleft, lhsright, filename));
     :};
 
-//ifLabelorAddr ::=
-//    ifLabel:x {:
-//        TrustAtom rtn = new TrustAtom(x);
-//        RESULT = rtn;
-//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-//    :}
-//    | NAME:x {:
-//        TrustAtom rtn = new TrustAtom((String)x);
-//        RESULT = rtn;
-//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-//    :};
-
 trust_operator ::=
     EQUAL {: RESULT = Relation.EQ; :}
     | LESSEQUAL {: RESULT = Relation.GEQ; :}
@@ -376,10 +354,6 @@ state_var_decs ::=
         RESULT = l;
     :};
 
-/*
-    T{l} x = v;
-    TODO: final and static
-*/
 state_var_dec ::=
     modifiers:m typeSym:t NAME:a EQUAL expr:b SEMI {:
         Name name = new Name((String)a);
@@ -594,19 +568,6 @@ depMap ::=
         RESULT = new ast.DepMap(keyType, keyName, valueType, valueLabel, mapLabel);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
-
-/*maybeAutoendorseIfLabel ::= autoendorse:a {:
-        RESULT = a;
-    :}
-    | ifLabel:a {:
-        logger.debug("finished parsing callin labels");
-        RESULT = a;
-    :};*/
-
-/*autoendorse ::= AUTOENDORSE:name LPAR ifLabel:from COMMA ifLabel:to RPAR {:
-        RESULT = new Autoendorse(from, to);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :};*/
 
 ifLabel ::= unitIfLabel:a {:
         RESULT = a;

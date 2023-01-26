@@ -220,10 +220,6 @@ public class TypeChecker {
     /**
      * Create constraints for the signature of a contract.
      * TODO: more detailed doc
-     * @param contractName
-     * @param env
-     * @param namespace
-     * @param curContractName
      */
     private static void buildSignatureConstraints(String contractName, VisitEnv env,
             String namespace, String curContractName) {

@@ -20,13 +20,6 @@ public class ScopeContext {
     private ScopeContext parent;
     private final String SHErrLocName;
 
-    public ScopeContext(String specifiedName) {
-        cur = null;
-        parent = null;
-        funcExceptionMap = new HashMap<ExceptionTypeSym, Boolean>();
-        SHErrLocName = specifiedName;
-    }
-
     public ScopeContext(Node cur, ScopeContext parent) {
         this.cur = cur;
         this.parent = parent;
