@@ -1,8 +1,10 @@
 # Exceptions and Failures
 
-Like any other program, smart contracts can run into errors. The EVM provides a coarse-grained transaction mechanism that rollbacks all side-effects of a transaction when this occurs. SCIF aids programmers in dealing with such scenarios more gracefully by providing exception and failure-handling mechanisms.
+Exception mechanisms are used for handling errors and unusual conditions, or as alternate ways to return. For smart contracts however, the EVM only provides a coarse-grained transaction mechanism that rolls back all side effects of the current function call (except logging instructions). SCIF makes the implementation of such logics easier and less error-prone by providing exception and failure-handling mechanisms.
 
-Intuitively, the distinction between exceptions and failures is that of recoverable, benign errors and severe ones that force part of the transaction to be rolled back. For example, a hotel-booking contract can throw an exception when a booking request is rejected while keeping the state change that the request has been processed; the request initiator contract may resume with a different request. For another example, an exchange contract may need to handle out-of-gas failure when calling an unknown contract by marking the particular transaction as problematic and skipping it in the future; in this case, the effects of the call shall be rolled back.
+SCIF distinguishes between exceptions and failures. Intuitively, exceptions are user-defined alternate return paths: the program keeps executing normally, and there is no rollback. In contrast, failures signal unrecoverable errors, such as out of gas or stack overflow, and the function call that causes the failure is guaranteed to have been rolled back.
+
+For example, a hotel-booking contract can throw an exception when a booking request is rejected while keeping the state change that the request has been processed; the request initiator contract may resume with a different request. For another example, an exchange contract may need to handle out-of-gas failure when calling an unknown contract by marking the particular transaction as problematic and skipping it in the future; in this case, the effects of the call shall be rolled back.
 
 Any code in SCIF finishes execution with one of those three cases: normal termination, a user-defined exception, or a failure.
 
