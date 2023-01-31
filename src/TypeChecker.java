@@ -360,22 +360,22 @@ public class TypeChecker {
         //SigCons curSigCons = env.getSigCons(contractName);
         //env.trustCons.addAll(curSigCons.trustcons);
         //env.cons.addAll(curSigCons.cons);
-        System.out.println("before prinSet size: " + env.principalSet().size());
+        // System.out.println("before prinSet size: " + env.principalSet().size());
 
         Node tmp = root;
         SourceFile sourceFile = (SourceFile) tmp;
         // env.varNameMap = new LookupMaps(varMap);
 
         sourceFile.genConsVisit(env, true);
-        System.out.println("mid prinSet size: " + env.principalSet().size());
+        // System.out.println("mid prinSet size: " + env.principalSet().size());
         buildSignatureConstraints(sourceFile.getContractName(), env, sourceFile.getContractName(),
                 sourceFile.getContractName());
         env.sigReq.forEach((name, curContractName) -> {
             buildSignatureConstraints(curContractName, env, name, sourceFile.getContractName());
         });
 
-        System.out.println("prinSet size: " + env.principalSet().size());
-        if (!Utils.writeCons2File(env.curContractSym.getPrincipalSet(), env.trustCons(), env.cons, outputFile, true)) {
+        // System.out.println("prinSet size: " + env.principalSet().size());
+        if (!Utils.writeCons2File(env.principalSet(), env.trustCons(), env.cons, outputFile, true)) {
             return true;
         }
         boolean result = false;

@@ -66,11 +66,9 @@ public class AnnAssign extends Statement {
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        if (!parent.isContractLevel()) {
-            String name = ((Name) target).id;
-            env.addSym(name,
-                    new VarSym(env.toVarSym(name, annotation, isStatic, isFinal, location, now)));
-        }
+        String name = ((Name) target).id;
+        env.addSym(name,
+                new VarSym(env.toVarSym(name, annotation, isStatic, isFinal, location, now)));
         ScopeContext type = annotation.ntcGenCons(env, now);
         ScopeContext tgt = target.ntcGenCons(env, now);
 
@@ -79,6 +77,8 @@ public class AnnAssign extends Statement {
         if (value != null) {
             ScopeContext v = value.ntcGenCons(env, now);
             env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
+        } else if (isFinal) {
+            throw new RuntimeException("final variable " + name + " not initialized at " + location);
         }
         return now;
     }
@@ -95,26 +95,65 @@ public class AnnAssign extends Statement {
         VarSym varSym;
         String id = ((Name) target).id;
         logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
-        if (!scopeContext.isContractLevel()) {
-            CodeLocation loc = location;
-            varSym = env.curContractSym.toVarSym(id, annotation, isStatic, isFinal, loc,
-                    scopeContext);
-            env.addVar(id, varSym);
-            if (annotation instanceof LabeledType) {
-                env.cons.add(new Constraint(
-                        new Inequality(varSym.labelNameSLC(), Relation.EQ, varSym.labelValueSLC()),
-                        env.hypothesis, location, env.curContractSym.getName(),
-                        "Variable " + varSym.getName() + " may be labeled incorrectly"));
-            }
-        } else {
-            varSym = env.getVar(id);
+        CodeLocation loc = location;
+        varSym = env.curContractSym.toVarSym(id, annotation, isStatic, isFinal, loc,
+                scopeContext);
+        env.addVar(id, varSym);
+        if (annotation instanceof LabeledType) {
+            env.cons.add(new Constraint(
+                    new Inequality(varSym.labelNameSLC(), Relation.EQ, varSym.labelValueSLC()),
+                    env.hypothesis, location, env.curContractSym.getName(),
+                    "Variable " + varSym.getName() + " may be labeled incorrectly"));
         }
         logger.debug(varSym.getName());
         SLCNameVar = varSym.toSHErrLocFmt();
         SLCNameVarLbl = varSym.labelNameSLC();
         logger.debug(varSym.typeSym.getName());
-        if (varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE) || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
-            env.principalSet().add(varSym);
+
+        // If the declared variable is a principal (final address/contract), add it to the principal list
+        if ((varSym.isFinal &&
+                (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))
+                // || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) Invalid to declare a non-global principal
+                ) {
+            env.addPrincipal(varSym);
+
+            VarSym equalPrincipal = null;
+            boolean correctInit = true;
+            if (value instanceof Name) { // assigned as another variable
+                // Nothing to check
+                equalPrincipal = env.getVar(((Name) value).id);
+            } else if (value instanceof Call && ((Call) value).isCast(env)) { // assigned as another contract
+                // check if it is a cast to a final address variable
+                Call cast = (Call) value;
+                Expression arg = cast.getArgAt(0);
+                if (arg instanceof Name) {
+                    VarSym sym = env.getVar(((Name) arg).id);
+                    if (!sym.isFinal) {
+                        correctInit = false;
+                    } else {
+                        equalPrincipal = sym;
+                    }
+                } else {
+                    correctInit = false;
+                }
+            } else {
+                correctInit = false;
+            }
+
+
+            if (correctInit) {
+                // add equivalence assumption to the trust set
+                env.addTrustConstraint(
+                        new Constraint(
+                                new Inequality(SLCNameVar, CompareOperator.Eq, equalPrincipal.toSHErrLocFmt()),
+                                env.hypothesis,
+                                location,
+                                env.curContractSym.getName(),
+                                "New principal declaration"
+                        ));
+            } else {
+                throw new RuntimeException("A final address/Contract must be initialized to another final address/Contract: " + id);
+            }
         }
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());

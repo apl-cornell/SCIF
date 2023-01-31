@@ -3,26 +3,28 @@ package typecheck;
 import ast.ExceptionType;
 import ast.SourceFile;
 import java.util.Collections;
-import typecheck.exceptions.NameNotFoundException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
 
+/**
+ * The environment for information flow typechecking.
+ * Mutable.
+ */
 public class VisitEnv {
     public Context inContext;
     // public PathOutcome outContext;
     // public HashMap<String, FuncInfo> funcMap;
     public List<Constraint> cons;
-    private List<Constraint> trustCons;
+    private final List<Constraint> trustCons;
     // public LookupMaps varNameMap;
     public SymTab globalSymTab;
     public SymTab curSymTab;
     public Hypothesis hypothesis;
-    private HashSet<Sym> principalSet; // TODO: better imp
+    private final Set<VarSym> principalSet; // TODO: better imp
     public ContractSym curContractSym;
     // public HashMap<String, ContractInfo> contractMap;
     //public HashMap<String, SigCons> sigConsMap;
@@ -40,7 +42,7 @@ public class VisitEnv {
                     SymTab globalSymTab,
                     SymTab curSymTab,
                     Hypothesis hypothesis,
-                    HashSet<Sym> principalSet,
+                    Set<VarSym> principalSet,
                     ContractSym curContractSym,
                     HashMap<String, SourceFile> programMap
                     // HashMap<ExceptionTypeSym, PsiUnit> psi
@@ -161,7 +163,7 @@ public class VisitEnv {
         return curContractSym.getContractNode().getScopeContext();
     }
 
-    public Set<Sym> principalSet() {
+    public Set<VarSym> principalSet() {
         return principalSet;
     }
 
@@ -171,5 +173,9 @@ public class VisitEnv {
 
     public void addTrustConstraint(Constraint constraint) {
         trustCons.add(constraint);
+    }
+
+    public void addPrincipal(VarSym varSym) {
+        principalSet.add(varSym);
     }
 }

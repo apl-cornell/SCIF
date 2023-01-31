@@ -55,6 +55,7 @@ public class Assign extends Statement {
             // prevContext = tmp;
             // rtnLockName = tmp.lambda;
         } else {
+            assert false;
             //TODO: error handling
         }
         ExpOutcome vo = value.genConsVisit(env, false);

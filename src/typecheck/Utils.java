@@ -207,7 +207,7 @@ public class Utils {
         }
     }
 
-    public static boolean writeCons2File(Set<Sym> constructors, List<Constraint> assumptions,
+    public static boolean writeCons2File(Set<? extends Sym> constructors, List<Constraint> assumptions,
             List<Constraint> constraints, File outputFile, boolean isIFC) {
         try {
             // transform every "this" to "contractName.this"

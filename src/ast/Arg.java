@@ -67,8 +67,8 @@ public class Arg extends Node {
                 scopeContext);
         env.addVar(name, varSym);
 
-        if (varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)) {
-            env.principalSet().add(varSym);
+        if (varSym.isFinal && varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)) {
+            env.addPrincipal(varSym);
         }
 
     }

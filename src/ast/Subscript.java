@@ -27,12 +27,10 @@ public class Subscript extends TrailerExpr {
         VarSym valueVarSym = value.getVarInfo(env);
         ScopeContext idx = index.ntcGenCons(env, now);
         value.ntcGenCons(env, now);
-        int a = 10;
-        final int b = a;
         //TODO: support DepMap
 
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
-            // index must match, and must be a final
+            // index must match, and must be a final address/contract or a principal
             System.err.println("Subscript: DepMap to be support");
             return null;
         } else if (valueVarSym.typeSym instanceof MapTypeSym) {
@@ -60,6 +58,8 @@ public class Subscript extends TrailerExpr {
         // String ifNameRtnLock = "";
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
             // value[index] where value is of dependent map type
+            // precondition: the type of index and value match; index is a final address/contract or a principal
+            // the result value of this expression has the label dependent to index
             assert false;
             VarSym indexVarSym = index.getVarInfo(env, tail_position);
             logger.debug("subscript/DepMap:");

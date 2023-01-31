@@ -198,21 +198,21 @@ public class ContractSym extends TypeSym {
      * Get all principals and addresses
      * @return
      */
-    public Set<Sym> getPrincipalSet() {
-        Set<Sym> rtn = new HashSet<>();
-        for (Entry<String, VarSym> entry : symTab.getVars().entrySet()) {
-            //if (sym instanceof VarSym) {
-            VarSym sym = entry.getValue();
-            if (sym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)
-                    || (sym.isFinal
-                    && (sym.typeSym instanceof ContractSym
-                        || sym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))) {
-                rtn.add(sym);
-            }
-            //}
-        }
-        return rtn;
-    }
+//    public Set<Sym> getPrincipalSet() {
+//        Set<Sym> rtn = new HashSet<>();
+//        for (Entry<String, VarSym> entry : symTab.getVars().entrySet()) {
+//            //if (sym instanceof VarSym) {
+//            VarSym sym = entry.getValue();
+//            if (sym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)
+//                    || (sym.isFinal
+//                    && (sym.typeSym instanceof ContractSym
+//                        || sym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))) {
+//                rtn.add(sym);
+//            }
+//            //}
+//        }
+//        return rtn;
+//    }
 
     public Iterable<Assumption> assumptions() {
         return assumptions;

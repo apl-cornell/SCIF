@@ -8,7 +8,7 @@ import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Map;
 
 public class FunctionSig extends TopLayerNode {
 
@@ -163,7 +163,7 @@ public class FunctionSig extends TopLayerNode {
         if (rtn instanceof LabeledType) {
             ifl = contractSym.toLabel(((LabeledType) rtn).ifl);
         }
-        HashMap<ExceptionTypeSym, String> exceptions = new HashMap<>();
+        Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
         for (ExceptionType t : exceptionList) {
             IfLabel label = null;
             /*if (t.type instanceof  LabeledType)

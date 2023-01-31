@@ -5,6 +5,7 @@ import com.owlike.genson.GensonBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class FuncSym extends Sym {
@@ -16,7 +17,7 @@ public class FuncSym extends Sym {
 
     public final Label external_pc, internal_pc, gamma, rtn;
 
-    public HashMap<ExceptionTypeSym, String> exceptions;
+    public Map<ExceptionTypeSym, String> exceptions;
     public CodeLocation location;
     // public ScopeContext scopeContext;
 
@@ -27,7 +28,7 @@ public class FuncSym extends Sym {
                    ArrayList<VarSym> parameters,
                    TypeSym returnType,
                    Label returnLabel,
-                   HashMap<ExceptionTypeSym, String> exceptions,
+                   Map<ExceptionTypeSym, String> exceptions,
                    ScopeContext defContext,
                    CodeLocation location) {
         super(funcName, defContext);

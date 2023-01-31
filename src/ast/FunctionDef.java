@@ -2,6 +2,7 @@ package ast;
 
 import compile.SolCode;
 import java.util.List;
+import java.util.Map.Entry;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -78,6 +79,14 @@ public class FunctionDef extends FunctionSig {
         if (isBuiltIn()) return null;
         env.incScopeLayer();
         addBuiltInVars(env.curSymTab, scopeContext);
+
+        for (Entry<String, VarSym> entry: env.curSymTab.getVars().entrySet()) {
+            VarSym varSym = entry.getValue();
+            if (varSym.isFinal && (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE))) {
+                env.addPrincipal(varSym);
+            }
+        }
+
         String funcLocalName = name;
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());

@@ -322,4 +322,26 @@ public class Call extends TrailerExpr {
 
         return true;
     }
+
+    /**
+     * Check if a type cast
+     */
+    public boolean isCast(VisitEnv env) {
+        if (value instanceof Name) {
+            // a(b)
+            String funcName = ((Name) value).id;
+            Sym s = env.getCurSym(funcName);
+            assert s != null;
+            if (!(s instanceof FuncSym)) {
+                if (s instanceof ContractSym || s instanceof BuiltinTypeSym) {
+                    return true;
+                }
+                assert false;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
 }

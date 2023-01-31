@@ -108,8 +108,51 @@ public class StateVariableDeclaration extends TopLayerNode {
         SLCNameVar = varSym.toSHErrLocFmt();
         SLCNameVarLbl = varSym.labelNameSLC();
         logger.debug(varSym.typeSym.getName());
-        if (varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE) || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
-            env.principalSet().add(varSym);
+        if ((varSym.isFinal &&
+                (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))) {
+            env.addPrincipal(varSym);
+
+            VarSym equalPrincipal = null;
+            boolean correctInit = true;
+            if (value instanceof Name) { // assigned as another variable
+                // Nothing to check
+                equalPrincipal = env.getVar(((Name) value).id);
+            } else if (value instanceof Call && ((Call) value).isCast(env)) { // assigned as another contract
+                // check if it is a cast to a final address variable
+                Call cast = (Call) value;
+                Expression arg = cast.getArgAt(0);
+                if (arg instanceof Name) {
+                    VarSym sym = env.getVar(((Name) arg).id);
+                    if (!sym.isFinal) {
+                        correctInit = false;
+                    } else {
+                        equalPrincipal = sym;
+                    }
+                } else {
+                    correctInit = false;
+                }
+            } else {
+                correctInit = false;
+            }
+
+
+            if (correctInit) {
+                // add equivalence assumption to the trust set
+                env.addTrustConstraint(
+                        new Constraint(
+                                new Inequality(SLCNameVar, CompareOperator.Eq, equalPrincipal.toSHErrLocFmt()),
+                                env.hypothesis,
+                                location,
+                                env.curContractSym.getName(),
+                                "New principal declaration"
+                        ));
+            } else {
+                throw new RuntimeException("A final address/Contract must be initialized to another final address/Contract: " + id);
+            }
+
+
+        } else if (varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
+            env.addPrincipal(varSym);
         }
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
