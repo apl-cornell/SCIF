@@ -1,9 +1,10 @@
 package typecheck.sherrlocUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Hypothesis {
-    ArrayList<Inequality> inequalities;
+    List<Inequality> inequalities;
     public Hypothesis() {
         this.inequalities = new ArrayList<>();
     }

@@ -337,6 +337,7 @@ public class Call extends TrailerExpr {
                     return true;
                 }
                 assert false;
+                return false;
             } else {
                 return false;
             }
