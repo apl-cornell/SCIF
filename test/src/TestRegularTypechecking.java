@@ -46,7 +46,9 @@ public class TestRegularTypechecking {
             "regularTypechecking/ExceptionThrowAndCatch_W01",
             "regularTypechecking/ExceptionThrowAndCatch_W02",
             "regularTypechecking/ExceptionThrowAndCatch_W03",
-            "regularTypechecking/LocalTrust_W01"
+            "regularTypechecking/LocalTrust_W01",
+            "regularTypechecking/FinalVarNotInitialized_W01",
+            "regularTypechecking/FinalVarNotInitialized_W02",
     })
     void testNegativeRegularTypechecking(String contractName) {
         File logDir = new File("./.scif");
