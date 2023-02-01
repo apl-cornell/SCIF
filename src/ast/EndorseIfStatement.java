@@ -45,6 +45,7 @@ public class EndorseIfStatement extends Statement {
         rtn.addAll(expressionList);
         rtn.add(from);
         rtn.add(to);
+        rtn.add(ifStatement);
         return rtn;
     }
 

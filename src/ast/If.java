@@ -99,7 +99,7 @@ public class If extends Statement {
                         Inequality hypo = new Inequality(l.toSHErrLocFmt(), bo.op,
                                 r.toSHErrLocFmt());
 
-                        env.hypothesis.add(hypo);
+                        env.hypothesis().add(hypo);
                         //System.err.println("testing label");
                         logger.debug("testing label");
                     }
@@ -108,11 +108,11 @@ public class If extends Statement {
                 }
             }
         }
-        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis,
+        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis(),
                 location, env.curContractSym.getName(),
                 "Control flow integrity before this if condition doesn't flow to the one after this condition"));
         env.cons.add(
-                new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location,
+                new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis(), location,
                         env.curContractSym.getName(),
                         "Integrity of this condition doesn't flow to the control flow in this if branch"));
 
@@ -144,7 +144,7 @@ public class If extends Statement {
         env.decScopeLayer();
 
         if (createdHypo) {
-            env.hypothesis.remove();
+            env.hypothesis().remove();
         }
 
         logger.debug("finished if branch");

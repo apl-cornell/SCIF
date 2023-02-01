@@ -13,6 +13,7 @@ abstract public class Label {
     }
 
     abstract public String toSHErrLocFmt();
+    abstract public String toSHErrLocFmt(String origin, String substitution);
 
     public CodeLocation location() {
         return location;

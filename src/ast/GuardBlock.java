@@ -53,7 +53,7 @@ public class GuardBlock extends Statement {
         String guardLabel = label.toSHErrLocFmt();
 
         env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, curContext.lambda),
-                beginContext.lambda), env.hypothesis, location, env.curContractSym.getName(),
+                beginContext.lambda), env.hypothesis(), location, env.curContractSym.getName(),
                 "Cannot grant a dynamic reentrancy lock"));
         // String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
@@ -86,7 +86,7 @@ public class GuardBlock extends Statement {
                     scopeContext.getSHErrLocName() + "." + "lock" + location.toString() + "."
                             + entry.getKey().getName();
             env.cons.add(new Constraint(new Inequality(newPathLabel, CompareOperator.Eq,
-                    Utils.meetLabels(value.c.lambda, guardLabel)), env.hypothesis, location,
+                    Utils.meetLabels(value.c.lambda, guardLabel)), env.hypothesis(), location,
                     env.curContractSym.getName(),
                     "Operations inside lock clause does't respect locks"));
             psiOutcome.set(entry.getKey(),
@@ -96,7 +96,7 @@ public class GuardBlock extends Statement {
         if (!tail_position) {
             env.cons.add(new Constraint(
                     new Inequality(psiOutcome.getNormalPath().c.lambda, beginContext.lambda),
-                    env.hypothesis, location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym.getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
         /*env.cons.add(new Constraint(new Inequality(Utils.meetLabels(curContext.lockName, guardLabel), context.lockName), env.hypothesis, location, env.curContractSym.name,

@@ -23,4 +23,14 @@ public class ComplexLabel extends Label {
         };
     }
 
+    @Override
+    public String toSHErrLocFmt(String origin, String substitution) {
+        String l = left.toSHErrLocFmt(origin, substitution);
+        String r = right.toSHErrLocFmt(origin, substitution);
+        return switch (op) {
+            case JOIN -> "(" + l + " ⊔ " + r + ")";
+            case MEET -> "(" + l + " ⊓ " + r + ")";
+        };
+    }
+
 }

@@ -141,7 +141,7 @@ public class StateVariableDeclaration extends TopLayerNode {
                 env.addTrustConstraint(
                         new Constraint(
                                 new Inequality(SLCNameVar, CompareOperator.Eq, equalPrincipal.toSHErrLocFmt()),
-                                env.hypothesis,
+                                env.hypothesis(),
                                 location,
                                 env.curContractSym.getName(),
                                 "New principal declaration"
@@ -160,7 +160,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         // Context prevContext = env.prevContext;
 
         env.cons.add(
-                new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis, location,
+                new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis(), location,
                         env.curContractSym.getName(),
                         "Integrity of control flow must be trusted to allow this assignment"));
 
@@ -168,14 +168,14 @@ public class StateVariableDeclaration extends TopLayerNode {
 
         if (!tail_position) {
             env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis, location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym.getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
         if (value != null) {
             env.inContext = beginContext;
             ExpOutcome valueOutcome = value.genConsVisit(env, scopeContext.isContractLevel());
             env.cons.add(new Constraint(new Inequality(valueOutcome.valueLabelName, SLCNameVarLbl),
-                    env.hypothesis, value.location, env.curContractSym.getName(),
+                    env.hypothesis(), value.location, env.curContractSym.getName(),
                     "Integrity of the value being assigned must be trusted to allow this assignment"));
             typecheck.Utils.contextFlow(env, valueOutcome.psi.getNormalPath().c, endContext,
                     value.location);

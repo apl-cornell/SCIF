@@ -11,7 +11,7 @@ public abstract class Literal extends Expression {
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         String ifNameRtn = "LITERAL..." + location.toString();
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtn), env.hypothesis, location,
+        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtn), env.hypothesis(), location,
                 env.curContractSym.getName(),
                 "Control flow must be trusted to use this literal"));
 

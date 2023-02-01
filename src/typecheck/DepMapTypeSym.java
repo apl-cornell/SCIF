@@ -21,4 +21,8 @@ public class DepMapTypeSym extends MapTypeSym {
         this.key = depMapTypeInfo.key;
         this.valueLabel = depMapTypeInfo.valueLabel;
     }
+
+    public VarSym key() {
+        return key;
+    }
 }

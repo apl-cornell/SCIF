@@ -95,4 +95,8 @@ public class VarSym extends Sym {
     public void setLabel(Label label) {
         ifl = label;
     }
+
+    public boolean isPrincipalVar() {
+        return isFinal && (typeSym instanceof ContractSym || typeSym.getName().equals(Utils.ADDRESS_TYPE));
+    }
 }

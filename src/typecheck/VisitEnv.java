@@ -23,7 +23,7 @@ public class VisitEnv {
     // public LookupMaps varNameMap;
     public SymTab globalSymTab;
     public SymTab curSymTab;
-    public Hypothesis hypothesis;
+    private Hypothesis hypothesis;
     private final Set<VarSym> principalSet; // TODO: better imp
     public ContractSym curContractSym;
     // public HashMap<String, ContractInfo> contractMap;
@@ -64,6 +64,10 @@ public class VisitEnv {
         // this.psi = psi;
         // this.contractMap = contractMap;
         // this.sigConsMap = sigConsMap;
+    }
+
+    public Hypothesis hypothesis() {
+        return hypothesis;
     }
 
     public void addVar(String id, VarSym varSym) {

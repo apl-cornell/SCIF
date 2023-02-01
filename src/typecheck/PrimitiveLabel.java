@@ -13,4 +13,12 @@ public class PrimitiveLabel extends Label {
     public String toSHErrLocFmt() {
         return sym.toSHErrLocFmt();
     }
+
+    @Override
+    public String toSHErrLocFmt(String origin, String substitution) {
+        if (sym.toSHErrLocFmt().equals(origin)) {
+            return substitution;
+        }
+        return sym.toSHErrLocFmt();
+    }
 }

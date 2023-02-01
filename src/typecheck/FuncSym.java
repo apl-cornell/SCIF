@@ -6,7 +6,6 @@ import com.owlike.genson.GensonBuilder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class FuncSym extends Sym {
     public String funcName;
@@ -15,11 +14,11 @@ public class FuncSym extends Sym {
     public TypeSym returnType;
     // public IfLabel returnLabel;
 
+    private VarSym sender;
     public final Label external_pc, internal_pc, gamma, rtn;
 
     public Map<ExceptionTypeSym, String> exceptions;
     public CodeLocation location;
-    // public ScopeContext scopeContext;
 
     public FuncSym(String funcName,
                    Label external_pc,
@@ -30,9 +29,10 @@ public class FuncSym extends Sym {
                    Label returnLabel,
                    Map<ExceptionTypeSym, String> exceptions,
                    ScopeContext defContext,
-                   CodeLocation location) {
+            VarSym sender, CodeLocation location) {
         super(funcName, defContext);
         this.funcName = funcName;
+        this.sender = sender;
         // this.funcLabels = funcLabels;
         assert external_pc != null;
         this.external_pc = external_pc;
@@ -54,10 +54,11 @@ public class FuncSym extends Sym {
                    TypeSym returnType,
                 Label returnLabel,
                    ScopeContext defContext,
-                   CodeLocation location) {
+            VarSym sender, CodeLocation location) {
         super(funcName, defContext);
         // this.typeName = funcName;
         this.funcName = funcName;
+        this.sender = sender;
         // this.name = funcName;
         assert external_pc != null;
         this.external_pc = external_pc;
@@ -163,6 +164,10 @@ public class FuncSym extends Sym {
 
     public String returnTypeSLC() {
         return toSHErrLocFmt() + "." + "returnT";
+    }
+
+    public VarSym sender() {
+        return sender;
     }
 //    public String getLabelNameCallGamma(String namespace) {
 //        if (!Objects.equals(namespace, ""))

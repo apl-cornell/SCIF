@@ -28,12 +28,12 @@ public class ConstantExpr extends Expression {
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         //env.outContext = endContext;
-        env.cons.add(new Constraint(new Inequality(beginContext.pc, endContext.pc), env.hypothesis,
+        env.cons.add(new Constraint(new Inequality(beginContext.pc, endContext.pc), env.hypothesis(),
                 location, env.curContractSym.getName(),
                 "Integrity of the control flow doesn't flow to value of this constant"));
         if (!tail_position) {
             env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis, location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym.getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
         return new ExpOutcome(endContext.pc, new PathOutcome(new PsiUnit(endContext)));

@@ -27,12 +27,22 @@ public class Subscript extends TrailerExpr {
         VarSym valueVarSym = value.getVarInfo(env);
         ScopeContext idx = index.ntcGenCons(env, now);
         value.ntcGenCons(env, now);
-        //TODO: support DepMap
 
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
             // index must match, and must be a final address/contract or a principal
-            System.err.println("Subscript: DepMap to be support");
-            return null;
+            boolean validIndex = true;
+            if (index instanceof Name) {
+                VarSym indexSym = index.getVarInfo(env);
+                if (!indexSym.isPrincipalVar()) {
+                    validIndex = false;
+                }
+            } else {
+                validIndex = false;
+            }
+            if (!validIndex) {
+                throw new RuntimeException("Must use a final address/contract to access a dependent map: " + index);
+            }
+            return now;
         } else if (valueVarSym.typeSym instanceof MapTypeSym) {
             MapTypeSym typeInfo = (MapTypeSym) valueVarSym.typeSym;
             // index matches the keytype
@@ -41,8 +51,7 @@ public class Subscript extends TrailerExpr {
             env.addCons(now.genCons(typeInfo.valueType.getName(), Relation.EQ, env, location));
             return now;
         } else {
-            System.err.println("Subscript: value type not found");
-            return null;
+            throw new RuntimeException("Subscript: value type not found: " + value);
         }
     }
 
@@ -53,45 +62,46 @@ public class Subscript extends TrailerExpr {
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         VarSym valueVarSym = value.getVarInfo(env, false);
         String ifNameValue = valueVarSym.labelNameSLC();
-        String ifNameRtnValue = ifNameValue + "." + "Subscript" + location.toString();
+        // String ifNameRtnValue = ifNameValue + "." + "Subscript" + location.toString();
+        String ifNameRtnValue = toSHErrLocFmt();
+        ExpOutcome io = index.genConsVisit(env, tail_position);
+
 
         // String ifNameRtnLock = "";
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
             // value[index] where value is of dependent map type
             // precondition: the type of index and value match; index is a final address/contract or a principal
             // the result value of this expression has the label dependent to index
-            assert false;
+
+            DepMapTypeSym typeSym = (DepMapTypeSym) valueVarSym.typeSym;
             VarSym indexVarSym = index.getVarInfo(env, tail_position);
             logger.debug("subscript/DepMap:");
             logger.debug("lookup at: " + index.toString());
             logger.debug(indexVarSym.toString());
             String ifNameIndex = indexVarSym.toSHErrLocFmt();
 
-            if (indexVarSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)) {
+            if (indexVarSym.isPrincipalVar()) {
                 logger.debug("typename {} to {}", valueVarSym.typeSym.getName(), ifNameIndex);
-//                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(valueVarSym.typeSym.getName(),
-//                        ifNameIndex);
+                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(typeSym.key().toSHErrLocFmt(),
+                        ifNameIndex);
 
-//                env.cons.add(
-//                        new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue),
-//                                env.hypothesis, location, env.curContractSym.getName(),
-//                                "Integrity level of the subscript value is not trustworthy enough"));
+                env.cons.add(
+                        new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue),
+                                env.hypothesis(), location, env.curContractSym.getName(),
+                                "Integrity level of the subscript value is not trustworthy enough"));
+                return new ExpOutcome(ifNameRtnValue, io.psi);
 
-                return null;
             } else {
-                logger.error("non-address type variable as index to access DEPMAP @{}",
-                        locToString());
-                //System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());
+                assert false;
                 return null;
             }
         } else {
-            ExpOutcome io = index.genConsVisit(env, tail_position);
             Context indexContext = io.psi.getNormalPath().c;
             String ifNameIndex = io.valueLabelName;
-            ifNameRtnValue =
-                    scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
+            //ifNameRtnValue =
+            //        scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
             env.cons.add(new Constraint(new Inequality(ifNameValue, Relation.EQ, ifNameRtnValue),
-                    env.hypothesis, location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym.getName(),
                     "Integrity level of the subscript value is not trustworthy enough"));
 
             // env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
@@ -133,12 +143,12 @@ public class Subscript extends TrailerExpr {
             String ifNameIndex = index.genConsVisit(env, tail_position).valueLabelName;
             ifNameRtn = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
             env.cons.add(
-                    new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis, location,
+                    new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis(), location,
                             env.curContractSym.getName(),
                             "Label of the subscript variable"));
 
             env.cons.add(
-                    new Constraint(new Inequality(ifNameIndex, ifNameRtn), env.hypothesis, location,
+                    new Constraint(new Inequality(ifNameIndex, ifNameRtn), env.hypothesis(), location,
                             env.curContractSym.getName(),
                             "Label of the subscript index value"));
 

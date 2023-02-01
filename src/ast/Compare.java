@@ -54,11 +54,11 @@ public class Compare extends Expression {
 
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "cmp" + location.toString();
 
-        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location,
+        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis(), location,
                 env.curContractSym.getName(),
                 "Integrity of left hand expression doesn't flow to value of this compare operation"));
         env.cons.add(
-                new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location,
+                new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis(), location,
                         env.curContractSym.getName(),
                         "Integrity of right hand expression doesn't flow to value of this compare operation"));
 
@@ -68,7 +68,7 @@ public class Compare extends Expression {
         if (!tail_position) {
             env.cons.add(new Constraint(
                     new Inequality(ro.psi.getNormalPath().c.lambda, beginContext.lambda),
-                    env.hypothesis, location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym.getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 
