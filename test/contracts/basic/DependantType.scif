@@ -1,9 +1,25 @@
+
 contract DependantType {
-    final address name;
+    principal name;
     uint{name} a;
+    assume {
+        this => name;
+    }
+
+    // name as a principal; name ⨆ this
     map(name: address, uint{name}) balances;
 
-    public void{y} foo(final address y) {
-        // ...
+    @public
+    void{y} foo{y}(final address y) {
+        balances[y] = value;
+    }
+
+    @public
+    void bar{sender -> this}(final address x) {
+        ContractA contractX = ContractA(x);
+        contractX.f();
+
+        DependantType contractY = ContractA(x);
+        contractY.bar(this);
     }
 }
