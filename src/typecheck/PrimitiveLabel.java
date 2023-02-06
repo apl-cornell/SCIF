@@ -1,5 +1,7 @@
 package typecheck;
 
+import java.util.Map;
+
 public class PrimitiveLabel extends Label {
     VarSym sym;
 
@@ -20,5 +22,10 @@ public class PrimitiveLabel extends Label {
             return substitution;
         }
         return sym.toSHErrLocFmt();
+    }
+    @Override
+    public String toSHErrLocFmt(Map<String, String> mapping) {
+        String str = sym.toSHErrLocFmt();
+        return mapping.getOrDefault(str, str);
     }
 }

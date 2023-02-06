@@ -110,14 +110,14 @@ public class Call extends TrailerExpr {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
+        Map<String, String> dependentLabelMapping = new HashMap<>();
 
         ArrayList<String> argValueLabelNames = new ArrayList<>();
 
         PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
         ExpOutcome ao = null;
 
-        for (int i = 0; i < args.size(); ++i) {
-            Expression arg = args.get(i);
+        for (Expression arg : args) {
             ao = arg.genConsVisit(env, false);
             psi.joinExe(ao.psi);
             argValueLabelNames.add(ao.valueLabelName);
@@ -130,23 +130,25 @@ public class Call extends TrailerExpr {
         String ifNamePc;
         FuncSym funcSym;
         String namespace = "";
-        String ifNameFuncCallPcBefore, ifNameFuncCallPcAfter, ifNameFuncGammaLock;
+        Label ifFuncCallPcBefore, ifFuncCallPcAfter, ifFuncGammaLock;
 
         ExpOutcome vo = null;
 
         boolean externalCall = false;
         ContractSym externalContractSym = null;
         VarSym externalTargetSym = null;
+        String ifContRtn = null;
         if (!(value instanceof Name)) {
             if (value instanceof Attribute) {
                 //  the case: a.b(c) where a is a contract, b is a function and c are the arguments
                 // att = a.b
+
                 logger.debug("call value: " + value.toSolCode());
                 externalCall = true;
                 Attribute att = (Attribute) value;
                 vo = att.value.genConsVisit(env, false);
                 psi.joinExe(vo.psi);
-                String ifContRtn = vo.valueLabelName;
+                ifContRtn = vo.valueLabelName;
 
                 //TODO: assuming a's depth is 1
                 String varName = ((Name) att.value).id;
@@ -160,12 +162,12 @@ public class Call extends TrailerExpr {
                 funcName = (att.attr).id;
                 ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
                 funcSym = env.getContract(conType.getName()).getFunc(funcName);
-                ifNameFuncCallPcBefore = funcSym.externalPcSLC();
-                ifNameFuncCallPcAfter = funcSym.internalPcSLC();
-                ifNameFuncGammaLock = funcSym.getLabelNameCallGamma();
-                env.cons.add(new Constraint(new Inequality(ifContRtn, ifNameFuncCallPcBefore),
-                        env.hypothesis(), location, env.curContractSym.getName(),
-                        "Argument value must be trusted to call this method")); //TODO join ContRtn with previous pc
+
+                dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(), env.thisSym().toSHErrLocFmt());
+
+                ifFuncCallPcBefore = funcSym.externalPc();
+                ifFuncCallPcAfter = funcSym.internalPc();
+                ifFuncGammaLock = funcSym.callGamma();
             } else {
                 assert false;
                 return null;
@@ -199,69 +201,80 @@ public class Call extends TrailerExpr {
             }
             funcSym = env.getFunc(funcName);
 
-            ifNameFuncCallPcBefore = funcSym.externalPcSLC();
-            ifNameFuncCallPcAfter = funcSym.internalPcSLC();
-            ifNameFuncGammaLock = funcSym.getLabelNameCallGamma();
+            dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(), env.sender().toSHErrLocFmt());
+
+            ifFuncCallPcBefore = funcSym.externalPc();
+            ifFuncCallPcAfter = funcSym.internalPc();
+            ifFuncGammaLock = funcSym.callGamma();
         }
 
         // build hypothesis for sender and this
         // make sender equal to this
-        int createdHypoCount = 0;
-        Inequality senderHypo = new Inequality(
-                funcSym.sender().toSHErrLocFmt(),
-                CompareOperator.Eq,
-                env.curContractSym.toSHErrLocFmt()
-        );
-        env.hypothesis().add(senderHypo);
-        ++createdHypoCount;
+//        Inequality senderHypo = new Inequality(
+//                funcSym.sender().toSHErrLocFmt(),
+//                CompareOperator.Eq,
+//                env.curContractSym.toSHErrLocFmt()
+//        );
+        // env.hypothesis().add(senderHypo);
+        // ++createdHypoCount;
+
         // if external call and the target address is final, make this equal to the target address
         if (externalCall && externalTargetSym.isFinal) {
-            // what if the current contract and the target contract are the same type, but with different addresses
-            Inequality targetHypo = new Inequality(
-                    externalTargetSym.toSHErrLocFmt(),
-                    CompareOperator.Eq,
-                    externalContractSym.toSHErrLocFmt()
-            );
-            env.hypothesis().add(targetHypo);
-            ++createdHypoCount;
+            dependentLabelMapping.put(
+                    externalContractSym.thisSym().toSHErrLocFmt(),
+                    externalTargetSym.toSHErrLocFmt());
         }
 
         for (int i = 0; i < args.size(); ++i) {
             Expression arg = args.get(i);
-            // env.prevContext = prevContext = tmp;
-            String ifNameArgValue = argValueLabelNames.get(i);
-            String ifNameArgLabel = funcSym.getLabelNameArg(i);
-            env.cons.add(
-                    new Constraint(new Inequality(ifNameArgValue, Relation.LEQ, ifNameArgLabel),
-                            env.hypothesis(), arg.location, env.curContractSym.getName(),
-                            "Input to the " + Utils.ordNumString(i + 1)
-                                    + " argument must be trusted enough"));
-            env.cons.add(new Constraint(new Inequality(ifNamePc, Relation.LEQ, ifNameArgLabel),
-                    env.hypothesis(), arg.location, env.curContractSym.getName(),
-                    "Current control flow must be trusted to feed the " + Utils.ordNumString(i + 1)
-                            + "-th argument value"));
-            // TODO: if the argument and the value are both final, add corresponding equivalence assumptions as hypothesis
             VarSym argSym = funcSym.parameters.get(i);
             if (argSym.isPrincipalVar()) {
 
-                if (value instanceof Name) {
-                    VarSym targetSym = (VarSym) env.getVar(((Name) value).id);
-                    if (targetSym.isPrincipalVar()) {
-                        Inequality argHypo = new Inequality(
-                                argSym.toSHErrLocFmt(),
-                                CompareOperator.Eq,
-                                targetSym.toSHErrLocFmt()
-                                );
-                        env.hypothesis().add(argHypo);
-                        ++createdHypoCount;
+                if (arg instanceof Name) {
+                    VarSym valueSym = (VarSym) env.getVar(((Name) arg).id);
+                    if (valueSym.isPrincipalVar()) {
+                        dependentLabelMapping.put(argSym.toSHErrLocFmt(), valueSym.toSHErrLocFmt());
                     }
                 }
             }
+
+            // env.prevContext = prevContext = tmp;
+            String ifNameArgValue = argValueLabelNames.get(i);
+            Label ifArgLabel = funcSym.getLabelArg(i); // TODO: dependent
+            env.cons.add(
+                    new Constraint(
+                            new Inequality(
+                                    ifNameArgValue,
+                                    Relation.LEQ,
+                                    ifArgLabel.toSHErrLocFmt(dependentLabelMapping)
+                            ),
+                            env.hypothesis(), arg.location, env.curContractSym.getName(),
+                            "Input to the " + Utils.ordNumString(i + 1)
+                                    + " argument must be trusted enough")
+            );
+            env.cons.add(
+                    new Constraint(
+                            new Inequality(
+                                    ifNamePc,
+                                    Relation.LEQ,
+                                    ifArgLabel.toSHErrLocFmt(dependentLabelMapping)),
+                            env.hypothesis(), arg.location, env.curContractSym.getName(),
+                            "Current control flow must be trusted to feed the " + Utils.ordNumString(i + 1)
+                            + "-th argument value")
+            );
+        }
+
+        if (externalCall) {
+            env.cons.add(
+                    new Constraint(
+                            new Inequality(ifContRtn, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping)),
+                    env.hypothesis(), location, env.curContractSym.getName(),
+                    "Target contract must be trusted to call this method"));
         }
 
 
         PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
-                Utils.joinLabels(psi.getNormalPath().c.pc, funcSym.endPcSLC()),
+                Utils.joinLabels(psi.getNormalPath().c.pc, funcSym.endPc().toSHErrLocFmt(dependentLabelMapping)),
                 Utils.joinLabels(funcSym.getLabelNameCallGamma(), funcSym.internalPcSLC())
         )));
 
@@ -271,9 +284,9 @@ public class Call extends TrailerExpr {
             expPsi.set(curSym, new PsiUnit(
                     new Context(
                             Utils.joinLabels(expLabelName, funcSym.externalPcSLC()),
-                            Utils.joinLabels(funcSym.getLabelNameCallGamma(),
-                                    funcSym.internalPcSLC())),
-                    true));
+                            Utils.joinLabels(ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping),
+                                    ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping))),
+                    true)); //TODO: dependent
             //PsiUnit psiUnit = env.psi.get(curSym);
             //env.cons.add(new Constraint(new Inequality(Utils.makeJoin(expLabelName, ifNameFuncCallPcAfter), psiUnit.pc), env.hypothesis, location, env.curContractSym.name,
             //"Exception " + curSym.name + " is not trusted enough to throw"));
@@ -283,15 +296,15 @@ public class Call extends TrailerExpr {
 
         typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
         env.cons.add(
-                new Constraint(new Inequality(ifNamePc, ifNameFuncCallPcBefore), env.hypothesis(),
+                new Constraint(new Inequality(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping)), env.hypothesis(),
                         location, env.curContractSym.getName(),
                         "Current control flow must be trusted to call this method"));
-        env.cons.add(new Constraint(new Inequality(ifNameFuncCallPcBefore,
-                Utils.joinLabels(ifNameFuncCallPcAfter, beginContext.lambda)), env.hypothesis(),
+        env.cons.add(new Constraint(new Inequality(ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
+                Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), beginContext.lambda)), env.hypothesis(),
                 location, env.curContractSym.getName(),
                 "Calling this function does not respect static reentrancy locks"));
         env.cons.add(new Constraint(
-                new Inequality(Utils.joinLabels(ifNameFuncCallPcAfter, ifNameFuncGammaLock),
+                new Inequality(Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
                         Relation.EQ, endContext.lambda), env.hypothesis(), location,
                 env.curContractSym.getName(),
                 "Calling this function does not respect static reentrancy locks"));
@@ -307,10 +320,6 @@ public class Call extends TrailerExpr {
         // String ifNameFuncRtnLock = funcSym.getLabelNameRtnLock();
         psi.joinExe(expPsi);
 
-        while (createdHypoCount > 0) {
-            --createdHypoCount;
-            env.hypothesis().remove();
-        }
         return new ExpOutcome(ifNameFuncRtnValue, psi);
     }
 

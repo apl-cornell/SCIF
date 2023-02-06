@@ -169,6 +169,26 @@ public class FuncSym extends Sym {
     public VarSym sender() {
         return sender;
     }
+
+    public Label externalPc() {
+        return external_pc;
+    }
+
+    public Label internalPc() {
+        return internal_pc;
+    }
+
+    public Label callGamma() {
+        return gamma;
+    }
+
+    public Label getLabelArg(int i) {
+        return parameters.get(i).ifl;
+    }
+
+    public Label endPc() {
+        return rtn;
+    }
 //    public String getLabelNameCallGamma(String namespace) {
 //        if (!Objects.equals(namespace, ""))
 //            namespace += ".";

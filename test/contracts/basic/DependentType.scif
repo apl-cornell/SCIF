@@ -1,5 +1,5 @@
 
-contract DependantType {
+contract DependentType {
     principal name;
     uint{name} a;
     assume {
@@ -19,7 +19,7 @@ contract DependantType {
         ContractA contractX = ContractA(x);
         contractX.f();
 
-        DependantType contractY = ContractA(x);
+        DependentType contractY = ContractA(x);
         contractY.bar(this);
     }
 }

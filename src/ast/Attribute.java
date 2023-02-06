@@ -47,12 +47,11 @@ public class Attribute extends TrailerExpr {
             return null;
         }
         VarSym varSym = env.getVar(varName);
-        if (!(varSym.typeSym instanceof StructTypeSym)) {
+        if (!(varSym.typeSym instanceof StructTypeSym structType)) {
             //TODO: throw errors: variable not struct
             return null;
         }
 
-        StructTypeSym structType = (StructTypeSym) varSym.typeSym;
         //String prevLockName = env.prevContext.lambda;
         ExpOutcome vo = value.genConsVisit(env, tail_position);
         String attrValueLabel = vo.valueLabelName;

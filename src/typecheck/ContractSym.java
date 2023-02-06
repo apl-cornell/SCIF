@@ -20,6 +20,7 @@ public class ContractSym extends TypeSym {
     // public ArrayList<TrustConstraint> trustCons;
     private List<Assumption> assumptions;
     private final Contract astNode;
+    private VarSym thisSym;
 
     public ContractSym(String name,
             SymTab symTab,
@@ -220,5 +221,10 @@ public class ContractSym extends TypeSym {
 
     public void updateAssumptions(List<Assumption> assumptions) {
         this.assumptions = assumptions;
+    }
+
+    public VarSym thisSym() {
+        assert thisSym != null;
+        return thisSym;
     }
 }

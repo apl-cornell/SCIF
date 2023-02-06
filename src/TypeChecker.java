@@ -87,19 +87,21 @@ public class TypeChecker {
         logger.debug(" code-paste in a topological order");
         // code-paste in a topological order
         for (String x : graph.getTopologicalQueue()) {
-            Node rt = null;
-            for (Node root : roots) {
-                if (((SourceFile) root).containContract(x)) {
+            SourceFile rt = null;
+            for (SourceFile root : roots) {
+                if (root.containContract(x)) {
                     rt = root;
                     break;
                 }
             }
             if (rt == null) {
                 // TODO: contract not found
+                assert false;
                 return null;
             }
-            if (!((SourceFile) rt).codePasteContract(x, contractMap)) {
+            if (!rt.codePasteContract(x, contractMap)) {
                 // TODO: inherit failed
+                assert false;
                 return null;
             }
         }
@@ -362,8 +364,7 @@ public class TypeChecker {
         //env.cons.addAll(curSigCons.cons);
         // System.out.println("before prinSet size: " + env.principalSet().size());
 
-        Node tmp = root;
-        SourceFile sourceFile = (SourceFile) tmp;
+        SourceFile sourceFile = root;
         // env.varNameMap = new LookupMaps(varMap);
 
         sourceFile.genConsVisit(env, true);

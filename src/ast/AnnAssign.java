@@ -43,7 +43,7 @@ public class AnnAssign extends Statement {
 
     public VarSym toVarInfo(ContractSym contractSym) {
         IfLabel ifl = null;
-        if (annotation instanceof LabeledType) {
+        if (annotation != null) {
             ifl = ((LabeledType) annotation).ifl;
         }
         return contractSym.toVarSym(((Name) target).id, annotation, isStatic, isFinal, location,
@@ -99,7 +99,7 @@ public class AnnAssign extends Statement {
         varSym = env.curContractSym.toVarSym(id, annotation, isStatic, isFinal, loc,
                 scopeContext);
         env.addVar(id, varSym);
-        if (annotation instanceof LabeledType) {
+        if (annotation != null) {
             env.cons.add(new Constraint(
                     new Inequality(varSym.labelNameSLC(), Relation.EQ, varSym.labelValueSLC()),
                     env.hypothesis(), location, env.curContractSym.getName(),
@@ -122,10 +122,9 @@ public class AnnAssign extends Statement {
             if (value instanceof Name) { // assigned as another variable
                 // Nothing to check
                 equalPrincipal = env.getVar(((Name) value).id);
-            } else if (value instanceof Call && ((Call) value).isCast(env)) { // assigned as another contract
+            } else if (value instanceof Call call && call.isCast(env)) { // assigned as another contract
                 // check if it is a cast to a final address variable
-                Call cast = (Call) value;
-                Expression arg = cast.getArgAt(0);
+                Expression arg = call.getArgAt(0);
                 if (arg instanceof Name) {
                     VarSym sym = env.getVar(((Name) arg).id);
                     if (!sym.isFinal) {
@@ -139,7 +138,6 @@ public class AnnAssign extends Statement {
             } else {
                 correctInit = false;
             }
-
 
             if (correctInit) {
                 // add equivalence assumption to the trust set

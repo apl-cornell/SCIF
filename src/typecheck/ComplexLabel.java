@@ -1,6 +1,7 @@
 package typecheck;
 
 import ast.IfOperator;
+import java.util.Map;
 
 public class ComplexLabel extends Label {
     private final Label left, right;
@@ -27,6 +28,16 @@ public class ComplexLabel extends Label {
     public String toSHErrLocFmt(String origin, String substitution) {
         String l = left.toSHErrLocFmt(origin, substitution);
         String r = right.toSHErrLocFmt(origin, substitution);
+        return switch (op) {
+            case JOIN -> "(" + l + " ⊔ " + r + ")";
+            case MEET -> "(" + l + " ⊓ " + r + ")";
+        };
+    }
+
+    @Override
+    public String toSHErrLocFmt(Map<String, String> mapping) {
+        String l = left.toSHErrLocFmt(mapping);
+        String r = right.toSHErrLocFmt(mapping);
         return switch (op) {
             case JOIN -> "(" + l + " ⊔ " + r + ")";
             case MEET -> "(" + l + " ⊓ " + r + ")";

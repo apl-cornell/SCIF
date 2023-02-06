@@ -182,4 +182,14 @@ public class VisitEnv {
     public void addPrincipal(VarSym varSym) {
         principalSet.add(varSym);
     }
+
+    public VarSym thisSym() {
+        assert false;
+        return null;
+    }
+
+    public VarSym sender() {
+        assert false;
+        return null;
+    }
 }
