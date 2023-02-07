@@ -10,6 +10,7 @@ public class VarSym extends Sym {
     //public String fullName;
     public boolean isStatic;
     public boolean isFinal;
+    public boolean isBuiltIn = false;
     public TypeSym typeSym;
     public Label ifl;
 
@@ -26,7 +27,18 @@ public class VarSym extends Sym {
         this.ifl = null;
     }*/
 
-    public VarSym(String localName, TypeSym type, Label ifl, CodeLocation location, ScopeContext context, boolean isConst, boolean isFinal) {
+//    public VarSym(String localName, TypeSym type, Label ifl, CodeLocation location, ScopeContext context, boolean isConst, boolean isFinal) {
+//        super(localName, context);
+//        // this.name = localName;
+//        this.typeSym = type;
+//        this.ifl = ifl;
+//        this.location = location;
+//        this.isStatic = isConst;
+//        this.isFinal = isFinal;
+//    }
+    public VarSym(String localName, TypeSym type, Label ifl,
+            CodeLocation location, ScopeContext context,
+            boolean isConst, boolean isFinal, boolean isBuiltIn) {
         super(localName, context);
         // this.name = localName;
         this.typeSym = type;
@@ -34,6 +46,7 @@ public class VarSym extends Sym {
         this.location = location;
         this.isStatic = isConst;
         this.isFinal = isFinal;
+        this.isBuiltIn = isBuiltIn;
     }
 
     /*public VarInfo(String localName, TypeInfo type, CodeLocation location, boolean isConst) {
@@ -52,6 +65,7 @@ public class VarSym extends Sym {
         this.location = varSym.location;
         this.isStatic = varSym.isStatic;
         this.isFinal = varSym.isFinal;
+        this.isBuiltIn = varSym.isBuiltIn;
     }
 
     /**

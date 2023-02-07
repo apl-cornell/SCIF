@@ -20,7 +20,7 @@ public class ContractSym extends TypeSym {
     // public ArrayList<TrustConstraint> trustCons;
     private List<Assumption> assumptions;
     private final Contract astNode;
-    private VarSym thisSym;
+    //private VarSym thisSym;
 
     public ContractSym(String name,
             SymTab symTab,
@@ -96,7 +96,7 @@ public class ContractSym extends TypeSym {
     }
 
 
-    public VarSym toVarSym(String localName, ast.Type astType, boolean isConst, boolean isFinal,
+    public VarSym toVarSym(String localName, ast.Type astType, boolean isStatic, boolean isFinal, boolean isBuiltIn,
             CodeLocation loc, ScopeContext defContext) {
         System.err.println("toVarSym: " + localName + " " + astType.getName());
         TypeSym typeSym = toTypeSym(astType, defContext);
@@ -107,7 +107,7 @@ public class ContractSym extends TypeSym {
         } else {
             throw new RuntimeException("Not a labeled type: " + localName);
         }
-        return new VarSym(localName, typeSym, ifl, loc, defContext, isConst, isFinal);
+        return new VarSym(localName, typeSym, ifl, loc, defContext, isStatic, isFinal, isBuiltIn);
     }
 
     public Label toLabel(IfLabel ifl) {
@@ -224,6 +224,7 @@ public class ContractSym extends TypeSym {
     }
 
     public VarSym thisSym() {
+        VarSym thisSym = (VarSym) lookupSym(Utils.LABEL_THIS);
         assert thisSym != null;
         return thisSym;
     }

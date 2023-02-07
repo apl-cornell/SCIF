@@ -256,9 +256,8 @@ public class TypeChecker {
             // TODO: handle the assumptions of other contracts
         }
 
-        env.curContractSym = contractSym;
-        env.curSymTab = contractSym.symTab;
-        env.curSymTab.setParent(env.globalSymTab);//TODO
+        env.setCurContract(contractSym);
+        // env.curSymTab.setParent(env.globalSymTab);//TODO
 
         for (HashMap.Entry<String, FuncSym> funcPair : contractSym.symTab.getFuncs().entrySet()) {
             FuncSym func = funcPair.getValue();
@@ -333,9 +332,8 @@ public class TypeChecker {
         logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n"
                 + env.curSymTab.getTypeSet());
 
-        env.curContractSym = contractSym;
-        env.curSymTab = contractSym.symTab;
-        env.curSymTab.setParent(env.globalSymTab);//TODO
+        env.setCurContract(contractSym);
+        // env.curSymTab.setParent(env.globalSymTab);//TODO
         env.cons = new ArrayList<>();
 
         logger.debug("Display varMap:");

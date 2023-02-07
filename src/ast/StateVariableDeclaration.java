@@ -70,7 +70,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         // ScopeContext tgt = new ScopeContext(name, now);
 
         String vname = name.id;
-        VarSym varSym = env.toVarSym(vname, type, isStatic, isFinal, location, parent);
+        VarSym varSym = env.toVarSym(vname, type, isStatic, isFinal, isBuiltIn, location, parent);
         // assert varSym.ifl != null;
         env.globalSymTab().add(vname, varSym);
         return true;
@@ -100,7 +100,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         CodeLocation loc = location;
         System.err.println(id + " " + type.ifl);
         VarSym varSym =
-                contractSym.toVarSym(id, type, isStatic, isFinal, loc, contractSym.defContext());
+                contractSym.toVarSym(id, type, isStatic, isFinal, isBuiltIn, loc, contractSym.defContext());
         contractSym.addVar(id, varSym);
         varSym.setLabel(contractSym.toLabel(type.ifl));
         assert varSym.ifl != null;
@@ -132,6 +132,7 @@ public class StateVariableDeclaration extends TopLayerNode {
             if (value instanceof Name) { // assigned as another variable
                 // Nothing to check
                 equalPrincipal = env.getVar(((Name) value).id);
+                assert equalPrincipal != null : ((Name) value).id;
             } else if (value instanceof Call && ((Call) value).isCast(env)) { // assigned as another contract
                 // check if it is a cast to a final address variable
                 Call cast = (Call) value;
@@ -158,10 +159,10 @@ public class StateVariableDeclaration extends TopLayerNode {
                                 new Inequality(SLCNameVar, CompareOperator.Eq, equalPrincipal.toSHErrLocFmt()),
                                 env.hypothesis(),
                                 location,
-                                env.curContractSym.getName(),
+                                env.curContractSym().getName(),
                                 "New principal declaration"
                         ));
-            } else {
+            } else if (!isBuiltIn) {
                 throw new RuntimeException("A final address/Contract must be initialized to another final address/Contract: " + id);
             }
 
@@ -176,21 +177,21 @@ public class StateVariableDeclaration extends TopLayerNode {
 
         env.cons.add(
                 new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis(), location,
-                        env.curContractSym.getName(),
+                        env.curContractSym().getName(),
                         "Integrity of control flow must be trusted to allow this assignment"));
 
         //env.outContext = endContext;
 
         if (!tail_position) {
             env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym().getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
         if (value != null) {
             env.inContext = beginContext;
             ExpOutcome valueOutcome = value.genConsVisit(env, scopeContext.isContractLevel());
             env.cons.add(new Constraint(new Inequality(valueOutcome.valueLabelName, SLCNameVarLbl),
-                    env.hypothesis(), value.location, env.curContractSym.getName(),
+                    env.hypothesis(), value.location, env.curContractSym().getName(),
                     "Integrity of the value being assigned must be trusted to allow this assignment"));
             typecheck.Utils.contextFlow(env, valueOutcome.psi.getNormalPath().c, endContext,
                     value.location);

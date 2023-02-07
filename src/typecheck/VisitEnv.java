@@ -25,7 +25,8 @@ public class VisitEnv {
     public SymTab curSymTab;
     private Hypothesis hypothesis;
     private final Set<VarSym> principalSet; // TODO: better imp
-    public ContractSym curContractSym;
+    private ContractSym curContractSym;
+    private FuncSym curFuncSym;
     // public HashMap<String, ContractInfo> contractMap;
     //public HashMap<String, SigCons> sigConsMap;
     public HashMap<String, String> sigReq = new HashMap<>();
@@ -184,12 +185,23 @@ public class VisitEnv {
     }
 
     public VarSym thisSym() {
-        assert false;
-        return null;
+        return curContractSym.thisSym();
     }
 
     public VarSym sender() {
-        assert false;
-        return null;
+        return curFuncSym.sender();
+    }
+
+    public ContractSym curContractSym() {
+        return curContractSym;
+    }
+
+    public void setCurContract(ContractSym contractSym) {
+        curContractSym = contractSym;
+        curSymTab = contractSym.symTab;
+    }
+
+    public void setCurFuncSym(FuncSym funcSym) {
+        curFuncSym = funcSym;
     }
 }

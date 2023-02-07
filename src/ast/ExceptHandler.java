@@ -27,7 +27,7 @@ public class ExceptHandler extends Statement {
         ScopeContext now = new ScopeContext(this, parent);
         env.setCurSymTab(new SymTab(env.curSymTab()));
 
-        VarSym var = env.toVarSym(name, type, true, true, location, now);
+        VarSym var = env.toVarSym(name, type, true, true, true, location, now);
         if (var == null) {
             System.err.println("Exception type " + type.getName() + " not found");
             throw new RuntimeException();

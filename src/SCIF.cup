@@ -566,10 +566,9 @@ labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
     :};
 
 depMap ::=
-    MAP:x LPAR NAME:keyName COLON NAME:keyTypeName COMMA NAME:valueTypeName LBRACE ifLabel:valueLabel RBRACE RPAR LBRACE ifLabel:mapLabel RBRACE {:
+    MAP:x LPAR NAME:keyTypeName NAME:keyName COMMA labeledType:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
         String name = (String) keyName;
         Type keyType = new Type((String) keyTypeName);
-        Type valueType = new Type((String) valueTypeName);
         RESULT = new ast.DepMap(keyType, keyName, valueType, valueLabel, mapLabel);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};

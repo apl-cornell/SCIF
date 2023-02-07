@@ -64,12 +64,12 @@ public class Assign extends Statement {
 
         env.cons.add(
                 new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis(), location,
-                        env.curContractSym.getName(),
+                        env.curContractSym().getName(),
                         "Integrity of the value being assigned must be trusted to allow this assignment"));
 
         env.cons.add(
                 new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis(), value.location,
-                        env.curContractSym.getName(),
+                        env.curContractSym().getName(),
                         "Integrity of control flow must be trusted to allow this assignment"));
 
         typecheck.Utils.contextFlow(env, vo.psi.getNormalPath().c, endContext, value.location);
@@ -77,7 +77,7 @@ public class Assign extends Statement {
 
         if (!tail_position) {
             env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym().getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 

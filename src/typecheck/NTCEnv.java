@@ -42,13 +42,13 @@ public class NTCEnv {
         this.curContractSym = curContractSym;
     }
 
-    public VarSym toVarSym(String varName, ast.Type astType, boolean isConst, boolean isFinal,
+    public VarSym toVarSym(String varName, ast.Type astType, boolean isConst, boolean isFinal, boolean isBuiltIn,
             CodeLocation location, ScopeContext context) {
         TypeSym typeSym = toTypeSym(astType, context);
         if (typeSym == null) {
             throw new RuntimeException("Type not found: " + astType.getName());
         }
-        return new VarSym(varName, typeSym, null, location, context, isConst, isFinal);
+        return new VarSym(varName, typeSym, null, location, context, isConst, isFinal, isBuiltIn);
     }
 
     public TypeSym toTypeSym(ast.Type astType, ScopeContext defContext) {

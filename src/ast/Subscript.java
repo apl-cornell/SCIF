@@ -87,7 +87,7 @@ public class Subscript extends TrailerExpr {
 
                 env.cons.add(
                         new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue),
-                                env.hypothesis(), location, env.curContractSym.getName(),
+                                env.hypothesis(), location, env.curContractSym().getName(),
                                 "Integrity level of the subscript value is not trustworthy enough"));
                 return new ExpOutcome(ifNameRtnValue, io.psi);
 
@@ -101,7 +101,7 @@ public class Subscript extends TrailerExpr {
             //ifNameRtnValue =
             //        scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
             env.cons.add(new Constraint(new Inequality(ifNameValue, Relation.EQ, ifNameRtnValue),
-                    env.hypothesis(), location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym().getName(),
                     "Integrity level of the subscript value is not trustworthy enough"));
 
             // env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
@@ -123,7 +123,7 @@ public class Subscript extends TrailerExpr {
 
                 TypeSym rtnTypeSym = ((DepMapTypeSym) valueVarSym.typeSym).valueType;
                 rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
-                        valueVarSym.defContext(), false, false);
+                        valueVarSym.defContext(), false, false, false);
 
 //                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(valueVarSym.typeSym.getName(),
 //                        ifNameIndex);
@@ -144,18 +144,18 @@ public class Subscript extends TrailerExpr {
             ifNameRtn = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
             env.cons.add(
                     new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis(), location,
-                            env.curContractSym.getName(),
+                            env.curContractSym().getName(),
                             "Label of the subscript variable"));
 
             env.cons.add(
                     new Constraint(new Inequality(ifNameIndex, ifNameRtn), env.hypothesis(), location,
-                            env.curContractSym.getName(),
+                            env.curContractSym().getName(),
                             "Label of the subscript index value"));
 
             TypeSym rtnTypeSym = new BuiltinTypeSym(ifNameRtn);
             //TODO: more careful thoughts
             rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
-                    valueVarSym.defContext(), false, false);
+                    valueVarSym.defContext(), false, false, false);
         }
         return rtnVarSym;
     }

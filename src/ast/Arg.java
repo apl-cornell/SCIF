@@ -34,12 +34,12 @@ public class Arg extends Node {
     }
 
     public VarSym parseArg(ContractSym contractSym) {
-        return contractSym.toVarSym(name, annotation, false, false, location, scopeContext);
+        return contractSym.toVarSym(name, annotation, false, false, true, location, scopeContext);
     }
 
     public VarSym parseArg(NTCEnv env, ScopeContext parent) {
         // ScopeContext now = new ScopeContext(this, parent);
-        return env.toVarSym(name, annotation, false, false, location, parent);
+        return env.toVarSym(name, annotation, false, false, true, location, parent);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class Arg extends Node {
 
         ScopeContext type = annotation.ntcGenCons(env, now);
 
-        env.addSym(name, env.toVarSym(name, annotation, false, false, location, now));
+        env.addSym(name, env.toVarSym(name, annotation, false, false, true, location, now));
 
         env.addCons(type.genCons(now, Relation.EQ, env, location));
 
@@ -63,7 +63,7 @@ public class Arg extends Node {
 
     public void genConsVisit(VisitEnv env, boolean tail_position) {
 
-        VarSym varSym = env.curContractSym.toVarSym(name, annotation, false, false, location,
+        VarSym varSym = env.curContractSym().toVarSym(name, annotation, false, false, true, location,
                 scopeContext);
         env.addVar(name, varSym);
 

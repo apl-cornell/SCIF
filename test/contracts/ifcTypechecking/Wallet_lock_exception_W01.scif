@@ -14,9 +14,9 @@ contract Wallet [this] {
         uint amount = endorse(_amount, BOT -> this);
         if (balances[sender] >= amount) {
             // pc: this join sender
-            try {
+            atom {
                 send(sender, amount);
-            } catchall (transferFailure e) { //TODO: support errors
+            } rescue (error e) {
                 throw transferFailure();
             }
             // balances[sender] = balances[sender] - amount;

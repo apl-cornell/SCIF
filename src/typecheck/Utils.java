@@ -545,11 +545,11 @@ public class Utils {
     public static void contextFlow(VisitEnv env, Context outContext, Context funcEndContext,
             CodeLocation location) {
         env.addTrustConstraint(new Constraint(new Inequality(outContext.lambda, funcEndContext.lambda),
-                env.hypothesis(), location, env.curContractSym.getName(),
+                env.hypothesis(), location, env.curContractSym().getName(),
                 "actually-maintained lock of the last sub-statement flows to parent-statement's one"));
         env.addTrustConstraint(
                 new Constraint(new Inequality(outContext.pc, funcEndContext.pc), env.hypothesis(),
-                        location, env.curContractSym.getName(),
+                        location, env.curContractSym().getName(),
                         "normal termination control flow of the last sub-statement flows to parent-statement's one"));
     }
 

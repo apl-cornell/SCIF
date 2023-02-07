@@ -47,11 +47,11 @@ public class BoolOp extends Expression {
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bool" + location.toString();
 
         env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis(), location,
-                env.curContractSym.getName(),
+                env.curContractSym().getName(),
                 "Integrity of left hand expression doesn't flow to value of this boolean operation"));
         env.cons.add(
                 new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis(), location,
-                        env.curContractSym.getName(),
+                        env.curContractSym().getName(),
                         "Integrity of right hand expression doesn't flow to value of this boolean operation"));
 
         typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, right.location);
@@ -60,7 +60,7 @@ public class BoolOp extends Expression {
         if (!tail_position) {
             env.cons.add(new Constraint(
                     new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym().getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 

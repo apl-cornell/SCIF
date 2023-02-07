@@ -190,7 +190,7 @@ public class Call extends TrailerExpr {
                     if (!tail_position) {
                         env.cons.add(new Constraint(
                                 new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
-                                env.hypothesis(), location, env.curContractSym.getName(),
+                                env.hypothesis(), location, env.curContractSym().getName(),
                                 typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
                     }
                     return new ExpOutcome(ifNameArgValue, psi);
@@ -248,7 +248,7 @@ public class Call extends TrailerExpr {
                                     Relation.LEQ,
                                     ifArgLabel.toSHErrLocFmt(dependentLabelMapping)
                             ),
-                            env.hypothesis(), arg.location, env.curContractSym.getName(),
+                            env.hypothesis(), arg.location, env.curContractSym().getName(),
                             "Input to the " + Utils.ordNumString(i + 1)
                                     + " argument must be trusted enough")
             );
@@ -258,7 +258,7 @@ public class Call extends TrailerExpr {
                                     ifNamePc,
                                     Relation.LEQ,
                                     ifArgLabel.toSHErrLocFmt(dependentLabelMapping)),
-                            env.hypothesis(), arg.location, env.curContractSym.getName(),
+                            env.hypothesis(), arg.location, env.curContractSym().getName(),
                             "Current control flow must be trusted to feed the " + Utils.ordNumString(i + 1)
                             + "-th argument value")
             );
@@ -268,7 +268,7 @@ public class Call extends TrailerExpr {
             env.cons.add(
                     new Constraint(
                             new Inequality(ifContRtn, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping)),
-                    env.hypothesis(), location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym().getName(),
                     "Target contract must be trusted to call this method"));
         }
 
@@ -297,22 +297,22 @@ public class Call extends TrailerExpr {
         typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
         env.cons.add(
                 new Constraint(new Inequality(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping)), env.hypothesis(),
-                        location, env.curContractSym.getName(),
+                        location, env.curContractSym().getName(),
                         "Current control flow must be trusted to call this method"));
         env.cons.add(new Constraint(new Inequality(ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
                 Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), beginContext.lambda)), env.hypothesis(),
-                location, env.curContractSym.getName(),
+                location, env.curContractSym().getName(),
                 "Calling this function does not respect static reentrancy locks"));
         env.cons.add(new Constraint(
                 new Inequality(Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
                         Relation.EQ, endContext.lambda), env.hypothesis(), location,
-                env.curContractSym.getName(),
+                env.curContractSym().getName(),
                 "Calling this function does not respect static reentrancy locks"));
 
         if (!tail_position) {
             env.cons.add(new Constraint(
                     new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym().getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 

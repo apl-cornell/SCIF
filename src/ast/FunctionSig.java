@@ -275,6 +275,7 @@ public class FunctionSig extends TopLayerNode {
                         typecheck.Utils.BUILTIN_LOCATION,
                         now,
                         true,
+                        true,
                         true
                 );
         PrimitiveLabel labelSender = new PrimitiveLabel(varSender, typecheck.Utils.BUILTIN_LOCATION);
@@ -289,6 +290,7 @@ public class FunctionSig extends TopLayerNode {
                         labelSender,
                         typecheck.Utils.BUILTIN_LOCATION,
                         now,
+                        true,
                         true,
                         true
                 ));

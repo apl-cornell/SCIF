@@ -51,7 +51,7 @@ public class Return extends Statement {
         PathOutcome psi = new PathOutcome();
         if (value == null) {
             env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis(),
-                    location, env.curContractSym.getName(),
+                    location, env.curContractSym().getName(),
                     Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
             psi.setReturnPath(env.inContext);
             return psi;
@@ -61,16 +61,16 @@ public class Return extends Statement {
         Context expContext = vo.psi.getNormalPath().c;
         String ifNameValue = vo.valueLabelName;
         env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtnValue), env.hypothesis(),
-                location, env.curContractSym.getName(),
+                location, env.curContractSym().getName(),
                 "Value must be trusted to be returned"));
         env.cons.add(
                 new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis(), location,
-                        env.curContractSym.getName(),
+                        env.curContractSym().getName(),
                         "Control flow must be trusted to return"));
 
         env.cons.add(new Constraint(
                 new Inequality(Utils.joinLabels(endContext.lambda, beginContext.lambda),
-                        ifRtnLockName), env.hypothesis(), location, env.curContractSym.getName(),
+                        ifRtnLockName), env.hypothesis(), location, env.curContractSym().getName(),
                 "Reentrancy locks must be respected to return"));
         PsiUnit pathn = vo.psi.getNormalPath();
         vo.psi.setNormalPath(null);

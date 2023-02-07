@@ -109,11 +109,11 @@ public class If extends Statement {
             }
         }
         env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis(),
-                location, env.curContractSym.getName(),
+                location, env.curContractSym().getName(),
                 "Control flow integrity before this if condition doesn't flow to the one after this condition"));
         env.cons.add(
                 new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis(), location,
-                        env.curContractSym.getName(),
+                        env.curContractSym().getName(),
                         "Integrity of this condition doesn't flow to the control flow in this if branch"));
 
         /*if (body.size() > 0 || orelse.size() > 0) {

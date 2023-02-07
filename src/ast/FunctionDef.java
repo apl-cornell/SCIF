@@ -91,6 +91,7 @@ public class FunctionDef extends FunctionSig {
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         FuncSym funcSym = env.getFunc(funcLocalName);
+        env.setCurFuncSym(funcSym);
         String funcFullName = funcSym.toSHErrLocFmt();
         // Context curContext = new Context(ifNamePc, Utils.getLabelNameFuncRtnLock(funcName), Utils.getLabelNameInLock(location));
         String inLockName = Utils.getLabelNameInLock(funcFullName);
@@ -101,21 +102,21 @@ public class FunctionDef extends FunctionSig {
         String ifNameCall = funcSym.internalPcSLC();
         env.addTrustConstraint(
                 new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis(),
-                        funcLabels.to_pc.location, env.curContractSym.getName(),
+                        funcLabels.to_pc.location, env.curContractSym().getName(),
                         "Control flow of this method start with its call-after(second) label"));
 
-        String ifNameContract = env.curContractSym.getLabelNameContract();
+        String ifNameContract = env.curContractSym().getLabelNameContract();
         env.addTrustConstraint(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis(),
-                funcLabels.begin_pc.location, env.curContractSym.getName(),
+                funcLabels.begin_pc.location, env.curContractSym().getName(),
                 "This contract should be trusted enough to call this method"));
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
         env.addTrustConstraint(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis(),
-                funcLabels.to_pc.location, env.curContractSym.getName(),
+                funcLabels.to_pc.location, env.curContractSym().getName(),
                 "The statically locked integrity must be at least as trusted as initial pc integrity"));
         env.cons.add(
                 new Constraint(new Inequality(Utils.joinLabels(inLockName, outLockName), ifNameGamma),
-                        env.hypothesis(), funcLabels.gamma_label.location, env.curContractSym.getName(),
+                        env.hypothesis(), funcLabels.gamma_label.location, env.curContractSym().getName(),
                         "This function does not maintain reentrancy locks as specified in signature",
                         1));
 

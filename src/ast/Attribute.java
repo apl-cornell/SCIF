@@ -42,7 +42,7 @@ public class Attribute extends TrailerExpr {
         //TODO: assuming only one-level attribute access
         // to add support to multi-level access
         String varName = ((Name) value).id;
-        if (!env.curContractSym.containVar(varName)) {
+        if (!env.curContractSym().containVar(varName)) {
             //TODO: throw errors: variable not found
             return null;
         }
@@ -58,11 +58,11 @@ public class Attribute extends TrailerExpr {
         String ifAttLabel = structType.getMemberLabel(attr.id);
         String ifNameRnt = scopeContext.getSHErrLocName() + ".struct" + location.toString();
         env.cons.add(new Constraint(new Inequality(ifNameRnt, ifAttLabel), env.hypothesis(), location,
-                env.curContractSym.getName(),
+                env.curContractSym().getName(),
                 "Integrity of the member"));
         if (!ifAttLabel.equals(attrValueLabel)) {
             env.cons.add(new Constraint(new Inequality(ifNameRnt, attrValueLabel), env.hypothesis(),
-                    location, env.curContractSym.getName(),
+                    location, env.curContractSym().getName(),
                     "Integrity of the index value must be trusted to indicate the attribute"));
         }
 

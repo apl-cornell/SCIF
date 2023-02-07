@@ -103,7 +103,7 @@ public class Atom extends Statement {
             if (u != null) {
                 env.cons.add(
                         new Constraint(new Inequality(u.c.lambda, beginContext.lambda), env.hypothesis(),
-                                location, env.curContractSym.getName(),
+                                location, env.curContractSym().getName(),
                                 "Try clause should maintain locks when throwing exception " + h.name()));
             /*env.cons.add(new Constraint(new Inequality(u.c.pc, h.), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));*/
@@ -137,7 +137,7 @@ public class Atom extends Statement {
         if (!tail_position) {
             env.cons.add(new Constraint(
                     new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym.getName(),
+                    env.hypothesis(), location, env.curContractSym().getName(),
                     Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 

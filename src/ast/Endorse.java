@@ -38,18 +38,18 @@ public class Endorse extends Expression {
 
         env.cons.add(
                 new Constraint(new Inequality(ifNameValue, fromLabel), env.hypothesis(), location,
-                        env.curContractSym.getName(),
+                        env.curContractSym().getName(),
                         "The expression must be trusted to be endorsed"));
 
         env.cons.add(new Constraint(new Inequality(toLabel, ifNameRtn), env.hypothesis(), location,
-                env.curContractSym.getName(),
+                env.curContractSym().getName(),
                 "The integrity level of this expression would be endorsed"));
 
         //env.outContext = endContext;
 
         env.addTrustConstraint(
                 new Constraint(new Inequality(beginContext.pc, endContext.pc), env.hypothesis(),
-                        location, env.curContractSym.getName(),
+                        location, env.curContractSym().getName(),
                         "The control flow of this expression would be endorsed"));
 
         return new ExpOutcome(ifNameRtn, vo.psi);
