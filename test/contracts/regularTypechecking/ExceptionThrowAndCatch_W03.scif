@@ -6,7 +6,7 @@ contract ExceptionDefinition {
     void foo() throws (X) {
         try {
             bar(1, 2);
-        } catch (Y expY) {
+        } catch (X expY) {
             throw X();
         }
     }

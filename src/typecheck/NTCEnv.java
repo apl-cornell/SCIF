@@ -46,7 +46,7 @@ public class NTCEnv {
             CodeLocation location, ScopeContext context) {
         TypeSym typeSym = toTypeSym(astType, context);
         if (typeSym == null) {
-            throw new RuntimeException("Type not found: " + astType);
+            throw new RuntimeException("Type not found: " + astType.getName());
         }
         return new VarSym(varName, typeSym, null, location, context, isConst, isFinal);
     }

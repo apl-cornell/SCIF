@@ -73,7 +73,7 @@ public abstract class Node {
 
     @Override
     public String toString() {
-        return "TODO";
+        return "Node";
         //return genson.serialize(location);
     }
 

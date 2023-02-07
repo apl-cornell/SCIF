@@ -220,7 +220,7 @@ public class TypeChecker {
     }
 
     /**
-     * Create constraints for the signature of a contract.
+     * Create ifc constraints for the signature of a contract.
      * TODO: more detailed doc
      */
     private static void buildSignatureConstraints(String contractName, VisitEnv env,

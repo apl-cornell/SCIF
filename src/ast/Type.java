@@ -3,6 +3,7 @@ package ast;
 import typecheck.ExpOutcome;
 import typecheck.ScopeContext;
 import typecheck.NTCEnv;
+import typecheck.TypeSym;
 import typecheck.VisitEnv;
 
 public class Type extends Expression {
@@ -20,12 +21,14 @@ public class Type extends Expression {
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
+        TypeSym typeSym = (TypeSym) env.getCurSym(name);
+        env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
         return now;
     }
 
-    public String toSHErrLocFmt() {
-        return "T_" + name + location;
-    }
+//    public String toSHErrLocFmt() {
+//        return "T_" + name + location;
+//    }
 
     // public String toSherrloc(String k, String v) {
     //    return "";

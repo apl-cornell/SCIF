@@ -1,21 +1,28 @@
 package ast;
 
 import compile.SolCode;
+import java.util.ArrayList;
 import java.util.List;
+import typecheck.Context;
+import typecheck.ExceptionTypeSym;
+import typecheck.NTCEnv;
+import typecheck.PathOutcome;
+import typecheck.PsiUnit;
+import typecheck.ScopeContext;
+import typecheck.SymTab;
+import typecheck.Utils;
+import typecheck.VisitEnv;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
-import typecheck.*;
 
-import java.util.ArrayList;
-
-public class Try extends Statement {
+public class Atom extends Statement {
 
     List<Statement> body;
     List<ExceptHandler> handlers;
 
     // ArrayList<Statement> orelse;
     // ArrayList<Statement> finalbody;
-    public Try(List<Statement> body,
+    public Atom(List<Statement> body,
             List<ExceptHandler> handlers) {//, ArrayList<Statement> orelse, ArrayList<Statement> finalbody) {
         this.body = body;
         this.handlers = handlers;
@@ -38,7 +45,7 @@ public class Try extends Statement {
         for (ExceptHandler h : handlers) {
             ExceptionTypeSym t = env.toExceptionTypeSym(h.type());
             assert t != null;
-            now.addException(t, true);
+            now.addException(t, false);
         }
 
         for (Statement s : body) {
@@ -60,8 +67,8 @@ public class Try extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
-                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
+        Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
+                Utils.getLabelNameLock(toSHErrLocFmt()));
 
         // add new exceptions to psi
         /*HashMap<ExceptionTypeSym, PsiUnit> oldPsi = env.psi;
@@ -123,7 +130,7 @@ public class Try extends Statement {
             // cTry = new Context(Utils.makeJoin(cTry.pc, env.outContext.outPcName), Utils.makeJoin(cTry.lambda, env.outContext.lockName));
         }
 
-        typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
+        Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
 
         /*Utils.contextFlow(env, cTry, endContext, location);
         env.outContext = endContext;*/
@@ -131,7 +138,7 @@ public class Try extends Statement {
             env.cons.add(new Constraint(
                     new Inequality(endContext.lambda, beginContext.lambda),
                     env.hypothesis(), location, env.curContractSym.getName(),
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 
         return psi;

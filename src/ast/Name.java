@@ -24,17 +24,20 @@ public class Name extends Variable {
         logger.debug("Name: " + id);
         // logger.debug(s.toString());
         if (s instanceof FuncSym) {
+            assert false;
             return null;
         } else if (s instanceof VarSym) {
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
             logger.debug(s.getName());
-            env.addCons(now.genCons(typeSym.getName(), Relation.EQ, env, location));
+            env.addCons(now.genEqualCons(typeSym, env, location, "The variable is of improper type"));
             logger.debug(now.toString());
             return now;
         } else if (s instanceof TypeSym) {
+            assert false;
             return null;
         }
+        assert false;
         return null;
     }
 
@@ -56,10 +59,6 @@ public class Name extends Variable {
         return rnt;
     }
 
-
-    public String toSHErrLocFmt() {
-        return id + "." + location;
-    }
 
     @Override
     public String toSolCode() {

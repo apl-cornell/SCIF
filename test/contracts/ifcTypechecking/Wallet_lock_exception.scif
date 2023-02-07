@@ -14,9 +14,9 @@ contract Wallet [this] {
         if (balances[sender] >= amount) {
             // pc: this join msg.sender
             lock(this) {
-                try {
+                atom {
                     send(sender, amount);
-                } catchall (Error e) {
+                } rescue (error e) {
                     throw transferFailure();
                 }
                 balances[sender] = balances[sender] - amount;
@@ -25,6 +25,7 @@ contract Wallet [this] {
             // pc: this join msg.sender
             throw balanceNotEnough();
         }
+
     }
 
     @public

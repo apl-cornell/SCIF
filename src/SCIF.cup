@@ -91,7 +91,7 @@ terminal CONTRACT;
 terminal EQUALGREATER;
 terminal NEWLINE, EXTENDS;
 terminal FINAL, STATIC;
-terminal TRY, EXTRY, CATCH, CATCHALL, EXCEPTION, THROW, THROWS, ALL;
+terminal TRY, ATOM, CATCH, RESCUE, EXCEPTION, THROW, THROWS, ALL;
 terminal DELETE;
 terminal ERROR, CONSTRUCTOR;//, PERCENTEQUAL;
 terminal ASSUME;
@@ -126,7 +126,7 @@ nonterminal String ipt_as_names;
 nonterminal Statement assert_stmt, compound_stmt;
 nonterminal CallStatement call_stmt;
 nonterminal If if_stmt;
-nonterminal Statement try_stmt, extry_stmt;
+nonterminal Statement try_stmt, atom_stmt;
 // nonterminal Statement while_stmt;
 nonterminal List<ExceptHandler> except_stmts, exceptall_stmts;
 nonterminal ExceptHandler except_clause, exceptall_clause;
@@ -210,11 +210,10 @@ sourceFile ::=
         RESULT = new SourceFile(filename, a);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
         logger.debug(RESULT);
-    :};
-    /*
+    :}
     | error:err {:
-        report_fatal_error("Syntax error when parsing source file", err);
-    :};*/
+        report_fatal_error("Syntax error when parsing source file " + filename + "\n", err);
+    :};
 
 ipt_stmts ::=
     ipt_stmts:s  ipt_stmt:a {:
@@ -261,6 +260,9 @@ contract ::=
         constructors.addAll(f_defs);
         RESULT = new Contract((String) name, c_extends, t_setting, v_decs, e_defs, f_defs, c_label);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
+    :}
+    | error:err {:
+        report_fatal_error("Syntax error when parsing contract\n", err);
     :};
 
 contract_label ::=
@@ -482,6 +484,9 @@ errorDef ::=
         logger.debug("exception def: " + a);
         RESULT = new ExceptionDef((String) a, null, b);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
+    | error:err {:
+        report_fatal_error("Syntax error when parsing a method", err);
     :};
 
 r_funcSig ::=
@@ -599,6 +604,9 @@ funcdef ::=
         // System.err.println("parsing function");
         RESULT = new FunctionDef(funcSig, d);
         RESULT.setLoc(new CodeLocation(funcSigleft, funcSigright, filename));
+    :}
+    | error:err {:
+        report_fatal_error("Syntax error when parsing a method", err);
     :};
 
 typeSym ::=
@@ -748,7 +756,7 @@ small_stmt ::=  assign_stmt:a {: RESULT = a; :}
     | dynamic_stmt:a {: RESULT = a; :}
     | excborder_stmt:a {: RESULT = a; :}
     | try_stmt:a {: RESULT = a; :}
-    | extry_stmt:a {: RESULT = a; :}
+    | atom_stmt:a {: RESULT = a; :}
     | throw_stmt:a {: RESULT = a;:}
 //    | endorse_stmt:a {:
 //        RESULT = a;
@@ -782,8 +790,8 @@ try_stmt ::= TRY:x suite:s except_stmts:es {:
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
-extry_stmt ::= TRY:x suite:s exceptall_stmts:es {:
-        RESULT = new Extry(s, es);
+atom_stmt ::= ATOM:x suite:s exceptall_stmts:es {:
+        RESULT = new Atom(s, es);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
@@ -825,7 +833,7 @@ except_clause ::=
     :};
 
 exceptall_clause ::=
-    CATCHALL:p LPAR except_type:t NAME:x RPAR suite:s {:
+    RESCUE:p LPAR except_type:t NAME:x RPAR suite:s {:
         RESULT = new ExceptHandler(t, (String)x, s);
         RESULT.setLoc(new CodeLocation(pleft, pright, filename));
     :};

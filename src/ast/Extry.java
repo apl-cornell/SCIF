@@ -26,7 +26,7 @@ public class Extry extends Try {
         ScopeContext tmp;
 
         for (ExceptHandler h : handlers) {
-            now.addException(env.toExceptionTypeSym(h.type), true);
+            now.addException(env.toExceptionTypeSym(h.type()), true);
         }
 
         for (Statement s : body) {

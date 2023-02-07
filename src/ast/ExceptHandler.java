@@ -8,9 +8,9 @@ import java.util.ArrayList;
 
 public class ExceptHandler extends Statement {
 
-    ExceptionType type;
-    String name;
-    List<Statement> body;
+    private ExceptionType type;
+    private String name;
+    private List<Statement> body;
 
     public ExceptHandler(ExceptionType type, String name, List<Statement> body) {
         this.type = type;
@@ -22,6 +22,7 @@ public class ExceptHandler extends Statement {
         this.body = body;
     }
 
+    @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         env.setCurSymTab(new SymTab(env.curSymTab()));
@@ -56,5 +57,13 @@ public class ExceptHandler extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         return null;
+    }
+
+    public ExceptionType type() {
+        return type;
+    }
+
+    public String name() {
+        return name;
     }
 }

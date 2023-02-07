@@ -63,7 +63,8 @@ public class ScopeContext {
             localPostfix = ((SourceFile) cur).getSourceFileId();
         } else {
             assert cur != null;
-            localPostfix = cur.toSHErrLocFmt();
+            // localPostfix = cur.toSHErrLocFmt();
+            return cur.toSHErrLocFmt();
             //throw new RuntimeException();
         }
 
@@ -142,5 +143,10 @@ public class ScopeContext {
 
     public ScopeContext parent() {
         return parent;
+    }
+
+    public Constraint genEqualCons(Sym sym, NTCEnv env, CodeLocation location, String explanation) {
+        return new Constraint(new Inequality(getSHErrLocName(), CompareOperator.Eq, sym.toSHErrLocFmt()),
+                env.globalHypothesis(), location, env.curContractSym().getName(), explanation);
     }
 }

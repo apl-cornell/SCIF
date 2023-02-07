@@ -28,6 +28,7 @@ public class StateVariableDeclaration extends TopLayerNode {
     private Expression value;
     private boolean isStatic;
     private boolean isFinal;
+    private boolean isBuiltIn = false;
 
     public StateVariableDeclaration(Name name, LabeledType type, Expression value,
             boolean isConst, boolean isFinal) {
@@ -37,6 +38,18 @@ public class StateVariableDeclaration extends TopLayerNode {
         this.isStatic = isConst;
         this.isFinal = isFinal;
         this.location = Utils.BUILTIN_LOCATION;
+        this.type.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+    }
+
+    public StateVariableDeclaration(Name name, LabeledType type, Expression value,
+            boolean isConst, boolean isFinal, boolean isBuiltIn) {
+        this.name = name;
+        this.type = type;
+        this.value = value;
+        this.isStatic = isConst;
+        this.isFinal = isFinal;
+        this.location = Utils.BUILTIN_LOCATION;
+        this.isBuiltIn = isBuiltIn;
         this.type.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
 
@@ -75,6 +88,8 @@ public class StateVariableDeclaration extends TopLayerNode {
         if (value != null) {
             ScopeContext v = value.ntcGenCons(env, now);
             env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
+        } else if (isFinal && !isBuiltIn) {
+            throw new RuntimeException("final variable " + name.id + " not initialized");
         }
         return now;
     }

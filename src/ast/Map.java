@@ -2,6 +2,10 @@ package ast;
 
 import java.awt.*;
 import java.util.ArrayList;
+import typecheck.MapTypeSym;
+import typecheck.NTCEnv;
+import typecheck.ScopeContext;
+import typecheck.TypeSym;
 import typecheck.Utils;
 
 public class Map extends LabeledType {
@@ -36,5 +40,15 @@ public class Map extends LabeledType {
                 super.typeMatch(annotation) &&
                 keyType.typeMatch(((Map) annotation).keyType) &&
                 valueType.typeMatch(((Map) annotation).valueType);
+    }
+
+    @Override
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext now = new ScopeContext(this, parent);
+        MapTypeSym typeSym = (MapTypeSym) env.toTypeSym(this, scopeContext);
+        assert typeSym != null : name;
+        env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
+        ifl.ntcGenCons(env, parent);
+        return now;
     }
 }

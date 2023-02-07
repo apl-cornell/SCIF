@@ -57,7 +57,7 @@ public class Utils {
     public static final String DEBUG_UNKNOWN_CONTRACT_NAME = "UNKNOWN";
     public static final String ANONYMOUS_VARIABLE_NAME = "ANONYMOUS";
     public static final String PRINCIPAL_TYPE = "principal";
-    public static final String EXCEPTION_ERROR_NAME = "Error";
+    public static final String EXCEPTION_ERROR_NAME = "error";
     public static final String METHOD_SEND_NAME = "send";
     public static final String METHOD_BALANCE_NAME = "balance";
     public static final CodeLocation BUILTIN_LOCATION = new CodeLocation(0, 0, "BUILTIN");

@@ -308,7 +308,7 @@ public class Contract extends Node {
     }
 
     public String toString() {
-        return "TODO";
+        return toSHErrLocFmt();
         //return genson.serialize(body.get();
     }
 
@@ -345,6 +345,13 @@ public class Contract extends Node {
                 false,
                 true
         ));
+        int count = 0;
+        for (Arg arg : args) {
+            CodeLocation location = new CodeLocation(0, count, "Builtin");
+            arg.setLoc(location);
+            arg.annotation.setLoc(location);
+            ++count;
+        }
         List<String> decs = new ArrayList<>();
         decs.add(Utils.PROTECTED_DECORATOR);
         decs.add(Utils.FINAL_DECORATOR);
@@ -415,6 +422,7 @@ public class Contract extends Node {
                 new LabeledType(contractName, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS))),
                 null,
                 true,
+                true,
                 true
         );
         StateVariableDeclaration topDec = new StateVariableDeclaration(
@@ -422,12 +430,14 @@ public class Contract extends Node {
                 new LabeledType(Utils.PRINCIPAL_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
                 null,
                 true,
+                true,
                 true
         );
         StateVariableDeclaration botDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_BOTTOM),
                 new LabeledType(Utils.PRINCIPAL_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM))),
                 null,
+                true,
                 true,
                 true
         );
