@@ -112,7 +112,7 @@ public class Throw extends Statement {
         ExceptionTypeSym expSym = env.getExp(expName);
 
         PsiUnit expUnit = new PsiUnit(
-                new Context(ao.psi.getNormalPath().c.pc,
+                new Context(env.inContext.pc,
                         psi.getNormalPath().c.lambda),
                 false);
         PathOutcome psi2 = new PathOutcome();
