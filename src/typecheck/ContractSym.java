@@ -79,7 +79,7 @@ public class ContractSym extends TypeSym {
         } else {
             if (astType instanceof DepMap) {
                 DepMap depMap = (DepMap) astType;
-                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType, defContext), toTypeSym(depMap.valueType, defContext), defContext);
+                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType, defContext), depMap.keyName(), toTypeSym(depMap.valueType, defContext), defContext, new ScopeContext(depMap, defContext));
             } else if (astType instanceof Map) {
                 Map map = (Map) astType;
                 typeSym = new MapTypeSym(toTypeSym(map.keyType, defContext), toTypeSym(map.valueType, defContext), defContext);

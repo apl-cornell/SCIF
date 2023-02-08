@@ -12,8 +12,18 @@ public class DepMapTypeSym extends MapTypeSym {
     private VarSym key;
     private Label valueLabel;
 
-    public DepMapTypeSym(TypeSym keyType, TypeSym valueType, ScopeContext defContext) {
+    public DepMapTypeSym(TypeSym keyType, String keyName, TypeSym valueType, ScopeContext defContext, ScopeContext newContext) {
         super(keyType, valueType, defContext);
+        key = new VarSym(
+                keyName,
+                keyType,
+                null,
+                newContext.cur().getLocation(),
+                newContext,
+                false,
+                true,
+                true
+        );
     }
 
     public DepMapTypeSym(DepMapTypeSym depMapTypeInfo) {

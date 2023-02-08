@@ -1,0 +1,16 @@
+
+contract DependentMap {
+    // name as a principal; name ⨆ this
+    map(address name, uint{name}) balances;
+
+
+    @public
+    void{y} foo{y}(final address{TOP} y) {
+        balances[y] = value;
+    }
+
+    @public
+    void bar{sender}() {
+//        foo(sender);
+    }
+}

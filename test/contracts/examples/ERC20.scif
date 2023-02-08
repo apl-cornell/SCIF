@@ -3,7 +3,7 @@ contract ERC20 {
     map(address owner, map(address, uint{owner}){owner}) allowances;
 
     @public
-    bool approve{sender}(address allowed, uint amount) {
+    bool approve{sender}(final address allowed, uint amount) {
         allowances[sender][allowed] = amount;
     }
 

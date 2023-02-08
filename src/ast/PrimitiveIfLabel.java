@@ -153,6 +153,7 @@ public class PrimitiveIfLabel extends IfLabel {
 //        }
         Sym s = env.getCurSym(value.id);
         logger.debug("Label Name: " + value.id);
+        System.err.println("Label Name: " + value.id);
         logger.debug(s.toString());
         if (s instanceof VarSym) {
             valueSym = (VarSym) s;

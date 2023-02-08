@@ -45,6 +45,8 @@ public class Map extends Type {
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
+        keyType.ntcGenCons(env, parent);
+        valueType.ntcGenCons(env, parent);
         MapTypeSym typeSym = (MapTypeSym) env.toTypeSym(this, scopeContext);
         assert typeSym != null : name;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));

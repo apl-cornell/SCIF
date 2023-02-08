@@ -15,14 +15,15 @@ public class TestIfcTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "basic/DependentMap",
             "basic/EmptyContract",
             "basic/ExceptionThrowAndCatch",
             "ifcTypechecking/LocalTrust",
             "ifcTypechecking/Wallet_lock_exception",
             "basic/Seq",
-            // "examples/ERC20"
+            "examples/ERC20",
     })
-    void testPositiveIfcTypechecking(String contractName) {
+    void testPositive(String contractName) {
         File logDir = new File("./.scif");
         logDir.mkdirs();
         String inputFilePath = contractName + ".scif";
@@ -62,7 +63,7 @@ public class TestIfcTypechecking {
             "ifcTypechecking/Wallet_lock_exception_W02",
             // "examples/ERC20"
     })
-    void testNegtiveIfcTypechecking(String contractName) {
+    void testNegative(String contractName) {
         File logDir = new File("./.scif");
         logDir.mkdirs();
         String inputFilePath = contractName + ".scif";

@@ -16,13 +16,14 @@ public class TestRegularTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "basic/DependentMap",
             "basic/EmptyContract",
             "basic/ExceptionThrowAndCatch",
             "basic/FinalVar",
             "ifcTypechecking/Wallet_lock_exception",
-            // "examples/ERC20"
+            "examples/ERC20",
     })
-    void testPositiveRegularTypechecking(String contractName) {
+    void testPositive(String contractName) {
         File logDir = new File("./.scif");
         logDir.mkdirs();
         String inputFilePath = contractName + ".scif";
@@ -50,7 +51,7 @@ public class TestRegularTypechecking {
             "regularTypechecking/FinalVarNotInitialized_W01",
             "regularTypechecking/FinalVarNotInitialized_W02",
     })
-    void testNegativeRegularTypechecking(String contractName) {
+    void testNegative(String contractName) {
         File logDir = new File("./.scif");
         logDir.mkdirs();
         String inputFilePath = contractName + ".scif";

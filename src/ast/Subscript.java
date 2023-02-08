@@ -20,7 +20,24 @@ public class Subscript extends TrailerExpr {
         index = i;
     }
 
-    //TODO: getVarInfo(NTCEnv)
+    @Override
+    public VarSym getVarInfo(NTCEnv env) {
+        VarSym valueVarSym = value.getVarInfo(env);
+        assert valueVarSym.typeSym instanceof MapTypeSym;
+
+        VarSym subscriptVarSym = new VarSym(
+                valueVarSym.getName() + ".sub",
+                ((MapTypeSym) valueVarSym.typeSym).valueType,
+                null,
+                location,
+                valueVarSym.defContext(),
+                false,
+                false,
+                true
+        );
+        return subscriptVarSym;
+    }
+
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
@@ -40,7 +57,7 @@ public class Subscript extends TrailerExpr {
                 validIndex = false;
             }
             if (!validIndex) {
-                throw new RuntimeException("Must use a final address/contract to access a dependent map: " + index);
+                throw new RuntimeException("Must use a final address/contract to access a dependent map: " + ((Name) index).id);
             }
             return now;
         } else if (valueVarSym.typeSym instanceof MapTypeSym) {
@@ -158,11 +175,6 @@ public class Subscript extends TrailerExpr {
                     valueVarSym.defContext(), false, false, false);
         }
         return rtnVarSym;
-    }
-
-    @Override
-    public VarSym getVarInfo(NTCEnv env) {
-        return null;
     }
 
     @Override

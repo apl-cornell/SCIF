@@ -437,7 +437,7 @@ public class Contract extends Node {
         );
         StateVariableDeclaration topDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_TOP),
-                new LabeledType(Utils.PRINCIPAL_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
                 null,
                 true,
                 true,
@@ -445,7 +445,7 @@ public class Contract extends Node {
         );
         StateVariableDeclaration botDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_BOTTOM),
-                new LabeledType(Utils.PRINCIPAL_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM))),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM))),
                 null,
                 true,
                 true,
