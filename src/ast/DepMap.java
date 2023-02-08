@@ -8,14 +8,14 @@ import typecheck.ScopeContext;
 public class DepMap extends Map {
     final private String keyName;
     final private IfLabel valueLabel;
-    public DepMap(Type keyType, String keyName, Type valueType, IfLabel valueLabel, IfLabel ifl) {
-        super(keyType, valueType, ifl);
+    public DepMap(Type keyType, String keyName, LabeledType valueType) {
+        super(keyType, valueType.type());
         this.keyName = keyName;
-        this.valueLabel = valueLabel;
+        this.valueLabel = valueType.label();
     }
 
     @Override
-    public boolean typeMatch(Type annotation) {
+    public boolean typeMatch(Expression annotation) {
         return annotation instanceof DepMap &&
                 super.typeMatch(annotation) &&
                 keyName.equals(((DepMap) annotation).keyName) &&

@@ -2,12 +2,8 @@ package typecheck;
 
 import ast.*;
 
-import java.beans.JavaBean;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 
 public class ContractSym extends TypeSym {
 
@@ -76,17 +72,16 @@ public class ContractSym extends TypeSym {
         }
         // System.err.println("[in]toTypeSym: " + astType.x);
 
-        Sym s = symTab.lookup(astType.getName());
+        Sym s = symTab.lookup(astType.name());
         TypeSym typeSym = null;
         if (s instanceof TypeSym) {
             typeSym = (TypeSym) s;
         } else {
-            LabeledType lt = (LabeledType) astType;
-            if (lt instanceof DepMap) {
-                DepMap depMap = (DepMap) lt;
+            if (astType instanceof DepMap) {
+                DepMap depMap = (DepMap) astType;
                 typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType, defContext), toTypeSym(depMap.valueType, defContext), defContext);
-            } else if (lt instanceof Map) {
-                Map map = (Map) lt;
+            } else if (astType instanceof Map) {
+                Map map = (Map) astType;
                 typeSym = new MapTypeSym(toTypeSym(map.keyType, defContext), toTypeSym(map.valueType, defContext), defContext);
             }
 
@@ -96,17 +91,13 @@ public class ContractSym extends TypeSym {
     }
 
 
-    public VarSym toVarSym(String localName, ast.Type astType, boolean isStatic, boolean isFinal, boolean isBuiltIn,
+    public VarSym toVarSym(String localName, ast.LabeledType astType, boolean isStatic, boolean isFinal, boolean isBuiltIn,
             CodeLocation loc, ScopeContext defContext) {
-        System.err.println("toVarSym: " + localName + " " + astType.getName());
-        TypeSym typeSym = toTypeSym(astType, defContext);
+        System.err.println("toVarSym: " + localName + " " + astType.type().name());
+        TypeSym typeSym = toTypeSym(astType.type(), defContext);
         System.err.println("toVarSym: " + localName + " " + typeSym);
         Label ifl;
-        if (astType instanceof LabeledType) {
-            ifl = toLabel(((LabeledType) astType).ifl);
-        } else {
-            throw new RuntimeException("Not a labeled type: " + localName);
-        }
+        ifl = toLabel(astType.label());
         return new VarSym(localName, typeSym, ifl, loc, defContext, isStatic, isFinal, isBuiltIn);
     }
 
@@ -170,7 +161,7 @@ public class ContractSym extends TypeSym {
 
     public String getLabelContract() {
         return Utils.getLabelNameContract(getContractNode().getScopeContext());
-        // return ifl.toSHErrLocFmt(getName());
+        // return ifl.toSHErrLocFmt(name());
     }
 
     public Contract getContractNode() {
@@ -204,10 +195,10 @@ public class ContractSym extends TypeSym {
 //        for (Entry<String, VarSym> entry : symTab.getVars().entrySet()) {
 //            //if (sym instanceof VarSym) {
 //            VarSym sym = entry.getValue();
-//            if (sym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)
+//            if (sym.typeSym.name().equals(Utils.PRINCIPAL_TYPE)
 //                    || (sym.isFinal
 //                    && (sym.typeSym instanceof ContractSym
-//                        || sym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))) {
+//                        || sym.typeSym.name().equals(Utils.ADDRESS_TYPE)))) {
 //                rtn.add(sym);
 //            }
 //            //}

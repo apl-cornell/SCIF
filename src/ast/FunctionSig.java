@@ -25,8 +25,8 @@ public class FunctionSig extends TopLayerNode {
      * initialization and need to be set to default
      */
     List<String> decoratorList;
-    Type rtn;
-    List<ExceptionType> exceptionList;
+    LabeledType rtn;
+    List<LabeledType> exceptionList;
     boolean isConstructor;
 
     final private boolean isBuiltIn;
@@ -40,7 +40,7 @@ public class FunctionSig extends TopLayerNode {
      * @param rtn           Type of the return value
      */
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
-            List<String> decoratorList, Type rtn, boolean isConstructor) {
+            List<String> decoratorList, LabeledType rtn, boolean isConstructor) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
@@ -52,7 +52,7 @@ public class FunctionSig extends TopLayerNode {
         setDefault();
     }
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
-            List<String> decoratorList, Type rtn, boolean isConstructor, boolean isBuiltIn) {
+            List<String> decoratorList, LabeledType rtn, boolean isConstructor, boolean isBuiltIn) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
@@ -67,10 +67,11 @@ public class FunctionSig extends TopLayerNode {
     private void setDefault() {
         funcLabels.setToDefault(isConstructor, this.decoratorList);
         args.setToDefault(funcLabels.begin_pc);
-        if (rtn instanceof LabeledType && ((LabeledType) rtn).ifl != null) {
+        if (rtn != null && ((LabeledType) rtn).label() != null) {
 
         } else {
-            rtn = new LabeledType(rtn.name,
+            assert rtn != null;
+            rtn = new LabeledType(rtn.type(),
                         new PrimitiveIfLabel(new Name(typecheck.Utils.LABEL_THIS)));
         }
     }
@@ -97,7 +98,7 @@ public class FunctionSig extends TopLayerNode {
     }
 
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
-            List<String> decoratorList, Type rtn, List<ExceptionType> exceptionList,
+            List<String> decoratorList, LabeledType rtn, List<LabeledType> exceptionList,
             boolean isConstructor) {
         this.name = name;
         this.funcLabels = funcLabels;
@@ -132,22 +133,22 @@ public class FunctionSig extends TopLayerNode {
 
         ArrayList<VarSym> argsInfo = args.parseArgs(env, now);
         HashMap<ExceptionTypeSym, String> exceptions = new HashMap<>();
-        for (ExceptionType t : exceptionList) {
-            t.setContractName(env.curContractSym().getName());
-            ExceptionTypeSym t1 = env.toExceptionTypeSym(t);
+        for (LabeledType t : exceptionList) {
+            // t.setContractName(env.curContractSym().getName());
+            ExceptionTypeSym t1 = env.toExceptionTypeSym(t.type());
             assert t1 != null;
             // System.err.println("add func exp: " +  t1.name);
             // ExceptionTypeSym exceptionType = env.get(t);
             exceptions.put(t1, null);
         }
-        System.err.println(((LabeledType) rtn).ifl);
+        System.err.println(((LabeledType) rtn).label());
         contractSymTab.add(name,
                 new FuncSym(name,
                         env.toLabel(funcLabels.begin_pc),
                         env.toLabel(funcLabels.to_pc),
                         env.toLabel(funcLabels.gamma_label),
-                        argsInfo, env.toTypeSym(rtn, now),
-                        env.toLabel(((LabeledType) rtn).ifl),
+                        argsInfo, env.toTypeSym(rtn.type(), now),
+                        env.toLabel(((LabeledType) rtn).label()),
                         exceptions,
                         parent, sender, location));
         env.setCurSymTab(env.curSymTab().getParent());
@@ -164,25 +165,25 @@ public class FunctionSig extends TopLayerNode {
         ArrayList<VarSym> argsInfo = args.parseArgs(contractSym);
         Label ifl = null;
         if (rtn instanceof LabeledType) {
-            ifl = contractSym.toLabel(((LabeledType) rtn).ifl);
+            ifl = contractSym.toLabel(((LabeledType) rtn).label());
         }
         Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
-        for (ExceptionType t : exceptionList) {
+        for (LabeledType t : exceptionList) {
             IfLabel label = null;
             /*if (t.type instanceof  LabeledType)
                 label = ((LabeledType) t.type).ifl;*/
-            ExceptionTypeSym exceptionTypeSym = contractSym.getExceptionSym(t.type.name);
+            ExceptionTypeSym exceptionTypeSym = contractSym.getExceptionSym(t.type().name);
             assert exceptionTypeSym != null;
             exceptions.put(exceptionTypeSym,
                     typecheck.Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(),
-                            t.getName()));
+                            t.type().name()));
         }
         realContractSymTab.add(name,
                 new FuncSym(name,
                         contractSym.toLabel(funcLabels.begin_pc),
                         contractSym.toLabel(funcLabels.to_pc),
                         contractSym.toLabel(funcLabels.gamma_label),
-                        argsInfo, contractSym.toTypeSym(rtn, scopeContext), ifl, exceptions,
+                        argsInfo, contractSym.toTypeSym(rtn.type(), scopeContext), ifl, exceptions,
                         contractSym.getContractNode().scopeContext, sender, location));
         contractSym.symTab = contractSym.symTab.getParent();
     }

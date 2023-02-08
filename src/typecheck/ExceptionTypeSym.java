@@ -7,13 +7,11 @@ import java.util.Objects;
 public class ExceptionTypeSym extends TypeSym {
     // Struct type should be initialized in a way like: varName = new typeName(member0, member1, ..., )
     private List<VarSym> parameters;
-    private Label ifl;
 
     public ExceptionTypeSym(String typeName, Label ifl, ArrayList<VarSym> parameters, ScopeContext defContext) {
         super(typeName, defContext);
         // System.err.println("ExceptionTypeSym: " + typeName);
         //this.name = typeName;
-        this.ifl = ifl;
         this.parameters = parameters;
         this.hashCode = Objects.hash(this.getName(), parameters);
     }
@@ -37,9 +35,9 @@ public class ExceptionTypeSym extends TypeSym {
      * Return the value of this symbol's label in SHErrLoc format
      * @return
      */
-    public String getLabelValueSLC() {
-        return ifl.toSHErrLocFmt();
-    }
+//    public String getLabelValueSLC() {
+//        return ifl.toSHErrLocFmt();
+//    }
 
     public List<VarSym> parameters() {
         return parameters;

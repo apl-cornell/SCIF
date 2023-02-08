@@ -147,11 +147,10 @@ nonterminal Setmaker setmaker;
 // nonterminal Setmaker setmaker_sub;
 // nonterminal ClassDef classdef;
 nonterminal Call arglist;
-nonterminal LabeledType labeledType;
+nonterminal LabeledType labeledType, maybeLabeledType;
 nonterminal IfLabel ifLabel, unitIfLabel;
 nonterminal PrimitiveIfLabel primitiveIfLabel;
-nonterminal LabeledType typeSym;
-nonterminal List<LabeledType> typeSyms;
+nonterminal Type type;
 nonterminal ast.Map mapType;
 // nonterminal Autoendorse autoendorse;
 //nonterminal IfLabel maybeAutoendorseIfLabel;
@@ -174,8 +173,8 @@ nonterminal HashMap<String, String> label_table;
 nonterminal Set<Integer> modifiers;
 nonterminal DynamicStatement dynamic_stmt;
 nonterminal ExceptionDef errorDef;
-nonterminal ExceptionType except_type;
-nonterminal List<ExceptionType> except_types;
+nonterminal LabeledType except_type;
+nonterminal List<LabeledType> except_types;
 nonterminal Throw throw_stmt;
 nonterminal List<FunctionDef> constructors;
 nonterminal FunctionDef constructor;
@@ -357,7 +356,7 @@ state_var_decs ::=
     :};
 
 state_var_dec ::=
-    modifiers:m typeSym:t NAME:a EQUAL expr:b SEMI {:
+    modifiers:m maybeLabeledType:t NAME:a EQUAL expr:b SEMI {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
         StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, b, false, m.contains(sym.FINAL));
@@ -365,7 +364,7 @@ state_var_dec ::=
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
 
     :}
-    | modifiers:m typeSym:t NAME:a SEMI {:
+    | modifiers:m maybeLabeledType:t NAME:a SEMI {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
         StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, m.contains(sym.FINAL));
@@ -429,6 +428,16 @@ tFuncLabels ::=
         RESULT = new FuncLabels(a, b, c, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
+    | LBRACE:x ifLabelOrNull:a RARROW ifLabelOrNull:b RBRACE {:
+        logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
+        RESULT = new FuncLabels(a, b, b, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
+    | LBRACE:x ifLabelOrNull:a RBRACE {:
+        logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
+        RESULT = new FuncLabels(a, a, a, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
     | {:
         logger.debug("parsing empty funclabels");
         RESULT = new FuncLabels();
@@ -490,28 +499,28 @@ errorDef ::=
     :};
 
 r_funcSig ::=
-    typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b {:
+    maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b {:
         // System.out.println("parsing function");
         logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, c, false);
         RESULT.setLoc(new CodeLocation(cleft, cright, filename));
         //makeNode("funcdef", a, b, c, d);
     :}
-    | decorators:d typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b  {:
+    | decorators:d maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b  {:
         // System.out.println("parsing function");
         // logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, d, c, false);
         RESULT.setLoc(new CodeLocation(cleft, cright, filename));
         //makeNode("funcdef", a, b, c, d);
     :}
-    | typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b THROWS LPAR except_types:t RPAR  {:
+    | maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b THROWS LPAR except_types:t RPAR  {:
         // System.out.println("parsing function");
         // logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, c, t, false);
         RESULT.setLoc(new CodeLocation(cleft, cright, filename));
         //makeNode("funcdef", a, b, c, d);
     :}
-    | decorators:d typeSym:c NAME:funcName tFuncLabels:funclabels parameters:b THROWS LPAR except_types:t RPAR {:
+    | decorators:d maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b THROWS LPAR except_types:t RPAR {:
         // System.out.println("parsing function");
         // logger.debug("parsing func sig");
         RESULT = new FunctionSig((String) funcName, funclabels, b, d, c, t, false);
@@ -558,18 +567,29 @@ decorators ::=
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
-labeledType ::= NAME:a LBRACE ifLabel:b RBRACE {:
+maybeLabeledType ::= labeledType:t {:
+        RESULT = t;
+    :}
+    | type:t {:
+        RESULT = new LabeledType(t, null);
+        RESULT.setLoc(new CodeLocation(tleft, tright, filename));
+    :};
+
+labeledType ::= type:a LBRACE ifLabel:b RBRACE {:
         //System.out.println("parsed labeledType with label: \n" + b.toString());
-        String name = (String)a;
-        RESULT = new LabeledType(name, b);
+        RESULT = new LabeledType(a, b);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 
 depMap ::=
-    MAP:x LPAR NAME:keyTypeName NAME:keyName COMMA labeledType:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
+    MAP:x LPAR NAME:keyTypeName NAME:keyName COMMA labeledType:valueType RPAR {:
         String name = (String) keyName;
         Type keyType = new Type((String) keyTypeName);
-        RESULT = new ast.DepMap(keyType, keyName, valueType, valueLabel, mapLabel);
+        RESULT = new ast.DepMap(keyType, keyName, valueType);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
+    | MAP:x LPAR type:keyType COMMA labeledType:valueType RPAR {:
+        RESULT = new ast.DepMap(keyType, "?", valueType);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
@@ -608,40 +628,18 @@ funcdef ::=
         report_fatal_error("Syntax error when parsing a method", err);
     :};
 
-typeSym ::=
+type ::=
     NAME:a {:
-        logger.debug("a name: " + (String) a);
-        RESULT = new LabeledType((String)a, null);
+        RESULT = new Type((String)a);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | mapType:m {:
         RESULT = m;
-    :}
-    | labeledType:a {:
-        /*Name name = new Name((String)a);
-        name.setLoc(new CodeLocation(aleft, aright, filename));*/
-        RESULT = a;
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-        logger.debug("finished labeled typeSym parsing");
-    :};
-
-typeSyms ::=
-    typeSym:a {:
-        RESULT = new ArrayList<LabeledType>();
-        RESULT.add(a);
-    :}
-    | typeSyms:list typeSym:a {:
-        list.add(a);
-        RESULT = list;
     :};
 
 mapType ::=
-    MAP:x LPAR typeSym:keyType COMMA typeSym:valueType RPAR {:
-        RESULT = new ast.Map(keyType, valueType, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
-    | MAP:x LPAR typeSym:keyType COMMA typeSym:valueType RPAR LBRACE ifLabel:mapLabel RBRACE {:
-        RESULT = new ast.Map(keyType, valueType, mapLabel);
+    MAP:x LPAR type:keyType COMMA type:valueType RPAR {:
+        RESULT = new ast.Map(keyType, valueType);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | depMap:a {:
@@ -650,7 +648,7 @@ mapType ::=
 
 except_types ::=
     except_type:a {:
-        RESULT = new ArrayList<ExceptionType>();
+        RESULT = new ArrayList<LabeledType>();
         RESULT.add(a);
     :}
     | except_types:list COMMA except_type:a {:
@@ -704,27 +702,27 @@ probinittfpdef ::=
 //        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 tfpdef ::= 
-     modifiers:m typeSym:b NAME:a{:
+     modifiers:m maybeLabeledType:b NAME:a{:
         // System.err.println("pair (" + b + " " + a + ")");
         String name = (String)a;
         RESULT = new Arg(name, b, false, m.contains(sym.FINAL));
         RESULT.setLoc(new CodeLocation(bleft, bright, filename));
     :};
 
-varDec ::= typeSym:a annassign:b SEMI {:
+varDec ::= maybeLabeledType:a annassign:b SEMI {:
         logger.debug("variable declaration");
         b.setType(a);
         b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
         RESULT = b;
     :}
-    | FINAL typeSym:a annassign:b SEMI {:
+    | FINAL maybeLabeledType:a annassign:b SEMI {:
         logger.debug("variable declaration");
         b.setType(a);
         b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
         b.setFinal(true);
         RESULT = b;
     :}
-    | STATIC typeSym:a annassign:b SEMI {:
+    | STATIC maybeLabeledType:a annassign:b SEMI {:
         logger.debug("variable declaration");
         b.setType(a);
         b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
@@ -838,14 +836,14 @@ exceptall_clause ::=
     :};
 
 except_type ::=
-    typeSym:t {:
-        RESULT = new ExceptionType(t);
+    maybeLabeledType:t {:
+        RESULT = t;
         RESULT.setLoc(new CodeLocation(tleft, tright, filename));
-    :}
-    | NAME:x DOT typeSym:t {:
-        RESULT = new ExceptionType(t, (String)x);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
+//    :}
+//    | NAME:x DOT typeSym:t {:
+//        RESULT = new ExceptionType(t, (String)x);
+//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
 
 /*excborder_stmt ::= EXCBORDER:name suite:s {:
         RESULT = new ExcBorder(s);

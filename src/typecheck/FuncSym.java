@@ -125,7 +125,7 @@ public class FuncSym extends Sym {
 
 //    public String getLabelNameException(ExceptionTypeSym exp) {
 //
-//        return Utils.getLabelNameFuncExpLabel(toSHErrLocFmt(), exp.getName());
+//        return Utils.getLabelNameFuncExpLabel(toSHErrLocFmt(), exp.name());
 //    }
 
     // TODO: remove namespace

@@ -15,20 +15,20 @@ public class MapTypeSym extends TypeSym {
         super(getMapName(keyType, valueType), defContext);
         this.keyType = keyType;
         this.valueType = valueType;
-        // this.name = getName();
+        // this.name = name();
     }
 
     public MapTypeSym(MapTypeSym depMapTypeInfo) {
         super(depMapTypeInfo.getName(), depMapTypeInfo.defContext());
         keyType = depMapTypeInfo.keyType;
         valueType = depMapTypeInfo.valueType;
-        // name = getName();
+        // name = name();
     }
 
 //    @Override
-//    public String getName() {
+//    public String name() {
 //        return this.name;
-//        // return "Map." + keyType.getName() + "." + valueType.getName();
+//        // return "Map." + keyType.name() + "." + valueType.name();
 //    }
 
     public static String getMapName(TypeSym keyType, TypeSym valueType) {

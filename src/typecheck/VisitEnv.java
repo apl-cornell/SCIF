@@ -1,6 +1,5 @@
 package typecheck;
 
-import ast.ExceptionType;
 import ast.SourceFile;
 import java.util.Collections;
 import typecheck.sherrlocUtils.Constraint;
@@ -148,12 +147,12 @@ public class VisitEnv {
         return ((ContractSym) extST).lookupSym(funcName);
     }
 
-    public ExceptionTypeSym toExceptionTypeSym(ExceptionType t) {
-        if (t.isLocal(curContractSym.getName())) {
-            return (ExceptionTypeSym) getCurSym(t.getName());
-        } else {
-            return (ExceptionTypeSym) getExtSym(t.getContractName(), t.getName());
-        }
+    public ExceptionTypeSym toExceptionTypeSym(ast.Type t) {
+//        if (t.isLocal(curContractSym.getName())) {
+            return (ExceptionTypeSym) getCurSym(t.name());
+//        } else {
+//            return (ExceptionTypeSym) getExtSym(t.getContractName(), t.name());
+//        }
     }
 
     public ExceptionTypeSym getExp(String name) {

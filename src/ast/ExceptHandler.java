@@ -4,16 +4,14 @@ import compile.SolCode;
 import java.util.List;
 import typecheck.*;
 
-import java.util.ArrayList;
-
 public class ExceptHandler extends Statement {
 
-    private ExceptionType type;
+    private LabeledType labeledType;
     private String name;
     private List<Statement> body;
 
-    public ExceptHandler(ExceptionType type, String name, List<Statement> body) {
-        this.type = type;
+    public ExceptHandler(LabeledType type, String name, List<Statement> body) {
+        this.labeledType = type;
         this.name = name;
         this.body = body;
     }
@@ -27,9 +25,9 @@ public class ExceptHandler extends Statement {
         ScopeContext now = new ScopeContext(this, parent);
         env.setCurSymTab(new SymTab(env.curSymTab()));
 
-        VarSym var = env.toVarSym(name, type, true, true, true, location, now);
+        VarSym var = env.toVarSym(name, labeledType, true, true, true, location, now);
         if (var == null) {
-            System.err.println("Exception type " + type.getName() + " not found");
+            System.err.println("Exception type " + labeledType.type().name() + " not found");
             throw new RuntimeException();
         }
         env.addSym(name, var);
@@ -59,8 +57,8 @@ public class ExceptHandler extends Statement {
         return null;
     }
 
-    public ExceptionType type() {
-        return type;
+    public Type type() {
+        return labeledType.type();
     }
 
     public String name() {

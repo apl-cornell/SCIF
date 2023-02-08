@@ -8,7 +8,6 @@ import typecheck.sherrlocUtils.Hypothesis;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class NTCEnv {
 
@@ -42,11 +41,11 @@ public class NTCEnv {
         this.curContractSym = curContractSym;
     }
 
-    public VarSym toVarSym(String varName, ast.Type astType, boolean isConst, boolean isFinal, boolean isBuiltIn,
+    public VarSym toVarSym(String varName, LabeledType labeledType, boolean isConst, boolean isFinal, boolean isBuiltIn,
             CodeLocation location, ScopeContext context) {
-        TypeSym typeSym = toTypeSym(astType, context);
+        TypeSym typeSym = toTypeSym(labeledType.type(), context);
         if (typeSym == null) {
-            throw new RuntimeException("Type not found: " + astType.getName());
+            throw new RuntimeException("Type not found: " + labeledType.type().name());
         }
         return new VarSym(varName, typeSym, null, location, context, isConst, isFinal, isBuiltIn);
     }
@@ -58,21 +57,16 @@ public class NTCEnv {
         }
         // System.err.println("[in]toTypeSym: " + astType.x);
 
-        if (astType instanceof ExceptionType exceptionType) {
-            return toExceptionTypeSym(exceptionType);
-        }
-
-        Sym s = getCurSym(astType.getName());
+        Sym s = getCurSym(astType.name());
         if (s instanceof TypeSym)//Utils.isPrimitiveType(astType.x))
         {
             typeSym = (TypeSym) s;// new BuiltinTypeSym(astType.x);
         } else {
-            LabeledType lt = (LabeledType) astType;
-            if (lt instanceof DepMap) {
-                DepMap depMap = (DepMap) lt;
+            if (astType instanceof DepMap) {
+                DepMap depMap = (DepMap) astType;
                 typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType, defContext), toTypeSym(depMap.valueType, defContext), defContext);
-            } else if (lt instanceof Map) {
-                Map map = (Map) lt;
+            } else if (astType instanceof Map) {
+                Map map = (Map) astType;
                 typeSym = new MapTypeSym(toTypeSym(map.keyType, defContext), toTypeSym(map.valueType, defContext), defContext);
             } else {
                 // return null;
@@ -179,13 +173,8 @@ public class NTCEnv {
         return new ExceptionTypeSym(exceptionName, null, memberList, parent);
     }
 
-    public ExceptionTypeSym toExceptionTypeSym(ExceptionType t) {
-        if (t.isLocal(curContractSym.getName())) {
-            System.out.println("isLocal");
-            return (ExceptionTypeSym) getCurSym(t.getName());
-        } else {
-            return (ExceptionTypeSym) getExtSym(t.getContractName(), t.getName());
-        }
+    public ExceptionTypeSym toExceptionTypeSym(Type t) {
+        return (ExceptionTypeSym) getCurSym(t.name());
     }
 
     public void addSourceFile(String contractName, SourceFile root) {

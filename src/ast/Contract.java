@@ -333,23 +333,26 @@ public class Contract extends Node {
         // @final
         // void send{this -> TOP; BOT}(address target, uint amount);
         List<Arg> args = new ArrayList<>();
-        args.add(new Arg(
+        Arg tmparg = new Arg(
                 "target",
                 new LabeledType(Utils.ADDRESS_TYPE, labelThis),
                 false,
                 true
-        ));
-        args.add(new Arg(
+        );
+        args.add(tmparg);
+        tmparg = new Arg(
                 "amount",
                 new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), labelThis),
                 false,
                 true
-        ));
+        );
+        args.add(tmparg);
         int count = 0;
         for (Arg arg : args) {
-            CodeLocation location = new CodeLocation(0, count, "Builtin");
+            CodeLocation location = new CodeLocation(1, count, "Builtin");
             arg.setLoc(location);
             arg.annotation.setLoc(location);
+            arg.annotation.type().setLoc(location);
             ++count;
         }
         List<String> decs = new ArrayList<>();
@@ -366,7 +369,7 @@ public class Contract extends Node {
                 new Arguments(args),
                 new ArrayList<>(),
                 decs,
-                new Type(Utils.BuiltinType2ID(BuiltInT.VOID)),
+                new LabeledType(new Type(Utils.BuiltinType2ID(BuiltInT.VOID))),
                 false,
                 true
         );
@@ -382,6 +385,14 @@ public class Contract extends Node {
                 false,
                 true
         ));
+        count = 0;
+        for (Arg arg : args) {
+            CodeLocation location = new CodeLocation(1, count, "Builtin");
+            arg.setLoc(location);
+            arg.annotation.setLoc(location);
+            arg.annotation.type().setLoc(location);
+            ++count;
+        }
         decs = new ArrayList<>();
         decs.add(Utils.PUBLIC_DECORATOR);
         decs.add(Utils.FINAL_DECORATOR);
@@ -396,7 +407,7 @@ public class Contract extends Node {
                 new Arguments(args),
                 new ArrayList<>(),
                 decs,
-                new Type(Utils.BuiltinType2ID(BuiltInT.UINT)),
+                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), labelTop),
                 false,
                 true
         );

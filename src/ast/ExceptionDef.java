@@ -8,24 +8,22 @@ import java.util.ArrayList;
 
 public class ExceptionDef extends TopLayerNode {
 
-    ExceptionType exceptionType;
+    String exceptionName;
+    IfLabel ifl;
     Arguments arguments;
 
     public ExceptionDef(String name, IfLabel ifl, Arguments members) {
+        exceptionName = name;
+        this.ifl = ifl;
         this.arguments = members;
-        if (ifl == null) {
-            this.exceptionType = new ExceptionType(new Type(name));
-        } else {
-            this.exceptionType = new ExceptionType(new LabeledType(name, ifl));
-        }
         arguments.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
 
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
-        exceptionType.setContractName(env.curContractSym().getName());
-        env.globalSymTab().add(exceptionType.name,
-                env.toExceptionType(exceptionType.name, arguments, parent));
+        // exceptionType.setContractName(env.curContractSym().getName());
+        env.globalSymTab().add(exceptionName,
+                env.toExceptionType(exceptionName, arguments, parent));
         return true;
     }
 
@@ -36,9 +34,9 @@ public class ExceptionDef extends TopLayerNode {
      */
     @Override
     public void globalInfoVisit(ContractSym contractSym) {
-        exceptionType.setContractName(contractSym.getName());
-        contractSym.addType(exceptionType.name,
-                contractSym.toExceptionType(exceptionType.name, exceptionType.type.ifl, arguments, contractSym.defContext()));
+        // exceptionType.setContractName(contractSym.getName());
+        contractSym.addType(exceptionName,
+                contractSym.toExceptionType(exceptionName, ifl, arguments, contractSym.defContext()));
         // contractSym.addType(exceptionType, contractSym.toExceptionType(exceptionType, arguments));
 
     }

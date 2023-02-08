@@ -45,7 +45,7 @@ public class TypeChecker {
 
                 Symbol result = Parser.parse(inputFile, null);//p.parse();
                 SourceFile root = (SourceFile) result.value;
-                // TODO root.setName(inputFile.getName());
+                // TODO root.setName(inputFile.name());
                 List<String> sourceCode = Files.readAllLines(Paths.get(inputFile.getAbsolutePath()),
                         StandardCharsets.UTF_8);
                 root.setSourceCode(sourceCode);

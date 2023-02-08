@@ -17,12 +17,12 @@ public class FunctionDef extends FunctionSig {
     List<Statement> body;
 
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
-            List<Statement> body, List<String> decoratorList, Type rtn, boolean isConstructor) {
+            List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor) {
         super(name, funcLabels, args, decoratorList, rtn, isConstructor);
         this.body = body;
     }
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
-            List<Statement> body, List<String> decoratorList, Type rtn, boolean isConstructor, boolean isBuiltIn) {
+            List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor, boolean isBuiltIn) {
         super(name, funcLabels, args, decoratorList, rtn, isConstructor, isBuiltIn);
         this.body = body;
     }
@@ -185,7 +185,7 @@ public class FunctionDef extends FunctionSig {
             }
         }
         String rtnTypeCode = "";
-        if (rtn != null && !this.rtn.isVoid()) {
+        if (rtn != null && !this.rtn.type().isVoid()) {
             rtnTypeCode = rtn.toSolCode();
         }
 
@@ -225,6 +225,6 @@ public class FunctionDef extends FunctionSig {
 //
 //    @Override
 //    public String toSHErrLocFmt() {
-//        return this.getClass().getSimpleName() + "." + getName() + "." + location;
+//        return this.getClass().getSimpleName() + "." + name() + "." + location;
 //    }
 }

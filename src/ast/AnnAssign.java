@@ -54,7 +54,7 @@ public class AnnAssign extends Statement {
     public VarSym toVarInfo(ContractSym contractSym) {
         IfLabel ifl = null;
         if (annotation != null) {
-            ifl = ((LabeledType) annotation).ifl;
+            ifl = annotation.label();
         }
         return contractSym.toVarSym(((Name) target).id, annotation, isStatic, isFinal, isBuiltIn, location,
                 scopeContext);
@@ -123,7 +123,7 @@ public class AnnAssign extends Statement {
         // If the declared variable is a principal (final address/contract), add it to the principal list
         if ((varSym.isFinal &&
                 (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))
-                // || varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) Invalid to declare a non-global principal
+                // || varSym.typeSym.name().equals(Utils.PRINCIPAL_TYPE)) Invalid to declare a non-global principal
                 ) {
             env.addPrincipal(varSym);
 

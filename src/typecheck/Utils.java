@@ -62,6 +62,8 @@ public class Utils {
     public static final String METHOD_BALANCE_NAME = "balance";
     public static final CodeLocation BUILTIN_LOCATION = new CodeLocation(0, 0, "BUILTIN");
     public static final String LABEL_PAYVALUE = "value";
+    public static final String VOID_TYPE = "void";
+    public static final String BUILTIN_CONTRACT = "Builtin";
 
     public static final boolean isPrimitiveType(String x) {
         return BUILTIN_TYPES.contains(x);

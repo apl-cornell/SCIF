@@ -18,9 +18,11 @@ public class TestParsing {
             "basic/BaseContract",
             "basic/ExceptionThrowAndCatch",
             "regularTypechecking/LocalTrust_W01",
+            "regularTypechecking/FinalVarNotInitialized_W01",
+            "regularTypechecking/FinalVarNotInitialized_W02",
             "ifcTypechecking/LocalTrust",
             "ifcTypechecking/Wallet_lock_exception",
-            // "examples/ERC20"
+            "examples/ERC20",
     })
     void testPositiveParsing(String contractName) {
         String inputFilePath = contractName + ".scif";

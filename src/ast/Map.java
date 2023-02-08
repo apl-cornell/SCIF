@@ -8,13 +8,13 @@ import typecheck.ScopeContext;
 import typecheck.TypeSym;
 import typecheck.Utils;
 
-public class Map extends LabeledType {
+public class Map extends Type {
 
     public Type keyType;
     public Type valueType;
 
-    public Map(Type keyType, Type valueType, IfLabel ifl) {
-        super(Utils.MAP_TYPE, ifl);
+    public Map(Type keyType, Type valueType) {
+        super(Utils.MAP_TYPE);
         this.keyType = keyType;
         this.valueType = valueType;
     }
@@ -35,7 +35,7 @@ public class Map extends LabeledType {
     }
 
     @Override
-    public boolean typeMatch(Type annotation) {
+    public boolean typeMatch(Expression annotation) {
         return annotation instanceof Map &&
                 super.typeMatch(annotation) &&
                 keyType.typeMatch(((Map) annotation).keyType) &&
@@ -48,7 +48,6 @@ public class Map extends LabeledType {
         MapTypeSym typeSym = (MapTypeSym) env.toTypeSym(this, scopeContext);
         assert typeSym != null : name;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
-        ifl.ntcGenCons(env, parent);
         return now;
     }
 }

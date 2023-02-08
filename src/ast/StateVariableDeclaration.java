@@ -98,11 +98,11 @@ public class StateVariableDeclaration extends TopLayerNode {
     public void globalInfoVisit(ContractSym contractSym) {
         String id = name.id;
         CodeLocation loc = location;
-        System.err.println(id + " " + type.ifl);
+        System.err.println(id + " " + type.label());
         VarSym varSym =
                 contractSym.toVarSym(id, type, isStatic, isFinal, isBuiltIn, loc, contractSym.defContext());
         contractSym.addVar(id, varSym);
-        varSym.setLabel(contractSym.toLabel(type.ifl));
+        varSym.setLabel(contractSym.toLabel(type.label()));
         assert varSym.ifl != null;
     }
 

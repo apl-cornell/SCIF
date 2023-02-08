@@ -125,12 +125,12 @@ public class Subscript extends TrailerExpr {
                 rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
                         valueVarSym.defContext(), false, false, false);
 
-//                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(valueVarSym.typeSym.getName(),
+//                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(valueVarSym.typeSym.name(),
 //                        ifNameIndex);
 
 //                env.cons.add(
 //                        new Constraint(new Inequality(ifDepMapValue, ifNameRtn), env.hypothesis,
-//                                location, env.curContractSym.getName(),
+//                                location, env.curContractSym.name(),
 //                                "Label of the subscript variable"));
 
             } else {
