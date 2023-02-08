@@ -556,7 +556,7 @@ public class Utils {
     }
 
     public static ExceptionTypeSym getNormalPathException() {
-        return new ExceptionTypeSym("*n", null, new ArrayList<>(), globalScopeContext());
+        return new ExceptionTypeSym("*n", new ArrayList<>(), globalScopeContext());
     }
 
     public static PsiUnit joinPsiUnit(PsiUnit u1, PsiUnit u2) {
@@ -568,7 +568,7 @@ public class Utils {
     }
 
     public static ExceptionTypeSym getReturnPathException() {
-        return new ExceptionTypeSym("*r", null, new ArrayList<>(), globalScopeContext());
+        return new ExceptionTypeSym("*r", new ArrayList<>(), globalScopeContext());
     }
 
     public static void addBuiltInTypes(SymTab symTab) {

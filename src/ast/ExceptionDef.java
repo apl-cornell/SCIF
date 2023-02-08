@@ -9,12 +9,10 @@ import java.util.ArrayList;
 public class ExceptionDef extends TopLayerNode {
 
     String exceptionName;
-    IfLabel ifl;
     Arguments arguments;
 
-    public ExceptionDef(String name, IfLabel ifl, Arguments members) {
+    public ExceptionDef(String name, Arguments members) {
         exceptionName = name;
-        this.ifl = ifl;
         this.arguments = members;
         arguments.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
@@ -36,7 +34,7 @@ public class ExceptionDef extends TopLayerNode {
     public void globalInfoVisit(ContractSym contractSym) {
         // exceptionType.setContractName(contractSym.getName());
         contractSym.addType(exceptionName,
-                contractSym.toExceptionType(exceptionName, ifl, arguments, contractSym.defContext()));
+                contractSym.toExceptionType(exceptionName, arguments, contractSym.defContext()));
         // contractSym.addType(exceptionType, contractSym.toExceptionType(exceptionType, arguments));
 
     }

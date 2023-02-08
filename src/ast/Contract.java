@@ -419,7 +419,6 @@ public class Contract extends Node {
         // exception{BOT} Error();
         ExceptionDef error = new ExceptionDef(
                 Utils.EXCEPTION_ERROR_NAME,
-                new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)),
                 new Arguments()
         );
         exceptionDefs.add(error);

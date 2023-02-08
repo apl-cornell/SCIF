@@ -486,12 +486,7 @@ funcSig ::= r_funcSig:a NEWLINE {: RESULT = a;
 errorDef ::=
     EXCEPTION:x NAME:a parameters:b SEMI {:
         logger.debug("exception def: " + a);
-        RESULT = new ExceptionDef((String) a, null, b);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
-    | EXCEPTION:x LBRACE ifLabel:ifl RBRACE NAME:a parameters:b SEMI {:
-        logger.debug("exception def: " + a);
-        RESULT = new ExceptionDef((String) a, null, b);
+        RESULT = new ExceptionDef((String) a, b);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | error:err {:

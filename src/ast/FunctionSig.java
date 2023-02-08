@@ -74,6 +74,9 @@ public class FunctionSig extends TopLayerNode {
             rtn = new LabeledType(rtn.type(),
                         new PrimitiveIfLabel(new Name(typecheck.Utils.LABEL_THIS)));
         }
+        for (LabeledType exception : exceptionList) {
+            exception.setToDefault(rtn.label());
+        }
     }
 
     private List<String> setToDefault(List<String> decoratorList) {

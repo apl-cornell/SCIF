@@ -168,14 +168,14 @@ public class ContractSym extends TypeSym {
         return astNode;
     }
 
-    public ExceptionTypeSym toExceptionType(String exceptionName, IfLabel ifl, Arguments arguments, ScopeContext defContext) {
+    public ExceptionTypeSym toExceptionType(String exceptionName, Arguments arguments, ScopeContext defContext) {
 
         ExceptionTypeSym sym = getExceptionSym(exceptionName);
         if (sym != null) {
             return sym;
         }
         ArrayList<VarSym> memberList = arguments.parseArgs(this);
-        return new ExceptionTypeSym(exceptionName, toLabel(ifl), memberList, defContext);
+        return new ExceptionTypeSym(exceptionName, memberList, defContext);
     }
 
     public ExceptionTypeSym getExceptionSym(String exceptionName) {

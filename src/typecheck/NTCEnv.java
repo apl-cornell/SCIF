@@ -170,7 +170,7 @@ public class NTCEnv {
             }
         }
         ArrayList<VarSym> memberList = arguments.parseArgs(this, parent);
-        return new ExceptionTypeSym(exceptionName, null, memberList, parent);
+        return new ExceptionTypeSym(exceptionName, memberList, parent);
     }
 
     public ExceptionTypeSym toExceptionTypeSym(Type t) {
