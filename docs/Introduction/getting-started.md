@@ -29,5 +29,5 @@ git clone --recurse-submodules  https://github.com/Neroysq/Wyvern.git
 The following instruction compiles a short SCIF example:
 
 ```shell
-./scif -c -i=test/contracts/basic/MethodDefinition.scif
+./scif -c test/contracts/basic/MethodDefinition.scif
 ```

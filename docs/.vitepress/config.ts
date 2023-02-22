@@ -89,6 +89,18 @@ export default async () => defineConfig({
                         link: '/LanguageBasics/built-in-methods-and-variables'
                     }
                 ]
+            }, 
+            {
+                text: 'Security Mechanisms',
+                collapsible: true,
+                items: [ 
+                {
+                    text: 'Label model',
+                    link: '/SecurityMechanisms/label-model'
+                }
+
+                ]
+
             }
         ]
     },

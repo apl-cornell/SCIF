@@ -4,11 +4,11 @@ SCIF provides the ability to label information manipulated by programs with secu
 
 ## Principals
 
-A principal is an entity that represents some power to change certain aspects of the program. In SCIF, a principal can either be an *address*, representing an on-chain account, or a unique identifier that are defined by the programmer and only carries meaning within the scope of the program.
+A principal is an entity that represents some power to change certain aspects of the program. In SCIF, a principal can either be an *address*, representing an on-chain account, or a unique identifier that are defined by the programmer and only carries meaning within the scope of the current contract.
 
 ## Trust relationships
 
-In addtion to the set of principals, SCIF need to know the relationship between principals to detect information flow violations. The relationship between principals are defined by *flowsto* declarations. 
+In addtion to the set of principals, SCIF need to know the relationship between principals to detect information flow violations. The relationship between principals are defined by *flowsto* declarations.
 
 For example, suppose principal `Alice` is trusted principal `Bob` in the program. It can be declared as:
 
@@ -33,7 +33,7 @@ In SCIF, an intergity policy is expressed as labels attached to code.
 Here is a quick example:
 
 ```scif
-address owner;
+final address owner;
 uint{owner} trustedCounter;
 ```
 
