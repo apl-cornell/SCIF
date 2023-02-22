@@ -34,7 +34,7 @@ bool{l_r} f{l_ex -> l_in; l_lk}(uint{l_i} i);
 SCIF allows the programmer to ommit these labels in the following ways:
 
 ```scif
-bool f(uint i) ==> bool f{sender->this}(uint i
+bool f(uint i) ==> bool f{sender->this}(uint i)
 bool f{l_ex}(uint i) ==> bool f{l_ex->l_ex}(uint i))
 bool f{l_ex->l_in}(uint i) ==> bool{this join l_ex} f{l_ex->l_in;l_in}(uint{l_ex} i)
 ```
