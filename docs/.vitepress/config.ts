@@ -97,8 +97,19 @@ export default async () => defineConfig({
                 {
                     text: 'Label model',
                     link: '/SecurityMechanisms/label-model'
+                },
+                {
+                    text: 'Trust delegation mechanisms',
+                    link: '/SecurityMechanisms/delegation'
+                },
+                {
+                    text: 'Reentrancy protection',
+                    link: '/SecurityMechanisms/reentrancy'
+                },
+                {
+                    text: 'Confused deputy protection',
+                    link: '/SecurityMechanisms/confused-deputy'
                 }
-
                 ]
 
             }
