@@ -95,19 +95,19 @@ export default async () => defineConfig({
                 collapsible: true,
                 items: [ 
                 {
-                    text: 'Label model',
+                    text: 'Label Model',
                     link: '/SecurityMechanisms/label-model'
                 },
                 {
-                    text: 'Trust delegation mechanisms',
+                    text: 'Trust Delegation Mechanisms',
                     link: '/SecurityMechanisms/delegation'
                 },
                 {
-                    text: 'Reentrancy protection',
+                    text: 'Reentrancy Protection',
                     link: '/SecurityMechanisms/reentrancy'
                 },
                 {
-                    text: 'Confused deputy protection',
+                    text: 'Confused Deputy Protection',
                     link: '/SecurityMechanisms/confused-deputy'
                 }
                 ]
