@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <title>SCIF</title>
+<!--meta http-equiv="Content-Location" content="https://www.cs.cornell.edu/andru/"-->
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="default.css" type="text/css" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open%20Sans&amp;subset=latin">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source%20Sans%20Pro&amp;subset=latin">
+</head>
+<body>
+
+<div id=content>
+<h1>SCIF: Smart Contract Information Flow</h1>
+<p>
+SCIF is a new programming language for building compositionally secure smart
+contracts. Smart contracts implemented in SCIF are checked by the compiler for
+their security properties before they are deployed. SCIF is especially designed
+to support building secure systems in which multiple smart contracts interact.
+It detects and prevents common security vulnerabilities such as use of untrusted
+information, reentrancy attacks, and confused deputy attacks.</p>
+<p>
+The core security mechanism of SCIF is static information flow
+checking, applied to integrity policies that can be used to annotate
+code. State-of-the-art compile-time diagnosis tools give programmers
+accurate feedback about where security bugs exist in their code. The
+SCIF runtime system also supports dynamic trust management so that
+security and trust policies can evolve securely even after contracts
+are deployed. A precise run-time lock mechanism prevents reentrancy
+vulnerabilities, and confused deputy attacks are prevented by run-time
+mechanisms to prevent type confusion.
+</p>
+<ul>
+<li><a href="https://neroysq.github.io/SCIF/">SCIF Reference Manual</a>
+<li><a href="https://github.com/Neroysq/SCIF">SCIF Github repository</a>
+</ul>
+<h2>References</h2>
+<ol>
+<li>
+Ethan Cecchetti, Siqiu Yao, Haobin Ni, and Andrew C. Myers.
+<span class=papertitle>
+<a href="http://www.cs.cornell.edu/andru/papers/oakland21">Compositional security for reentrant applications</a></span>.
+<span class="conferencename">
+IEEE Symp.&nbsp;on Security and Privacy</span>,
+May 2021.
+</ol>
+
+</div>
+</body>
+</html>
