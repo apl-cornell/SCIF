@@ -8,9 +8,15 @@
   <link href="default.css" type="text/css" rel="stylesheet">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open%20Sans&amp;subset=latin">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source%20Sans%20Pro&amp;subset=latin">
+  <script src="https://andrewcmyers.github.io/constrain/numeric-1.2.6.js"></script>
+  <script src="https://andrewcmyers.github.io/constrain/constrain.js"></script>
+  <style>
+    #diagram { float: right; width: 30%; padding: 30px; height: 300px; margin: auto 0 }
+  </style>
 </head>
 <body>
 
+<canvas id=diagram></canvas>
 <div id=content>
 <h1>SCIF: Smart Contract Information Flow</h1>
 <p>
@@ -45,6 +51,51 @@ Ethan Cecchetti, Siqiu Yao, Haobin Ni, and Andrew C. Myers.
 IEEE Symp.&nbsp;on Security and Privacy</span>,
 May 2021.
 </ol>
+<script>
+with (new Constrain.Figure("diagram")) {
+    const height = variable(), width = variable()
+    function contract() {
+        return rectangle().setCornerRadius(15).setW(width).setH(height).setLineWidth(3)
+    }
+    function lock() {
+        const c = circle().setStrokeStyle("#6af").setLineWidth(5)
+        const s = square().setW(20).setLineWidth(2).setFillStyle("#8cf").setStrokeStyle("#6af")
+        c.at(s.uc()).setW(times(s.w(), 0.7))
+        return s
+    }
+    const t1 = contract(), t2 = contract(), u = contract()
+    equal(height, times(width, 1.508))
+
+    align("LR", "none", t1, t2)
+    align("center", "abut", t1, vspace(30), t2)
+    t1.setFillStyle("#8c8")
+    t2.setFillStyle("#8c8")
+    u.setFillStyle("#f88")
+    align("R", "center", u, margin())
+    setLineWidth(4)
+    setConnectionStyle("intersection")
+    connector(t1, u).setEndArrow("arrow").setArrowSize(18)
+    connector(u, t2).setEndArrow("arrow").setArrowSize(18)
+    Constrain.autoResize()
+    const x = average(t2, u)
+    setStrokeStyle("red")
+    let sz = 20
+    setLineWidth(8)
+    line(x.toTop(sz).toLeft(sz), x.toBottom(sz).toRight(sz))
+    line(x.toBottom(sz).toLeft(sz), x.toTop(sz).toRight(sz))
+
+    setStrokeStyle("#8c8")
+    const domain = rectangle().setCornerRadius(30).setLineWidth(5).setLineDash([8,8]).setFillStyle(null)
+    align("left", "top", domain, t1.expand(15))
+    align("right", "bottom", domain, t2.expand(15))
+    align("left", "T", domain, margin())
+
+    let l = lock().at(domain.lr())
+    align("none", "bottom", l, margin())
+
+    start()
+}
+</script>
 
 </div>
 </body>
