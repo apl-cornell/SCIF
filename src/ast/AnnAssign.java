@@ -1,24 +1,23 @@
 package ast;
 
 import compile.SolCode;
-import sherrloc.constraint.ast.Top;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class AnnAssign extends Statement {
 
-    Expression target;
-    Type annotation;
-    Expression value;
-    boolean isStatic;
-    boolean isFinal;
+    private final Expression target;
+    private LabeledType annotation;
+    private Expression value;
+    private boolean isStatic;
+    private boolean isFinal;
+    private boolean isBuiltIn = false;
 
-    public AnnAssign(Expression target, Type annotation, Expression value,
+    public AnnAssign(Expression target, LabeledType annotation, Expression value,
             boolean isConst, boolean isFinal) {
         this.target = target;
         this.annotation = annotation;
@@ -26,17 +25,22 @@ public class AnnAssign extends Statement {
         this.isStatic = isConst;
         this.isFinal = isFinal;
     }
+    public AnnAssign(Expression target, LabeledType annotation, Expression value,
+            boolean isConst, boolean isFinal, boolean isBuiltIn) {
+        this.target = target;
+        this.annotation = annotation;
+        this.value = value;
+        this.isStatic = isConst;
+        this.isFinal = isFinal;
+        this.isBuiltIn = isBuiltIn;
+    }
 
-    public void setType(Type type) {
+    public void setType(LabeledType type) {
         this.annotation = type;
     }
 
     public void setToDefault(IfLabel lbl) {
         annotation.setToDefault(lbl);
-    }
-
-    public void setTarget(Expression target) {
-        this.target = target;
     }
 
     public void setFinal(boolean isFinal) {
@@ -49,10 +53,10 @@ public class AnnAssign extends Statement {
 
     public VarSym toVarInfo(ContractSym contractSym) {
         IfLabel ifl = null;
-        if (annotation instanceof LabeledType) {
-            ifl = ((LabeledType) annotation).ifl;
+        if (annotation != null) {
+            ifl = annotation.label();
         }
-        return contractSym.toVarSym(((Name) target).id, annotation, isStatic, isFinal, location,
+        return contractSym.toVarSym(((Name) target).id, annotation, isStatic, isFinal, isBuiltIn, location,
                 scopeContext);
     }
 
@@ -64,27 +68,27 @@ public class AnnAssign extends Statement {
         ScopeContext tgt = new ScopeContext(target, now);
 
         String name = ((Name) target).id;
-        env.globalSymTab.add(name,
-                env.toVarSym(name, annotation, isStatic, isFinal, location, tgt));
+        env.globalSymTab().add(name,
+                env.toVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, tgt));
         return true;
     }
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        if (!parent.isContractLevel()) {
-            String name = ((Name) target).id;
-            env.addSym(name,
-                    new VarSym(env.toVarSym(name, annotation, isStatic, isFinal, location, now)));
-        }
+        String name = ((Name) target).id;
+        env.addSym(name,
+                new VarSym(env.toVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, now)));
         ScopeContext type = annotation.ntcGenCons(env, now);
         ScopeContext tgt = target.ntcGenCons(env, now);
 
         logger.debug("1: \n" + env + "\n2: " + target.toSolCode() + "\n" + tgt);
-        env.cons.add(type.genCons(tgt, Relation.EQ, env, location));
+        env.addCons(type.genCons(tgt, Relation.EQ, env, location));
         if (value != null) {
             ScopeContext v = value.ntcGenCons(env, now);
-            env.cons.add(tgt.genCons(v, Relation.LEQ, env, location));
+            env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
+        } else if (isFinal) {
+            throw new RuntimeException("final variable " + name + " not initialized at " + location);
         }
         return now;
     }
@@ -92,8 +96,8 @@ public class AnnAssign extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         logger.debug("entering AnnAssign: \n");
         // logger.debug(this.toString() + "\n");
@@ -101,62 +105,82 @@ public class AnnAssign extends Statement {
         VarSym varSym;
         String id = ((Name) target).id;
         logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
-        if (!scopeContext.isContractLevel()) {
-            CodeLocation loc = location;
-            varSym = env.curContractSym.toVarSym(id, annotation, isStatic, isFinal, loc,
-                    scopeContext);
-            // ifNameTgt = varSym.toSherrlocFmt();
-            // (env.ctxt.equals("") ? "" : env.ctxt + ".") + ((Name) target).id;
-            // varSym = env.contractInfo.toVarInfo(id, annotation, isConst, loc);
-            env.addVar(id, varSym);
-            // env.varNameMap.add(((Name) target).id, ifNameTgt, varSym);
-            if (annotation instanceof LabeledType) {
-                String ifLabel = ((LabeledType) annotation).ifl.toSherrlocFmt();
-                env.cons.add(new Constraint(
-                        new Inequality(ifLabel, Relation.EQ, varSym.labelToSherrlocFmt()),
-                        env.hypothesis, location, env.curContractSym.name,
-                        "Variable " + varSym.name + " may be labeled incorrectly"));
-            }
-        } else {
-            // ifNameTgt = ((Name) target).id;
-            varSym = env.getVar(id);
+        CodeLocation loc = location;
+        varSym = env.curContractSym().toVarSym(id, annotation, isStatic, isFinal, isBuiltIn, loc,
+                scopeContext);
+        env.addVar(id, varSym);
+        if (annotation != null) {
+            env.cons.add(new Constraint(
+                    new Inequality(varSym.labelNameSLC(), Relation.EQ, varSym.labelValueSLC()),
+                    env.hypothesis(), location, env.curContractSym().getName(),
+                    "Variable " + varSym.getName() + " may be labeled incorrectly"));
         }
-        logger.debug(varSym.name);
-        SLCNameVar = varSym.toSherrlocFmt();
-        SLCNameVarLbl = varSym.labelToSherrlocFmt();
-        logger.debug(varSym.typeSym.name);
-        if (varSym.typeSym.name.equals(Utils.ADDRESSTYPE)) {
-            env.principalSet.add(varSym.toSherrlocFmt());
+        logger.debug(varSym.getName());
+        SLCNameVar = varSym.toSHErrLocFmt();
+        SLCNameVarLbl = varSym.labelNameSLC();
+        logger.debug(varSym.typeSym.getName());
+
+        // If the declared variable is a principal (final address/contract), add it to the principal list
+        if ((varSym.isFinal &&
+                (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))
+                // || varSym.typeSym.name().equals(Utils.PRINCIPAL_TYPE)) Invalid to declare a non-global principal
+                ) {
+            env.addPrincipal(varSym);
+
+            VarSym equalPrincipal = null;
+            boolean correctInit = true;
+            if (value instanceof Name) { // assigned as another variable
+                // Nothing to check
+                equalPrincipal = env.getVar(((Name) value).id);
+            } else if (value instanceof Call call && call.isCast(env)) { // assigned as another contract
+                // check if it is a cast to a final address variable
+                Expression arg = call.getArgAt(0);
+                if (arg instanceof Name) {
+                    VarSym sym = env.getVar(((Name) arg).id);
+                    if (!sym.isFinal) {
+                        correctInit = false;
+                    } else {
+                        equalPrincipal = sym;
+                    }
+                } else {
+                    correctInit = false;
+                }
+            } else if (!isBuiltIn) {
+                correctInit = false;
+            }
+
+            if (correctInit) {
+                // add equivalence assumption to the trust set
+                env.addTrustConstraint(
+                        new Constraint(
+                                new Inequality(SLCNameVar, CompareOperator.Eq, equalPrincipal.toSHErrLocFmt()),
+                                env.hypothesis(),
+                                location,
+                                env.curContractSym().getName(),
+                                "New principal declaration"
+                        ));
+            } else {
+                throw new RuntimeException("A final address/Contract must be initialized to another final address/Contract: " + id);
+            }
         }
 
-        if (annotation instanceof LabeledType) {
-            if (annotation instanceof DepMap) {
-                ((DepMap) annotation).findPrincipal(env.principalSet);
-            } else {
-                ((LabeledType) annotation).ifl.findPrincipal(env.principalSet);
-            }
-        }
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        // String ifNameTgtLbl = ifNameTgt + "..lbl";
-        // Context prevContext = env.prevContext;
 
         env.cons.add(
-                new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis, location,
-                        env.curContractSym.name,
+                new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis(), location,
+                        env.curContractSym().getName(),
                         "Integrity of control flow must be trusted to allow this assignment"));
-
-        //env.outContext = endContext;
 
         if (!tail_position) {
             env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis, location, env.curContractSym.name,
+                    env.hypothesis(), location, env.curContractSym().getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
         if (value != null) {
             env.inContext = beginContext;
             ExpOutcome valueOutcome = value.genConsVisit(env, scopeContext.isContractLevel());
             env.cons.add(new Constraint(new Inequality(valueOutcome.valueLabelName, SLCNameVarLbl),
-                    env.hypothesis, value.location, env.curContractSym.name,
+                    env.hypothesis(), value.location, env.curContractSym().getName(),
                     "Integrity of the value being assigned must be trusted to allow this assignment"));
             typecheck.Utils.contextFlow(env, valueOutcome.psi.getNormalPath().c, endContext,
                     value.location);
@@ -168,11 +192,11 @@ public class AnnAssign extends Statement {
 
     }
 
-    public void findPrincipal(HashSet<String> principalSet) {
-        if (annotation instanceof LabeledType) {
-            ((LabeledType) annotation).ifl.findPrincipal(principalSet);
-        }
-    }
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        if (annotation instanceof LabeledType) {
+//            ((LabeledType) annotation).ifl.findPrincipal(principalSet);
+//        }
+//    }
 
     public void solidityCodeGen(SolCode code) {
         if (value != null) {

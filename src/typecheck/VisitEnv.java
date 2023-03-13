@@ -1,26 +1,31 @@
 package typecheck;
 
-import ast.ExceptionType;
 import ast.SourceFile;
+import java.util.Collections;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 
+/**
+ * The environment for information flow typechecking.
+ * Mutable.
+ */
 public class VisitEnv {
     public Context inContext;
     // public PathOutcome outContext;
     // public HashMap<String, FuncInfo> funcMap;
     public List<Constraint> cons;
-    public List<Constraint> trustCons;
+    private final List<Constraint> trustCons;
     // public LookupMaps varNameMap;
     public SymTab globalSymTab;
     public SymTab curSymTab;
-    public Hypothesis hypothesis;
-    public HashSet<String> principalSet; // TODO: better imp
-    public ContractSym curContractSym;
+    private Hypothesis hypothesis;
+    private final Set<VarSym> principalSet; // TODO: better imp
+    private ContractSym curContractSym;
+    private FuncSym curFuncSym;
     // public HashMap<String, ContractInfo> contractMap;
     //public HashMap<String, SigCons> sigConsMap;
     public HashMap<String, String> sigReq = new HashMap<>();
@@ -37,7 +42,7 @@ public class VisitEnv {
                     SymTab globalSymTab,
                     SymTab curSymTab,
                     Hypothesis hypothesis,
-                    HashSet<String> principalSet,
+                    Set<VarSym> principalSet,
                     ContractSym curContractSym,
                     HashMap<String, SourceFile> programMap
                     // HashMap<ExceptionTypeSym, PsiUnit> psi
@@ -61,35 +66,26 @@ public class VisitEnv {
         // this.sigConsMap = sigConsMap;
     }
 
-    /*public VisitEnv() {
-        // ctxt = null;
-        inContext = new Context();
-        outContext = new PsiUnit();
-        // funcMap = new HashMap<>();
-        cons = new ArrayList<>();
-        trustCons = new ArrayList<>();
-        globalSymTab = new SymTab();
-        curSymTab = globalSymTab;
-        // varNameMap = new LookupMaps();
-        hypothesis = new Hypothesis();
-        principalSet = new HashSet<>();
-        curContractSym = null;
-        programMap = new HashMap<>();
-        psi = new HashMap<>();
-        // contractMap = new HashMap<>();
-        //sigConsMap = new HashMap<>();
-    }*/
-
-    public void addVar(String id, VarSym varSym) {
-        curContractSym.addVar(id, varSym);
+    public Hypothesis hypothesis() {
+        return hypothesis;
     }
 
-    public VarSym getVar(String id) {
+    public void addVar(String id, VarSym varSym) {
+        curSymTab.add(id, varSym);
+    }
+
+    /**
+     * Should never fail
+     * @param id
+     * @return
+     */
+    public VarSym getVar(String id)  {
         Sym sym = curSymTab.lookup(id);
         if (sym instanceof VarSym)
             return (VarSym) sym;
-        else
-            return null;
+        else {
+            throw new RuntimeException("VisitEnv getVar failure:" + id + " " + sym);
+        }
     }
 
     public ContractSym getContract(String id) {
@@ -151,12 +147,12 @@ public class VisitEnv {
         return ((ContractSym) extST).lookupSym(funcName);
     }
 
-    public ExceptionTypeSym toExceptionTypeSym(ExceptionType t) {
-        if (t.isLocal(curContractSym.name)) {
-            return (ExceptionTypeSym) getCurSym(t.getName());
-        } else {
-            return (ExceptionTypeSym) getExtSym(t.getContractName(), t.getName());
-        }
+    public ExceptionTypeSym toExceptionTypeSym(ast.Type t) {
+//        if (t.isLocal(curContractSym.getName())) {
+            return (ExceptionTypeSym) getCurSym(t.name());
+//        } else {
+//            return (ExceptionTypeSym) getExtSym(t.getContractName(), t.name());
+//        }
     }
 
     public ExceptionTypeSym getExp(String name) {
@@ -165,5 +161,46 @@ public class VisitEnv {
             return (ExceptionTypeSym) sym;
         else
             return null;
+    }
+
+    public ScopeContext getScopeContext() {
+        return curContractSym.getContractNode().getScopeContext();
+    }
+
+    public Set<VarSym> principalSet() {
+        return principalSet;
+    }
+
+    public List<Constraint> trustCons() {
+        return Collections.unmodifiableList(trustCons);
+    }
+
+    public void addTrustConstraint(Constraint constraint) {
+        trustCons.add(constraint);
+    }
+
+    public void addPrincipal(VarSym varSym) {
+        principalSet.add(varSym);
+    }
+
+    public VarSym thisSym() {
+        return curContractSym.thisSym();
+    }
+
+    public VarSym sender() {
+        return curFuncSym.sender();
+    }
+
+    public ContractSym curContractSym() {
+        return curContractSym;
+    }
+
+    public void setCurContract(ContractSym contractSym) {
+        curContractSym = contractSym;
+        curSymTab = contractSym.symTab;
+    }
+
+    public void setCurFuncSym(FuncSym funcSym) {
+        curFuncSym = funcSym;
     }
 }

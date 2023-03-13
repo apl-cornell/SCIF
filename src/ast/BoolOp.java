@@ -24,17 +24,17 @@ public class BoolOp extends Expression {
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         ScopeContext l = left.ntcGenCons(env, now), r = right.ntcGenCons(env, now);
-        env.cons.add(now.genCons(l, Relation.LEQ, env, location));
-        env.cons.add(now.genCons(r, Relation.LEQ, env, location));
-        env.cons.add(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        env.addCons(now.genCons(l, Relation.LEQ, env, location));
+        env.addCons(now.genCons(r, Relation.LEQ, env, location));
+        env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
         return now;
     }
 
     @Override
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         env.inContext = beginContext;
         ExpOutcome lo = left.genConsVisit(env, false);
@@ -46,12 +46,12 @@ public class BoolOp extends Expression {
 
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bool" + location.toString();
 
-        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location,
-                env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis(), location,
+                env.curContractSym().getName(),
                 "Integrity of left hand expression doesn't flow to value of this boolean operation"));
         env.cons.add(
-                new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location,
-                        env.curContractSym.name,
+                new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis(), location,
+                        env.curContractSym().getName(),
                         "Integrity of right hand expression doesn't flow to value of this boolean operation"));
 
         typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, right.location);
@@ -59,8 +59,8 @@ public class BoolOp extends Expression {
 
         if (!tail_position) {
             env.cons.add(new Constraint(
-                    new Inequality(ro.psi.getNormalPath().c.lambda, beginContext.lambda),
-                    env.hypothesis, location, env.curContractSym.name,
+                    new Inequality(endContext.lambda, beginContext.lambda),
+                    env.hypothesis(), location, env.curContractSym().getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 

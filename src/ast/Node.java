@@ -18,7 +18,7 @@ public abstract class Node {
     /**
      * Record where the corresponding code is in original source file
      */
-    CodeLocation location;
+    CodeLocation location = new CodeLocation();
 
     public CodeLocation getLocation() {
         return location;
@@ -35,7 +35,7 @@ public abstract class Node {
     }
 
     public String toSHErrLocFmt() {
-        return this.getClass().getSimpleName() + "" + location;
+        return scopeContext + "." + this.getClass().getSimpleName() + "" + location;
     }
 
     /**
@@ -45,10 +45,17 @@ public abstract class Node {
 
     public abstract void solidityCodeGen(SolCode code);
 
+    /**
+     * Return a list of AST nodes that are the current node's kids
+     */
     public List<Node> children() {
         return new ArrayList<>();
     }
 
+    /**
+     * set the scopeContext of the current node, and update children's scopeContext
+     * @param parent
+     */
     public void passScopeContext(ScopeContext parent) {
         scopeContext = parent;
         for (Node node : children()) {
@@ -66,9 +73,13 @@ public abstract class Node {
 
     @Override
     public String toString() {
-        return "TODO";
+        return "Node";
         //return genson.serialize(location);
     }
 
     protected static final Logger logger = LogManager.getLogger();
+
+    public ScopeContext getScopeContext() {
+        return scopeContext;
+    }
 }

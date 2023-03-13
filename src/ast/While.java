@@ -29,7 +29,7 @@ public class While extends Statement {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
-        env.curSymTab = new SymTab(env.curSymTab);
+        env.setCurSymTab(new SymTab(env.curSymTab()));
         ScopeContext rtn = test.ntcGenCons(env, now);
         env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
 
@@ -39,7 +39,7 @@ public class While extends Statement {
         for (Statement s : orelse) {
             ScopeContext tmp = s.ntcGenCons(env, now);
         }
-        env.curSymTab = env.curSymTab.getParent();
+        env.setCurSymTab(env.curSymTab().getParent());
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         return now;
     }

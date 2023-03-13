@@ -3,6 +3,7 @@ package typecheck;
 import ast.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ContractSym extends TypeSym {
 
@@ -11,36 +12,30 @@ public class ContractSym extends TypeSym {
     public HashMap<String, VarInfo> varMap;
     public HashMap<String, FuncInfo> funcMap;*/
     public SymTab symTab;
-    public IfLabel ifl;
+    // private Label label;
     // public ArrayList<TrustConstraint> trustCons;
-    public TrustSetting trustSetting;
-    public SourceFile astNode;
+    private List<Assumption> assumptions;
+    private final Contract astNode;
+    //private VarSym thisSym;
 
     public ContractSym(String name,
             SymTab symTab,
             // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
-            TrustSetting trustSetting,
-            IfLabel ifl) {
-        super(name);
-        // this.name = name;
-        /*this.iptContracts = iptContracts;
-        this.typeMap = typeMap;
-        this.varMap = varMap;
-        this.funcMap = funcMap;*/
+            List<Assumption> assumptions,
+            // Label label,
+            Contract contract) {
+        super(name, contract.getScopeContext());
         this.symTab = symTab;
-        this.trustSetting = trustSetting;
-        this.ifl = ifl;
+        this.assumptions = assumptions;
+        // this.label = label;
+        astNode = contract;
     }
 
-    public ContractSym() {
-        // name = "UNKNOWN";
-        super(Utils.DEBUG_UNKNOWN_CONTRACT_NAME);
-        /*iptContracts = new HashSet<>();
-        typeMap = new HashMap<>();
-        varMap = new HashMap<>();
-        funcMap = new HashMap<>();*/
+    public ContractSym(String contractName, Contract contract) {
+        super(contractName, contract.getScopeContext());
+        astNode = contract;
         symTab = new SymTab();
-        trustSetting = new TrustSetting();
+        assumptions = new ArrayList<>();
     }
 
     public TypeSym toType(String typeName) {
@@ -68,27 +63,26 @@ public class ContractSym extends TypeSym {
             VarSym tmp = member.toVarInfo(this);
             memberList.add(tmp);
         }
-        return new StructTypeSym(typeName, memberList);
+        return new StructTypeSym(typeName, memberList, astNode.getScopeContext());
     }
 
-    public TypeSym toTypeSym(ast.Type astType) {
+    public TypeSym toTypeSym(ast.Type astType, ScopeContext defContext) {
         if (astType == null) {
             return new BuiltinTypeSym("void");
         }
         // System.err.println("[in]toTypeSym: " + astType.x);
 
-        Sym s = symTab.lookup(astType.getName());
+        Sym s = symTab.lookup(astType.name());
         TypeSym typeSym = null;
         if (s instanceof TypeSym) {
             typeSym = (TypeSym) s;
         } else {
-            LabeledType lt = (LabeledType) astType;
-            if (lt instanceof DepMap) {
-                DepMap depMap = (DepMap) lt;
-                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType), toTypeSym(depMap.valueType));
-            } else if (lt instanceof Map) {
-                Map map = (Map) lt;
-                typeSym = new MapTypeSym(toTypeSym(map.keyType), toTypeSym(map.valueType));
+            if (astType instanceof DepMap) {
+                DepMap depMap = (DepMap) astType;
+                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType, defContext), depMap.keyName(), toTypeSym(depMap.valueType, defContext), defContext, new ScopeContext(depMap, defContext));
+            } else if (astType instanceof Map) {
+                Map map = (Map) astType;
+                typeSym = new MapTypeSym(toTypeSym(map.keyType, defContext), toTypeSym(map.valueType, defContext), defContext);
             }
 
         }
@@ -97,14 +91,29 @@ public class ContractSym extends TypeSym {
     }
 
 
-    public VarSym toVarSym(String localName, ast.Type astType, boolean isConst, boolean isFinal,
-            CodeLocation loc, ScopeContext scopeContext) {
-        TypeSym typeSym = toTypeSym(astType);
-        IfLabel ifl = null;
-        if (astType instanceof LabeledType) {
-            ifl = ((LabeledType) astType).ifl;
+    public VarSym toVarSym(String localName, ast.LabeledType astType, boolean isStatic, boolean isFinal, boolean isBuiltIn,
+            CodeLocation loc, ScopeContext defContext) {
+        System.err.println("toVarSym: " + localName + " " + astType.type().name());
+        TypeSym typeSym = toTypeSym(astType.type(), defContext);
+        System.err.println("toVarSym: " + localName + " " + typeSym);
+        Label ifl;
+        ifl = toLabel(astType.label());
+        return new VarSym(localName, typeSym, ifl, loc, defContext, isStatic, isFinal, isBuiltIn);
+    }
+
+    public Label toLabel(IfLabel ifl) {
+        if (ifl instanceof PrimitiveIfLabel) {
+            VarSym label = (VarSym) lookupSym(((PrimitiveIfLabel) ifl).value().id);
+            if (label == null) return null;
+            return new PrimitiveLabel(label, ifl.getLocation());
+        } else if (ifl instanceof ComplexIfLabel) {
+            return new ComplexLabel(toLabel(((ComplexIfLabel) ifl).getLeft()),
+                    ((ComplexIfLabel) ifl).getOp(),
+                    toLabel(((ComplexIfLabel) ifl).getRight()),
+                    ifl.getLocation());
+        } else {
+            throw new RuntimeException();
         }
-        return new VarSym(localName, typeSym, ifl, loc, scopeContext, isConst, isFinal);
     }
 
     public void addVar(String varname, VarSym varSym) {
@@ -147,21 +156,26 @@ public class ContractSym extends TypeSym {
 
 
     public String getLabelNameContract() {
-        return Utils.getLabelNameContract(name);
+        return Utils.getLabelNameContract(getContractNode().getScopeContext());
     }
 
     public String getLabelContract() {
-        return ifl.toSherrlocFmt();
+        return Utils.getLabelNameContract(getContractNode().getScopeContext());
+        // return ifl.toSHErrLocFmt(name());
     }
 
-    public ExceptionTypeSym toExceptionType(String exceptionName, Arguments arguments) {
+    public Contract getContractNode() {
+        return astNode;
+    }
+
+    public ExceptionTypeSym toExceptionType(String exceptionName, Arguments arguments, ScopeContext defContext) {
 
         ExceptionTypeSym sym = getExceptionSym(exceptionName);
         if (sym != null) {
             return sym;
         }
         ArrayList<VarSym> memberList = arguments.parseArgs(this);
-        return new ExceptionTypeSym(exceptionName, memberList);
+        return new ExceptionTypeSym(exceptionName, memberList, defContext);
     }
 
     public ExceptionTypeSym getExceptionSym(String exceptionName) {
@@ -170,5 +184,39 @@ public class ContractSym extends TypeSym {
             return null;
         }
         return (ExceptionTypeSym) sym;
+    }
+
+    /**
+     * Get all principals and addresses
+     * @return
+     */
+//    public Set<Sym> getPrincipalSet() {
+//        Set<Sym> rtn = new HashSet<>();
+//        for (Entry<String, VarSym> entry : symTab.getVars().entrySet()) {
+//            //if (sym instanceof VarSym) {
+//            VarSym sym = entry.getValue();
+//            if (sym.typeSym.name().equals(Utils.PRINCIPAL_TYPE)
+//                    || (sym.isFinal
+//                    && (sym.typeSym instanceof ContractSym
+//                        || sym.typeSym.name().equals(Utils.ADDRESS_TYPE)))) {
+//                rtn.add(sym);
+//            }
+//            //}
+//        }
+//        return rtn;
+//    }
+
+    public Iterable<Assumption> assumptions() {
+        return assumptions;
+    }
+
+    public void updateAssumptions(List<Assumption> assumptions) {
+        this.assumptions = assumptions;
+    }
+
+    public VarSym thisSym() {
+        VarSym thisSym = (VarSym) lookupSym(Utils.LABEL_THIS);
+        assert thisSym != null;
+        return thisSym;
     }
 }

@@ -11,8 +11,8 @@ public abstract class Literal extends Expression {
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         String ifNameRtn = "LITERAL..." + location.toString();
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtn), env.hypothesis, location,
-                env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtn), env.hypothesis(), location,
+                env.curContractSym().getName(),
                 "Control flow must be trusted to use this literal"));
 
         return new ExpOutcome(ifNameRtn,
@@ -24,9 +24,9 @@ public abstract class Literal extends Expression {
         ScopeContext now = new ScopeContext(this, parent);
         // con: tgt should be a supertype of v
         if (this instanceof Num) {
-            env.cons.add(now.genCons(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
+            env.addCons(now.genCons(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
         } else if (this instanceof Str) {
-            env.cons.add(now.genCons(env.getSymName(BuiltInT.STRING), Relation.EQ, env, location));
+            env.addCons(now.genCons(env.getSymName(BuiltInT.STRING), Relation.EQ, env, location));
         }
         return now;
     }

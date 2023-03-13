@@ -6,7 +6,7 @@ export async function highlighter() {
     console.log('Current directory: '+ process.cwd())
     const highlighter = await getHighlighter({})
 
-    const scifGrammar = JSON.parse(readFileSync("./docs/.vitepress/scif.tmLanguage.json", "utf-8"))
+    const scifGrammar = JSON.parse(readFileSync("./docs/.vitepress/c.tmLanguage.json", "utf-8"))
 
     const scif = {
         id: "scif",
@@ -77,6 +77,10 @@ export default async () => defineConfig({
                         link: '/LanguageBasics/contracts'
                     },
                     {
+                        text: 'Exceptions and Failures',
+                        link: '/LanguageBasics/exceptions-and-failures'
+                    },
+                    {
                         text: 'Expressions and Statements',
                         link: '/LanguageBasics/expressions-and-statements'
                     },
@@ -85,6 +89,29 @@ export default async () => defineConfig({
                         link: '/LanguageBasics/built-in-methods-and-variables'
                     }
                 ]
+            }, 
+            {
+                text: 'Security Mechanisms',
+                collapsible: true,
+                items: [ 
+                {
+                    text: 'Label Model',
+                    link: '/SecurityMechanisms/label-model'
+                },
+                {
+                    text: 'Trust Delegation Mechanisms',
+                    link: '/SecurityMechanisms/delegation'
+                },
+                {
+                    text: 'Reentrancy Protection',
+                    link: '/SecurityMechanisms/reentrancy'
+                },
+                {
+                    text: 'Confused Deputy Protection',
+                    link: '/SecurityMechanisms/confused-deputy'
+                }
+                ]
+
             }
         ]
     },

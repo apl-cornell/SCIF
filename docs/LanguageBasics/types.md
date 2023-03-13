@@ -36,7 +36,8 @@ Values in a map `m` can be accessed through expressions `m[k]`.
 Each variable type in SCIF is associated with a label representing its integrity level. `T{l}` describes a type `T` associated with the label `l`.
 
 For example:
-```Java
+
+```scif
 uint{trusted} x;
 uint{untrusted} y;
 x = y; // compile error

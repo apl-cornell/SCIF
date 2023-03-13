@@ -1,0 +1,7 @@
+contract FinalVar {
+
+    @public
+    void foo() {
+        final uint a;
+    }
+}

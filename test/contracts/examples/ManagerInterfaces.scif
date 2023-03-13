@@ -1,0 +1,30 @@
+interface TrustManager {
+    @public
+    bool register();
+
+    @public
+    bool ifTrust(address a, address b);
+
+    @public
+    bool ifTrust(address a, address b, address[] proof);
+
+    @public
+    void setTrust(address trustee);
+
+    @public
+    void revokeTrust(address trustee);
+}
+
+interface LockManager {
+    @public
+    bool register();
+
+    @public
+    bool lock(address l);
+
+    @public
+    bool unlock(address l);
+
+    @public
+    bool ifLocked(address l);
+}

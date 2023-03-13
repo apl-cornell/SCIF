@@ -12,12 +12,20 @@ public class TestParsing {
     @ParameterizedTest
     @ValueSource(strings = {
             "basic/EmptyContract",
+            "basic/DependentMap",
             "basic/StateVarDeclaration",
             "basic/ExceptionDefinition",
             "basic/MethodDefinition",
             "basic/BaseContract",
+            "basic/ExceptionThrowAndCatch",
+            "regularTypechecking/LocalTrust_W01",
+            "regularTypechecking/FinalVarNotInitialized_W01",
+            "regularTypechecking/FinalVarNotInitialized_W02",
+            "ifcTypechecking/LocalTrust",
+            "ifcTypechecking/Wallet_lock_exception",
+            "examples/ERC20",
     })
-    void testPositiveParsing(String contractName) {
+    void testPositive(String contractName) {
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         try {
@@ -34,7 +42,7 @@ public class TestParsing {
     @ValueSource(strings = {
             "WrongStateVarDeclaration",
     })
-    void testNegativeParsing(String contractName) {
+    void testNegative(String contractName) {
         String inputFilePath = "parsing/" + contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         try {

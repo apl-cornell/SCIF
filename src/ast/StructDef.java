@@ -35,10 +35,10 @@ public class StructDef extends TopLayerNode {
         return false;
     }
 
-    @Override
-    public void findPrincipal(HashSet<String> principalSet) {
-
-    }
+//    @Override
+//    public void findPrincipal(HashSet<String> principalSet) {
+//
+//    }
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {

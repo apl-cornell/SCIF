@@ -28,24 +28,29 @@ public class FuncLabels extends Node {
         this.end_pc = end_pc;
     }
 
-    public void findPrincipal(HashSet<String> principalSet) {
-        if (begin_pc != null) {
-            begin_pc.findPrincipal(principalSet);
-        }
-        if (to_pc != null) {
-            to_pc.findPrincipal(principalSet);
-        }
-        if (gamma_label != null) {
-            gamma_label.findPrincipal(principalSet);
-        }
-        if (end_pc != null) {
-            end_pc.findPrincipal(principalSet);
-        }
-    }
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        if (begin_pc != null) {
+//            begin_pc.findPrincipal(principalSet);
+//        }
+//        if (to_pc != null) {
+//            to_pc.findPrincipal(principalSet);
+//        }
+//        if (gamma_label != null) {
+//            gamma_label.findPrincipal(principalSet);
+//        }
+//        if (end_pc != null) {
+//            end_pc.findPrincipal(principalSet);
+//        }
+//    }
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        return null;
+        begin_pc.ntcGenCons(env, parent);
+        to_pc.ntcGenCons(env, parent);
+        gamma_label.ntcGenCons(env, parent);
+        // TODO: set end pc
+        if (end_pc != null) end_pc.ntcGenCons(env, parent);
+        return parent;
     }
 
     @Override
@@ -78,7 +83,7 @@ public class FuncLabels extends Node {
         //TODO: set end_pc
         IfLabel thisLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
         if (isConstructor) {
-            begin_pc = to_pc = gamma_label = thisLbl;
+            begin_pc = to_pc = gamma_label = end_pc = thisLbl;
         } else {
             if (gamma_label != null) {
                 return;
@@ -97,9 +102,12 @@ public class FuncLabels extends Node {
                     }
                     if (isPublic) {
                         IfLabel botLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM));
-                        begin_pc = to_pc = gamma_label = botLbl;
+                        begin_pc = new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER));
+                        to_pc = thisLbl;
+                        gamma_label = botLbl;
+                        end_pc = thisLbl;
                     } else {
-                        begin_pc = to_pc = gamma_label = thisLbl;
+                        begin_pc = to_pc = gamma_label = end_pc = thisLbl;
                     }
                 }
             }

@@ -1,7 +1,10 @@
 package ast;
 
 import compile.SolCode;
+import java.util.Collections;
 import java.util.List;
+import typecheck.Assumption;
+import typecheck.ContractSym;
 import typecheck.DynamicSystemOption;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
@@ -9,6 +12,9 @@ import typecheck.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import typecheck.VisitEnv;
+import typecheck.sherrlocUtils.Relation;
 
 public class TrustSetting extends Node {
 
@@ -17,18 +23,16 @@ public class TrustSetting extends Node {
     DynamicSystemOption dynamicSystemOption;
     HashMap<String, String> labelTable;
 
-    public List<TrustConstraint> getTrust_list() {
-        //TODO: sus
-        return trust_list;
+    public List<TrustConstraint> trust_list() {
+        return Collections.unmodifiableList(trust_list);
     }
 
     public DynamicSystemOption getDynamicSystemOption() {
         return dynamicSystemOption;
     }
 
-    public HashMap<String, String> getLabelTable() {
-        //TODO: sus
-        return labelTable;
+    public Map<String, String> getLabelTable() {
+        return Collections.unmodifiableMap(labelTable);
     }
 
     public TrustSetting() {
@@ -37,16 +41,19 @@ public class TrustSetting extends Node {
         labelTable = new HashMap<>();
     }
 
-    public TrustSetting(String dynamicOption, List<TrustConstraint> trust_list,
-            HashMap<String, String> labelTable) {
-        this.dynamicSystemOption = Utils.resolveDynamicOption(dynamicOption);
+    public TrustSetting(List<TrustConstraint> trust_list) {
+        this.dynamicSystemOption = null;
+        // Utils.resolveDynamicOption(dynamicOption);
         this.trust_list = trust_list;
-        this.labelTable = labelTable;
+        this.labelTable = new HashMap<>();
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        return null;
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext context) {
+        for (TrustConstraint trustConstraint : trust_list) {
+            trustConstraint.ntcGenCons(env, context);
+        }
+        return context;
     }
 
     @Override
@@ -57,5 +64,27 @@ public class TrustSetting extends Node {
     @Override
     public String toString() {
         return genson.serialize(dynamicSystemOption) + "\n...";
+    }
+
+    protected void addBuiltIns() {
+        PrimitiveIfLabel labelThis = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
+        PrimitiveIfLabel labelBot = new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM));
+        PrimitiveIfLabel labelTop = new PrimitiveIfLabel(new Name(Utils.LABEL_TOP));
+        TrustConstraint thisFlowsToBot = new TrustConstraint(labelThis, Relation.LEQ, labelBot);
+        TrustConstraint topFlowsToThis = new TrustConstraint(labelTop, Relation.LEQ, labelThis);
+        trust_list.add(thisFlowsToBot);
+        trust_list.add(topFlowsToThis);
+    }
+
+    public void genConsVisit(VisitEnv env, boolean tail_position) {
+
+    }
+
+    public void globalInfoVisit(ContractSym contractSym) {
+        List<Assumption> assumptions = new ArrayList<>();
+        for (TrustConstraint constraint : trust_list) {
+            assumptions.add(constraint.toAssumption(contractSym));
+        }
+        contractSym.updateAssumptions(assumptions);
     }
 }

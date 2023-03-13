@@ -10,22 +10,15 @@ import java.util.Map;
 
 
 /*
- * A context class that stores tree structure between nodes and an exception map that indicate what
+ * A context class that stores tree structure between nodes and an exception map that indicates what
  * exceptions are acceptable in the current contract
  * */
 public class ScopeContext {
 
-    Node cur;
-    HashMap<ExceptionTypeSym, Boolean> funcExceptionMap;
-    ScopeContext parent;
-    String SHErrLocName;
-
-    public ScopeContext(String specifiedName) {
-        cur = null;
-        parent = null;
-        funcExceptionMap = new HashMap<ExceptionTypeSym, Boolean>();
-        SHErrLocName = specifiedName;
-    }
+    private Node cur;
+    private HashMap<ExceptionTypeSym, Boolean> funcExceptionMap;
+    private ScopeContext parent;
+    private final String SHErrLocName;
 
     public ScopeContext(Node cur, ScopeContext parent) {
         this.cur = cur;
@@ -47,6 +40,9 @@ public class ScopeContext {
     }
 
     private String calcSHErrLocName() {
+        if (cur == null && parent == null) {
+            return "global";
+        }
 
         String localPostfix;
         if (cur instanceof Contract) {
@@ -61,10 +57,15 @@ public class ScopeContext {
             localPostfix = ((Interface) cur).contractName;
         } else if (cur instanceof GuardBlock) {
             localPostfix = "guardBlock" + cur.locToString();
+        } else if (cur instanceof Try) {
+            localPostfix = "try" + cur.locToString();
         } else if (cur instanceof SourceFile) {
-            localPostfix = ((SourceFile) cur).getSourceFileName();
+            localPostfix = ((SourceFile) cur).getSourceFileId();
         } else {
-            localPostfix = cur.toSHErrLocFmt();
+            assert cur != null;
+            // localPostfix = cur.toSHErrLocFmt();
+            return cur.toSHErrLocFmt();
+            //throw new RuntimeException();
         }
 
         if (parent != null) {
@@ -81,12 +82,12 @@ public class ScopeContext {
     public Constraint genCons(ScopeContext rhs, Relation op, NTCEnv env, CodeLocation location) {
 
         return new Constraint(new Inequality(getSHErrLocName(), op, rhs.getSHErrLocName()),
-                env.globalHypothesis, location, env.curContractSym.name, "");
+                env.globalHypothesis(), location, env.curContractSym().getName(), "");
     }
 
     public Constraint genCons(String rhs, Relation op, NTCEnv env, CodeLocation location) {
-        return new Constraint(new Inequality(getSHErrLocName(), op, rhs), env.globalHypothesis,
-                location, env.curContractSym.name, "");
+        return new Constraint(new Inequality(getSHErrLocName(), op, rhs), env.globalHypothesis(),
+                location, env.curContractSym().getName(), "");
     }
 
     public boolean isContractLevel() {
@@ -132,7 +133,20 @@ public class ScopeContext {
     public void printExceptionSet() {
         System.err.println(funcExceptionMap.size());
         for (Map.Entry<ExceptionTypeSym, Boolean> t : funcExceptionMap.entrySet()) {
-            System.err.println(t + t.getKey().name);
+            System.err.println(t + t.getKey().getName());
         }
+    }
+
+    public Node cur() {
+        return cur;
+    }
+
+    public ScopeContext parent() {
+        return parent;
+    }
+
+    public Constraint genEqualCons(Sym sym, NTCEnv env, CodeLocation location, String explanation) {
+        return new Constraint(new Inequality(getSHErrLocName(), CompareOperator.Eq, sym.toSHErrLocFmt()),
+                env.globalHypothesis(), location, env.curContractSym().getName(), explanation);
     }
 }

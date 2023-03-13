@@ -29,29 +29,30 @@ public class Interface extends TopLayerNode {
                 return false;
             }
         }
-        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab, trustSetting,
-                null); //TODO ifl should be included in interface
+        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab(), new ArrayList<>(),
+                null);
         env.addSym(contractName, contractSym);
         return true;
     }
 
 
     public void globalInfoVisit(ContractSym contractSym) {
-        contractSym.name = contractName;
-        contractSym.trustSetting = trustSetting;
+        // contractSym.name = contractName;
+        // contractSym.trustSetting = trustSetting;
+        trustSetting.globalInfoVisit(contractSym);
         for (FunctionSig stmt : funcSigs) {
             stmt.globalInfoVisit(contractSym);
         }
     }
 
-    public void findPrincipal(HashSet<String> principalSet) {
-        for (TrustConstraint trustConstraint : trustSetting.trust_list) {
-            trustConstraint.findPrincipal(principalSet);
-        }
-        for (FunctionSig stmt : funcSigs) {
-            stmt.findPrincipal(principalSet);
-        }
-    }
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        for (TrustConstraint trustConstraint : trustSetting.trust_list) {
+//            trustConstraint.findPrincipal(principalSet);
+//        }
+//        for (FunctionSig stmt : funcSigs) {
+//            stmt.findPrincipal(principalSet);
+//        }
+//    }
 
     @Override
     public void passScopeContext(ScopeContext parent) {

@@ -2,11 +2,12 @@ package ast;
 
 import compile.SolCode;
 import java.util.List;
+import javax.swing.plaf.nimbus.State;
+import jdk.jshell.execution.Util;
 import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class Contract extends Node {
 
@@ -30,6 +31,7 @@ public class Contract extends Node {
         this.exceptionDefs = exceptionDefs;
         this.methodDeclarations = methodDeclarations;
         this.ifl = ifl;
+        setDefault();
     }
 
     public Contract(String contractName, String superContractName, TrustSetting trustSetting,
@@ -45,6 +47,13 @@ public class Contract extends Node {
         this.exceptionDefs = exceptionDefs;
         this.methodDeclarations = methodDeclarations;
         this.ifl = ifl;
+        setDefault();
+    }
+
+    private void setDefault() {
+        if (ifl == null) {
+            ifl = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
+        }
     }
 
     public boolean ntcInherit(InheritGraph graph) {
@@ -57,29 +66,33 @@ public class Contract extends Node {
 
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        env.setCurSymTab(new SymTab(env.curSymTab));
-        Utils.addBuiltInSyms(env.globalSymTab, trustSetting);
-        /*
-            add built-in variable "this"
-         */
-        //String name = "this";
-        //env.globalSymTab.add(name, new VarSym(env.toVarSym(name, new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, new CodeLocation(), now)));
-        ContractSym contractSym = new ContractSym(contractName, env.curSymTab, trustSetting, ifl);
+        SymTab curSymTab = new SymTab(env.curSymTab());
+        Utils.addBuiltInTypes(curSymTab);
+        env.setCurSymTab(curSymTab);
+        ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), new ArrayList<>(), this);
         env.addGlobalSym(contractName, contractSym);
         env.setCurContractSym(contractSym);
+        // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
 
         for (StateVariableDeclaration dec : varDeclarations) {
             if (!dec.ntcGlobalInfo(env, now)) {
                 return false;
             }
         }
+
+        for (ExceptionDef def : exceptionDefs) {
+            if (!def.ntcGlobalInfo(env, now)) {
+                return false;
+            }
+        }
+
         for (FunctionDef fDef : methodDeclarations) {
             if (!fDef.ntcGlobalInfo(env, now)) {
                 return false;
             }
         }
 
-        env.curSymTab = env.curSymTab.getParent();
+        env.setCurSymTab(env.curSymTab().getParent());
         return true;
     }
 
@@ -92,6 +105,12 @@ public class Contract extends Node {
             dec.ntcGenCons(env, now);
         }
 
+        trustSetting.ntcGenCons(env, now);
+
+        for (ExceptionDef def : exceptionDefs) {
+            def.ntcGenCons(env, now);
+        }
+
         for (FunctionDef fDef : methodDeclarations) {
             fDef.ntcGenCons(env, now);
         }
@@ -100,23 +119,43 @@ public class Contract extends Node {
     }
 
     public void globalInfoVisit(ContractSym contractSym) {
-        contractSym.name = contractName;
-        contractSym.trustSetting = trustSetting;
-        contractSym.ifl = ifl;
+        // contractSym.name = contractName;
+//        contractSym.trustSetting = trustSetting;
+        // contractSym.ifl = ifl;
         contractSym.addContract(contractName, contractSym);
-        String name = "this";
+        Utils.addBuiltInTypes(contractSym.symTab);
+        /*String name = "this";
         contractSym.addVar(name, contractSym.toVarSym(name,
                 new LabeledType(contractName, new PrimitiveIfLabel(new Name("this"))), true, false,
                 null, scopeContext));
+
+         */
+
+        // Utils.addBuiltInSymsIfc(contractSym);
+
+        for (StateVariableDeclaration dec : varDeclarations) {
+            dec.globalInfoVisit(contractSym);
+        }
+
+        trustSetting.globalInfoVisit(contractSym);
+
+        for (ExceptionDef expDef : exceptionDefs) {
+            expDef.globalInfoVisit(contractSym);
+        }
+
+        for (FunctionDef fDef : methodDeclarations) {
+            fDef.globalInfoVisit(contractSym);
+        }
     }
 
     public void genConsVisit(VisitEnv env, boolean tail_position) {
         //env.prevContext = new Context()
-        findPrincipal(env.principalSet);
+        // findPrincipal(env.principalSet);
 
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.genConsVisit(env, tail_position);
         }
+        trustSetting.genConsVisit(env, tail_position);
 
         for (ExceptionDef expDef : exceptionDefs) {
             expDef.genConsVisit(env, tail_position);
@@ -127,24 +166,24 @@ public class Contract extends Node {
         }
     }
 
-    public void findPrincipal(HashSet<String> principalSet) {
-        for (TrustConstraint trustConstraint : trustSetting.trust_list) {
-            trustConstraint.findPrincipal(principalSet);
-        }
-        ifl.findPrincipal(principalSet);
-
-        for (StateVariableDeclaration dec : varDeclarations) {
-            dec.findPrincipal(principalSet);
-        }
-
-        for (ExceptionDef expDef : exceptionDefs) {
-            expDef.findPrincipal(principalSet);
-        }
-
-        for (FunctionDef fDef : methodDeclarations) {
-            fDef.findPrincipal(principalSet);
-        }
-    }
+//    public void findPrincipal(HashSet<String> principalSet) {
+//        for (TrustConstraint trustConstraint : trustSetting.trust_list) {
+//            trustConstraint.findPrincipal(principalSet);
+//        }
+//        ifl.findPrincipal(principalSet);
+//
+//        for (StateVariableDeclaration dec : varDeclarations) {
+//            dec.findPrincipal(principalSet);
+//        }
+//
+//        for (ExceptionDef expDef : exceptionDefs) {
+//            expDef.findPrincipal(principalSet);
+//        }
+//
+//        for (FunctionDef fDef : methodDeclarations) {
+//            fDef.findPrincipal(principalSet);
+//        }
+//    }
 
     public void solidityCodeGen(SolCode code) {
         code.setDynamicOption(trustSetting);
@@ -178,6 +217,7 @@ public class Contract extends Node {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.addAll(trustSetting.trust_list);
         rtn.addAll(varDeclarations);
+        rtn.addAll(exceptionDefs);
         rtn.addAll(methodDeclarations);
         return rtn;
     }
@@ -210,7 +250,7 @@ public class Contract extends Node {
         HashMap<String, FunctionSig> funcNames = new HashMap<>();
 
         for (StateVariableDeclaration a : varDeclarations) {
-            Name x = a.name;
+            Name x = a.name();
             if (varNames.containsKey(x.id)) {
                 //TODO: duplicate names
                 return false;
@@ -230,7 +270,7 @@ public class Contract extends Node {
         ArrayList<FunctionDef> newFuncDefs = new ArrayList<>();
 
         for (StateVariableDeclaration a : superContract.varDeclarations) {
-            Name x = a.name;
+            Name x = a.name();
             if (varNames.containsKey(x.id)) {
                 // TODO: var being overridden
                 return false;
@@ -268,11 +308,160 @@ public class Contract extends Node {
     }
 
     public String toString() {
-        return "TODO";
+        return toSHErrLocFmt();
         //return genson.serialize(body.get();
     }
 
     public String getContractName() {
         return contractName;
     }
+
+    protected void addBuiltIns() {
+        addBuiltInTrustSettings();
+        addBuiltInVars();
+        addBuiltInExceptions();
+        addBuiltInMethods();
+    }
+
+    private void addBuiltInMethods() {
+        // add methods:
+        final IfLabel labelThis = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
+        final IfLabel labelTop = new PrimitiveIfLabel(new Name(Utils.LABEL_TOP));
+        final IfLabel labelBot = new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM));
+
+        // @protected
+        // @final
+        // void send{this -> TOP; BOT}(address target, uint amount);
+        List<Arg> args = new ArrayList<>();
+        Arg tmparg = new Arg(
+                "target",
+                new LabeledType(Utils.ADDRESS_TYPE, labelThis),
+                false,
+                true
+        );
+        args.add(tmparg);
+        tmparg = new Arg(
+                "amount",
+                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), labelThis),
+                false,
+                true
+        );
+        args.add(tmparg);
+        int count = 0;
+        for (Arg arg : args) {
+            CodeLocation location = new CodeLocation(1, count, "Builtin");
+            arg.setLoc(location);
+            arg.annotation.setLoc(location);
+            arg.annotation.type().setLoc(location);
+            ++count;
+        }
+        List<String> decs = new ArrayList<>();
+        decs.add(Utils.PROTECTED_DECORATOR);
+        decs.add(Utils.FINAL_DECORATOR);
+        FunctionDef sendDef = new FunctionDef(
+                Utils.METHOD_SEND_NAME,
+                new FuncLabels(
+                        labelThis,
+                        labelTop,
+                        labelBot,
+                        labelBot
+                ),
+                new Arguments(args),
+                new ArrayList<>(),
+                decs,
+                new LabeledType(new Type(Utils.BuiltinType2ID(BuiltInT.VOID))),
+                false,
+                true
+        );
+        methodDeclarations.add(sendDef);
+
+        // @public
+        // final
+        // uint{TOP} balance{BOT -> TOP; TOP}(final address addr);
+        args = new ArrayList<>();
+        args.add(new Arg(
+                "addr",
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM))),
+                false,
+                true
+        ));
+        count = 0;
+        for (Arg arg : args) {
+            CodeLocation location = new CodeLocation(1, count, "Builtin");
+            arg.setLoc(location);
+            arg.annotation.setLoc(location);
+            arg.annotation.type().setLoc(location);
+            ++count;
+        }
+        decs = new ArrayList<>();
+        decs.add(Utils.PUBLIC_DECORATOR);
+        decs.add(Utils.FINAL_DECORATOR);
+        FunctionDef balanceDef = new FunctionDef(
+                Utils.METHOD_BALANCE_NAME,
+                new FuncLabels(
+                        labelBot,
+                        labelTop,
+                        labelTop,
+                        labelTop
+                ),
+                new Arguments(args),
+                new ArrayList<>(),
+                decs,
+                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), labelTop),
+                false,
+                true
+        );
+        methodDeclarations.add(balanceDef);
+    }
+
+    private void addBuiltInExceptions() {
+        // add exceptions:
+        // exception{BOT} Error();
+        ExceptionDef error = new ExceptionDef(
+                Utils.EXCEPTION_ERROR_NAME,
+                new Arguments()
+        );
+        exceptionDefs.add(error);
+    }
+
+    private void addBuiltInVars() {
+        // add variables:
+        // final This{this} this;
+        StateVariableDeclaration thisDec = new StateVariableDeclaration(
+                new Name(Utils.LABEL_THIS),
+                new LabeledType(contractName, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS))),
+                null,
+                true,
+                true,
+                true
+        );
+        StateVariableDeclaration topDec = new StateVariableDeclaration(
+                new Name(Utils.LABEL_TOP),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
+                null,
+                true,
+                true,
+                true
+        );
+        StateVariableDeclaration botDec = new StateVariableDeclaration(
+                new Name(Utils.LABEL_BOTTOM),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM))),
+                null,
+                true,
+                true,
+                true
+        );
+        ArrayList<StateVariableDeclaration> newDecs = new ArrayList<>();
+        newDecs.add(topDec);
+        newDecs.add(botDec);
+        newDecs.add(thisDec);
+        newDecs.addAll(varDeclarations);
+        varDeclarations = newDecs;
+    }
+
+    private void addBuiltInTrustSettings() {
+        trustSetting.addBuiltIns();
+    }
+    
+    
 }

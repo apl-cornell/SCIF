@@ -31,11 +31,13 @@ public class If extends Statement {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
-        env.curSymTab = new SymTab(env.curSymTab);
+        env.setCurSymTab(new SymTab(env.curSymTab()));
         ScopeContext rtn = null;
 
         rtn = test.ntcGenCons(env, now);
-        env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
+        Constraint testCon = rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
+        env.addCons(testCon);
+        System.out.println(testCon.toSherrlocFmt(true));
 
         for (Statement s : body) {
             rtn = s.ntcGenCons(env, now);
@@ -43,7 +45,7 @@ public class If extends Statement {
         for (Statement s : orelse) {
             rtn = s.ntcGenCons(env, now);
         }
-        env.curSymTab = env.curSymTab.getParent();
+        env.setCurSymTab(env.curSymTab().getParent());
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         return now;
     }
@@ -51,8 +53,8 @@ public class If extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         // String originalCtxt = env.ctxt;
 
         // curContext.lambda = env.prevContext.lambda;
@@ -86,18 +88,18 @@ public class If extends Statement {
                     logger.debug(r.toString());
                     //System.err.println(l.toString());
                     //System.err.println(r.toString());
-                    if (l.typeSym.name.equals(Utils.ADDRESSTYPE) && r.typeSym.name.equals(
-                            Utils.ADDRESSTYPE)) {
+                    if (l.typeSym.getName().equals(Utils.ADDRESS_TYPE) && r.typeSym.getName().equals(
+                            Utils.ADDRESS_TYPE)) {
                         /*testedVar = ((TestableVarInfo) l);
                         beforeTestedLabel = testedVar.testedLabel;
                         tested = testedVar.tested;
-                        testedVar.setTested(r.toSherrlocFmt());*/
+                        testedVar.setTested(r.toSHErrLocFmt());*/
 
                         createdHypo = true;
-                        Inequality hypo = new Inequality(l.toSherrlocFmt(), bo.op,
-                                r.toSherrlocFmt());
+                        Inequality hypo = new Inequality(l.toSHErrLocFmt(), bo.op,
+                                r.toSHErrLocFmt());
 
-                        env.hypothesis.add(hypo);
+                        env.hypothesis().add(hypo);
                         //System.err.println("testing label");
                         logger.debug("testing label");
                     }
@@ -106,12 +108,12 @@ public class If extends Statement {
                 }
             }
         }
-        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis,
-                location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis(),
+                location, env.curContractSym().getName(),
                 "Control flow integrity before this if condition doesn't flow to the one after this condition"));
         env.cons.add(
-                new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis, location,
-                        env.curContractSym.name,
+                new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis(), location,
+                        env.curContractSym().getName(),
                         "Integrity of this condition doesn't flow to the control flow in this if branch"));
 
         /*if (body.size() > 0 || orelse.size() > 0) {
@@ -131,14 +133,18 @@ public class If extends Statement {
             // env.prevContext = tmp;
             // prev2 = leftContext;
             //env.context = context;
-            env.inContext = ifo.getNormalPath().c;
+            PsiUnit normalUnit = ifo.getNormalPath();
+            if (normalUnit == null) {
+                break;
+            }
+            env.inContext = normalUnit.c;
             loc = stmt.location;
             // leftContext = new Context(tmp);
         }
         env.decScopeLayer();
 
         if (createdHypo) {
-            env.hypothesis.remove();
+            env.hypothesis().remove();
         }
 
         logger.debug("finished if branch");
@@ -151,6 +157,10 @@ public class If extends Statement {
         for (Statement stmt : orelse) {
             ++index;
             elseo = stmt.genConsVisit(env, index == orelse.size() && tail_position);
+            PsiUnit normalUnit = elseo.getNormalPath();
+            if (normalUnit == null) {
+                break;
+            }
             env.inContext = elseo.getNormalPath().c;
             // env.prevContext.lambda = rightContext.lambda;
         }

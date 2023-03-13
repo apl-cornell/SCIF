@@ -1,200 +1,150 @@
 package typecheck;
 
-import ast.ExceptionType;
-import ast.FuncLabels;
-import ast.IfLabel;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
+import java.util.Map;
 
 public class FuncSym extends Sym {
     public String funcName;
-    public FuncLabels funcLabels;
+    // public FuncLabels funcLabels;
     public ArrayList<VarSym> parameters;
     public TypeSym returnType;
-    public IfLabel returnLabel;
-    public HashMap<ExceptionTypeSym, String> exceptions;
+    // public IfLabel returnLabel;
+
+    private VarSym sender;
+    public final Label external_pc, internal_pc, gamma, rtn;
+
+    public Map<ExceptionTypeSym, String> exceptions;
     public CodeLocation location;
-    public ScopeContext scopeContext;
 
     public FuncSym(String funcName,
-                   FuncLabels funcLabels,
+                   Label external_pc,
+                   Label internal_pc,
+                   Label gamma,
                    ArrayList<VarSym> parameters,
                    TypeSym returnType,
-                   IfLabel returnLabel,
-                   HashMap<ExceptionTypeSym, String> exceptions,
-                   ScopeContext scopeContext,
-                   CodeLocation location) {
-        super(funcName);
-        // this.typeName = funcName;
+                   Label returnLabel,
+                   Map<ExceptionTypeSym, String> exceptions,
+                   ScopeContext defContext,
+            VarSym sender, CodeLocation location) {
+        super(funcName, defContext);
         this.funcName = funcName;
-        // this.name = funcName;
-        this.funcLabels = funcLabels;
+        this.sender = sender;
+        // this.funcLabels = funcLabels;
+        assert external_pc != null;
+        this.external_pc = external_pc;
+        this.internal_pc = internal_pc;
+        this.gamma = gamma;
         this.parameters = parameters;
         this.returnType = returnType;
-        this.returnLabel = returnLabel;
+        this.rtn = returnLabel;
+        // this.returnLabel = returnLabel;
         this.exceptions = exceptions;
-        this.scopeContext = scopeContext;
+        // this.scopeContext = scopeContext;
         this.location = location;
     }
     public FuncSym(String funcName,
-                   FuncLabels funcLabels,
+                Label external_pc,
+                Label internal_pc,
+                Label gamma,
                    ArrayList<VarSym> parameters,
                    TypeSym returnType,
-                   IfLabel returnLabel,
-                   ScopeContext scopeContext,
-                   CodeLocation location) {
-        super(funcName);
+                Label returnLabel,
+                   ScopeContext defContext,
+            VarSym sender, CodeLocation location) {
+        super(funcName, defContext);
         // this.typeName = funcName;
         this.funcName = funcName;
+        this.sender = sender;
         // this.name = funcName;
-        this.funcLabels = funcLabels;
+        assert external_pc != null;
+        this.external_pc = external_pc;
+        this.internal_pc = internal_pc;
+        this.gamma = gamma;
         this.parameters = parameters;
         this.returnType = returnType;
-        this.returnLabel = returnLabel;
+        this.rtn = returnLabel;
         this.exceptions = new HashMap<>();
-        this.scopeContext = scopeContext;
+        // this.defContext = defContext;
         this.location = location;
     }
 
-    public String getLabelNameCallPcBefore() {
-        return Utils.getLabelNameFuncCallPcBefore(scopeContext.getSHErrLocName());
+    public String externalPcSLC() {
+        return toSHErrLocFmt() + "." + "extpc";
+        // return Utils.getLabelNameFuncCallPcBefore(toSHErrLocFmt());
     }
-    public String getLabelNameCallPcBefore(String namespace) {
-        if (namespace != "")
-            namespace += "..";
-        return namespace + Utils.getLabelNameFuncCallPcBefore(scopeContext.getSHErrLocName());
+//    public String getLabelNameCallPcBefore(String namespace) {
+//        if (!Objects.equals(namespace, ""))
+//            namespace += ".";
+//        return namespace + Utils.getLabelNameFuncCallPcBefore(toSHErrLocFmt());
+//    }
+
+    public String internalPcSLC() {
+        return toSHErrLocFmt() + "." + "inpc";
+        // return Utils.getLabelNameFuncCallPcAfter(toSHErrLocFmt());
     }
 
-    public String getLabelNameCallPcAfter() {
-        return Utils.getLabelNameFuncCallPcAfter(scopeContext.getSHErrLocName());
+    public String endPcSLC() {
+        return toSHErrLocFmt() + "." + "endpc";
+        // return Utils.getLabelNameCallPcEnd(toSHErrLocFmt());
     }
 
-    public String getLabelNameCallPcEnd() {
-        return Utils.getLabelNameCallPcEnd(scopeContext.getSHErrLocName());
+//    public String getLabelNameCallPcAfter(String namespace) {
+//        if (!Objects.equals(namespace, ""))
+//            namespace += ".";
+//        return namespace + Utils.getLabelNameFuncCallPcAfter(toSHErrLocFmt());
+//    }
+
+    public String returnSLC() {
+        return toSHErrLocFmt() + "." + "returnV";
+        //return Utils.getLabelNameFuncRtnValue(toSHErrLocFmt());
     }
 
-    public String getLabelNameCallPcAfter(String namespace) {
-        if (!Objects.equals(namespace, ""))
-            namespace += "..";
-        return namespace + Utils.getLabelNameFuncCallPcAfter(scopeContext.getSHErrLocName());
-    }
-
-    public String getLabelNameRtnValue() {
-        return Utils.getLabelNameFuncRtnValue(scopeContext.getSHErrLocName());
-    }
-    public String getLabelNameRtnValue(String namespace) {
-        if (!Objects.equals(namespace, ""))
-            namespace += "..";
-        return namespace + Utils.getLabelNameFuncRtnValue(scopeContext.getSHErrLocName());
-    }
+//    public String getLabelNameRtnValue(String namespace) {
+//        if (!Objects.equals(namespace, ""))
+//            namespace += "..";
+//        return namespace + Utils.getLabelNameFuncRtnValue(toSHErrLocFmt());
+//    }
     /*public String getLabelNameRtnLock() {
         return Utils.getLabelNameFuncRtnLock(scopeContext.getSHErrLocName());
     }*/
-    public String getLabelNameCallLock() {
-        return Utils.getLabelNameFuncCallLock(scopeContext.getSHErrLocName());
-    }
 
     public String getLabelNameArg(int index) {
-        return Utils.getLabelNameArgLabel(scopeContext.getSHErrLocName(), parameters.get(index));
+        return parameters.get(index).labelNameSLC();
+        // return Utils.getLabelNameArgLabel(toSHErrLocFmt(), parameters.get(index));
     }
 
-    public String getLabelNameArg(String namespace, int index) {
-        if (!Objects.equals(namespace, ""))
-            namespace += "..";
-        return namespace + Utils.getLabelNameArgLabel(scopeContext.getSHErrLocName(), parameters.get(index));
-    }
+//    public String getLabelNameArg(String namespace, int index) {
+//        if (!Objects.equals(namespace, ""))
+//            namespace += ".";
+//        return namespace + Utils.getLabelNameArgLabel(toSHErrLocFmt(), parameters.get(index));
+//    }
 
-    public String getLabelNameException(ExceptionTypeSym exp) {
-        return Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(), exp.name);
-    }
+//    public String getLabelNameException(ExceptionTypeSym exp) {
+//
+//        return Utils.getLabelNameFuncExpLabel(toSHErrLocFmt(), exp.name());
+//    }
 
-    public String getCallPcLabel() {
-        if (funcLabels != null && funcLabels.begin_pc != null) {
-            return funcLabels.begin_pc.toSherrlocFmt();
-        }
-        else {
-            return null;
-        }
-    }
+    // TODO: remove namespace
     public String getCallPcLabel(String namespace) {
-        if (funcLabels != null && funcLabels.begin_pc != null) {
-            return funcLabels.begin_pc.toSherrlocFmt(namespace);
-        }
-        else {
-            return null;
-        }
+        assert external_pc != null;
+        return external_pc.toSHErrLocFmt();
     }
 
-    public String getCallLockLabel() {
-        if (funcLabels != null && funcLabels.gamma_label != null) {
-            return funcLabels.gamma_label.toSherrlocFmt();
-        }
-        else {
-            return null;
-        }
-    }
 
     public String getCallLockLabel(String namespace) {
-        if (funcLabels != null && funcLabels.gamma_label != null) {
-            return funcLabels.gamma_label.toSherrlocFmt(namespace);
-        }
-        else {
-            return null;
-        }
-    }
-
-
-    /*public String getRtnLockLabel() {
-        if (funcLabels != null && funcLabels.gamma_label != null) {
-            return funcLabels.gamma_label.toSherrlocFmt();
-        }
-        else {
-            return null;
-        }
-
-    }*/
-
-    /*public String getCallBeforeLabel() {
-        if (callLabel != null) {
-            if (callLabel instanceof Autoendorse) {
-                return ((Autoendorse) callLabel).from.toSherrlocFmt();
-            } else {
-                return callLabel.toSherrlocFmt();
-            }
-        }
-        else {
-            return null;
-        }
-    }*/
-
-    public String getCallAfterLabel() {
-        if (funcLabels != null && funcLabels.to_pc != null) {
-            return funcLabels.to_pc.toSherrlocFmt();
-        }
-        else {
-            return null;
-        }
+        return gamma.toSHErrLocFmt();
     }
 
     public String getCallAfterLabel(String namespace) {
-        if (funcLabels != null && funcLabels.to_pc != null) {
-            return funcLabels.to_pc.toSherrlocFmt(namespace);
-        }
-        else {
-            return null;
-        }
+        return internal_pc.toSHErrLocFmt();
     }
 
-    public String getRtnValueLabel() {
-        if (returnLabel != null) {
-            return returnLabel.toSherrlocFmt();
-        } else {
-            return null;
-        }
+    public String getRtnValueLabel(String namespace) {
+        return rtn.toSHErrLocFmt();
     }
 
     public boolean isLValue() {
@@ -204,15 +154,44 @@ public class FuncSym extends Sym {
     static Genson genson = new GensonBuilder().useClassMetadata(true).useIndentation(true).useRuntimeType(true).create();
     @Override
     public String toString() {
-        return genson.serialize(this);
+        return getName();//genson.serialize(this);
     }
 
     public String getLabelNameCallGamma() {
-        return Utils.getLabelNameFuncCallGamma(scopeContext.getSHErrLocName());
+        return toSHErrLocFmt() + "." + "gamma";
+        //return Utils.getLabelNameFuncCallGamma(toSHErrLocFmt());
     }
-    public String getLabelNameCallGamma(String namespace) {
-        if (!Objects.equals(namespace, ""))
-            namespace += "..";
-        return namespace + Utils.getLabelNameFuncCallGamma(scopeContext.getSHErrLocName());
+
+    public String returnTypeSLC() {
+        return toSHErrLocFmt() + "." + "returnT";
     }
+
+    public VarSym sender() {
+        return sender;
+    }
+
+    public Label externalPc() {
+        return external_pc;
+    }
+
+    public Label internalPc() {
+        return internal_pc;
+    }
+
+    public Label callGamma() {
+        return gamma;
+    }
+
+    public Label getLabelArg(int i) {
+        return parameters.get(i).ifl;
+    }
+
+    public Label endPc() {
+        return rtn;
+    }
+//    public String getLabelNameCallGamma(String namespace) {
+//        if (!Objects.equals(namespace, ""))
+//            namespace += ".";
+//        return namespace + Utils.getLabelNameFuncCallGamma(toSHErrLocFmt());
+//    }
 }

@@ -1,10 +1,12 @@
 package typecheck;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
-/*
-    variables, types, functions, contracts
+/**
+    variables, types, methods/exceptions, contracts
 */
 
 public class SymTab {
@@ -13,7 +15,7 @@ public class SymTab {
     public SymTab() {
         parent = null;
         table = new HashMap<>();
-        //Utils.addBuiltInSyms(table);
+        //Utils.addBuiltInASTNode(table);
     }
     public SymTab(SymTab parent) {
         this.parent = parent;
@@ -32,6 +34,9 @@ public class SymTab {
     public void add(String id, Sym sym) {
         // System.out.println("sym add: " + id + " @" + this);
         // System.out.println(sym.name);
+        if (table.containsKey(id)) {
+            throw new RuntimeException("SymTab adding a symbol that existed: " + id);
+        }
         table.put(id, sym);
     }
 
@@ -39,10 +44,12 @@ public class SymTab {
         return parent;
     }
 
-    public HashSet<String> getTypeSet() {
-        HashSet<String> rtn = new HashSet<>();
+    public Set<Sym> getTypeSet() {
+        Set<Sym> rtn = new HashSet<>();
         for (Sym sym : table.values()) {
-            rtn.add(sym.getSLCName());
+            if (sym instanceof TypeSym) {
+                rtn.add(sym);
+            }
         }
         return rtn;
     }
@@ -51,7 +58,7 @@ public class SymTab {
         HashMap<String, VarSym> rtn = new HashMap<>();
         for (Sym sym : table.values()) {
             if (sym instanceof VarSym)
-                rtn.put(sym.name, (VarSym) sym);
+                rtn.put(sym.getName(), (VarSym) sym);
         }
         return rtn;
     }
@@ -60,7 +67,7 @@ public class SymTab {
         HashMap<String, FuncSym> rtn = new HashMap<>();
         for (Sym sym : table.values()) {
             if (sym instanceof FuncSym)
-                rtn.put(sym.name, (FuncSym) sym);
+                rtn.put(sym.getName(), (FuncSym) sym);
         }
         return rtn;
     }

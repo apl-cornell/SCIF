@@ -8,11 +8,11 @@ import java.util.HashSet;
 public abstract class Expression extends Node {
 
     public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
-        return new VarSym();
+        return null;
     }
 
     public VarSym getVarInfo(NTCEnv env) {
-        return new VarSym();
+        return null;
     }
 
     public String toSolCode() {

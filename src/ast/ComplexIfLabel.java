@@ -9,8 +9,8 @@ import java.util.HashSet;
 
 public class ComplexIfLabel extends IfLabel {
 
-    IfOperator op;
-    IfLabel left, right;
+    private final IfOperator op;
+    private final IfLabel left, right;
 
     public IfOperator getOp() {
         return op;
@@ -30,10 +30,11 @@ public class ComplexIfLabel extends IfLabel {
         this.right = right;
     }
 
+    /*
     @Override
-    public String toSherrlocFmt() {
-        String l = left.toSherrlocFmt();
-        String r = right.toSherrlocFmt();
+    public String toSHErrLocFmt(ScopeContext defContext) {
+        String l = left.toSHErrLocFmt(defContext);
+        String r = right.toSHErrLocFmt(defContext);
         String rnt = "";
         switch (op) {
             case JOIN:
@@ -47,70 +48,59 @@ public class ComplexIfLabel extends IfLabel {
         return rnt;
     }
 
-    public String toSherrlocFmt(String namespace) {
-        String l = left.toSherrlocFmt(namespace);
-        String r = right.toSherrlocFmt(namespace);
-        String rnt = "";
-        switch (op) {
-            case JOIN:
-                rnt = "(" + l + " ⊔ " + r + ")";
-                break;
-            case MEET:
-                rnt = "(" + l + " ⊓ " + r + ")";
-                break;
+     */
+//    public String toSHErrLocFmt(String namespace) {
+//        String l = left.toSHErrLocFmt(namespace);
+//        String r = right.toSHErrLocFmt(namespace);
+//        String rnt = "";
+//        switch (op) {
+//            case JOIN:
+//                rnt = "(" + l + " ⊔ " + r + ")";
+//                break;
+//            case MEET:
+//                rnt = "(" + l + " ⊓ " + r + ")";
+//                break;
+//
+//        }
+//        return rnt;
+//    }
 
-        }
-        return rnt;
-    }
+//    public String toSHErrLocFmt(String k, String v) {
+//        String l = left.toSHErrLocFmt(k, v);
+//        String r = right.toSHErrLocFmt(k, v);
+//        String rnt = "";
+//        switch (op) {
+//            case JOIN:
+//                rnt = "(" + l + " ⊔ " + r + ")";
+//                break;
+//            case MEET:
+//                rnt = "(" + l + " ⊓ " + r + ")";
+//                break;
+//
+//        }
+//        return rnt;
+//    }
 
-    public String toSherrlocFmt(String k, String v) {
-        String l = left.toSherrlocFmt(k, v);
-        String r = right.toSherrlocFmt(k, v);
-        String rnt = "";
-        switch (op) {
-            case JOIN:
-                rnt = "(" + l + " ⊔ " + r + ")";
-                break;
-            case MEET:
-                rnt = "(" + l + " ⊓ " + r + ")";
-                break;
-
-        }
-        return rnt;
-    }
-
-    public String toSherrlocFmtApply(HashSet<String> strSet, int no) {
-        String l = left.toSherrlocFmtApply(strSet, no);
-        String r = right.toSherrlocFmtApply(strSet, no);
-        String rnt = "";
-        switch (op) {
-            case JOIN:
-                rnt = "(" + l + " ⊔ " + r + ")";
-                break;
-            case MEET:
-                rnt = "(" + l + " ⊓ " + r + ")";
-                break;
-
-        }
-        return rnt;
-    }
+//    public String toSherrlocFmtApply(HashSet<String> strSet, int no) {
+//        String l = left.toSherrlocFmtApply(strSet, no);
+//        String r = right.toSherrlocFmtApply(strSet, no);
+//        String rnt = "";
+//        switch (op) {
+//            case JOIN:
+//                rnt = "(" + l + " ⊔ " + r + ")";
+//                break;
+//            case MEET:
+//                rnt = "(" + l + " ⊓ " + r + ")";
+//                break;
+//
+//        }
+//        return rnt;
+//    }
 
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
 
         // TODO: deal with dynamic labels
         return null;
-    }
-
-    @Override
-    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
-        left.findPrincipal(principalSet, getRidOf);
-        right.findPrincipal(principalSet, getRidOf);
-    }
-
-    @Override
-    public void findPrincipal(HashSet<String> principalSet) {
-        left.findPrincipal(principalSet);
-        right.findPrincipal(principalSet);
     }
 
     @Override
@@ -123,10 +113,10 @@ public class ComplexIfLabel extends IfLabel {
         return op == cil.op && left.typeMatch(cil.left) && right.typeMatch(cil.right);
     }
 
-    public void replace(String k, String v) {
-        left.replace(k, v);
-        right.replace(k, v);
-    }
+//    public void replace(String k, String v) {
+//        left.replace(k, v);
+//        right.replace(k, v);
+//    }
 
     @Override
     public boolean typeMatch(Expression expression) {
@@ -136,6 +126,8 @@ public class ComplexIfLabel extends IfLabel {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        return null;
+        left.ntcGenCons(env, parent);
+        right.ntcGenCons(env, parent);
+        return parent;
     }
 }

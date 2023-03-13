@@ -2,6 +2,7 @@ package ast;
 
 import compile.SolCode;
 import java.util.List;
+import java.util.Map.Entry;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -16,8 +17,13 @@ public class FunctionDef extends FunctionSig {
     List<Statement> body;
 
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
-            List<Statement> body, List<String> decoratorList, Type rtn, boolean isConstructor) {
+            List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor) {
         super(name, funcLabels, args, decoratorList, rtn, isConstructor);
+        this.body = body;
+    }
+    public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
+            List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor, boolean isBuiltIn) {
+        super(name, funcLabels, args, decoratorList, rtn, isConstructor, isBuiltIn);
         this.body = body;
     }
 
@@ -28,6 +34,7 @@ public class FunctionDef extends FunctionSig {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        env.setCurSymTab(new SymTab(env.curSymTab()));
         // add args to local sym;
         String funcName = this.name;
         logger.debug("func: " + funcName);
@@ -41,62 +48,83 @@ public class FunctionDef extends FunctionSig {
         ScopeContext now = new ScopeContext(this, parent, exceptionTypeSyms);
         // now.printExceptionSet();
 
-        for (Arg arg : this.args.args) {
+        // add built-in vars
+        addBuiltInVars(env.curSymTab(), now);
+
+        for (Arg arg : this.args.args()) {
             arg.ntcGenCons(env, now);
         }
+        funcLabels.ntcGenCons(env, now);
         if (funcSym.returnType != null) {
-            env.addCons(new Constraint(new Inequality(rtnToSHErrLocFmt(), Relation.EQ,
-                    env.getSymName(funcSym.returnType.name)), env.globalHypothesis, location,
-                    env.curContractSym.name,
+            env.addCons(new Constraint(new Inequality(funcSym.returnTypeSLC(), Relation.EQ,
+                    funcSym.returnType.toSHErrLocFmt()), env.globalHypothesis(), location,
+                    env.curContractSym().getName(),
                     "Label of this method's return value"));
         }
 
-        env.setCurSymTab(new SymTab(env.curSymTab));
-        for (Statement stmt : body) {
-            // logger.debug("stmt: " + stmt);
-            stmt.ntcGenCons(env, now);
+        if (!isBuiltIn()) {
+            // TODO: add support for signatures
+            for (Statement stmt : body) {
+                // logger.debug("stmt: " + stmt);
+                stmt.ntcGenCons(env, now);
+            }
         }
-        env.curSymTab = env.curSymTab.getParent();
+        env.setCurSymTab(env.curSymTab().getParent());
         return now;
     }
 
+
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        String funcName = name;
+        if (isBuiltIn()) return null;
+        env.incScopeLayer();
+        addBuiltInVars(env.curSymTab, scopeContext);
+
+        for (Entry<String, VarSym> entry: env.curSymTab.getVars().entrySet()) {
+            VarSym varSym = entry.getValue();
+            if (varSym.isFinal && (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE))) {
+                env.addPrincipal(varSym);
+            }
+        }
+
+        String funcLocalName = name;
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        FuncSym funcSym = env.getFunc(funcName);
+        FuncSym funcSym = env.getFunc(funcLocalName);
+        env.setCurFuncSym(funcSym);
+        String funcFullName = funcSym.toSHErrLocFmt();
         // Context curContext = new Context(ifNamePc, Utils.getLabelNameFuncRtnLock(funcName), Utils.getLabelNameInLock(location));
-        String inLockName = Utils.getLabelNameInLock(location);
-        String outLockName = Utils.getLabelNameFuncRtnLock(funcName);
-        String outPcName = Utils.getLabelNameFuncRtnPc(funcName);
+        String inLockName = Utils.getLabelNameInLock(funcFullName);
+        String outLockName = Utils.getLabelNameFuncRtnLock(funcFullName);
+        String outPcName = Utils.getLabelNameFuncRtnPc(funcFullName);
         Context curContext = new Context(ifNamePc, inLockName);
 
-        String ifNameCall = funcSym.getLabelNameCallPcAfter();
-        env.trustCons.add(
-                new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis,
-                        funcLabels.to_pc.location, env.curContractSym.name,
+        String ifNameCall = funcSym.internalPcSLC();
+        env.addTrustConstraint(
+                new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis(),
+                        funcLabels.to_pc.location, env.curContractSym().getName(),
                         "Control flow of this method start with its call-after(second) label"));
 
-        String ifNameContract = env.curContractSym.getLabelNameContract();
-        env.trustCons.add(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis,
-                funcLabels.begin_pc.location, env.curContractSym.name,
+        String ifNameContract = env.curContractSym().getLabelNameContract();
+        env.addTrustConstraint(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis(),
+                funcLabels.begin_pc.location, env.curContractSym().getName(),
                 "This contract should be trusted enough to call this method"));
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
-        env.trustCons.add(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis,
-                funcLabels.to_pc.location, env.curContractSym.name,
+        env.addTrustConstraint(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis(),
+                funcLabels.to_pc.location, env.curContractSym().getName(),
                 "The statically locked integrity must be at least as trusted as initial pc integrity"));
         env.cons.add(
-                new Constraint(new Inequality(Utils.makeJoin(inLockName, outLockName), ifNameGamma),
-                        env.hypothesis, funcLabels.gamma_label.location, env.curContractSym.name,
+                new Constraint(new Inequality(Utils.joinLabels(inLockName, outLockName), ifNameGamma),
+                        env.hypothesis(), funcLabels.gamma_label.location, env.curContractSym().getName(),
                         "This function does not maintain reentrancy locks as specified in signature",
                         1));
 
         HashMap<ExceptionTypeSym, PsiUnit> psi = new HashMap<>();
         for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
             psi.put(exp.getKey(), new PsiUnit(
-                    new Context(funcSym.getLabelNameException(exp.getKey()), ifNameGamma), true));
+                    //new Context(funcSym.getLabelNameException(exp.getKey()), ifNameGamma), true));
+                    new Context(exp.getKey().labelNameSLC(), ifNameGamma), true));
         }
 
         Context funcBeginContext = curContext;
@@ -104,7 +132,6 @@ public class FunctionDef extends FunctionSig {
         // env.inContext = funcBeginContext;
         // env.outContext = funcEndContext;
 
-        env.incScopeLayer();
         args.genConsVisit(env, false);
         // Context prev = new Context(env.prevContext);//, prev2 = null;
         CodeLocation loc = null;
@@ -158,7 +185,7 @@ public class FunctionDef extends FunctionSig {
             }
         }
         String rtnTypeCode = "";
-        if (rtn != null && !this.rtn.isVoid()) {
+        if (rtn != null && !this.rtn.type().isVoid()) {
             rtnTypeCode = rtn.toSolCode();
         }
 
@@ -195,4 +222,9 @@ public class FunctionDef extends FunctionSig {
         rtn.addAll(body);
         return rtn;
     }
+//
+//    @Override
+//    public String toSHErrLocFmt() {
+//        return this.getClass().getSimpleName() + "." + name() + "." + location;
+//    }
 }

@@ -46,7 +46,7 @@ import java.util.HashMap;
         keywords.put("else",    Integer.valueOf(sym.ELSE));
         // keywords.put("finally", Integer.valueOf(sym.FINALLY));
         // keywords.put("for",     Integer.valueOf(sym.FOR));
-        keywords.put("from",    Integer.valueOf(sym.FROM));
+        // keywords.put("from",    Integer.valueOf(sym.FROM));
         keywords.put("if",      Integer.valueOf(sym.IF));
         keywords.put("import",  Integer.valueOf(sym.IMPORT));
         keywords.put("in",      Integer.valueOf(sym.IN));
@@ -57,6 +57,7 @@ import java.util.HashMap;
         keywords.put("raise",   Integer.valueOf(sym.RAISE));
         keywords.put("return",  Integer.valueOf(sym.RETURN));
         keywords.put("try",     Integer.valueOf(sym.TRY));
+        keywords.put("atom",     Integer.valueOf(sym.ATOM));
         // keywords.put("while",   Integer.valueOf(sym.WHILE));
         // keywords.put("with",    Integer.valueOf(sym.WITH));
         keywords.put("endorse", Integer.valueOf(sym.ENDORSE));
@@ -76,9 +77,11 @@ import java.util.HashMap;
         keywords.put("throw", Integer.valueOf(sym.THROW));
         keywords.put("endorseIf", Integer.valueOf(sym.ENDORSEIF));
         keywords.put("catch", Integer.valueOf(sym.CATCH));
+        keywords.put("rescue", Integer.valueOf(sym.RESCUE));
         keywords.put("exception", Integer.valueOf(sym.EXCEPTION));
         keywords.put("all", Integer.valueOf(sym.ALL));
         keywords.put("constructor", Integer.valueOf(sym.CONSTRUCTOR));
+        keywords.put("assume", Integer.valueOf(sym.ASSUME));
     }
 
 

@@ -1,31 +1,31 @@
 package typecheck;
 
 import ast.*;
+import java.util.List;
+import java.util.Set;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class NTCEnv {
 
-    public SymTab globalSymTab;
-    public SymTab curSymTab;
+    private SymTab globalSymTab;
+    private SymTab curSymTab;
     // public HashMap<String, SymTab> externalSymTab;
     // external contracts will be added to the global SymTab
-    public ArrayList<Constraint> cons;
-    public Hypothesis globalHypothesis;
-    public ContractSym curContractSym;
-    public HashMap<String, SourceFile> programMap;
+    private ArrayList<Constraint> cons;
+    private Hypothesis globalHypothesis;
+    private ContractSym curContractSym;
+    private HashMap<String, SourceFile> programMap;
 
-    public NTCEnv() {
+    public NTCEnv(ContractSym contractSym) {
         globalSymTab = new SymTab();
         cons = new ArrayList<>();
-        //globalSymTab = null; //TODO
         curSymTab = globalSymTab;
         globalHypothesis = new Hypothesis();
-        curContractSym = new ContractSym();
+        curContractSym = contractSym;
         programMap = new HashMap<>();
     }
 
@@ -41,38 +41,33 @@ public class NTCEnv {
         this.curContractSym = curContractSym;
     }
 
-    public VarSym toVarSym(String varName, ast.Type astType, boolean isConst, boolean isFinal,
+    public VarSym toVarSym(String varName, LabeledType labeledType, boolean isConst, boolean isFinal, boolean isBuiltIn,
             CodeLocation location, ScopeContext context) {
-        TypeSym typeSym = toTypeSym(astType);
+        TypeSym typeSym = toTypeSym(labeledType.type(), context);
         if (typeSym == null) {
-            return null;
+            throw new RuntimeException("Type not found: " + labeledType.type().name());
         }
-        return new VarSym(varName, typeSym, null, location, context, isConst, isFinal);
+        return new VarSym(varName, typeSym, null, location, context, isConst, isFinal, isBuiltIn);
     }
 
-    public TypeSym toTypeSym(ast.Type astType) {
+    public TypeSym toTypeSym(ast.Type astType, ScopeContext defContext) {
         TypeSym typeSym = null;
         if (astType == null) {
             return new BuiltinTypeSym(Utils.BuiltinType2ID(BuiltInT.VOID));
         }
         // System.err.println("[in]toTypeSym: " + astType.x);
 
-        if (astType instanceof ExceptionType exceptionType) {
-            return toExceptionTypeSym(exceptionType);
-        }
-
-        Sym s = getCurSym(astType.getName());
+        Sym s = getCurSym(astType.name());
         if (s instanceof TypeSym)//Utils.isPrimitiveType(astType.x))
         {
             typeSym = (TypeSym) s;// new BuiltinTypeSym(astType.x);
         } else {
-            LabeledType lt = (LabeledType) astType;
-            if (lt instanceof DepMap) {
-                DepMap depMap = (DepMap) lt;
-                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType), toTypeSym(depMap.valueType));
-            } else if (lt instanceof Map) {
-                Map map = (Map) lt;
-                typeSym = new MapTypeSym(toTypeSym(map.keyType), toTypeSym(map.valueType));
+            if (astType instanceof DepMap) {
+                DepMap depMap = (DepMap) astType;
+                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType, defContext), depMap.keyName(), toTypeSym(depMap.valueType, defContext), defContext, new ScopeContext(depMap, defContext));
+            } else if (astType instanceof Map) {
+                Map map = (Map) astType;
+                typeSym = new MapTypeSym(toTypeSym(map.keyType, defContext), toTypeSym(map.valueType, defContext), defContext);
             } else {
                 // return null;
                 // typeSym = new BuiltinTypeSym(lt.x);
@@ -95,13 +90,18 @@ public class NTCEnv {
         return rtn;
     }*/
 
-    public String getSymName(String id) {
-        return curSymTab.lookup(id).getSLCName();
+//    public String getSymName(String id) {
+//        return curSymTab.lookup(id).getSLCName();
+//    }
+
+    public Sym getSym(BuiltInT type) {
+        Sym symbol = curSymTab.lookup(Utils.BuiltinType2ID(type));
+        return symbol;
     }
 
     public String getSymName(BuiltInT type) {
         Sym symbol = curSymTab.lookup(Utils.BuiltinType2ID(type));
-        return symbol.getSLCName();
+        return symbol.getName();
     }
 
     public Sym getCurSym(String name) {
@@ -132,10 +132,10 @@ public class NTCEnv {
         curSymTab.add(name, sym);
     }
 
-    public HashSet<String> getTypeSet() {
-        HashSet<String> rtn = globalSymTab.getTypeSet();
+    public Set<Sym> getTypeSet() {
+        Set<Sym> rtn = globalSymTab.getTypeSet();
         for (BuiltInT builtInT : BuiltInT.values()) {
-            rtn.add(getSymName(builtInT));
+            rtn.add(getSym(builtInT));
         }
         return rtn;
     }
@@ -170,14 +170,53 @@ public class NTCEnv {
             }
         }
         ArrayList<VarSym> memberList = arguments.parseArgs(this, parent);
-        return new ExceptionTypeSym(exceptionName, memberList);
+        return new ExceptionTypeSym(exceptionName, memberList, parent);
     }
 
-    public ExceptionTypeSym toExceptionTypeSym(ExceptionType t) {
-        if (t.isLocal(curContractSym.name)) {
-            return (ExceptionTypeSym) getCurSym(t.getName());
+    public ExceptionTypeSym toExceptionTypeSym(Type t) {
+        return (ExceptionTypeSym) getCurSym(t.name());
+    }
+
+    public void addSourceFile(String contractName, SourceFile root) {
+        programMap.put(contractName, root);
+    }
+
+    public SymTab globalSymTab() {
+        return globalSymTab;
+    }
+
+    public List<Constraint> cons() {
+        return cons;
+    }
+
+    public HashMap<String, SourceFile> programMap() {
+        return programMap;
+    }
+
+    public Hypothesis globalHypothesis() {
+        return globalHypothesis;
+    }
+
+    public ContractSym curContractSym() {
+        return curContractSym;
+    }
+
+    public SymTab curSymTab() {
+        return curSymTab;
+    }
+
+    public Label toLabel(IfLabel ifl) {
+        if (ifl instanceof PrimitiveIfLabel) {
+            VarSym label = (VarSym) curSymTab.lookup(((PrimitiveIfLabel) ifl).value().id);
+            if (label == null) return null;
+            return new PrimitiveLabel(label, ifl.getLocation());
+        } else if (ifl instanceof ComplexIfLabel) {
+            return new ComplexLabel(toLabel(((ComplexIfLabel) ifl).getLeft()),
+                    ((ComplexIfLabel) ifl).getOp(),
+                    toLabel(((ComplexIfLabel) ifl).getRight()),
+                    ifl.getLocation());
         } else {
-            return (ExceptionTypeSym) getExtSym(t.getContractName(), t.getName());
+            throw new RuntimeException();
         }
     }
 }

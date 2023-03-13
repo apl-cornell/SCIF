@@ -30,8 +30,8 @@ public class ClassDef extends TopLayerNode {
         return false;
     }
 
-    @Override
-    public void findPrincipal(HashSet<String> principalSet) {
-
-    }
+//    @Override
+//    public void findPrincipal(HashSet<String> principalSet) {
+//
+//    }
 }

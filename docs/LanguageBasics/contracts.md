@@ -16,7 +16,7 @@ The body of a contract may contain the following:
 
 The following example shows a basic contract.
 
-```Java
+```scif
 contract ContractName[this] {
     // state variables
     map(address, uint) balances;
@@ -98,7 +98,7 @@ A method is labeled as `{l1 -> l2; l3}` where `l1` represents the requirement of
 
 SCIF supports inheritance when defining a contract by using the keyword `extends`:
 
-```Java
+```scif
 contract B extends A {
     ...
     @override

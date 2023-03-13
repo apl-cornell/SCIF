@@ -1,0 +1,14 @@
+contract Seq {
+    uint{BOT} bal;
+
+    @public
+    void foo{BOT -> this; this}() {
+        bar();
+        bal = 20;
+    }
+
+    @public
+    void bar{BOT -> BOT; BOT}() {
+
+    }
+}

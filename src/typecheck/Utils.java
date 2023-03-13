@@ -18,7 +18,7 @@ import java.util.*;
 public class Utils {
 
     public static final String[] BUILTIN_TYPE_NAMES =
-            new String[]{"bool", "address", "bytes", "string", "void", "uint"};
+            new String[]{"bool", "address", "bytes", "string", "void", "uint", "principal"};
     //new String[] {"bool", "int128", "uint256", "address", "bytes", "string", "int", "void", "uint"};
     public static final HashSet<String> BUILTIN_TYPES = new HashSet<>(
             Arrays.asList(BUILTIN_TYPE_NAMES));
@@ -27,6 +27,7 @@ public class Utils {
     public static final String LABEL_TOP = "TOP";
     public static final String LABEL_BOTTOM = "BOT";
     public static final String LABEL_THIS = "this";
+    public static final String LABEL_SENDER = "sender";
     public static final String DEAD = "---DEAD---";
     public static final String KEY = "KEY";
     public static final String SHERRLOC_TOP = LABEL_TOP;
@@ -39,8 +40,11 @@ public class Utils {
     public static final String TYPECHECK_NORESULT_MSG = "No result from ShErrLoc.";
 
 
-    public static final String ADDRESSTYPE = "address";
+    public static final String ADDRESS_TYPE = "address";
+    public static final String MAP_TYPE = "map";
     public static final String PUBLIC_DECORATOR = "public";
+    public static final String PROTECTED_DECORATOR = "protected";
+    public static final String FINAL_DECORATOR = "final";
     public static final String PAYABLE_DECORATOR = "payable";
 
     public static final String TRUSTCENTER_NAME = "trustCenter";
@@ -52,6 +56,14 @@ public class Utils {
 
     public static final String DEBUG_UNKNOWN_CONTRACT_NAME = "UNKNOWN";
     public static final String ANONYMOUS_VARIABLE_NAME = "ANONYMOUS";
+    public static final String PRINCIPAL_TYPE = "principal";
+    public static final String EXCEPTION_ERROR_NAME = "error";
+    public static final String METHOD_SEND_NAME = "send";
+    public static final String METHOD_BALANCE_NAME = "balance";
+    public static final CodeLocation BUILTIN_LOCATION = new CodeLocation(0, 0, "BUILTIN");
+    public static final String LABEL_PAYVALUE = "value";
+    public static final String VOID_TYPE = "void";
+    public static final String BUILTIN_CONTRACT = "Builtin";
 
     public static final boolean isPrimitiveType(String x) {
         return BUILTIN_TYPES.contains(x);
@@ -65,27 +77,19 @@ public class Utils {
         return new IfConstraint();
     }*/
 
-    public static String getLabelNamePc(String prefix) {
-        if (prefix.equals("")) {
-            return "PC";
-        } else {
-            return prefix + ".." + "PC";
-        }
-    }
-
-    public static String getLabelNamePc(CodeLocation location) {
+    public static String getLabelNamePc(String location) {
         if (location == null) {
             return "PC";
         } else {
-            return location + ".." + "PC";
+            return location + "." + "PC";
         }
     }
 
-    public static String getLabelNameLock(CodeLocation location) {
+    public static String getLabelNameLock(String location) {
         if (location == null) {
             return "LK";
         } else {
-            return location + ".." + "LK";
+            return location + "." + "LK";
         }
         /*if (prefix.equals("")) {
             return "LK";
@@ -94,33 +98,33 @@ public class Utils {
         }*/
     }
 
-    public static String getLabelNameInLock(CodeLocation location) {
-        if (location == null) {
+    public static String getLabelNameInLock(String funcFullName) {
+        if (funcFullName == null) {
             return "ILK";
         } else {
-            return location.toString() + ".." + "ILK";
+            return funcFullName + "." + "ILK";
         }
     }
 
-    public static String getLabelNameFuncCallPcBefore(String funcName) {
-        return funcName + ".." + "call.pc.bfr";
-    }
+    /*public static String getLabelNameFuncCallPcBefore(String funcName) {
+        return funcName + "." + "call.pc.bfr";
+    }*/
 
-    public static String getLabelNameFuncCallPcAfter(String funcName) {
-        return funcName + ".." + "call.pc.aft";
-    }
+//    public static String getLabelNameFuncCallPcAfter(String funcName) {
+//        return funcName + "." + "call.pc.aft";
+//    }
 
-    public static String getLabelNameCallPcEnd(String funcName) {
-        return funcName + ".." + "call.pc.end";
-    }
+//    public static String getLabelNameCallPcEnd(String funcName) {
+//        return funcName + "." + "call.pc.end";
+//    }
 
     public static String getLabelNameFuncCallLock(String funcName) {
-        return funcName + ".." + "call.lk";
+        return funcName + "." + "call.lk";
     }
 
-    public static String getLabelNameFuncCallGamma(String funcName) {
-        return funcName + ".." + "gamma.lk";
-    }
+//    public static String getLabelNameFuncCallGamma(String funcName) {
+//        return funcName + "." + "gamma.lk";
+//    }
 
     /*public static String getLabelNameFuncCallBefore(String funcName) {
         return funcName + ".." + "call.before";
@@ -129,23 +133,23 @@ public class Utils {
         return funcName + ".." + "call.after";
     }*/
     public static String getLabelNameFuncRtnValue(String funcName) {
-        return funcName + ".." + "rtn.v";
+        return funcName + "." + "rtn.v";
     }
 
     public static String getLabelNameFuncRtnLock(String funcName) {
-        return funcName + ".." + "rtn.lk";
+        return funcName + "." + "rtn.lk";
     }
 
     public static String getLabelNameFuncRtnPc(String funcName) {
-        return funcName + ".." + "rtn.pc";
+        return funcName + "." + "rtn.pc";
     }
 
     public static String getLabelNameArgLabel(String funcName, VarSym arg) {
-        return funcName + "." + arg.name + "..lbl";
+        return funcName + "." + arg.getName() + ".lbl";
     }
 
     public static String getLabelNameFuncExpLabel(String funcName, String name) {
-        return funcName + "." + name + "..lbl";
+        return funcName + "." + name + ".lbl";
     }
 
     public static sherrloc.diagnostic.DiagnosticConstraintResult runSherrloc(String consFilePath)
@@ -198,42 +202,57 @@ public class Utils {
             return "address";
         } else if (type == BuiltInT.BYTES) {
             return "bytes";
+        } else if (type == BuiltInT.PRINCIPAL) {
+            return "principal";
         } else {
             return "unknownT";
         }
     }
 
-    public static void writeCons2File(HashSet<String> constructors, List<Constraint> assumptions,
+    public static boolean writeCons2File(Set<? extends Sym> constructors, List<Constraint> assumptions,
             List<Constraint> constraints, File outputFile, boolean isIFC) {
         try {
             // transform every "this" to "contractName.this"
             BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
+            if (constraints.size() == 0) {
+                return false;
+            }
             logger.debug("Writing the constraints of size {}", constraints.size());
             //System.err.println("Writing the constraints of size " + env.cons.size());
-            if (!constructors.contains("BOT") && isIFC) {
-                constructors.add("BOT");
-            }
-            if (!constructors.contains("TOP") && isIFC) {
-                constructors.add("TOP");
-            }
-            if (!constructors.contains("this") && isIFC) {
+//            VarSym bot = new VarSym();
+//            if (!constructors.contains("BOT") && isIFC) {
+//                constructors.add("BOT");
+//            }
+//            if (!constructors.contains("TOP") && isIFC) {
+//                constructors.add("TOP");
+//            }
+            /*if (!constructors.contains("this") && isIFC) {
                 constructors.add("this");
-            }
+            }*/
 
+            Sym bot = null, top = null;
             if (!constructors.isEmpty()) {
-                for (String principal : constructors) {
-                    consFile.write("CONSTRUCTOR " + principal + " 0\n");
+                for (Sym principal : constructors) {
+                    if (principal.getName().equals("BOT")) {
+                        bot = principal;
+                    }
+                    if (principal.getName().equals("TOP")) {
+                        top = principal;
+                    }
+                    consFile.write("CONSTRUCTOR " + principal.toSHErrLocFmt() + " 0\n");
                 }
             }
             if (!assumptions.isEmpty() || isIFC) {
                 consFile.write("%%\n");
+                assert bot != null;
+                assert top != null;
                 if (isIFC) {
-                    for (String x : constructors) {
-                        if (!x.equals("BOT") && !x.equals("TOP")) {
-                            consFile.write("BOT" + " >= " + x + ";" + "\n");
+                    for (Sym x : constructors) {
+                        if (!x.equals(bot) && !x.equals(top)) {
+                            consFile.write(bot.toSHErrLocFmt() + " >= " + x.toSHErrLocFmt() + ";" + "\n");
                         }
-                        if (!x.equals("TOP")) {
-                            consFile.write("TOP" + " <= " + x + ";" + "\n");
+                        if (!x.equals(top)) {
+                            consFile.write(top.toSHErrLocFmt() + " <= " + x.toSHErrLocFmt() + ";" + "\n");
                         }
                     }
                 }
@@ -252,10 +271,12 @@ public class Utils {
             consFile.close();
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
-    public static void SLCinput(HashSet<String> constructors, ArrayList<Constraint> assumptions,
+    public static boolean SLCinput(HashSet<String> constructors, ArrayList<Constraint> assumptions,
             ArrayList<Constraint> constraints, boolean isIFC) {
         try {
             sherrloc.constraint.ast.Hypothesis hypothesis = new Hypothesis();
@@ -264,6 +285,9 @@ public class Utils {
             // transform every "this" to "contractName.this"
             //BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
             logger.debug("Writing the constraints of size {}", constraints.size());
+            if (constraints.size() == 0) {
+                return false;
+            }
             //System.err.println("Writing the constraints of size " + env.cons.size());
             if (!constructors.contains("BOT") && isIFC) {
                 constructors.add("BOT");
@@ -295,7 +319,7 @@ public class Utils {
                     }
                 }
                 for (Constraint con : assumptions) {
-                    //  consFile.write(con.toSherrlocFmt(false) + "\n");
+                    //  consFile.write(con.toSHErrLocFmt(false) + "\n");
                 }
                 //consFile.write("%%\n");
             } else {
@@ -303,22 +327,24 @@ public class Utils {
             }
             if (!constraints.isEmpty()) {
                 for (Constraint con : constraints) {
-                    //consFile.write(con.toSherrlocFmt(true) + "\n");
+                    //consFile.write(con.toSHErrLocFmt(true) + "\n");
                 }
             }
             //consFile.close();
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
     protected static final Logger logger = LogManager.getLogger();
 
     public static FuncSym getCurrentFuncInfo(NTCEnv env, ScopeContext now) {
-        while (!(now.cur instanceof FunctionDef)) {
-            now = now.parent;
+        while (!(now.cur() instanceof FunctionDef)) {
+            now = now.parent();
         }
-        FunctionDef funcNode = (FunctionDef) now.cur;
+        FunctionDef funcNode = (FunctionDef) now.cur();
         Sym sym = env.getCurSym(funcNode.getName());
         return ((FuncSym) sym);
     }
@@ -327,105 +353,22 @@ public class Utils {
         return (TypeSym) s.lookup(typeName);
     }
 
-    public static VarSym createBuiltInVarInfo(String localName, String typeName,
-            ScopeContext context, SymTab s) {
-        return new VarSym(
-                localName,
-                ((TypeSym) s.lookup(typeName)), new PrimitiveIfLabel(new Name("this")), null,
-                context, false, false);
+    /*private static ExceptionTypeSym builtin_error_sym() {
+        return new ExceptionTypeSym("error", new PrimitiveIfLabel(new Name(LABEL_BOTTOM)), new ArrayList<>());
     }
 
-    public static void addBuiltInSyms(SymTab globalSymTab, TrustSetting trustSetting) {
-        for (BuiltInT t : BuiltInT.values()) {
-            String typeName = Utils.BuiltinType2ID(t);
-            TypeSym s = new BuiltinTypeSym(typeName);
-            globalSymTab.add(typeName, s);
-        }
-        ArrayList<VarSym> members = new ArrayList<>();
+     */
 
-
-        /*
-            add address type as a contract type
-         */
-
-        /*String contractName = "address";
-        ArrayList<TrustConstraint> trustCons = new ArrayList<>();
-        SymTab symTab = new SymTab();
-
-
-        ContractSym contractSym = new ContractSym(contractName, symTab, trustCons);*/
-
-        /* msg:
-         *   sender - address
-         *   value - uint
-         * */
-        members = new ArrayList<>();
-        ScopeContext emptyContext = new ScopeContext("");
-        ScopeContext universalContext = new ScopeContext("UNIVERSAL");
-        VarSym sender = createBuiltInVarInfo("sender", "address", emptyContext, globalSymTab);
-        members.add(sender);
-        VarSym value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
-        members.add(value);
-        StructTypeSym msgT = new StructTypeSym("msgT", members);
-        VarSym msg = new VarSym("msg",
-                msgT, null,
-                null, universalContext, false, false);
-        globalSymTab.add("msg", new VarSym(msg));
-
-        /* send(address, value) */
-
-        members = new ArrayList<>();
-        VarSym recipient = createBuiltInVarInfo("recipient", "address", emptyContext, globalSymTab);
-        value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
-        members.add(recipient);
-        members.add(value);
-        IfLabel thisLabel = new PrimitiveIfLabel(new Name("this"));
-        IfLabel botLabel = new PrimitiveIfLabel(new Name("BOT"));
-        FuncLabels funcLabels = new FuncLabels(thisLabel, thisLabel, botLabel, botLabel);
-        FuncSym sendFuncSym = new FuncSym("send", funcLabels, members,
-                getBuiltinTypeInfo("bool", globalSymTab), thisLabel, new ScopeContext("send"),
-                null);
-        globalSymTab.add("send", sendFuncSym);
-
-        /* trustedSend(address, value) */
-        members = new ArrayList<>();
-        recipient = createBuiltInVarInfo("recipient", "address", emptyContext, globalSymTab);
-        value = createBuiltInVarInfo("value", "uint", emptyContext, globalSymTab);
-        members.add(recipient);
-        members.add(value);
-        IfLabel trustedSendLabel = new PrimitiveIfLabel(new Name("trustedSend"));
-        funcLabels = new FuncLabels(trustedSendLabel, trustedSendLabel, trustedSendLabel,
-                trustedSendLabel);
-        FuncSym trustedSendFuncSym = new FuncSym("trustedSend", funcLabels, members,
-                getBuiltinTypeInfo("bool", globalSymTab), thisLabel,
-                new ScopeContext("trustedSend"), null);
-        globalSymTab.add("trustedSend", trustedSendFuncSym);
-
-        /* built-in for dynamic options */
-        // TODO: change to importing style
-        //if (trustSetting != null) {
-        //if (trustSetting.dynamicSystemOption == DynamicSystemOption.BaseContractCentralized) {
-        // setTrust(address trustee)
-        members = new ArrayList<>();
-        VarSym trustee = createBuiltInVarInfo("trustee", "address", emptyContext, globalSymTab);
-        members.add(trustee);
-        funcLabels = new FuncLabels(thisLabel, thisLabel, thisLabel, thisLabel);
-        FuncSym setTrustSym = new FuncSym("setTrust", funcLabels, members,
-                getBuiltinTypeInfo("bool", globalSymTab), thisLabel, new ScopeContext("setTrust"),
-                null);
-        globalSymTab.add("setTrust", setTrustSym);
-        //}
-        //}
-    }
-
-    public static boolean isBuiltinFunc(String funcName) {
+  /*  public static boolean isBuiltinFunc(String funcName) {
         if (funcName.equals("send") || funcName.equals("setTrust")) {
             return true;
         }
         return false;
     }
 
-    public static String transBuiltinFunc(String funcName, Call call) {
+   */
+
+ /*   public static String transBuiltinFunc(String funcName, Call call) {
         if (funcName.equals("send")) {
             String recipient = call.getArgAt(0).toSolCode();
             String value = call.getArgAt(1).toSolCode();
@@ -437,6 +380,8 @@ public class Utils {
             return "unknown built-in function";
         }
     }
+
+  */
 
     public static boolean emptyFile(String outputFileName) {
         File file = new File(outputFileName);
@@ -461,8 +406,8 @@ public class Utils {
         return true;
     }
 
-    public static String getLabelNameContract(String name) {
-        return name + "." + "codeLbl";
+    public static String getLabelNameContract(ScopeContext context) {
+        return context.getSHErrLocName() + "." + "codeLbl";
     }
 
     public static DynamicSystemOption resolveDynamicOption(String dynamicOption) {
@@ -521,7 +466,7 @@ public class Utils {
         SourceFile program = programMap.get(contractName);
 
         String rtn =
-                program.getSourceFileName() + "(" + slin + "," + scol + "): " + explanation + ".\n";
+                program.getSourceFileId() + "(" + slin + "," + scol + "): " + explanation + ".\n";
         rtn += program.getSourceCodeLine(lin - 1) + "\n";
         for (int i = 1; i < col; ++i) {
             rtn += " ";
@@ -577,7 +522,7 @@ public class Utils {
         SourceFile program = programMap.get(contractName);
 
         String rtn =
-                program.getSourceFileName() + "(" + slin + "," + scol + "): " + explanation + ".\n";
+                program.getSourceFileId() + "(" + slin + "," + scol + "): " + explanation + ".\n";
         rtn += program.getSourceCodeLine(lin - 1) + "\n";
         for (int i = 1; i < col; ++i) {
             rtn += " ";
@@ -599,23 +544,19 @@ public class Utils {
         }
     }
 
-    public static String makeJoin(String lhs, String rhs) {
-        return "(" + lhs + " ⊔ " + rhs + ")";
-    }
-
     public static void contextFlow(VisitEnv env, Context outContext, Context funcEndContext,
             CodeLocation location) {
-        env.trustCons.add(new Constraint(new Inequality(outContext.lambda, funcEndContext.lambda),
-                env.hypothesis, location, env.curContractSym.name,
+        env.addTrustConstraint(new Constraint(new Inequality(outContext.lambda, funcEndContext.lambda),
+                env.hypothesis(), location, env.curContractSym().getName(),
                 "actually-maintained lock of the last sub-statement flows to parent-statement's one"));
-        env.trustCons.add(
-                new Constraint(new Inequality(outContext.pc, funcEndContext.pc), env.hypothesis,
-                        location, env.curContractSym.name,
+        env.addTrustConstraint(
+                new Constraint(new Inequality(outContext.pc, funcEndContext.pc), env.hypothesis(),
+                        location, env.curContractSym().getName(),
                         "normal termination control flow of the last sub-statement flows to parent-statement's one"));
     }
 
     public static ExceptionTypeSym getNormalPathException() {
-        return new ExceptionTypeSym("*n", new ArrayList<>());
+        return new ExceptionTypeSym("*n", new ArrayList<>(), globalScopeContext());
     }
 
     public static PsiUnit joinPsiUnit(PsiUnit u1, PsiUnit u2) {
@@ -627,7 +568,23 @@ public class Utils {
     }
 
     public static ExceptionTypeSym getReturnPathException() {
-        return new ExceptionTypeSym("*r", new ArrayList<>());
+        return new ExceptionTypeSym("*r", new ArrayList<>(), globalScopeContext());
+    }
+
+    public static void addBuiltInTypes(SymTab symTab) {
+        for (BuiltInT t : BuiltInT.values()) {
+            String typeName = Utils.BuiltinType2ID(t);
+            TypeSym s = new BuiltinTypeSym(typeName);
+            symTab.add(typeName, s);
+        }
+    }
+
+    public static CodeLocation placeholder() {
+        return new CodeLocation();
+    }
+
+    public static ScopeContext globalScopeContext() {
+        return new ScopeContext(null, null);
     }
 }
 

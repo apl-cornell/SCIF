@@ -4,16 +4,14 @@ import compile.SolCode;
 import java.util.List;
 import typecheck.*;
 
-import java.util.ArrayList;
-
 public class ExceptHandler extends Statement {
 
-    ExceptionType type;
-    String name;
-    List<Statement> body;
+    private LabeledType labeledType;
+    private String name;
+    private List<Statement> body;
 
-    public ExceptHandler(ExceptionType type, String name, List<Statement> body) {
-        this.type = type;
+    public ExceptHandler(LabeledType type, String name, List<Statement> body) {
+        this.labeledType = type;
         this.name = name;
         this.body = body;
     }
@@ -22,13 +20,14 @@ public class ExceptHandler extends Statement {
         this.body = body;
     }
 
+    @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        env.curSymTab = new SymTab(env.curSymTab);
+        env.setCurSymTab(new SymTab(env.curSymTab()));
 
-        VarSym var = env.toVarSym(name, type, true, true, location, now);
+        VarSym var = env.toVarSym(name, labeledType, true, true, true, location, now);
         if (var == null) {
-            System.err.println("Exception type " + type.getName() + " not found");
+            System.err.println("Exception type " + labeledType.type().name() + " not found");
             throw new RuntimeException();
         }
         env.addSym(name, var);
@@ -36,7 +35,7 @@ public class ExceptHandler extends Statement {
         for (Statement s : body) {
             ScopeContext tmp = s.ntcGenCons(env, now);
         }
-        env.curSymTab = env.curSymTab.getParent();
+        env.setCurSymTab(env.curSymTab().getParent());
         return now;
     }
 
@@ -56,5 +55,13 @@ public class ExceptHandler extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         return null;
+    }
+
+    public Type type() {
+        return labeledType.type();
+    }
+
+    public String name() {
+        return name;
     }
 }

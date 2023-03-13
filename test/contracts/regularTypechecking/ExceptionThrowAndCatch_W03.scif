@@ -1,0 +1,20 @@
+contract ExceptionDefinition {
+    exception X();
+    exception Y(uint aug1, uint aug2);
+
+    @public
+    void foo() throws (X) {
+        try {
+            bar(1, 2);
+        } catch (X expY) {
+            throw X();
+        }
+    }
+
+    @public
+    void bar(uint a, uint b) throws (Y) {
+        if (a != b) {
+            throw Y(a, b);
+        }
+    }
+}

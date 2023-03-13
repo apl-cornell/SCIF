@@ -1,8 +1,8 @@
 package typecheck;
 
 public class CodeLocation {
-    public int lineNo = -1, columnNo = -1;
-    public String fileName;
+    public int lineNo = 0, columnNo = 0;
+    public String fileName = "Builtin";
 
     public CodeLocation(int lineNo, int columnNo, String fileName) {
         this.lineNo = lineNo;
@@ -23,6 +23,6 @@ public class CodeLocation {
 
     @Override
     public String toString() {
-        return String.format("L%dC%dF%s", lineNo, columnNo, fileName.replace("/", "..."));
+        return String.format("L%dC%d", lineNo, columnNo);//, fileName.replace("/", "..."));
     }
 }

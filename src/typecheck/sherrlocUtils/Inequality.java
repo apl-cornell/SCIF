@@ -9,19 +9,15 @@ public class Inequality {
     String lhs, rhs;
     Relation relation;
     public Inequality(String lhs, Relation relation, String rhs) {
-        if (lhs.equals("") || rhs.equals("")) {
-            // System.err.println(lhs + " | " + rhs);
-            int a = 1/0;
-        }
+        assert !lhs.equals("");
+        assert !rhs.equals("");
         this.lhs = lhs;
         this.rhs = rhs;
         this.relation = relation;
     }
     public Inequality(String lhs, CompareOperator co, String rhs) {
-        if (lhs.equals("") || rhs.equals("")) {
-            // System.err.println(lhs + " | " + rhs);
-            int a = 1/0;
-        }
+        assert !lhs.equals("");
+        assert !rhs.equals("");
         this.lhs = lhs;
         this.rhs = rhs;
         if (co == CompareOperator.Eq)

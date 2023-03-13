@@ -24,18 +24,29 @@ public class Name extends Variable {
         logger.debug("Name: " + id);
         // logger.debug(s.toString());
         if (s instanceof FuncSym) {
+            assert false;
             return null;
         } else if (s instanceof VarSym) {
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
-            logger.debug(s.name);
-            env.addCons(now.genCons(typeSym.name, Relation.EQ, env, location));
+            logger.debug(s.getName());
+            env.addCons(now.genEqualCons(typeSym, env, location, "The variable is of improper type"));
             logger.debug(now.toString());
             return now;
         } else if (s instanceof TypeSym) {
+            assert false;
             return null;
         }
+        assert false;
         return null;
+    }
+
+    @Override
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        // assuming the name would be a variable name
+        logger.debug("Name: " + id);
+        String ifNameRtn = env.getVar(id).labelNameSLC();
+        return new ExpOutcome(ifNameRtn, new PathOutcome(new PsiUnit(env.inContext)));
     }
 
     @Override
@@ -43,23 +54,11 @@ public class Name extends Variable {
         return ((VarSym) env.getCurSym(id));
     }
 
-    @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        // assuming the name would be a variable name
-        logger.debug("Name: " + id);
-        String ifNameRtn = env.getVar(id).labelToSherrlocFmt();
-        return new ExpOutcome(ifNameRtn, new PathOutcome(new PsiUnit(env.inContext)));
-    }
-
     public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
         VarSym rnt = env.getVar(id);
         return rnt;
     }
 
-
-    public String toSHErrLocFmt() {
-        return id + "." + location;
-    }
 
     @Override
     public String toSolCode() {

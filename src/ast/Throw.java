@@ -1,6 +1,8 @@
 package ast;
 
 import compile.SolCode;
+import java.nio.file.Path;
+import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -27,7 +29,7 @@ public class Throw extends Statement {
                 String contractTypeName = ((Name) att.value).id;
                 exceptionName = att.attr.id;
                 ContractSym s = env.getContract(contractTypeName);
-                logger.debug("contract " + contractTypeName + ": " + s.name);
+                logger.debug("contract " + contractTypeName + ": " + s.getName());
                 if (!(env.getExtSym(exceptionName, contractTypeName) == null)) {
                     System.err.println("a.b not found");
                     return null;
@@ -55,19 +57,29 @@ public class Throw extends Statement {
             }
             exceptionSym = ((ExceptionTypeSym) s);
         }
+        // check if the parameter number matches
+        if (exceptionSym.parameters().size() != exception.args.size()) {
+            System.err.println("Throwing an exception " + exceptionSym.getName() + " with unmatched parameter number at " + "location: "
+                    + location.toString());
+            throw new RuntimeException();
+        }
+
         // typecheck arguments
         for (int i = 0; i < exception.args.size(); ++i) {
             Expression arg = exception.args.get(i);
-            TypeSym paraInfo = exceptionSym.parameters.get(i).typeSym;
+            TypeSym paraInfo = exceptionSym.parameters().get(i).typeSym;
             ScopeContext argContext = arg.ntcGenCons(env, now);
-            String typeName = env.getSymName(paraInfo.name);
-            env.addCons(argContext.genCons(typeName, Relation.GEQ, env, location));
+            String typeNameSLC = paraInfo.toSHErrLocFmt();
+            Constraint argCon = argContext.genCons(typeNameSLC, Relation.GEQ, env, arg.location);
+            env.addCons(argCon);
+            System.out.println(paraInfo.getName());
+            System.out.println(argCon.toSherrlocFmt(true));
         }
         // String rtnTypeName = exceptionSym.returnType.name;
         // env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
 
         if (!parent.isCheckedException(exceptionSym, false)) {
-            System.err.println("Unchecked exception " + exceptionSym.name + " at " + "lo"
+            System.err.println("Unchecked exception " + exceptionSym.getName() + " at " + "location: "
                     + location.toString());
             throw new RuntimeException();
         }
@@ -82,8 +94,8 @@ public class Throw extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         PathOutcome psi = new PathOutcome(new PsiUnit(beginContext));
         ExpOutcome ao = null;
 
@@ -97,9 +109,18 @@ public class Throw extends Statement {
         }
 
         String expName = ((Name) exception.value).id;
-        //ExceptionTypeSym expSym = env.getExp(expName);
+        ExceptionTypeSym expSym = env.getExp(expName);
 
-        //TODO
-        return null;
+        PsiUnit expUnit = new PsiUnit(
+                new Context(env.inContext.pc,
+                        psi.getNormalPath().c.lambda),
+                false);
+        PathOutcome psi2 = new PathOutcome();
+        psi2.set(expSym, expUnit);
+
+        psi.remove(Utils.getNormalPathException());
+        psi.join(psi2);
+
+        return psi;
     }
 }

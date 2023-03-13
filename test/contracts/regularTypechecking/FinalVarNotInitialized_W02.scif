@@ -1,0 +1,4 @@
+contract FinalVar {
+
+    final uint a;
+}

@@ -1,39 +1,47 @@
 package ast;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.List;
+import typecheck.ExpOutcome;
+import typecheck.NTCEnv;
+import typecheck.ScopeContext;
+import typecheck.VisitEnv;
 
-public class LabeledType extends Type {
+public class LabeledType extends Expression {
 
-    public IfLabel ifl;
+    private Type type;
+    private IfLabel ifl;
 
-    public LabeledType(String x, IfLabel ifl) {
-        super(x);
+    public LabeledType(Type x, IfLabel ifl) {
+        this.type = x;
         this.ifl = ifl;
     }
 
-    public String toSherrloc(String k, String v) {
-        return "";
+    public LabeledType(Type x) {
+        this.type = x;
     }
-
-    public void findPrincipal(HashSet<String> principalSet) {
-        ifl.findPrincipal(principalSet);
-    }
-
-    public void findPrincipal(HashSet<String> principalSet, String getRidOf) {
-        ifl.findPrincipal(principalSet, getRidOf);
+    public LabeledType(String x, IfLabel ifl) {
+        this.type = new Type(x);
+        this.ifl = ifl;
     }
 
     @Override
-    public ArrayList<Node> children() {
-        ArrayList<Node> rtn = new ArrayList<>();
+    public List<Node> children() {
+        List<Node> rtn = super.children();
+        rtn.add(type);
         rtn.add(ifl);
         return rtn;
     }
 
-    public boolean typeMatch(Type annotation) {
+    @Override
+    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+        assert false;
+        return null;
+    }
+
+    @Override
+    public boolean typeMatch(Expression annotation) {
         return annotation instanceof LabeledType &&
-                super.typeMatch(annotation) &&
+                type.typeMatch(((LabeledType) annotation).type) &&
                 ifl.typeMatch(((LabeledType) annotation).ifl);
     }
 
@@ -42,4 +50,19 @@ public class LabeledType extends Type {
             this.ifl = lbl;
         }
     }
+    @Override
+    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        ScopeContext rtn = type.ntcGenCons(env, parent);
+        if (ifl != null) ifl.ntcGenCons(env, parent);
+        return rtn;
+    }
+
+    public Type type() {
+        return type;
+    }
+
+    public IfLabel label() {
+        return ifl;
+    }
+
 }

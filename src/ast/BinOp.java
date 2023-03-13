@@ -31,17 +31,17 @@ public class BinOp extends Expression {
         ScopeContext r = right.ntcGenCons(env, now);
         // logger.debug("binOp/right:");
         // logger.debug(r.toString());
-        env.cons.add(now.genCons(l, Relation.LEQ, env, location));
-        env.cons.add(now.genCons(r, Relation.LEQ, env, location));
-        env.cons.add(now.genCons(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
+        env.addCons(now.genCons(l, Relation.LEQ, env, location));
+        env.addCons(now.genCons(r, Relation.LEQ, env, location));
+        env.addCons(now.genCons(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
         return now;
     }
 
     @Override
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         env.inContext = beginContext;
         ExpOutcome lo = left.genConsVisit(env, false);
@@ -53,12 +53,12 @@ public class BinOp extends Expression {
 
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bin" + location.toString();
 
-        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis, location,
-                env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis(), location,
+                env.curContractSym().getName(),
                 "Integrity of left hand expression doesn't flow to value of this binary operation"));
         env.cons.add(
-                new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis, location,
-                        env.curContractSym.name,
+                new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis(), location,
+                        env.curContractSym().getName(),
                         "Integrity of right hand expression doesn't flow to value of this binary operation"));
 
         typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, right.location);
@@ -67,7 +67,7 @@ public class BinOp extends Expression {
         if (!tail_position) {
             env.cons.add(new Constraint(
                     new Inequality(ro.psi.getNormalPath().c.lambda, beginContext.lambda),
-                    env.hypothesis, location, env.curContractSym.name,
+                    env.hypothesis(), location, env.curContractSym().getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 

@@ -27,15 +27,15 @@ public class Assign extends Statement {
         logger.debug(v);
         logger.debug(env);
         logger.debug(location);
-        env.cons.add(tgt.genCons(v, Relation.LEQ, env, location));
+        env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
         return now;
     }
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(location),
-                typecheck.Utils.getLabelNameLock(location));
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         // Context prevContext = env.prevContext;
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
@@ -44,7 +44,7 @@ public class Assign extends Statement {
         String ifNameTgt = "";
         if (target instanceof Name) {
             //Assuming target is Name
-            ifNameTgt = env.getVar(((Name) target).id).labelToSherrlocFmt();
+            ifNameTgt = env.getVar(((Name) target).id).labelNameSLC();
         } else if (target instanceof Subscript || target instanceof Attribute) {
             // env.prevContext = valueContext;
             /*env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, valueContext.lambda), env.hypothesis, value.location, env.curContractSym.name,
@@ -55,6 +55,7 @@ public class Assign extends Statement {
             // prevContext = tmp;
             // rtnLockName = tmp.lambda;
         } else {
+            assert false;
             //TODO: error handling
         }
         ExpOutcome vo = value.genConsVisit(env, false);
@@ -62,13 +63,13 @@ public class Assign extends Statement {
         // prevContext = valueContext;
 
         env.cons.add(
-                new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis, location,
-                        env.curContractSym.name,
+                new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis(), location,
+                        env.curContractSym().getName(),
                         "Integrity of the value being assigned must be trusted to allow this assignment"));
 
         env.cons.add(
-                new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis, value.location,
-                        env.curContractSym.name,
+                new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis(), value.location,
+                        env.curContractSym().getName(),
                         "Integrity of control flow must be trusted to allow this assignment"));
 
         typecheck.Utils.contextFlow(env, vo.psi.getNormalPath().c, endContext, value.location);
@@ -76,7 +77,7 @@ public class Assign extends Statement {
 
         if (!tail_position) {
             env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis, location, env.curContractSym.name,
+                    env.hypothesis(), location, env.curContractSym().getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 
