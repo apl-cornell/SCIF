@@ -109,8 +109,7 @@ with (new Constrain.Figure("diagram")) {
 
     setStrokeStyle(good)
     const domain = rectangle().setCornerRadius(30).setLineWidth(5).setLineDash([10,10])
-                        .setStrokeStyle(good).setFillStyle(null)
-    domain.placeUnder(t1)
+                        .setStrokeStyle(good).setFillStyle(null).placeUnder(t1)
     align("left", "top", domain, t1.expand(15))
     align("right", "bottom", domain, t2.expand(15))
     align("left", "top", domain, margin(4))
