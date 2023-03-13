@@ -66,13 +66,16 @@ April 2020.
 </ol>
 
 
-
+<h2>Acknowledgments</h2>
+<p>
+This research has been supported by NSF grant 1704615 and by a gift from Ripple Inc.
+</p>
 
 <script>
 with (new Constrain.Figure("diagram")) {
     const height = variable(), width = variable()
-    function contract() {
-        return rectangle().setCornerRadius(15).setW(width).setH(height).setLineWidth(3)
+    function contract(color) {
+        return rectangle().setFillStyle(color).setCornerRadius(15).setW(width).setH(height).setLineWidth(3)
     }
     function lock() {
         const c = circle().setStrokeStyle("#6af").setLineWidth(5)
@@ -80,36 +83,41 @@ with (new Constrain.Figure("diagram")) {
         c.at(s.uc()).setW(times(s.w(), 0.7))
         return s
     }
-    const t1 = contract(), t2 = contract(), u = contract()
-    equal(height, times(width, 1.508))
+    function arrow(a, b) {
+        return connector(a, b).setEndArrow("arrow").setArrowSize(18).setLineWidth(4)
+    }
+    function make_X(x) {
+        let sz = 20
+        saveStyle()
+        setLineWidth(8)
+        setStrokeStyle("red")
+        line(x.toTop(sz).toLeft(sz), x.toBottom(sz).toRight(sz))
+        line(x.toBottom(sz).toLeft(sz), x.toTop(sz).toRight(sz))
+        restoreStyle()
+    }
+    const good = "#8c8", evil = "#f88"
+    const t1 = contract(good), t2 = contract(good), u = contract(evil)
+    equal(height, times(width, 1.4))
 
     align("LR", "none", t1, t2)
     align("center", "abut", t1, vspace(30), t2)
-    t1.setFillStyle("#8c8")
-    t2.setFillStyle("#8c8")
-    u.setFillStyle("#f88")
     align("R", "center", u, margin())
-    setLineWidth(4)
     setConnectionStyle("intersection")
-    connector(t1, u).setEndArrow("arrow").setArrowSize(18)
-    connector(u, t2).setEndArrow("arrow").setArrowSize(18)
-    Constrain.autoResize()
-    const x = average(t2, u)
-    setStrokeStyle("red")
-    let sz = 20
-    setLineWidth(8)
-    line(x.toTop(sz).toLeft(sz), x.toBottom(sz).toRight(sz))
-    line(x.toBottom(sz).toLeft(sz), x.toTop(sz).toRight(sz))
+    arrow(t1, u)
+    arrow(u, t2)
+    make_X(average(t2, u))
 
-    setStrokeStyle("#8c8")
-    const domain = rectangle().setCornerRadius(30).setLineWidth(5).setLineDash([8,8]).setFillStyle(null)
+    setStrokeStyle(good)
+    const domain = rectangle().setCornerRadius(30).setLineWidth(5).setLineDash([10,10])
+                        .setStrokeStyle(good).setFillStyle(null)
+    domain.placeUnder(t1)
     align("left", "top", domain, t1.expand(15))
     align("right", "bottom", domain, t2.expand(15))
-    align("left", "T", domain, margin())
+    align("left", "top", domain, margin(4))
 
-    let l = lock().at(domain.lr())
-    align("none", "bottom", l, margin())
+    align("none", "bottom", lock().at(domain.lr()), margin())
 
+    Constrain.autoResize()
     start()
 }
 </script>
