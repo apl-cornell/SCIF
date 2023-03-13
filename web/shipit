@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -e
+git pull
+
+# put USER=<username> into shipit.local
+
+if [[ -f shipit.local ]]
+then
+# put user-specific customizations in shipit.local
+    . shipit.local
+else
+    echo "Error: shipit.local does not exist. Please at least define USER in it."
+    exit 1
+fi
+if [[ -z "$WEBHOST" ]]
+then
+    WEBHOST=cslinux.cs.cornell.edu
+fi
+if [[ -z "$real_web" ]]
+then
+    real_web="$USER@$WEBHOST:/research/scif"
+fi
+
+
+echo rsync -OtruvilC --exclude-from=shipit-excludes ./ "$real_web"/
+     rsync -OtruvilC --exclude-from=shipit-excludes ./ "$real_web"/
+
