@@ -40,7 +40,7 @@ mechanisms to prevent type confusion.
 </p>
 <p>
 SCIF code is similar to Solidity code, though with additional security
-annotations.  SXIF programs compile to Solidity and can interoperate with
+annotations.  SCIF programs compile to Solidity and can interoperate with
 existing contracts implemented in Solidity.
 </p>
 <ul>
@@ -72,28 +72,31 @@ This research has been supported by NSF grant 1704615 and by a gift from Ripple 
 </p>
 
 <script>
-with (new Constrain.Figure("diagram")) {
-    const height = variable(), width = variable()
-    function contract(color) {
-        return rectangle().setFillStyle(color).setCornerRadius(15).setW(width).setH(height).setLineWidth(3)
+const fig = new Constrain.Figure("diagram")
+with (fig) {
+    const height = fig.variable(), width = fig.variable()
+    const contract = color => {
+      return rectangle().setFillStyle(color).setCornerRadius(15).setW(width).setH(height).setLineWidth(3)
     }
-    function lock() {
-        const c = circle().setStrokeStyle("#6af").setLineWidth(5)
-        const s = square().setW(20).setLineWidth(2).setFillStyle("#8cf").setStrokeStyle("#6af")
-        c.at(s.uc()).setW(times(s.w(), 0.7))
-        return s
+    const lock = () => {
+      const c = circle().setStrokeStyle("#6af").setLineWidth(5),
+            s = square().setW(20).setLineWidth(2).setFillStyle("#8cf").setStrokeStyle("#6af")
+      c.at(s.uc()).setW(times(s.w(), 0.7))
+      return s
     }
-    function arrow(a, b) {
+    const arrow = (a, b) => {
         return connector(a, b).setEndArrow("arrow").setArrowSize(18).setLineWidth(4)
     }
-    function make_X(x) {
+    const make_X = x => {
+      with (fig) {
         let sz = 20
         saveStyle()
-        setLineWidth(8)
-        setStrokeStyle("red")
-        line(x.toTop(sz).toLeft(sz), x.toBottom(sz).toRight(sz))
-        line(x.toBottom(sz).toLeft(sz), x.toTop(sz).toRight(sz))
+         setLineWidth(8)
+         setStrokeStyle("red")
+         line(x.toTop(sz).toLeft(sz), x.toBottom(sz).toRight(sz))
+         line(x.toBottom(sz).toLeft(sz), x.toTop(sz).toRight(sz))
         restoreStyle()
+      }
     }
     const good = "#8c8", evil = "#f88"
     const t1 = contract(good), t2 = contract(good), u = contract(evil)
