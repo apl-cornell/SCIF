@@ -72,10 +72,10 @@ This research has been supported by NSF grant 1704615 and by a gift from Ripple 
 </p>
 
 <script>
-const fig = new Constrain.Figure("diagram")
-with (fig) {
-    const height = fig.variable(), width = fig.variable()
-    const contract = color => {
+function setup() {
+  with (new Constrain.Figure("diagram")) {
+    const height = variable(), width = variable()
+    function contract(color) {
       return rectangle().setFillStyle(color).setCornerRadius(15).setW(width).setH(height).setLineWidth(3)
     }
     const lock = () => {
@@ -88,7 +88,6 @@ with (fig) {
         return connector(a, b).setEndArrow("arrow").setArrowSize(18).setLineWidth(4)
     }
     const make_X = x => {
-      with (fig) {
         let sz = 20
         saveStyle()
          setLineWidth(8)
@@ -96,7 +95,6 @@ with (fig) {
          line(x.toTop(sz).toLeft(sz), x.toBottom(sz).toRight(sz))
          line(x.toBottom(sz).toLeft(sz), x.toTop(sz).toRight(sz))
         restoreStyle()
-      }
     }
     const good = "#8c8", evil = "#f88"
     const t1 = contract(good), t2 = contract(good), u = contract(evil)
@@ -121,7 +119,9 @@ with (fig) {
 
     Constrain.autoResize()
     start()
+  }
 }
+setup()
 </script>
 
 </div>
