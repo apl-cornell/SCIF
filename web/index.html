@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <title>SCIF</title>
+<!--meta http-equiv="Content-Location" content="https://www.cs.cornell.edu/andru/"-->
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="default.css" type="text/css" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open%20Sans&amp;subset=latin">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source%20Sans%20Pro&amp;subset=latin">
+  <script src="https://andrewcmyers.github.io/constrain/numeric-1.2.6.js"></script>
+  <script src="https://andrewcmyers.github.io/constrain/constrain.js"></script>
+  <style>
+    #diagram { float: right; min-width: 200px; width: 30%; padding: 30px; height: 270px; margin: auto 0 }
+    h1 { font-size: 4vw}
+  </style>
+</head>
+<body>
+
+<canvas id=diagram></canvas>
+<div id=content>
+<h1>SCIF: Smart Contract Information Flow</h1>
+<p>
+SCIF is a new programming language for building compositionally secure smart
+contracts. Smart contracts implemented in SCIF are checked by the compiler for
+their security properties before they are deployed. SCIF is especially designed
+to support building secure systems in which multiple smart contracts interact.
+It detects and prevents common security vulnerabilities such as use of untrusted
+information, reentrancy attacks, and confused deputy attacks.</p>
+<p>
+The core security mechanism of SCIF is static information flow
+checking, applied to integrity policies that can be used to annotate
+code. State-of-the-art compile-time diagnosis tools give programmers
+accurate feedback about where security bugs exist in their code. The
+SCIF runtime system also supports dynamic trust management so that
+security and trust policies can evolve securely even after contracts
+are deployed. A precise run-time lock mechanism prevents reentrancy
+vulnerabilities, and confused deputy attacks are prevented by run-time
+mechanisms to prevent type confusion.
+</p>
+<p>
+SCIF code is similar to Solidity code, though with additional security
+annotations.  SCIF programs compile to Solidity and can interoperate with
+existing contracts implemented in Solidity.
+</p>
+<ul>
+<li><a href="https://neroysq.github.io/SCIF/">SCIF Reference Manual</a>
+<li><a href="https://github.com/Neroysq/SCIF">SCIF Github repository</a>
+</ul>
+<h2>References</h2>
+<ol>
+<li>
+Ethan Cecchetti, Siqiu Yao, Haobin Ni, and Andrew C. Myers.
+<span class=papertitle>
+<a href="http://www.cs.cornell.edu/andru/papers/oakland21">Compositional security for reentrant applications</a></span>.
+<span class="conferencename">
+IEEE Symp.&nbsp;on Security and Privacy</span>,
+May 2021.
+<li>
+Ethan Cecchetti, Siqiu Yao, Haobin Ni, and Andrew C. Myers.
+<span class=papertitle>
+<a href="http://www.cs.cornell.edu/andru/papers/fab20">Securing smart contracts with information flow</a>.</span>
+<span class="conferencename">
+3<span class=ordinal>rd</span> Int'l Symp. on Foundations and Applications of Blockchain (FAB)</span>,
+April 2020.
+</ol>
+
+
+<h2>Acknowledgments</h2>
+<p>
+This research has been supported by NSF grant 1704615 and by a gift from Ripple Inc.
+</p>
+
+<script>
+function setup() {
+  with (new Constrain.Figure("diagram")) {
+    const height = variable(), width = variable()
+    function contract(color) {
+      return rectangle().setFillStyle(color).setCornerRadius(15).setW(width).setH(height).setLineWidth(3)
+    }
+    const lock = () => {
+      const c = circle().setStrokeStyle("#6af").setLineWidth(5),
+            s = square().setW(20).setLineWidth(2).setFillStyle("#8cf").setStrokeStyle("#6af")
+      c.at(s.uc()).setW(times(s.w(), 0.7))
+      return s
+    }
+    const arrow = (a, b) => {
+        return connector(a, b).setEndArrow("arrow").setArrowSize(18).setLineWidth(4)
+    }
+    const make_X = x => {
+        let sz = 20
+        saveStyle()
+         setLineWidth(8)
+         setStrokeStyle("red")
+         line(x.toTop(sz).toLeft(sz), x.toBottom(sz).toRight(sz))
+         line(x.toBottom(sz).toLeft(sz), x.toTop(sz).toRight(sz))
+        restoreStyle()
+    }
+    const good = "#8c8", evil = "#f88"
+    const t1 = contract(good), t2 = contract(good), u = contract(evil)
+    equal(height, times(width, 1.4))
+
+    align("LR", "none", t1, t2)
+    align("center", "abut", t1, vspace(30), t2)
+    align("R", "center", u, margin())
+    setConnectionStyle("intersection")
+    arrow(t1, u)
+    arrow(u, t2)
+    make_X(average(t2, u))
+
+    setStrokeStyle(good)
+    const domain = rectangle().setCornerRadius(30).setLineWidth(5).setLineDash([10,10])
+                        .setStrokeStyle(good).setFillStyle(null).placeUnder(t1)
+    align("left", "top", domain, t1.expand(15))
+    align("right", "bottom", domain, t2.expand(15))
+    align("left", "top", domain, margin(4))
+
+    align("none", "bottom", lock().at(domain.lr()), margin())
+
+    Constrain.autoResize()
+    start()
+  }
+}
+setup()
+</script>
+
+</div>
+</body>
+</html>

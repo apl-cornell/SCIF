@@ -1,7 +1,7 @@
 # SCIF Reference Manual
 
-SCIF (**S**mart **C**ontract with **I**nformation **F**low) is a secure object-oriented high-level language for implementing smart contracts. It enforces improved security properties with hybrid information flow tracking and lock mechanism. The primary goal is to prevent integrity failures such as reentrancy vulnerabilities and access control failures.
+SCIF (**S**mart **C**ontract **I**nformation **F**low) is a secure high-level language for implementing smart contracts. It enforces improved security properties with information flow tracking to prevent untrusted users and contracts from subverting the intended behavior of contracts. Beyond classic information flow control, SCIF includes mechanisms for preventing vulnerabilities arising from reentrancy or confused deputies.
 
-Comparing to a regular smart contract language, such as Solidity, SCIF supports expressing integrity policies by annotating code with *labels*. The programmer is able to specify which data and code are important and should be protected from adversarial parties. If a SCIF program typechecks, the type system ensures that no integrity failures could ever happen.
+Unlike other smart contract languages such as Solidity, SCIF allows annotating code with *integrity labels* that express security requirements and trust. The programmer specifies which data and code are important and should be protected from adversarial parties. A SCIF program that type-checks is protected against integrity failures.
 
 
