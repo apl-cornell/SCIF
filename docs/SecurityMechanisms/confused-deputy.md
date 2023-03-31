@@ -18,12 +18,15 @@ When compiling to Solidity, information flow labels are stripped off from the co
 And because the way Solidity assigns identities to methods, two methods whose signatures only differ in labels will be assigned the same id. This leads to potential of confused deputy vulnerabilities. 
 For example, `uint{this} g{this}(uint{this} value)` and `uint{any} g{this}(uint{this} value)` will be assigned the same id while they return values of different integrity level, resulting in potential information flow violation.
 
-To get rid of method type confusion, SCIF embeds labels in method signatures in their names when compiling to Solidity. For example, the name of a method `uint{this} g{this}(uint{this} value)` will become `"g" + hash(["this", "this", "this")`, when compiling to a Soldity function.
+To get rid of method type confusion, SCIF embeds labels in method signatures in their names when compiling to Solidity. For example, the name of a method `uint{this} g{this}(uint{this} value)` will become `"g" + hash(["this", "this", "this"])`, when compiling to a Solidity function.
+
 
 ## Run-time system for confused deputy prevention
 
+
+
 ```scif
-uint{this} f1{any -> this}(ContractTarget{any} target, uint{any} value) {
+uint{this} f1{sender -> this}(final ContractTarget{sender} target, uint{sender} value) {
     return target.g(value);
 }
 
@@ -41,20 +44,38 @@ uint{this} f4{any -> this}() {
     return constTarget.g(constValue);
 }
 
-uint{this} g{this}(uint{any} value) in ContractTarget
+uint{this} g{this}(uint{sender} value) in ContractTarget
 uint{this} g{this}(uint{this} value) in ContractRealTarget1
 uint{any} g{this}(uint{this} value) in ContractRealTarget2
 ```
 
 ```scif
-uint{this} f1{any -> this}(final ContractTarget{any} target, uint{any} value) {
+uint{this} f1{sender -> this}(final ContractTarget{sender} target, uint{sender} value) {
     assert sender => target;
     assert this => target;
+
     assert target => this;
     return target.g(value);
 }
 
-uint{this} g{this}(uint{any} value) in ContractTarget
+uint{this} g{this}(uint{any} value) {
+    checkHash;
+    assert sender => this;
+}
+in ContractTarget
+
+uint{this} g{l -> this}(uint{any} value) {
+    checkHash;
+    assert sender => l; // if sender => l, can we trust sender calls in the right pc
+}
 ```
 
 ## Support for legacy code
+
+When a SCIF contract calls a method in a legacy contract, its signature will be filled conservatively, promising the lowest level security gurantees. Any entry-point will be treated as a method that requires no integrity level and autoendorse to this, respects no locks and returns low-level values.
+
+When a legacy contract calls a method in a SCIF contract, it is expected that the method pointer points to the method whose legacy method name matches the hash of the method signature.
+
+### SCIF calls legacy
+
+### legacy calls SCIF
