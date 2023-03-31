@@ -84,8 +84,8 @@ contract Wallet {
 
 In this example, two custom exceptions have been defined: `balanceNotEnough` and `transferFailure`.
 These exceptions represent scenarios where the sender has insufficient funds and scenarios where the call to `send` fails, respectively.
-It is important to note the use of the `atom`/`rescue` pattern for invoking the `send` method and handling any exceptions or errors resulting from the call.
-This pattern ensures that the control flow outcome of operations inside the `atom` block does not influence the control flow outside the block, thus alleviating the burden on developers when reasoning about control flow.
+It is important to note the use of the `atomic`/`rescue` pattern for invoking the `send` method and handling any exceptions or errors resulting from the call.
+This pattern ensures that the control flow outcome of operations inside the `atomic` block does not influence the control flow outside the block, thus alleviating the burden on developers when reasoning about control flow.
 
 ## ERC20 token
 
