@@ -23,7 +23,7 @@ contract Wallet {
                 balances[sender] -= amount;
             }
         } else {
-            throw;
+            revert "insufficient funds";
         }
     }
 
@@ -55,22 +55,22 @@ The following contract showcases a multi-user wallet implementation that incorpo
 ```scif
 contract Wallet {
     map(address, uint) balances;
-    exception balanceNotEnough();
-    exception transferFailure();
+    exception balanceNotEnough;
+    exception transferFailure;
 
     @public
     void withdraw(uint amount) throws (balanceNotEnough, transferFailure) {
         endorse(amount, any -> this) if (balances[sender] >= amount) {
             lock(this) {
-                atom {
+                atomic {
                     send(sender, amount);
                 } rescue (error e) {
-                    throw transferFailure();
+                    throw transferFailure;
                 }
                 balances[sender] -= amount;
             }
         } else {
-            throw balanceNotEnough();
+            throw balanceNotEnough;
         }
     }
 
