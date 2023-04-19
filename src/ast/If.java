@@ -37,7 +37,7 @@ public class If extends Statement {
         rtn = test.ntcGenCons(env, now);
         Constraint testCon = rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
         env.addCons(testCon);
-        System.out.println(testCon.toSherrlocFmt(true));
+        System.err.println(testCon.toSherrlocFmt(true));
 
         for (Statement s : body) {
             rtn = s.ntcGenCons(env, now);

@@ -86,9 +86,6 @@ public class SCIF implements Callable<Integer> {
         if (!passNTC) {
             return null;
         }
-        if (3 == 3) {
-            return null;
-        }
         // System.out.println("["+ outputFileName + "]");
         ArrayList<File> IFCConsFiles = new ArrayList<>();
         for (int i = 0; i < roots.size(); ++i) {

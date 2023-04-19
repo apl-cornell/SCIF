@@ -3,6 +3,7 @@ plugins {
     id "org.xbib.gradle.plugin.jflex" version "1.6.0" // a plugin for building a lexer using jflex
     id "cup.gradle.cup-gradle-plugin" version "2.0" // building a parser using cup
     id "idea"
+    id 'application'
 }
 
 version '0.5.0'
@@ -72,6 +73,7 @@ compileJava.configure {
 def fatJar = tasks.register("fatJar", Jar) {
     manifest {
         attributes "Main-Class": "SCIF"
+        attributes 'Multi-Release': 'true'
     }
 
     archiveBaseName = "SCIF-full"
@@ -114,4 +116,13 @@ dependencies {
     implementation files("build/libs/sherrloc.jar")
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.9.0"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.9.0"
+}
+
+def dummyOutputStream = new OutputStream() {
+    @Override
+    public void write(int b) {}
+}
+
+application {
+    mainClass = "SCIF"
 }

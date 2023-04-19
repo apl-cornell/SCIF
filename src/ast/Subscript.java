@@ -108,7 +108,7 @@ public class Subscript extends TrailerExpr {
                 env.cons.add(
                         new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue),
                                 env.hypothesis(), location, env.curContractSym().getName(),
-                                "Integrity level of the subscript value is not trustworthy enough"));
+                                "Integrity level of the subscripted value is not expected"));
                 return new ExpOutcome(ifNameRtnValue, io.psi);
 
             } else {

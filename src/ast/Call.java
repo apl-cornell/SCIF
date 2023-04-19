@@ -174,7 +174,7 @@ public class Call extends TrailerExpr {
             }
         } else {
             //a(b)
-            System.out.println("a(b)");
+            System.err.println("a(b)");
             funcName = ((Name) value).id;
             ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
             if (!env.containsFunc(funcName)) {

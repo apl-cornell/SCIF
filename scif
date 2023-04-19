@@ -1,9 +1,11 @@
 #!/bin/bash
 
-JAVA=java
 ROOT=`dirname $0`
-jars=(build/libs/*full*.jar)
-libs=$(printf ":%s" "${jars[@]}")
-CLASSPATH=${ROOT}${libs}
+GRADLEW_NAME="gradlew"
+GRADLEW=${ROOT}/$GRADLEW_NAME
+ARGUMENTS=\""${array[*]}"\"
+echo $ARGUMENTS
+COMMAND="bash "${GRADLEW}" run --args=${ARGUMENTS} --quiet" 2> /dev/null
 
-${JAVA} -cp ${CLASSPATH} SCIF "$@"
+echo ${COMMAND}
+${COMMAND}

@@ -8,7 +8,7 @@ contract Wallet {
         uint amount = endorse(_amount, any -> this);
         if (balances[sender] >= amount) {
             atomic {
-                if (_amount > 0) {
+                if (amount > 0) {
                     send(sender, amount);
                     revert "failure";
                 }

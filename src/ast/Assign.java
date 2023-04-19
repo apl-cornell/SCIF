@@ -63,7 +63,7 @@ public class Assign extends Statement {
         // prevContext = valueContext;
 
         env.cons.add(
-                new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis(), location,
+                new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis(), value.location,
                         env.curContractSym().getName(),
                         "Integrity of the value being assigned must be trusted to allow this assignment"));
 

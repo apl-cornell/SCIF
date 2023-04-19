@@ -72,8 +72,8 @@ public class Throw extends Statement {
             String typeNameSLC = paraInfo.toSHErrLocFmt();
             Constraint argCon = argContext.genCons(typeNameSLC, Relation.GEQ, env, arg.location);
             env.addCons(argCon);
-            System.out.println(paraInfo.getName());
-            System.out.println(argCon.toSherrlocFmt(true));
+            System.err.println(paraInfo.getName());
+            System.err.println(argCon.toSherrlocFmt(true));
         }
         // String rtnTypeName = exceptionSym.returnType.name;
         // env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));

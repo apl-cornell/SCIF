@@ -428,7 +428,7 @@ public class Utils {
             return null;
         }
         if (DEBUG) {
-            System.out.println(s);
+            System.err.println(s);
         }
 
         //if (true) return s;
@@ -480,7 +480,7 @@ public class Utils {
             sherrloc.diagnostic.explanation.Explanation exp, boolean DEBUG) {
         String s = exp.toConsoleStringWithExp();
         if (DEBUG) {
-            System.out.println(s + "#" + exp.getWeight());
+            System.err.println(s + "#" + exp.getWeight());
         }
 
         //if (true) return s;
@@ -522,7 +522,7 @@ public class Utils {
         SourceFile program = programMap.get(contractName);
 
         String rtn =
-                program.getSourceFileId() + "(" + slin + "," + scol + "): " + explanation + ".\n";
+                program.getSourceFileFullName() + "(" + slin + "," + scol + "): " + "\n" + explanation + ".\n";
         rtn += program.getSourceCodeLine(lin - 1) + "\n";
         for (int i = 1; i < col; ++i) {
             rtn += " ";
