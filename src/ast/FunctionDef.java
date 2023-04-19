@@ -34,7 +34,8 @@ public class FunctionDef extends FunctionSig {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        env.setCurSymTab(new SymTab(env.curSymTab()));
+        //env.setCurSymTab(new SymTab(env.curSymTab()));
+        env.enterNewScope();
         // add args to local sym;
         String funcName = this.name;
         logger.debug("func: " + funcName);
@@ -69,7 +70,8 @@ public class FunctionDef extends FunctionSig {
                 stmt.ntcGenCons(env, now);
             }
         }
-        env.setCurSymTab(env.curSymTab().getParent());
+        //env.setCurSymTab(env.curSymTab().getParent());
+        env.exitNewScope();
         return now;
     }
 

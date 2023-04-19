@@ -33,15 +33,26 @@ public class NTCEnv {
         globalSymTab = curSymTab;
     }
 
-    public void setCurSymTab(SymTab curSymTab) {
+    private void setCurSymTab(SymTab curSymTab) {
         this.curSymTab = curSymTab;
+    }
+
+    public void initCurSymTab() {
+        // this.globalSymTab = globalSymTab;
+        this.curSymTab = globalSymTab;
+    }
+    public void enterNewScope() {
+        curSymTab = new SymTab(curSymTab);
+    }
+    public void exitNewScope() {
+        curSymTab = curSymTab.getParent();
     }
 
     public void setCurContractSym(ContractSym curContractSym) {
         this.curContractSym = curContractSym;
     }
 
-    public VarSym toVarSym(String varName, LabeledType labeledType, boolean isConst, boolean isFinal, boolean isBuiltIn,
+    public VarSym newVarSym(String varName, LabeledType labeledType, boolean isConst, boolean isFinal, boolean isBuiltIn,
             CodeLocation location, ScopeContext context) {
         TypeSym typeSym = toTypeSym(labeledType.type(), context);
         if (typeSym == null) {
@@ -64,7 +75,9 @@ public class NTCEnv {
         } else {
             if (astType instanceof DepMap) {
                 DepMap depMap = (DepMap) astType;
-                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType, defContext), depMap.keyName(), toTypeSym(depMap.valueType, defContext), defContext, new ScopeContext(depMap, defContext));
+                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType, defContext), depMap.keyName(), toTypeSym(depMap.valueType, defContext),
+                        newLabel(depMap.valueLabel()),
+                        defContext, new ScopeContext(depMap, defContext));
             } else if (astType instanceof Map) {
                 Map map = (Map) astType;
                 typeSym = new MapTypeSym(toTypeSym(map.keyType, defContext), toTypeSym(map.valueType, defContext), defContext);
@@ -160,7 +173,7 @@ public class NTCEnv {
         globalSymTab.add(contractName, contractSym);
     }
 
-    public Sym toExceptionType(String exceptionName, Arguments arguments, ScopeContext parent) {
+    public Sym newExceptionType(String exceptionName, Arguments arguments, ScopeContext parent) {
         Sym sym = curSymTab.lookup(exceptionName);
         if (sym != null) {
             if (sym instanceof TypeSym) {
@@ -173,7 +186,7 @@ public class NTCEnv {
         return new ExceptionTypeSym(exceptionName, memberList, parent);
     }
 
-    public ExceptionTypeSym toExceptionTypeSym(Type t) {
+    public ExceptionTypeSym getExceptionTypeSym(Type t) {
         return (ExceptionTypeSym) getCurSym(t.name());
     }
 
@@ -205,15 +218,15 @@ public class NTCEnv {
         return curSymTab;
     }
 
-    public Label toLabel(IfLabel ifl) {
+    public Label newLabel(IfLabel ifl) {
         if (ifl instanceof PrimitiveIfLabel) {
             VarSym label = (VarSym) curSymTab.lookup(((PrimitiveIfLabel) ifl).value().id);
             if (label == null) return null;
             return new PrimitiveLabel(label, ifl.getLocation());
         } else if (ifl instanceof ComplexIfLabel) {
-            return new ComplexLabel(toLabel(((ComplexIfLabel) ifl).getLeft()),
+            return new ComplexLabel(newLabel(((ComplexIfLabel) ifl).getLeft()),
                     ((ComplexIfLabel) ifl).getOp(),
-                    toLabel(((ComplexIfLabel) ifl).getRight()),
+                    newLabel(((ComplexIfLabel) ifl).getRight()),
                     ifl.getLocation());
         } else {
             throw new RuntimeException();

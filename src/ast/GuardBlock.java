@@ -25,12 +25,14 @@ public class GuardBlock extends Statement {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
-        env.setCurSymTab(new SymTab(env.curSymTab()));
+
+        env.enterNewScope();
         ScopeContext rtn = null;
         for (Statement s : body) {
             rtn = s.ntcGenCons(env, now);
         }
-        env.setCurSymTab(env.curSymTab().getParent());
+        env.exitNewScope();
+
         return now;
     }
 
@@ -49,7 +51,7 @@ public class GuardBlock extends Statement {
 
         // env.prevContext.lambda = newLockLabel;
 
-        Label label = env.curContractSym().toLabel(l);
+        Label label = env.curContractSym().newLabel(l);
         String guardLabel = label.toSHErrLocFmt();
 
         env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, curContext.lambda),

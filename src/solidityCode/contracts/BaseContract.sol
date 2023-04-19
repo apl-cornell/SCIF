@@ -27,14 +27,15 @@ abstract contract BaseContract {
         trustees.pop();
         trusteeIndex[trustee] = 0;
     }
+    function ifTrust(address a, address b) internal virtual returns (bool);
 
-    function ifTrust(address a, address b) public virtual returns (bool);
-    function ifTrust(address a, address b, address[] calldata proof) public virtual returns (bool);
+    function ifTrust(address trustee) public virtu  al returns (bool);
+    //function ifTrust(address a, address b, address[] calldata proof) public virtual returns (bool);
     function ifDTrust(address trustee) public view virtual returns (bool);
     function getDTrustList() public view virtual returns (address[] memory);
 
-    function setTrust(address trustee) public virtual;
-    function revokeTrust(address trustee) public virtual;
+    //function setTrust(address trustee) public virtual;
+    //function revokeTrust(address trustee) public virtual;
 
     // function lock(Label calldata l) public virtual returns (bool);
     // function unlock(Label calldata l) public virtual returns (bool);

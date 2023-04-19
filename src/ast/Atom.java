@@ -35,7 +35,7 @@ public class Atom extends Statement {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
-        env.setCurSymTab(new SymTab(env.curSymTab()));
+        env.enterNewScope();
         ScopeContext rtn = null;
 
         // ScopeContext tryclause = new ScopeContext(this, now);
@@ -43,7 +43,7 @@ public class Atom extends Statement {
 
         //TODO: inc scope layer
         for (ExceptHandler h : handlers) {
-            ExceptionTypeSym t = env.toExceptionTypeSym(h.type());
+            ExceptionTypeSym t = env.getExceptionTypeSym(h.type());
             assert t != null;
             now.addException(t, false);
         }
@@ -51,7 +51,7 @@ public class Atom extends Statement {
         for (Statement s : body) {
             tmp = s.ntcGenCons(env, now);
         }
-        env.setCurSymTab(env.curSymTab().getParent());
+        env.exitNewScope();
 
         for (ExceptHandler h : handlers) {
             tmp = h.ntcGenCons(env, parent);

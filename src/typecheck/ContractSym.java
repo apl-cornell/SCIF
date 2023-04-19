@@ -38,11 +38,8 @@ public class ContractSym extends TypeSym {
         assumptions = new ArrayList<>();
     }
 
-    public TypeSym toType(String typeName) {
+    public TypeSym getTypeSym(String typeName) {
         Sym sym = symTab.lookup(typeName);
-        if (sym == null) {
-            return null;
-        }
         if (sym instanceof TypeSym) {
             return (TypeSym) sym;
         }
@@ -66,6 +63,10 @@ public class ContractSym extends TypeSym {
         return new StructTypeSym(typeName, memberList, astNode.getScopeContext());
     }
 
+    /**
+        Look up a type symbol.
+        If there is no such a symbol, create one with the given defining scope.
+     */
     public TypeSym toTypeSym(ast.Type astType, ScopeContext defContext) {
         if (astType == null) {
             return new BuiltinTypeSym("void");
@@ -77,11 +78,29 @@ public class ContractSym extends TypeSym {
         if (s instanceof TypeSym) {
             typeSym = (TypeSym) s;
         } else {
-            if (astType instanceof DepMap) {
-                DepMap depMap = (DepMap) astType;
-                typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType, defContext), depMap.keyName(), toTypeSym(depMap.valueType, defContext), defContext, new ScopeContext(depMap, defContext));
-            } else if (astType instanceof Map) {
-                Map map = (Map) astType;
+            if (astType instanceof DepMap depMap) {
+                // map(keyType keyName(), valueType{valueLabel()})
+                ScopeContext depMapScope = new ScopeContext(depMap, defContext);
+                TypeSym keyTypeSym = toTypeSym(depMap.keyType, depMapScope);
+
+                // create a variable keyType keyName() in the new scope
+                symTab = new SymTab(symTab);
+                VarSym keyNameVar = newVarSym(depMap.keyName(), depMap.labeledKeyType(),
+                        false, true, false,
+                        depMap.keyType.getLocation(), depMapScope);
+                addVar(depMap.keyName(), keyNameVar);
+
+                Label valueLabel = newLabel(depMap.valueLabel());
+
+                TypeSym valueTypeSym = toTypeSym(depMap.valueType, depMapScope);
+                assert valueLabel != null;
+                typeSym = new DepMapTypeSym(keyTypeSym, depMap.keyName(),
+                        valueTypeSym,
+                        valueLabel,
+                        defContext, depMapScope);
+
+                symTab = symTab.parent;
+            } else if (astType instanceof Map map) {
                 typeSym = new MapTypeSym(toTypeSym(map.keyType, defContext), toTypeSym(map.valueType, defContext), defContext);
             }
 
@@ -90,29 +109,28 @@ public class ContractSym extends TypeSym {
         return typeSym;
     }
 
-
-    public VarSym toVarSym(String localName, ast.LabeledType astType, boolean isStatic, boolean isFinal, boolean isBuiltIn,
+    public VarSym newVarSym(String localName, ast.LabeledType astType, boolean isStatic, boolean isFinal, boolean isBuiltIn,
             CodeLocation loc, ScopeContext defContext) {
         System.err.println("toVarSym: " + localName + " " + astType.type().name());
         TypeSym typeSym = toTypeSym(astType.type(), defContext);
         System.err.println("toVarSym: " + localName + " " + typeSym);
         Label ifl;
-        ifl = toLabel(astType.label());
+        ifl = newLabel(astType.label());
         return new VarSym(localName, typeSym, ifl, loc, defContext, isStatic, isFinal, isBuiltIn);
     }
 
-    public Label toLabel(IfLabel ifl) {
+    public Label newLabel(IfLabel ifl) {
         if (ifl instanceof PrimitiveIfLabel) {
             VarSym label = (VarSym) lookupSym(((PrimitiveIfLabel) ifl).value().id);
             if (label == null) return null;
             return new PrimitiveLabel(label, ifl.getLocation());
         } else if (ifl instanceof ComplexIfLabel) {
-            return new ComplexLabel(toLabel(((ComplexIfLabel) ifl).getLeft()),
+            return new ComplexLabel(newLabel(((ComplexIfLabel) ifl).getLeft()),
                     ((ComplexIfLabel) ifl).getOp(),
-                    toLabel(((ComplexIfLabel) ifl).getRight()),
+                    newLabel(((ComplexIfLabel) ifl).getRight()),
                     ifl.getLocation());
         } else {
-            throw new RuntimeException();
+            throw new RuntimeException("Unable to resolve the label: " + ifl);
         }
     }
 
@@ -153,7 +171,6 @@ public class ContractSym extends TypeSym {
             return null;
         }
     }
-
 
     public String getLabelNameContract() {
         return Utils.getLabelNameContract(getContractNode().getScopeContext());

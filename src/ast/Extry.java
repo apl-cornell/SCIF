@@ -19,20 +19,21 @@ public class Extry extends Try {
         // must contain at least one Statement
 
         ScopeContext now = new ScopeContext(this, parent);
-        env.setCurSymTab(new SymTab(env.curSymTab()));
+        env.enterNewScope();
         ScopeContext rtn = null;
 
         // ScopeContext tryclause = new ScopeContext(this, now);
         ScopeContext tmp;
 
         for (ExceptHandler h : handlers) {
-            now.addException(env.toExceptionTypeSym(h.type()), true);
+            now.addException(env.getExceptionTypeSym(h.type()), true);
         }
 
         for (Statement s : body) {
             tmp = s.ntcGenCons(env, now);
         }
-        env.setCurSymTab(env.curSymTab().getParent());
+
+        env.exitNewScope();
 
         for (ExceptHandler h : handlers) {
             tmp = h.ntcGenCons(env, parent);

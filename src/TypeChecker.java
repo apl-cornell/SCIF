@@ -107,22 +107,22 @@ public class TypeChecker {
         }
 
         // Add built-ins and Collect global info
-        NTCEnv NTCenv = new NTCEnv(null);
+        NTCEnv ntcEnv = new NTCEnv(null);
         for (SourceFile root : roots) {
-            NTCenv.addSourceFile(root.getContractName(), root);
+            ntcEnv.addSourceFile(root.getContractName(), root);
             root.addBuiltIns();
             root.passScopeContext(null);
-            if (!root.ntcGlobalInfo(NTCenv, null)) {
+            if (!root.ntcGlobalInfo(ntcEnv, null)) {
                 // doesn't typecheck
                 return null;
             }
         }
 
-        logger.debug("Current Contracts: " + NTCenv.globalSymTab().getTypeSet());
+        logger.debug("Current Contracts: " + ntcEnv.globalSymTab().getTypeSet());
 
         // Generate constraints
-        for (Node root : roots) {
-            root.ntcGenCons(NTCenv, null);
+        for (SourceFile root : roots) {
+            root.ntcGenCons(ntcEnv, null);
         }
 
         // Check using SHErrLoc and get a solution
@@ -130,13 +130,13 @@ public class TypeChecker {
         // constructors: all types
         // assumptions: none or relations between types
         // constraints
-        if (!Utils.writeCons2File(NTCenv.getTypeSet(), NTCenv.getTypeRelationCons(), NTCenv.cons(),
+        if (!Utils.writeCons2File(ntcEnv.getTypeSet(), ntcEnv.getTypeRelationCons(), ntcEnv.cons(),
                 outputFile, false)) {
             return roots;
         }
         boolean result = false;
         try {
-            result = runSLC(NTCenv.programMap(), outputFile.getAbsolutePath(), DEBUG);
+            result = runSLC(ntcEnv.programMap(), outputFile.getAbsolutePath(), DEBUG);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

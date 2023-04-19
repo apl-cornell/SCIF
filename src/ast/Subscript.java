@@ -85,12 +85,12 @@ public class Subscript extends TrailerExpr {
 
 
         // String ifNameRtnLock = "";
-        if (valueVarSym.typeSym instanceof DepMapTypeSym) {
+        if (valueVarSym.typeSym instanceof DepMapTypeSym depMapTypeSym) {
             // value[index] where value is of dependent map type
             // precondition: the type of index and value match; index is a final address/contract or a principal
             // the result value of this expression has the label dependent to index
 
-            DepMapTypeSym typeSym = (DepMapTypeSym) valueVarSym.typeSym;
+            // DepMapTypeSym typeSym = (DepMapTypeSym) valueVarSym.typeSym;
             VarSym indexVarSym = index.getVarInfo(env, tail_position);
             logger.debug("subscript/DepMap:");
             logger.debug("lookup at: " + index.toString());
@@ -99,8 +99,11 @@ public class Subscript extends TrailerExpr {
 
             if (indexVarSym.isPrincipalVar()) {
                 logger.debug("typename {} to {}", valueVarSym.typeSym.getName(), ifNameIndex);
-                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(typeSym.key().toSHErrLocFmt(),
+                System.err.println("typename " + depMapTypeSym.key().toSHErrLocFmt() + " to " + ifNameIndex);
+
+                String ifDepMapValue = depMapTypeSym.label().toSHErrLocFmt(depMapTypeSym.key().toSHErrLocFmt(),
                         ifNameIndex);
+                System.err.println("DepMapValue: " + ifDepMapValue + " - " + depMapTypeSym.key().toSHErrLocFmt() + "/" + ifNameIndex);
 
                 env.cons.add(
                         new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue),
@@ -132,15 +135,15 @@ public class Subscript extends TrailerExpr {
         VarSym valueVarSym = value.getVarInfo(env, false);
         String ifNameValue = valueVarSym.labelNameSLC();
         String ifNameRtn = ifNameValue + "." + "Subscript" + location.toString();
-        if (valueVarSym.typeSym instanceof DepMapTypeSym) {
-            assert false;
+        if (valueVarSym.typeSym instanceof DepMapTypeSym depMapTypeSym) {
+            // check if the index value is a principal
             VarSym indexVarSym = index.getVarInfo(env, tail_position);
             String ifNameIndex = indexVarSym.toSHErrLocFmt();
-            if (indexVarSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)) {
+            if (indexVarSym.isPrincipalVar()) {
 
-                TypeSym rtnTypeSym = ((DepMapTypeSym) valueVarSym.typeSym).valueType;
+                TypeSym rtnTypeSym = depMapTypeSym.valueType;
                 rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
-                        valueVarSym.defContext(), false, false, false);
+                        rtnTypeSym.defContext(), false, false, false);
 
 //                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(valueVarSym.typeSym.name(),
 //                        ifNameIndex);

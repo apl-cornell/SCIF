@@ -129,7 +129,7 @@ public class FunctionSig extends TopLayerNode {
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         SymTab contractSymTab = env.curSymTab();
-        env.setCurSymTab(new SymTab(env.curSymTab()));
+        env.enterNewScope();
         ScopeContext now = new ScopeContext(this, parent);
         addBuiltInVars(env.curSymTab(), now);
         VarSym sender = (VarSym) env.getCurSym(typecheck.Utils.LABEL_SENDER);
@@ -138,7 +138,7 @@ public class FunctionSig extends TopLayerNode {
         HashMap<ExceptionTypeSym, String> exceptions = new HashMap<>();
         for (LabeledType t : exceptionList) {
             // t.setContractName(env.curContractSym().getName());
-            ExceptionTypeSym t1 = env.toExceptionTypeSym(t.type());
+            ExceptionTypeSym t1 = env.getExceptionTypeSym(t.type());
             assert t1 != null;
             // System.err.println("add func exp: " +  t1.name);
             // ExceptionTypeSym exceptionType = env.get(t);
@@ -147,14 +147,14 @@ public class FunctionSig extends TopLayerNode {
         System.err.println(((LabeledType) rtn).label());
         contractSymTab.add(name,
                 new FuncSym(name,
-                        env.toLabel(funcLabels.begin_pc),
-                        env.toLabel(funcLabels.to_pc),
-                        env.toLabel(funcLabels.gamma_label),
+                        env.newLabel(funcLabels.begin_pc),
+                        env.newLabel(funcLabels.to_pc),
+                        env.newLabel(funcLabels.gamma_label),
                         argsInfo, env.toTypeSym(rtn.type(), now),
-                        env.toLabel(((LabeledType) rtn).label()),
+                        env.newLabel(((LabeledType) rtn).label()),
                         exceptions,
                         parent, sender, location));
-        env.setCurSymTab(env.curSymTab().getParent());
+        env.exitNewScope();
         return true;
 
     }
@@ -168,7 +168,7 @@ public class FunctionSig extends TopLayerNode {
         ArrayList<VarSym> argsInfo = args.parseArgs(contractSym);
         Label ifl = null;
         if (rtn instanceof LabeledType) {
-            ifl = contractSym.toLabel(((LabeledType) rtn).label());
+            ifl = contractSym.newLabel(((LabeledType) rtn).label());
         }
         Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
         for (LabeledType t : exceptionList) {
@@ -183,9 +183,9 @@ public class FunctionSig extends TopLayerNode {
         }
         realContractSymTab.add(name,
                 new FuncSym(name,
-                        contractSym.toLabel(funcLabels.begin_pc),
-                        contractSym.toLabel(funcLabels.to_pc),
-                        contractSym.toLabel(funcLabels.gamma_label),
+                        contractSym.newLabel(funcLabels.begin_pc),
+                        contractSym.newLabel(funcLabels.to_pc),
+                        contractSym.newLabel(funcLabels.gamma_label),
                         argsInfo, contractSym.toTypeSym(rtn.type(), scopeContext), ifl, exceptions,
                         contractSym.getContractNode().scopeContext, sender, location));
         contractSym.symTab = contractSym.symTab.getParent();

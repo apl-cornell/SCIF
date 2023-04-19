@@ -66,9 +66,10 @@ public class Contract extends Node {
 
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        SymTab curSymTab = new SymTab(env.curSymTab());
-        Utils.addBuiltInTypes(curSymTab);
-        env.setCurSymTab(curSymTab);
+        // SymTab curSymTab = new SymTab(env.curSymTab());
+        env.enterNewScope();
+        Utils.addBuiltInTypes(env.curSymTab());
+        // env.initSymTab(curSymTab);
         ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), new ArrayList<>(), this);
         env.addGlobalSym(contractName, contractSym);
         env.setCurContractSym(contractSym);
@@ -92,7 +93,7 @@ public class Contract extends Node {
             }
         }
 
-        env.setCurSymTab(env.curSymTab().getParent());
+        env.exitNewScope();
         return true;
     }
 

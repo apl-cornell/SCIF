@@ -21,7 +21,7 @@ public class ExceptionDef extends TopLayerNode {
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         // exceptionType.setContractName(env.curContractSym().getName());
         env.globalSymTab().add(exceptionName,
-                env.toExceptionType(exceptionName, arguments, parent));
+                env.newExceptionType(exceptionName, arguments, parent));
         return true;
     }
 

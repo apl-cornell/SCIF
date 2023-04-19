@@ -23,7 +23,10 @@ public abstract class Node {
     public CodeLocation getLocation() {
         return location;
     }
-    
+
+    /**
+     * Represent the scope of where the current node is defined
+     */
     ScopeContext scopeContext;
 
     public void setLoc(CodeLocation location) {

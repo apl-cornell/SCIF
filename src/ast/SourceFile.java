@@ -90,12 +90,15 @@ public class SourceFile extends Node {
         return contract.ntcInherit(graph);
     }
 
+    /**
+     *  Generate constraints for regular typechecking in the current source file.
+     */
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         logger.debug("contract: " + contract.contractName + "\n" + env.getContract(
                 contract.contractName));
         env.setGlobalSymTab(env.getContract(contract.contractName).symTab);
-        env.setCurSymTab(env.globalSymTab());
+        env.initCurSymTab();
         contract.ntcGenCons(env, now);
         return now;
     }
@@ -109,7 +112,7 @@ public class SourceFile extends Node {
             }
         }
         // env.setGlobalSymTab(new SymTab());
-        env.setCurSymTab(env.globalSymTab());
+        env.initCurSymTab();
         // Utils.addBuiltInASTNode(env.globalSymTab, contract.trustSetting);
         if (!contract.ntcGlobalInfo(env, now)) {
             logger.debug("GlobalInfo failed with: " + contract);

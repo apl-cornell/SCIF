@@ -2,19 +2,23 @@ package ast;
 
 import java.util.ArrayList;
 import typecheck.DepMapTypeSym;
+import typecheck.Label;
 import typecheck.MapTypeSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.SymTab;
 import typecheck.TypeSym;
+import typecheck.Utils;
 import typecheck.VarSym;
 
 public class DepMap extends Map {
     final private String keyName;
+    final private LabeledType labeledKeyType;
     final private IfLabel valueLabel;
     public DepMap(Type keyType, String keyName, LabeledType valueType) {
         super(keyType, valueType.type());
         this.keyName = keyName;
+        this.labeledKeyType = new LabeledType(keyType, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)));
         this.valueLabel = valueType.label();
     }
 
@@ -49,12 +53,11 @@ public class DepMap extends Map {
                 true,
                 true
         );
-        env.setCurSymTab(new SymTab(env.curSymTab()));
+        env.enterNewScope();
         env.addSym(keyName, keyVarSym);
         valueType.ntcGenCons(env, now);
 
-        env.setCurSymTab(env.curSymTab().getParent());
-
+        env.exitNewScope();
         DepMapTypeSym typeSym = (DepMapTypeSym) env.toTypeSym(this, scopeContext);
         assert typeSym != null : name;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
@@ -63,5 +66,13 @@ public class DepMap extends Map {
 
     public String keyName() {
         return keyName;
+    }
+
+    public LabeledType labeledKeyType() {
+        return labeledKeyType;
+    }
+
+    public IfLabel valueLabel() {
+        return valueLabel;
     }
 }

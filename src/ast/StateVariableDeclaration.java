@@ -70,7 +70,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         // ScopeContext tgt = new ScopeContext(name, now);
 
         String vname = name.id;
-        VarSym varSym = env.toVarSym(vname, type, isStatic, isFinal, isBuiltIn, location, parent);
+        VarSym varSym = env.newVarSym(vname, type, isStatic, isFinal, isBuiltIn, location, parent);
         // assert varSym.ifl != null;
         env.globalSymTab().add(vname, varSym);
         return true;
@@ -100,9 +100,9 @@ public class StateVariableDeclaration extends TopLayerNode {
         CodeLocation loc = location;
         System.err.println(id + " " + type.label());
         VarSym varSym =
-                contractSym.toVarSym(id, type, isStatic, isFinal, isBuiltIn, loc, contractSym.defContext());
+                contractSym.newVarSym(id, type, isStatic, isFinal, isBuiltIn, loc, contractSym.defContext());
         contractSym.addVar(id, varSym);
-        varSym.setLabel(contractSym.toLabel(type.label()));
+        varSym.setLabel(contractSym.newLabel(type.label()));
         assert varSym.ifl != null;
     }
 

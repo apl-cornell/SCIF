@@ -58,9 +58,9 @@ public class TrustConstraint extends TopLayerNode {
     }
 
     public Assumption toAssumption(ContractSym contractSym) {
-        return new Assumption((PrimitiveLabel) contractSym.toLabel(lhs),
+        return new Assumption((PrimitiveLabel) contractSym.newLabel(lhs),
                 optor,
-                (PrimitiveLabel) contractSym.toLabel(rhs),
+                (PrimitiveLabel) contractSym.newLabel(rhs),
                 location);
     }
 }

@@ -1,5 +1,7 @@
 package typecheck;
 
+import ast.LabeledType;
+
 /**
  *  Represent a dependant map type.
  *  A dependant map is written as map(x: t0, t1{l}),
@@ -12,7 +14,7 @@ public class DepMapTypeSym extends MapTypeSym {
     private VarSym key;
     private Label valueLabel;
 
-    public DepMapTypeSym(TypeSym keyType, String keyName, TypeSym valueType, ScopeContext defContext, ScopeContext newContext) {
+    public DepMapTypeSym(TypeSym keyType, String keyName, TypeSym valueType, Label valueLabel, ScopeContext defContext, ScopeContext newContext) {
         super(keyType, valueType, defContext);
         key = new VarSym(
                 keyName,
@@ -24,6 +26,7 @@ public class DepMapTypeSym extends MapTypeSym {
                 true,
                 true
         );
+        this.valueLabel = valueLabel;
     }
 
     public DepMapTypeSym(DepMapTypeSym depMapTypeInfo) {
@@ -34,5 +37,8 @@ public class DepMapTypeSym extends MapTypeSym {
 
     public VarSym key() {
         return key;
+    }
+    public Label label() {
+        return valueLabel;
     }
 }

@@ -56,7 +56,7 @@ public class AnnAssign extends Statement {
         if (annotation != null) {
             ifl = annotation.label();
         }
-        return contractSym.toVarSym(((Name) target).id, annotation, isStatic, isFinal, isBuiltIn, location,
+        return contractSym.newVarSym(((Name) target).id, annotation, isStatic, isFinal, isBuiltIn, location,
                 scopeContext);
     }
 
@@ -69,7 +69,7 @@ public class AnnAssign extends Statement {
 
         String name = ((Name) target).id;
         env.globalSymTab().add(name,
-                env.toVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, tgt));
+                env.newVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, tgt));
         return true;
     }
 
@@ -78,7 +78,7 @@ public class AnnAssign extends Statement {
         ScopeContext now = new ScopeContext(this, parent);
         String name = ((Name) target).id;
         env.addSym(name,
-                new VarSym(env.toVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, now)));
+                new VarSym(env.newVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, now)));
         ScopeContext type = annotation.ntcGenCons(env, now);
         ScopeContext tgt = target.ntcGenCons(env, now);
 
@@ -106,7 +106,7 @@ public class AnnAssign extends Statement {
         String id = ((Name) target).id;
         logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
         CodeLocation loc = location;
-        varSym = env.curContractSym().toVarSym(id, annotation, isStatic, isFinal, isBuiltIn, loc,
+        varSym = env.curContractSym().newVarSym(id, annotation, isStatic, isFinal, isBuiltIn, loc,
                 scopeContext);
         env.addVar(id, varSym);
         if (annotation != null) {

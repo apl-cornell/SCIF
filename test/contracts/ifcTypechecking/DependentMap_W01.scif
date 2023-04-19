@@ -5,12 +5,7 @@ contract DependentMap {
 
 
     @public
-    void{y} foo{y}(final address{TOP} y, uint{BOT} amount) {
+    void{y} foo{y}(final address{this} y, uint{BOT} amount) {
         balances[y] = amount;
-    }
-
-    @public
-    void bar{sender}() {
-//        foo(sender);
     }
 }

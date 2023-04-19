@@ -23,9 +23,9 @@ public class ExceptHandler extends Statement {
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        env.setCurSymTab(new SymTab(env.curSymTab()));
+        env.enterNewScope();
 
-        VarSym var = env.toVarSym(name, labeledType, true, true, true, location, now);
+        VarSym var = env.newVarSym(name, labeledType, true, true, true, location, now);
         if (var == null) {
             System.err.println("Exception type " + labeledType.type().name() + " not found");
             throw new RuntimeException();
@@ -35,7 +35,7 @@ public class ExceptHandler extends Statement {
         for (Statement s : body) {
             ScopeContext tmp = s.ntcGenCons(env, now);
         }
-        env.setCurSymTab(env.curSymTab().getParent());
+        env.exitNewScope();
         return now;
     }
 
