@@ -3,9 +3,10 @@
 ROOT=`dirname $0`
 GRADLEW_NAME="gradlew"
 GRADLEW=${ROOT}/$GRADLEW_NAME
-ARGUMENTS=\""${array[*]}"\"
+ARGUMENTS="$*"
 echo $ARGUMENTS
-COMMAND="bash "${GRADLEW}" run --args=${ARGUMENTS} --quiet" 2> /dev/null
+${GRADLEW} run --args="$*" --quiet 2> /dev/null
 
-echo ${COMMAND}
-${COMMAND}
+# echo ${COMMAND}
+
+#${COMMAND}
