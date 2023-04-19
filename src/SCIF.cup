@@ -70,8 +70,8 @@ parser code {:
     }
 :};
 
-terminal String NAME;
-terminal NUMBER, STRING;
+terminal String NAME, STRING_LITERAL;
+terminal NUMBER;
 terminal FALSE, TRUE, NONE, ELLIPSIS;
 terminal AND, AS, ASSERT;
 terminal BREAK, CONTINUE;
@@ -91,10 +91,11 @@ terminal CONTRACT;
 terminal EQUALGREATER;
 terminal NEWLINE, EXTENDS;
 terminal FINAL, STATIC;
-terminal TRY, ATOM, CATCH, RESCUE, EXCEPTION, THROW, THROWS, ALL;
+terminal TRY, ATOMIC, CATCH, RESCUE, EXCEPTION, THROW, THROWS, ALL;
 terminal DELETE;
 terminal ERROR, CONSTRUCTOR;//, PERCENTEQUAL;
 terminal ASSUME;
+terminal REVERT;
 
 nonterminal SourceFile sourceCode;
 // nonterminal Interface interface;
@@ -126,7 +127,7 @@ nonterminal String ipt_as_names;
 nonterminal Statement assert_stmt, compound_stmt;
 nonterminal CallStatement call_stmt;
 nonterminal If if_stmt;
-nonterminal Statement try_stmt, atom_stmt;
+nonterminal Statement try_stmt, atomic_stmt;
 // nonterminal Statement while_stmt;
 nonterminal List<ExceptHandler> except_stmts, exceptall_stmts;
 nonterminal ExceptHandler except_clause, exceptall_clause;
@@ -181,6 +182,7 @@ nonterminal FunctionDef constructor;
 nonterminal EndorseStatement endorse_stmt;
 nonterminal EndorseIfStatement endorseIf_stmt;
 nonterminal Call call_expr;
+nonterminal Revert revert_stmt;
 
 precedence left OR;
 precedence left AND;
@@ -748,8 +750,9 @@ small_stmt ::=  assign_stmt:a {: RESULT = a; :}
     | dynamic_stmt:a {: RESULT = a; :}
     | excborder_stmt:a {: RESULT = a; :}
     | try_stmt:a {: RESULT = a; :}
-    | atom_stmt:a {: RESULT = a; :}
+    | atomic_stmt:a {: RESULT = a; :}
     | throw_stmt:a {: RESULT = a;:}
+    | revert_stmt:a {: RESULT = a;:}
 //    | endorse_stmt:a {:
 //        RESULT = a;
 //    :}
@@ -782,8 +785,8 @@ try_stmt ::= TRY:x suite:s except_stmts:es {:
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
-atom_stmt ::= ATOM:x suite:s exceptall_stmts:es {:
-        RESULT = new Atom(s, es);
+atomic_stmt ::= ATOMIC:x suite:s exceptall_stmts:es {:
+        RESULT = new Atomic(s, es);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
@@ -793,6 +796,11 @@ throw_stmt ::= THROW:x trailer_expr:e SEMI{:
         }
 
         RESULT = new Throw((Call)e);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :};
+
+revert_stmt ::= REVERT:x STRING_LITERAL:s SEMI{:
+        RESULT = new Revert((String)s);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
@@ -1152,14 +1160,14 @@ atom ::=
         RESULT = a;
     :}
     ;
-strings ::=
+/*strings ::=
     STRING:a {:
         RESULT = new Str((String)a);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}
+    :}*/
     /*| strings:a STRING:b {:
         RESULT = null; //TODO
-    :}*/;
+    :}*/
 
 // trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
 // subscript: test | [test] ':' [test] [sliceop]

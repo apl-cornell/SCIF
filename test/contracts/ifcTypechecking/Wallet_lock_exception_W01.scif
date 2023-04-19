@@ -1,29 +1,23 @@
-contract Wallet [this] {
-    map(address, uint) balances; //previously map(user: address, uint{user}) balances
-    uint highV;
+contract Wallet {
+    map(address, uint) balances;
     exception balanceNotEnough();
     exception transferFailure();
 
-//     *
-//     *  {BOT -> this; BOT} (t{BOT} name) return {value: this; end_pc: this}
-//     *  msg.sender: address{msg.sender}
-//     *  amount: uint{msg.sender}
-//     *
     @public
-    void withdraw{BOT -> this; this}(uint _amount) throws (balanceNotEnough, transferFailure) {
-        uint amount = endorse(_amount, BOT -> this);
+    void withdraw{any -> this; this}(uint _amount) throws (balanceNotEnough, transferFailure) {
+        uint amount = endorse(_amount, any -> this);
         if (balances[sender] >= amount) {
-            // pc: this join sender
-            atom {
-                send(sender, amount);
+            atomic {
+                if (_amount > 0) {
+                    send(sender, amount);
+                    revert "failure";
+                }
             } rescue (error e) {
+                // any
                 throw transferFailure();
             }
-            // balances[sender] = balances[sender] - amount;
-            highV = highV - amount;
-
+            balances[sender] = balances[sender] - amount;
         } else {
-            // pc: this join sender
             throw balanceNotEnough();
         }
     }

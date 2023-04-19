@@ -7,8 +7,8 @@ contract Wallet [this] {
 //     *  amount: uint{msg.sender}
 //     *
     @public
-    void withdraw{BOT -> this; this}(uint _amount) {
-        uint amount = endorse(_amount, BOT -> this);
+    void withdraw{any -> this; this}(uint _amount) {
+        uint amount = endorse(_amount, any -> this);
         send(sender, amount);
         highV = amount;
     }

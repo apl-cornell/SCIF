@@ -9,20 +9,19 @@ import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.PsiUnit;
 import typecheck.ScopeContext;
-import typecheck.SymTab;
 import typecheck.Utils;
 import typecheck.VisitEnv;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 
-public class Atom extends Statement {
+public class Atomic extends Statement {
 
     List<Statement> body;
     List<ExceptHandler> handlers;
 
     // ArrayList<Statement> orelse;
     // ArrayList<Statement> finalbody;
-    public Atom(List<Statement> body,
+    public Atomic(List<Statement> body,
             List<ExceptHandler> handlers) {//, ArrayList<Statement> orelse, ArrayList<Statement> finalbody) {
         this.body = body;
         this.handlers = handlers;

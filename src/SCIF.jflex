@@ -57,7 +57,7 @@ import java.util.HashMap;
         keywords.put("raise",   Integer.valueOf(sym.RAISE));
         keywords.put("return",  Integer.valueOf(sym.RETURN));
         keywords.put("try",     Integer.valueOf(sym.TRY));
-        keywords.put("atom",     Integer.valueOf(sym.ATOM));
+        keywords.put("atomic",     Integer.valueOf(sym.ATOMIC));
         // keywords.put("while",   Integer.valueOf(sym.WHILE));
         // keywords.put("with",    Integer.valueOf(sym.WITH));
         keywords.put("endorse", Integer.valueOf(sym.ENDORSE));
@@ -75,6 +75,7 @@ import java.util.HashMap;
         keywords.put("static", Integer.valueOf(sym.STATIC));
         keywords.put("throws", Integer.valueOf(sym.THROWS));
         keywords.put("throw", Integer.valueOf(sym.THROW));
+        keywords.put("revert", Integer.valueOf(sym.REVERT));
         keywords.put("endorseIf", Integer.valueOf(sym.ENDORSEIF));
         keywords.put("catch", Integer.valueOf(sym.CATCH));
         keywords.put("rescue", Integer.valueOf(sym.RESCUE));
@@ -136,7 +137,11 @@ imagnumber =  ({floatnumber} | {digitpart}) ("j" | "J")
 
 invalid = "$" | "?" | "`"
 
+StringCharacter = [^\r\n\"\\]
+LineTerminator = \r|\n|\r\n
 
+
+%state STRING
 
 %%
 
@@ -146,14 +151,11 @@ invalid = "$" | "?" | "`"
             Integer i = keywords.get(yytext());
             if (i == null) return id();
             else return key(i.intValue());
-        }
-//    "\""    {
-//            yybegin(STRING);
-//            sb.setlength(0);
-//        }
+      }
+
 
     "("     {
-            return op(sym.LPAR); 
+            return op(sym.LPAR);
         }
     ")"     {
             return op(sym.RPAR); 
@@ -208,6 +210,8 @@ invalid = "$" | "?" | "`"
     //"<<="   { return op(sym.LEFTSHIFTEQUAL); }
     //">>="   { return op(sym.RIGHTSHIFTEQUAL); }
     "=>"    { return op(sym.EQUALGREATER); }
+    /* string literal */
+    \"      { yybegin(STRING); sb.setLength(0); }
 
     {integer}   {
         return op(sym.NUMBER, yytext());
@@ -226,11 +230,29 @@ invalid = "$" | "?" | "`"
     }
 }
 
+<STRING> {
+    \"                             { yybegin(YYINITIAL); return op(STRING_LITERAL, sb.toString()); }
+
+    {StringCharacter}+             { sb.append( yytext() ); }
+
+    /* escape sequences */
+    "\\b"                          { sb.append( '\b' ); }
+    "\\t"                          { sb.append( '\t' ); }
+    "\\n"                          { sb.append( '\n' ); }
+    "\\f"                          { sb.append( '\f' ); }
+    "\\r"                          { sb.append( '\r' ); }
+    "\\\""                         { sb.append( '\"' ); }
+    "\\'"                          { sb.append( '\'' ); }
+    "\\\\"                         { sb.append( '\\' ); }
+    \\[0-3]?{octdigit}?{octdigit}  { char val = (char) Integer.parseInt(yytext().substring(1),8);
+                                                           sb.append( val ); }
+
+    /* error cases */
+    \\.                            { throw new RuntimeException("Illegal escape sequence \""+yytext()+"\""); }
+    {LineTerminator}               { throw new RuntimeException("Unterminated string at end of line"); }
+}
+
 
 [^]         {
     return op(sym.ERROR, "Unrecognizable char: " + yytext());
 }
-
-//<STRING> {
-//
-//}

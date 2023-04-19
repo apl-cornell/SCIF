@@ -5,7 +5,7 @@ contract DependentMap {
 
 
     @public
-    void{y} foo{y}(final address{this} y, uint{BOT} amount) {
+    void{y} foo{y}(final address{this} y, uint{any} amount) {
         balances[y] = amount;
     }
 }

@@ -25,7 +25,7 @@ public class Utils {
 
     //public static final String ENDORCE_FUNC_NAME = "endorce";
     public static final String LABEL_TOP = "TOP";
-    public static final String LABEL_BOTTOM = "BOT";
+    public static final String LABEL_BOTTOM = "any";
     public static final String LABEL_THIS = "this";
     public static final String LABEL_SENDER = "sender";
     public static final String DEAD = "---DEAD---";
@@ -233,10 +233,10 @@ public class Utils {
             Sym bot = null, top = null;
             if (!constructors.isEmpty()) {
                 for (Sym principal : constructors) {
-                    if (principal.getName().equals("BOT")) {
+                    if (principal.getName().equals(LABEL_BOTTOM)) {
                         bot = principal;
                     }
-                    if (principal.getName().equals("TOP")) {
+                    if (principal.getName().equals(LABEL_TOP)) {
                         top = principal;
                     }
                     consFile.write("CONSTRUCTOR " + principal.toSHErrLocFmt() + " 0\n");
@@ -289,14 +289,14 @@ public class Utils {
                 return false;
             }
             //System.err.println("Writing the constraints of size " + env.cons.size());
-            if (!constructors.contains("BOT") && isIFC) {
-                constructors.add("BOT");
+            if (!constructors.contains(LABEL_BOTTOM) && isIFC) {
+                constructors.add(LABEL_BOTTOM);
             }
-            if (!constructors.contains("TOP") && isIFC) {
-                constructors.add("TOP");
+            if (!constructors.contains(LABEL_TOP) && isIFC) {
+                constructors.add(LABEL_TOP);
             }
-            if (!constructors.contains("this") && isIFC) {
-                constructors.add("this");
+            if (!constructors.contains(LABEL_THIS) && isIFC) {
+                constructors.add(LABEL_THIS);
             }
 
             if (!constructors.isEmpty()) {
@@ -310,10 +310,10 @@ public class Utils {
                 //consFile.write("%%\n");
                 if (isIFC) {
                     for (String x : constructors) {
-                        if (!x.equals("BOT") && !x.equals("TOP")) {
+                        if (!x.equals(LABEL_BOTTOM) && !x.equals(LABEL_TOP)) {
                             //          consFile.write("BOT" + " >= " + x + ";" + "\n");
                         }
-                        if (!x.equals("TOP")) {
+                        if (!x.equals(LABEL_TOP)) {
                             //          consFile.write("TOP" + " <= " + x + ";" + "\n");
                         }
                     }
