@@ -2,6 +2,8 @@ package ast;
 
 import compile.SolCode;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
@@ -19,6 +21,7 @@ public class Throw extends Statement {
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
+
         String exceptionName;
         ExceptionTypeSym exceptionSym;
         if (!(exception.value instanceof Name)) {
@@ -68,6 +71,7 @@ public class Throw extends Statement {
         for (int i = 0; i < exception.args.size(); ++i) {
             Expression arg = exception.args.get(i);
             TypeSym paraInfo = exceptionSym.parameters().get(i).typeSym;
+            assert !now.getSHErrLocName().startsWith("null");
             ScopeContext argContext = arg.ntcGenCons(env, now);
             String typeNameSLC = paraInfo.toSHErrLocFmt();
             Constraint argCon = argContext.genCons(typeNameSLC, Relation.GEQ, env, arg.location);
@@ -89,6 +93,13 @@ public class Throw extends Statement {
     @Override
     public void solidityCodeGen(SolCode code) {
         
+    }
+
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        rtn.add(exception);
+        return rtn;
     }
 
     @Override

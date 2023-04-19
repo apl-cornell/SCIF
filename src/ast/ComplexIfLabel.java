@@ -1,5 +1,7 @@
 package ast;
 
+import java.util.ArrayList;
+import java.util.List;
 import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
@@ -129,5 +131,12 @@ public class ComplexIfLabel extends IfLabel {
         left.ntcGenCons(env, parent);
         right.ntcGenCons(env, parent);
         return parent;
+    }
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        rtn.add(left);
+        rtn.add(right);
+        return rtn;
     }
 }

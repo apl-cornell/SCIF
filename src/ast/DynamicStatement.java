@@ -1,6 +1,8 @@
 package ast;
 
 import compile.SolCode;
+import java.util.ArrayList;
+import java.util.List;
 import typecheck.*;
 
 public class DynamicStatement extends Statement {
@@ -29,5 +31,12 @@ public class DynamicStatement extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         return null;
+    }
+
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        rtn.add(call);
+        return rtn;
     }
 }

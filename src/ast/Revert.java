@@ -1,6 +1,8 @@
 package ast;
 
 import compile.SolCode;
+import java.util.ArrayList;
+import java.util.List;
 import typecheck.Context;
 import typecheck.ContractSym;
 import typecheck.ExceptionTypeSym;
@@ -35,6 +37,12 @@ public class Revert extends Statement {
     @Override
     public void solidityCodeGen(SolCode code) {
         
+    }
+
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        return rtn;
     }
 
     @Override

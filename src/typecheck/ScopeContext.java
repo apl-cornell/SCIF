@@ -59,6 +59,8 @@ public class ScopeContext {
             localPostfix = "guardBlock" + cur.locToString();
         } else if (cur instanceof Try) {
             localPostfix = "try" + cur.locToString();
+        } else if (cur instanceof Atomic) {
+            localPostfix = "atomic" + cur.locToString();
         } else if (cur instanceof SourceFile) {
             localPostfix = ((SourceFile) cur).getSourceFileId();
         } else {
@@ -71,6 +73,7 @@ public class ScopeContext {
         if (parent != null) {
             return parent.getSHErrLocName() + "." + localPostfix;
         } else {
+            assert !localPostfix.equals("null");
             return localPostfix;
         }
     }
@@ -146,6 +149,7 @@ public class ScopeContext {
     }
 
     public Constraint genEqualCons(Sym sym, NTCEnv env, CodeLocation location, String explanation) {
+        assert !getSHErrLocName().startsWith("null") : getSHErrLocName();
         return new Constraint(new Inequality(getSHErrLocName(), CompareOperator.Eq, sym.toSHErrLocFmt()),
                 env.globalHypothesis(), location, env.curContractSym().getName(), explanation);
     }

@@ -31,4 +31,10 @@ public class Delete extends Statement {
     public void solidityCodeGen(SolCode code) {
 
     }
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        rtn.addAll(targets);
+        return rtn;
+    }
 }

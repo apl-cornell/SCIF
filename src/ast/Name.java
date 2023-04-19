@@ -1,5 +1,7 @@
 package ast;
 
+import java.util.ArrayList;
+import java.util.List;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -37,8 +39,13 @@ public class Name extends Variable {
             assert false;
             return null;
         }
-        assert false;
+        assert false : id;
         return null;
+    }
+
+    @Override
+    public List<Node> children() {
+        return new ArrayList<>();
     }
 
     @Override

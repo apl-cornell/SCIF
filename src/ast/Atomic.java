@@ -48,6 +48,7 @@ public class Atomic extends Statement {
         }
 
         for (Statement s : body) {
+            assert !now.getSHErrLocName().startsWith("null");
             tmp = s.ntcGenCons(env, now);
         }
         env.exitNewScope();

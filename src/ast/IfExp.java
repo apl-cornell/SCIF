@@ -1,5 +1,7 @@
 package ast;
 
+import java.util.ArrayList;
+import java.util.List;
 import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
@@ -32,5 +34,13 @@ public class IfExp extends Expression {
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         return null;
+    }
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        rtn.add(test);
+        rtn.add(body);
+        rtn.add(orelse);
+        return rtn;
     }
 }

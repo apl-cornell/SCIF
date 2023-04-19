@@ -105,6 +105,7 @@ public class ContractSym extends TypeSym {
             }
 
         }
+        assert typeSym != null;
         // System.err.println("[out]toTypeSym: " + typeSym.name);
         return typeSym;
     }

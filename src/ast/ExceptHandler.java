@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import java.util.ArrayList;
 import java.util.List;
 import typecheck.*;
 
@@ -44,6 +45,14 @@ public class ExceptHandler extends Statement {
 
     }
 
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        rtn.add(labeledType);
+        rtn.addAll(body);
+        return rtn;
+    }
+
     public String getHandlerPcLabelName() {
         return scopeContext.getSHErrLocName() + "." + "handlerPcLabelName" + location.toString();
     }
@@ -64,4 +73,6 @@ public class ExceptHandler extends Statement {
     public String name() {
         return name;
     }
+
+
 }

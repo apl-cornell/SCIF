@@ -51,9 +51,7 @@ public abstract class Node {
     /**
      * Return a list of AST nodes that are the current node's kids
      */
-    public List<Node> children() {
-        return new ArrayList<>();
-    }
+    public abstract List<Node> children();
 
     /**
      * set the scopeContext of the current node, and update children's scopeContext

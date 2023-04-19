@@ -47,6 +47,7 @@ public class FunctionDef extends FunctionSig {
         }
 
         ScopeContext now = new ScopeContext(this, parent, exceptionTypeSyms);
+        System.err.println("functiondef: " + funcName + " " + now.getSHErrLocName());
         // now.printExceptionSet();
 
         // add built-in vars

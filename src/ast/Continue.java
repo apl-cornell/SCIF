@@ -1,6 +1,8 @@
 package ast;
 
 import compile.SolCode;
+import java.util.ArrayList;
+import java.util.List;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.ScopeContext;
@@ -21,5 +23,10 @@ public class Continue extends Statement {
     @Override
     public void solidityCodeGen(SolCode code) {
 
+    }
+
+    @Override
+    public List<Node> children() {
+        return new ArrayList<>();
     }
 }

@@ -1,5 +1,6 @@
 package ast;
 
+import java.util.List;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -56,5 +57,12 @@ public class Dictmaker extends Expression {
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         return null;
+    }
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        rtn.addAll(keys);
+        rtn.addAll(values);
+        return rtn;
     }
 }

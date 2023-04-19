@@ -31,7 +31,6 @@ public class If extends Statement {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
-        env.enterNewScope();
         ScopeContext rtn = null;
 
         rtn = test.ntcGenCons(env, now);
@@ -39,9 +38,13 @@ public class If extends Statement {
         env.addCons(testCon);
         System.err.println(testCon.toSherrlocFmt(true));
 
+        env.enterNewScope();
         for (Statement s : body) {
+            assert !now.getSHErrLocName().startsWith("null");
             rtn = s.ntcGenCons(env, now);
         }
+        env.exitNewScope();
+        env.enterNewScope();
         for (Statement s : orelse) {
             rtn = s.ntcGenCons(env, now);
         }

@@ -1,6 +1,8 @@
 package ast;
 
 import compile.SolCode;
+import java.util.ArrayList;
+import java.util.List;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.ScopeContext;
@@ -21,5 +23,10 @@ public class Break extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         return null;
+    }
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        return rtn;
     }
 }

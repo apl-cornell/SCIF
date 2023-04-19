@@ -1,7 +1,9 @@
 package ast;
 
 import compile.SolCode;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import typecheck.ContractSym;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
@@ -28,6 +30,11 @@ public class ClassDef extends TopLayerNode {
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         return false;
+    }
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        return rtn;
     }
 
 //    @Override

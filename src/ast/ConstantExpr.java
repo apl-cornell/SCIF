@@ -1,5 +1,7 @@
 package ast;
 
+import java.util.ArrayList;
+import java.util.List;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -48,5 +50,10 @@ public class ConstantExpr extends Expression {
     public boolean typeMatch(Expression expression) {
         return expression instanceof ConstantExpr &&
                 value.equals(((ConstantExpr) expression).value);
+    }
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        return rtn;
     }
 }

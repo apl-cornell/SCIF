@@ -62,6 +62,13 @@ public class TrustSetting extends Node {
     }
 
     @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        rtn.addAll(trust_list);
+        return rtn;
+    }
+
+    @Override
     public String toString() {
         return genson.serialize(dynamicSystemOption) + "\n...";
     }

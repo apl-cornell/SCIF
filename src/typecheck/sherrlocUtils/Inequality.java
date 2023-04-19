@@ -9,6 +9,8 @@ public class Inequality {
     String lhs, rhs;
     Relation relation;
     public Inequality(String lhs, Relation relation, String rhs) {
+        assert !lhs.startsWith("null");
+        assert !rhs.startsWith("null");
         assert !lhs.equals("");
         assert !rhs.equals("");
         this.lhs = lhs;
@@ -16,6 +18,8 @@ public class Inequality {
         this.relation = relation;
     }
     public Inequality(String lhs, CompareOperator co, String rhs) {
+        assert !lhs.startsWith("null") : lhs;
+        assert !rhs.startsWith("null") : rhs;
         assert !lhs.equals("");
         assert !rhs.equals("");
         this.lhs = lhs;
@@ -29,10 +33,8 @@ public class Inequality {
     }
 
     public Inequality(String lhs, String rhs) {
-        if (lhs.equals("") || rhs.equals("")) {
-            // System.err.println(lhs + " | " + rhs);
-            int a = 1/0;
-        }
+        assert !lhs.startsWith("null");
+        assert !rhs.startsWith("null");
         this.lhs = lhs;
         this.rhs = rhs;
         this.relation = Relation.LEQ;

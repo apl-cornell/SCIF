@@ -1,5 +1,6 @@
 package ast;
 
+import java.util.ArrayList;
 import java.util.List;
 import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
@@ -26,7 +27,7 @@ public class LabeledType extends Expression {
 
     @Override
     public List<Node> children() {
-        List<Node> rtn = super.children();
+        List<Node> rtn = new ArrayList<>();
         rtn.add(type);
         rtn.add(ifl);
         return rtn;

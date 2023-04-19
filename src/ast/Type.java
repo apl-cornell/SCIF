@@ -1,5 +1,7 @@
 package ast;
 
+import java.util.ArrayList;
+import java.util.List;
 import typecheck.ExpOutcome;
 import typecheck.ScopeContext;
 import typecheck.NTCEnv;
@@ -55,4 +57,9 @@ public class Type extends Expression {
         return name.equals(Utils.VOID_TYPE);
     }
 
+    @Override
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
+        return rtn;
+    }
 }
