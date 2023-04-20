@@ -1,6 +1,7 @@
 package typecheck.sherrlocUtils;
 
 import typecheck.CodeLocation;
+import typecheck.Utils;
 
 public class Position {
     int beginLineNo = -1, beginColNo = -1;
@@ -21,6 +22,7 @@ public class Position {
     }
 
     public String toSherrlocFmt(String explanation, int weight) {
+
         String rtn = "[";
         //if (!snippet.equals("")) {
             rtn += "\"" + explanation + "\": ";
@@ -31,6 +33,7 @@ public class Position {
         rtn += "#" + weight;
         rtn += "]";
 
+        // assert !explanation.startsWith(Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION) || weight == 5 : rtn;
         return rtn;
     }
 

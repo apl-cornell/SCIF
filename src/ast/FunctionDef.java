@@ -120,8 +120,7 @@ public class FunctionDef extends FunctionSig {
         env.cons.add(
                 new Constraint(new Inequality(Utils.joinLabels(inLockName, outLockName), ifNameGamma),
                         env.hypothesis(), funcLabels.gamma_label.location, env.curContractSym().getName(),
-                        "This function does not maintain reentrancy locks as specified in signature",
-                        1));
+                        "This function does not maintain reentrancy locks as specified in signature"));
 
         HashMap<ExceptionTypeSym, PsiUnit> psi = new HashMap<>();
         for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {

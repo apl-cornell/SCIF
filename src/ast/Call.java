@@ -307,7 +307,7 @@ public class Call extends TrailerExpr {
                 new Inequality(Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
                         Relation.EQ, endContext.lambda), env.hypothesis(), location,
                 env.curContractSym().getName(),
-                "Calling this function does not respect static reentrancy locks"));
+                typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
 
         if (!tail_position) {
             env.cons.add(new Constraint(
