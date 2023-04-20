@@ -4,7 +4,7 @@ ROOT=`dirname $0`
 GRADLEW_NAME="gradlew"
 GRADLEW=${ROOT}/$GRADLEW_NAME
 ARGUMENTS="$*"
-echo $ARGUMENTS
+#echo $ARGUMENTS
 ${GRADLEW} run --args="$*" --quiet 2> /dev/null
 
 # echo ${COMMAND}
