@@ -15,11 +15,11 @@ import typecheck.sherrlocUtils.Inequality;
 
 public class EndorseStatement extends Statement {
 
-    List<Expression> expressionList;
+    List<Name> expressionList;
     IfLabel from, to;
     List<Statement> body;
 
-    public EndorseStatement(List<Expression> expressionList, IfLabel from, IfLabel to,
+    public EndorseStatement(List<Name> expressionList, IfLabel from, IfLabel to,
             List<Statement> body) {
         this.expressionList = expressionList;
         this.from = from;

@@ -170,7 +170,7 @@ nonterminal List<TrustConstraint> trust_decs;
 nonterminal TrustConstraint trust_dec;
 nonterminal TrustAtom ifLabelorAddr;
 nonterminal Relation trust_operator;
-nonterminal HashMap<String, String> label_table;
+nonterminal java.util.Map<String, String> label_table;
 nonterminal Set<Integer> modifiers;
 nonterminal DynamicStatement dynamic_stmt;
 nonterminal ExceptionDef errorDef;
@@ -183,6 +183,7 @@ nonterminal EndorseStatement endorse_stmt;
 nonterminal EndorseIfStatement endorseIf_stmt;
 nonterminal Call call_expr;
 nonterminal Revert revert_stmt;
+nonterminal List<Name> name_list, name_list_oneplus;
 
 precedence left OR;
 precedence left AND;
@@ -199,7 +200,8 @@ start with sourceCode;
 
 sourceCode ::= sourceFile:a {: RESULT = a; :}
     // | interface:a {:RESULT = a; :}
-    | {: logger.debug("empty sourceFile"); RESULT = null;:};
+    | {: logger.debug("empty sourceFile");
+    ;:};
 
 sourceFile ::=
     ipt_stmts:a contract:b {:
@@ -765,7 +767,7 @@ small_stmt ::=  assign_stmt:a {: RESULT = a; :}
     ;
 
 endorse_stmt ::=
-    ENDORSEIF:x LPAR exprlist_sub:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR IN suite:s {:
+    ENDORSEIF:x LPAR name_list:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR IN suite:s {:
         EndorseStatement statement = new EndorseStatement(exprList, from, to, s);
         RESULT = statement;
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
@@ -773,10 +775,37 @@ endorse_stmt ::=
     ;
 
 endorseIf_stmt ::=
-    ENDORSE:x LPAR exprlist_sub:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR if_stmt:ifStmt {:
+    ENDORSE:x LPAR name_list:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR if_stmt:ifStmt {:
         EndorseIfStatement statement = new EndorseIfStatement(exprList, from, to, ifStmt);
         RESULT = statement;
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
+    ;
+
+name_list ::=
+    NAME:x {:
+        List<Name> rtn = new ArrayList<>();
+        rtn.add(new Name(x));
+        RESULT = rtn;
+    :}
+    | LSQB:p name_list_oneplus:x RSQB {:
+        RESULT = x;
+    :}
+    ;
+
+name_list_oneplus ::=
+    NAME:x {:
+        List<Name> rtn = new ArrayList<>();
+        Name newName = new Name(x);
+        newName.setLoc(new CodeLocation(xleft, xright, filename));
+        rtn.add(newName);
+        RESULT = rtn;
+    :}
+    | name_list_oneplus:list COMMA NAME:x  {:
+        Name newName = new Name(x);
+        newName.setLoc(new CodeLocation(xleft, xright, filename));
+        list.add(newName);
+        RESULT = list;
     :}
     ;
 

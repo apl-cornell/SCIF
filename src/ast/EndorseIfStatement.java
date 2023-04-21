@@ -11,11 +11,11 @@ import typecheck.VisitEnv;
 
 public class EndorseIfStatement extends Statement {
 
-    List<Expression> expressionList;
+    List<Name> expressionList;
     IfLabel from, to;
     If ifStatement;
 
-    public EndorseIfStatement(List<Expression> expressionList, IfLabel from, IfLabel to,
+    public EndorseIfStatement(List<Name> expressionList, IfLabel from, IfLabel to,
             If ifStatement) {
         this.expressionList = expressionList;
         this.from = from;
