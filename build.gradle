@@ -126,3 +126,7 @@ def dummyOutputStream = new OutputStream() {
 application {
     mainClass = "SCIF"
 }
+
+run {
+    enableAssertions = true
+}
