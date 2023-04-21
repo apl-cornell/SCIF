@@ -10,7 +10,7 @@
 ## Installation
 
 ```console
-git clone --recurse-submodules  https://github.com/Neroysq/Wyvern.git
+git clone --recurse-submodules  https://github.com/Neroysq/SCIF.git
 ./gradlew build
 ```
 
