@@ -152,9 +152,13 @@ public class FunctionDef extends FunctionSig {
             }
             CO = stmt.genConsVisit(env, index == body.size() && tail_position);
             //Context CO = env.outContext;
-            env.inContext = new Context(CO.getNormalPath().c);
+            if (CO.existsNormalPath()) {
+                env.inContext = new Context(CO.getNormalPath().c);
+            } else {
+                break;
+            }
         }
-        if (body.size() > 0) {
+        if (body.size() > 0 && CO.existsNormalPath()) {
             assert CO != null;
             Utils.contextFlow(env, CO.getNormalPath().c, funcEndContext.c,
                     body.get(body.size() - 1).location);

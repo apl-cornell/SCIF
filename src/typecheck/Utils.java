@@ -521,6 +521,10 @@ public class Utils {
         // if (DEBUG) System.out.println("position of #:" + p + " " + contractName);
         SourceFile program = programMap.get(contractName);
 
+        if (lin == 0 || col == 0) {
+            // Built-in or default
+            return program.getSourceFileFullName() + "\n" + explanation + ".\n";
+        }
         String rtn =
                 program.getSourceFileFullName() + "(" + slin + "," + scol + "): " + "\n" + explanation + ".\n";
         rtn += program.getSourceCodeLine(lin - 1) + "\n";

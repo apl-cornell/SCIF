@@ -102,7 +102,7 @@ public class FuncLabels extends Node {
                     }
                     if (isPublic) {
                         IfLabel botLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM));
-                        begin_pc = new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER));
+                        begin_pc = botLbl;//new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER));
                         to_pc = thisLbl;
                         gamma_label = botLbl;
                         end_pc = thisLbl;

@@ -85,6 +85,7 @@ public class Assign extends Statement {
             vo.psi.join(to.psi);
         }
         vo.psi.setNormalPath(endContext);
+        assert vo.psi.getNormalPath().c != null;
         return vo.psi;
     }
 

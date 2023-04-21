@@ -67,4 +67,7 @@ public class PathOutcome {
         set(Utils.getReturnPathException(), inContext);
     }
 
+    public boolean existsNormalPath() {
+        return getNormalPath().c != null;
+    }
 }

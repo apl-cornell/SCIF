@@ -765,7 +765,7 @@ small_stmt ::=  assign_stmt:a {: RESULT = a; :}
     ;
 
 endorse_stmt ::=
-    ENDORSE:x LPAR exprlist_sub:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR suite:s {:
+    ENDORSEIF:x LPAR exprlist_sub:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR IN suite:s {:
         EndorseStatement statement = new EndorseStatement(exprList, from, to, s);
         RESULT = statement;
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
@@ -773,7 +773,7 @@ endorse_stmt ::=
     ;
 
 endorseIf_stmt ::=
-    ENDORSEIF:x LPAR exprlist_sub:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR if_stmt:ifStmt {:
+    ENDORSE:x LPAR exprlist_sub:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR if_stmt:ifStmt {:
         EndorseIfStatement statement = new EndorseIfStatement(exprList, from, to, ifStmt);
         RESULT = statement;
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));

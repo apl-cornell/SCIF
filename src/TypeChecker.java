@@ -310,11 +310,11 @@ public class TypeChecker {
 
                 if (ifArgLabel != null) {
                     cons.add(new Constraint(new Inequality(ifNameArgLabel, Relation.EQ, ifArgLabel),
-                            arg.labelLocation(), contractName,
+                            arg.location, contractName,
                             "Argument " + arg.getName() + " may be labeled incorrectly"));
                     env.addTrustConstraint(
                             new Constraint(new Inequality(ifNameCallBeforeLabel, ifNameArgLabel),
-                                    arg.labelLocation(), contractName,
+                                    arg.location, contractName,
                                     "Argument " + arg.getName()
                                             + " must be no more trusted than caller's integrity"));
                 }
