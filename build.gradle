@@ -33,6 +33,10 @@ def compileSlcJar = tasks.register("compileSlcJar", Copy) {
     into "build/libs"
 }
 
+compileSlcJar.configure {
+    dependsOn("slc-jar")
+}
+
 sourceSets {
     main {
         jflex {
