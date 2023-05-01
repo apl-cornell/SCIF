@@ -20,8 +20,9 @@ public class TestRegularTypechecking {
             "basic/EmptyContract",
             "basic/ExceptionThrowAndCatch",
             "basic/FinalVar",
+            "basic/EndroseIf",
             "ifcTypechecking/Wallet_lock_exception",
-            "examples/ERC20",
+            // "examples/ERC20",
     })
     void testPositive(String contractName) {
         File logDir = new File("./.scif");

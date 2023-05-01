@@ -10,7 +10,6 @@ contract Wallet {
             atomic {
                 if (amount > 0) {
                     send(sender, amount);
-                    revert "failure";
                 }
             } rescue (error e) {
                 // any

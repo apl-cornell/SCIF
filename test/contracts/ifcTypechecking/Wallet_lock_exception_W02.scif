@@ -10,6 +10,6 @@ contract Wallet [this] {
     void withdraw{any -> this; this}(uint _amount) {
         uint amount = endorse(_amount, any -> this);
         send(sender, amount);
-        highV = amount;
+        _amount = 1;
     }
 }

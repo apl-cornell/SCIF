@@ -18,6 +18,8 @@ public class TestIfcTypechecking {
             "basic/DependentMap",
             "basic/EmptyContract",
             "basic/ExceptionThrowAndCatch",
+            // "basic/EndroseIf",
+            "examples/SimpleStorage",
             "ifcTypechecking/LocalTrust",
             "ifcTypechecking/Wallet_lock_exception",
             // "basic/Seq",
