@@ -11,6 +11,7 @@
 
 ```console
 git clone --recurse-submodules git@github.com:Neroysq/SCIF.git
+cd SCIF
 ./gradlew build
 ```
 
