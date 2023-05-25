@@ -1,6 +1,7 @@
 package typecheck;
 
 import ast.*;
+import java.net.URL;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sherrloc.constraint.ast.Constructor;
@@ -64,8 +65,26 @@ public class Utils {
     public static final String LABEL_PAYVALUE = "value";
     public static final String VOID_TYPE = "void";
     public static final String BUILTIN_CONTRACT = "Builtin";
+    public static final String BASECONTRACTNAME = "BaseContract";
+    public static final Iterable<? extends File> BUILTIN_FILES = generateBuiltInFiles();
+    public static final List<String> BUILTIN_FILENAMES = Arrays.asList(
+            "builtin_files/BaseContract.scif",
+            "builtin_files/ILockManager.scif",
+            "builtin_files/ITrustManager.scif"
+    );
 
-    public static final boolean isPrimitiveType(String x) {
+    private static Iterable<? extends File> generateBuiltInFiles() {
+        List<File> builtin_files = new ArrayList<>();
+        assert BUILTIN_FILENAMES != null;
+        for (String filename : BUILTIN_FILENAMES) {
+            URL input = ClassLoader.getSystemResource(filename);
+            File inputFile = new File((input.getFile()));
+            builtin_files.add(inputFile);
+        }
+        return builtin_files;
+    }
+
+    public static boolean isPrimitiveType(String x) {
         return BUILTIN_TYPES.contains(x);
     }
 

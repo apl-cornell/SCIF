@@ -46,7 +46,7 @@ sourceSets {
             srcDirs = ['src', 'build/generated-src/cup']
         }
         resources {
-            srcDirs = ['src/config']
+            srcDirs = ['src/config', 'resources']
         }
     }
     test {

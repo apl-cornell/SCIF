@@ -28,7 +28,7 @@ public class TypeChecker {
         It generates constraints in SHErrLoc format and put them in outputFile, then runs ShErrLoc to get error info.
      */
     public static List<SourceFile> regularTypecheck(ArrayList<File> inputFiles, File outputFile,
-            boolean DEBUG) {
+            boolean DEBUG) throws IOException {
 
         logger.trace("typecheck starts...");
 
@@ -36,8 +36,18 @@ public class TypeChecker {
             parse all SCIF source files and store AST roots in roots.
          */
         List<SourceFile> roots = new ArrayList<>();
+        // add all built-in source files
+        for (File builtinFile: Utils.BUILTIN_FILES) {
+            Symbol result = Parser.parse(builtinFile, null);//p.parse();
+            SourceFile root = new SourceFile((SourceFile) result.value, true);
+            // TODO root.setName(inputFile.name());
+            List<String> sourceCode = Files.readAllLines(Paths.get(builtinFile.getAbsolutePath()),
+                    StandardCharsets.UTF_8);
+            root.setSourceCode(sourceCode);
+            roots.add(root);
+        }
+
         for (File inputFile : inputFiles) {
-            try {
                 logger.debug(inputFile);
 
                 //Lexer lexer = new Lexer(new FileReader(inputFile));
@@ -52,10 +62,7 @@ public class TypeChecker {
                 roots.add(root);
                 logger.debug("Finish");
                 //System.err.println("Finish\n");
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
+
         }
 
         // Step 1: typecheck, generate constraints and check via SHErrLoc
@@ -64,10 +71,7 @@ public class TypeChecker {
         HashMap<String, Contract> contractMap = new HashMap<>();
         InheritGraph graph = new InheritGraph();
         for (SourceFile root : roots) {
-            if (!root.ntcInherit(graph)) {
-                // TODO: doesn't typecheck
-                return null;
-            }
+            assert root.ntcInherit(graph);
             if (root.getContract() != null) {
                 contractMap.put(root.getContractName(), root.getContract());
             }
@@ -78,10 +82,11 @@ public class TypeChecker {
                         + graph.getAllNodes());
         // check if there is any non-existent contract name
         for (String contractName : graph.getAllNodes()) {
-            if (!contractMap.containsKey(contractName)) {
+            assert contractMap.containsKey(contractName);
+            /*if (!contractMap.containsKey(contractName)) {
                 // TODO: mentioning non-existent contract
                 return null;
-            }
+            }*/
         }
 
         logger.debug(" code-paste in a topological order");
@@ -112,10 +117,7 @@ public class TypeChecker {
             ntcEnv.addSourceFile(root.getContractName(), root);
             root.addBuiltIns();
             root.passScopeContext(null);
-            if (!root.ntcGlobalInfo(ntcEnv, null)) {
-                // doesn't typecheck
-                return null;
-            }
+            assert root.ntcGlobalInfo(ntcEnv, null);
         }
 
         logger.debug("Current Contracts: " + ntcEnv.globalSymTab().getTypeSet());

@@ -1,6 +1,7 @@
 // the main class of STC
 
 import ast.SourceFile;
+import java.io.IOException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
@@ -10,6 +11,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import typecheck.exceptions.TypeCheckFailure;
 
 /**
  * The main program of SCIF compiler. It accepts arguments and options to perform parsing,
@@ -55,9 +57,9 @@ public class SCIF implements Callable<Integer> {
      *
      * @param outputFileNames
      * @return The manipulated AST.
-     * @throws Exception
      */
-    private List<SourceFile> _typecheck(String[] outputFileNames) throws Exception {
+    private List<SourceFile> _typecheck(String[] outputFileNames)
+            throws TypeCheckFailure, IOException {
         File logDir = new File("./.scif");
         logDir.mkdirs();
 
@@ -119,7 +121,13 @@ public class SCIF implements Callable<Integer> {
 
         logger.trace("SCIF starts");
         if (m_funcRequest == null || m_funcRequest.compile) {
-            List<SourceFile> roots = _typecheck(new String[0]);
+            List<SourceFile> roots;
+            try {
+                roots = _typecheck(new String[0]);
+            } catch (TypeCheckFailure e) {
+                System.out.println(e.explanation());
+                return 0;
+            }
             logger.debug("finished typecheck, compiling...");
             if (roots == null) {
                 return 1;
@@ -136,7 +144,11 @@ public class SCIF implements Callable<Integer> {
             }
             SolCompiler.compile(roots, outputFile);
         } else if (m_funcRequest.typecheck) {
-            _typecheck(m_outputFileNames);
+            try {
+                _typecheck(m_outputFileNames);
+            } catch (TypeCheckFailure e) {
+                System.out.println(e.explanation());
+            }
         } else if (m_funcRequest.parse) {
             File astOutputFile = m_outputFileNames == null ? null : new File(m_outputFileNames[0]);
             Parser.parse(m_inputFiles[0], astOutputFile);

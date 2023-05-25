@@ -11,17 +11,17 @@ public class SourceFile extends Node {
     static Map<String, String> sourceFileNameIds = new HashMap<>();
     static int idCounter = 0;
 
-    private String sourceFileFullName; // e.g., "A.scif"
-    private String sourceFileNameId;
-    private Set<String> iptContracts; // imported contracts
-    private Contract contract;
-    private String contractName;
-    private String filePath;
+    private final String sourceFileFullName; // e.g., "A.scif"
+    private final String sourceFileNameId;
+    private final Set<String> iptContracts; // imported contracts
+    private final Contract contract;
+    private final String contractName;
 
     /*
         @sourceCode represents the source code in lines
      */
     private List<String> sourceCode;
+    private final boolean builtIn;
 
     public SourceFile(String sourceFileName, Set<String> iptContracts, Contract contract) {
         this.sourceFileFullName = sourceFileName;
@@ -30,6 +30,7 @@ public class SourceFile extends Node {
         this.iptContracts = iptContracts;
         this.contract = contract;
         sourceCode = null;
+        builtIn = false;
     }
 
     /**
@@ -53,6 +54,17 @@ public class SourceFile extends Node {
         this.iptContracts = new HashSet<>();
         this.contract = contract;
         this.sourceCode = null;
+        builtIn = false;
+    }
+
+    public SourceFile(SourceFile source, boolean builtIn) {
+        this.sourceFileFullName = source.sourceFileFullName;
+        this.sourceFileNameId = source.sourceFileNameId;
+        this.contractName = source.contractName;
+        this.iptContracts = source.iptContracts;
+        this.contract = source.contract;
+        this.sourceCode = source.sourceCode;
+        this.builtIn = builtIn;
     }
 
     public String getContractName() {
@@ -125,9 +137,7 @@ public class SourceFile extends Node {
         if (contract == null) {
             return;
         }
-        if (!iptContracts.contains(contract.contractName)) {
-            iptContracts.add(contract.contractName);
-        }
+        iptContracts.add(contract.contractName);
         // contractSym.iptContracts = iptContracts;
         logger.debug("visit Contract: " + contract.contractName + "\n"
                 + contractSym.symTab.getTypeSet());
@@ -146,8 +156,6 @@ public class SourceFile extends Node {
     public void solidityCodeGen(SolCode code) {
         code.addVersion(compile.Utils.SOLITIDY_VERSION);
 
-        //TODO: deal with baseContract imports
-        code.addImport(Utils.PATH_TO_BASECONTRACTCENTRALIZED);
 
         for (String contractName : iptContracts) {
             boolean exists = false;
@@ -163,7 +171,7 @@ public class SourceFile extends Node {
     }
 
     @Override
-    public ArrayList<Node> children() {
+    public List<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(contract);
         return rtn;
@@ -196,5 +204,9 @@ public class SourceFile extends Node {
                 node.passScopeContext(scopeContext);
             }
         }
+    }
+
+    public boolean isBuiltIn() {
+        return builtIn;
     }
 }

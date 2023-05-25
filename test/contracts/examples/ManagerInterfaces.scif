@@ -1,18 +1,31 @@
+/**
+    Only manage relationships for its users.
+**/
 interface TrustManager {
+    exception NotUser;
     @public
     bool register();
+    /**
+        if a trusts b.
+        Checks: this is a's manager. Throw E otherwise.
+        True: a trusts b.
+        False: a doesn't trust b
+        E: not sure
+    */
+    @public
+    bool ifTrust(address a, address b) throws (NotUser);
 
     @public
-    bool ifTrust(address a, address b);
+    bool ifTrust(address a, address b, address[] proof) throws (NotUser);
+
+    /**
+        Set that the sender trusts trustee.
+    */
+    @public
+    void setTrust(address trustee) throws (NotUser);
 
     @public
-    bool ifTrust(address a, address b, address[] proof);
-
-    @public
-    void setTrust(address trustee);
-
-    @public
-    void revokeTrust(address trustee);
+    void revokeTrust(address trustee) throws (NotUser);
 }
 
 interface LockManager {

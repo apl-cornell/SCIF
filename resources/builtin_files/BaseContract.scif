@@ -2,11 +2,11 @@ contract BaseContract {
     address owner;
     address[] trustees;
     map(address, uint) trusteeIndex;
-    TrustManager trustManager;
-    LockManager lockManager;
+    ITrustManager trustManager;
+    ILockManager lockManager;
 
 
-    constructor(TrustManager _trustManager, LockManager _lockManager) {
+    constructor(ITrustManager _trustManager, ILockManager _lockManager) {
         owner = sender;
         trustManager = _trustManager;
         lockManager = _lockManager;

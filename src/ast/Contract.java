@@ -51,6 +51,9 @@ public class Contract extends Node {
     }
 
     private void setDefault() {
+        if (superContractName.isEmpty() && !contractName.equals(Utils.BASECONTRACTNAME)) {
+            superContractName = Utils.BASECONTRACTNAME;
+        }
         if (ifl == null) {
             ifl = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
         }
@@ -58,7 +61,7 @@ public class Contract extends Node {
 
     public boolean ntcInherit(InheritGraph graph) {
         // add an edge from superclass to this contract
-        if (!superContractName.equals("")) {
+        if (!superContractName.isEmpty()) {
             graph.addEdge(superContractName, contractName);
         }
         return true;
@@ -187,7 +190,7 @@ public class Contract extends Node {
 //    }
 
     public void solidityCodeGen(SolCode code) {
-        code.setDynamicOption(trustSetting);
+        // code.setDynamicOption(trustSetting);
         code.enterContractDef(contractName);
 
         for (StateVariableDeclaration dec : varDeclarations) {

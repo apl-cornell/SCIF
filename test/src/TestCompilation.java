@@ -34,13 +34,7 @@ public class TestIfcTypechecking {
         File ntcConsFile = new File(logDir, "ntc.cons");
         ArrayList<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
-        List<SourceFile> roots = null;
-        try {
-            roots = TypeChecker.regularTypecheck(files, ntcConsFile, m_debug);
-        } catch (Exception e) {
-            e.printStackTrace();
-            assert false;
-        }
+        List<SourceFile> roots = TypeChecker.regularTypecheck(files, ntcConsFile, m_debug);
         assertNotNull(roots);
         // System.out.println("["+ outputFileName + "]");
         ArrayList<File> ifcConsFiles = new ArrayList<>();
@@ -78,16 +72,10 @@ public class TestIfcTypechecking {
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         System.out.println(inputFilePath + ": " + input);
-        File ntcConsFile = new File(logDir, "ntc.cons");
+        File NTCConsFile = new File(logDir, "ntc.cons");
         ArrayList<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
-        List<SourceFile> roots = null;
-        try {
-            roots = TypeChecker.regularTypecheck(files, ntcConsFile, m_debug);
-        } catch (Exception e) {
-            e.printStackTrace();
-            assert false;
-        }
+        List<SourceFile> roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
         assertNotNull(roots);
         // System.out.println("["+ outputFileName + "]");
         ArrayList<File> IFCConsFiles = new ArrayList<>();
