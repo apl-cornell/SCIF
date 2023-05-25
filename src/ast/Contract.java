@@ -4,17 +4,18 @@ import compile.SolCode;
 import java.util.List;
 import javax.swing.plaf.nimbus.State;
 import jdk.jshell.execution.Util;
+import sherrloc.constraint.ast.Top;
 import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
-public class Contract extends Node {
+public class Contract extends TopLayerNode {
 
     String contractName;
     String superContractName = "";
     TrustSetting trustSetting;
-    IfLabel ifl;
     List<StateVariableDeclaration> varDeclarations;
     List<ExceptionDef> exceptionDefs;
     List<FunctionDef> methodDeclarations;
@@ -22,23 +23,20 @@ public class Contract extends Node {
     public Contract(String contractName, TrustSetting trustSetting,
             List<StateVariableDeclaration> varDeclarations,
             List<ExceptionDef> exceptionDefs,
-            List<FunctionDef> methodDeclarations,
-            IfLabel ifl) {
+            List<FunctionDef> methodDeclarations) {
         this.contractName = contractName;
         this.trustSetting = trustSetting;
         this.trustSetting.labelTable.put("this", "address(this)");
         this.varDeclarations = varDeclarations;
         this.exceptionDefs = exceptionDefs;
         this.methodDeclarations = methodDeclarations;
-        this.ifl = ifl;
         setDefault();
     }
 
     public Contract(String contractName, String superContractName, TrustSetting trustSetting,
             List<StateVariableDeclaration> varDeclarations,
             List<ExceptionDef> exceptionDefs,
-            List<FunctionDef> methodDeclarations,
-            IfLabel ifl) {
+            List<FunctionDef> methodDeclarations) {
         this.contractName = contractName;
         this.superContractName = superContractName;
         this.trustSetting = trustSetting;
@@ -46,16 +44,12 @@ public class Contract extends Node {
         this.varDeclarations = varDeclarations;
         this.exceptionDefs = exceptionDefs;
         this.methodDeclarations = methodDeclarations;
-        this.ifl = ifl;
         setDefault();
     }
 
     private void setDefault() {
         if (superContractName.isEmpty() && !contractName.equals(Utils.BASECONTRACTNAME)) {
             superContractName = Utils.BASECONTRACTNAME;
-        }
-        if (ifl == null) {
-            ifl = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
         }
     }
 
@@ -226,7 +220,7 @@ public class Contract extends Node {
         return rtn;
     }
 
-    public boolean codePasteContract(HashMap<String, Contract> contractMap) {
+    public boolean codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
         // TODO: add exception
         if (superContractName.equals("")) {
             return true;

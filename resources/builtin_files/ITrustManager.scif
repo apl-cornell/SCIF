@@ -1,6 +1,5 @@
-interface ITrustManager {
+interface TrustManager {
     exception NotRegistered;
-    @public
     bool register();
     /**
         if a trusts b.
@@ -9,18 +8,11 @@ interface ITrustManager {
         False: a doesn't trust b
         E: not sure
     */
-    @public
     bool ifTrust(address a, address b) throws (NotRegistered);
-
-    @public
     bool ifTrust(address a, address b, address[] proof) throws (NotRegistered);
-
     /**
         Set that the sender trusts trustee.
     */
-    @public
     void setTrust(address trustee) throws (NotRegistered);
-
-    @public
     void revokeTrust(address trustee) throws (NotRegistered);
 }

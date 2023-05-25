@@ -1,13 +1,6 @@
 interface ILockManager {
-    @public
     bool register();
-
-    @public
-    bool lock(address l);
-
-    @public
+    bool addlock(address l);
     bool unlock(address l);
-
-    @public
     bool ifLocked(address l);
 }

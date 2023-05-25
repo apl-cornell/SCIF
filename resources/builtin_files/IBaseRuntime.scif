@@ -1,0 +1,13 @@
+import TrustManager;
+import LockManager;
+
+interface IBaseRuntime {
+    bool setTrust{this}(address trustee);
+    bool revokeTrust{this}(address trustee);
+
+    bool ifDTrust(address trustee);
+    address[] getDTrustList();
+
+    TrustManager trustManager();
+    LockManager lockManager();
+}

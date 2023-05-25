@@ -98,12 +98,11 @@ terminal ASSUME;
 terminal REVERT;
 
 nonterminal SourceFile sourceCode;
-// nonterminal Interface interface;
+nonterminal Interface interface;
 nonterminal SourceFile sourceFile;
 nonterminal Set<String> ipt_stmts;
 // nonterminal List<Contract> contracts;
 nonterminal Contract contract;
-nonterminal IfLabel contract_label;
 nonterminal String contract_extends;
 // nonterminal ArrayList<Statement> file_input;
 nonterminal List<StateVariableDeclaration> state_var_decs;
@@ -199,18 +198,27 @@ precedence left LPAR, RPAR, LSQB, RSQB, LBRACE, RBRACE;
 start with sourceCode;
 
 sourceCode ::= sourceFile:a {: RESULT = a; :}
-    // | interface:a {:RESULT = a; :}
     | {: logger.debug("empty sourceFile");
     ;:};
 
 sourceFile ::=
     ipt_stmts:a contract:b {:
-        RESULT = new SourceFile(filename, a, b);
+        RESULT = new ContractFile(filename, a, b);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
         logger.debug(RESULT);
     :}
     | contract:a {:
-        RESULT = new SourceFile(filename, a);
+        RESULT = new ContractFile(filename, a);
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+        logger.debug(RESULT);
+    :}
+    | ipt_stmts:a interface:b {:
+        RESULT = new InterfaceFile(filename, a, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+        logger.debug(RESULT);
+    :}
+    | interface:a {:
+        RESULT = new InterfaceFile(filename, a);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
         logger.debug(RESULT);
     :}
@@ -251,7 +259,7 @@ ipt_as_names ::=
     :};
 
 contract ::=
-    CONTRACT NAME: name contract_label: c_label contract_extends: c_extends
+    CONTRACT NAME: name contract_extends: c_extends
         LBRACE
             trust_setting: t_setting
             state_var_decs: v_decs
@@ -261,19 +269,11 @@ contract ::=
         RBRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, c_extends, t_setting, v_decs, e_defs, f_defs, c_label);
+        RESULT = new Contract((String) name, c_extends, t_setting, v_decs, e_defs, f_defs);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | error:err {:
         report_fatal_error("Syntax error when parsing contract\n", err);
-    :};
-
-contract_label ::=
-    LSQB ifLabel:ifl RSQB {:
-        RESULT = ifl;
-    :}
-    | {:
-        RESULT = null;
     :};
 
 contract_extends ::=
@@ -455,8 +455,7 @@ ifLabelOrNull ::= ifLabel:x {:
     :};
 // ---
 
-//TODO: not usable for now; since the core calculus is not surppoting interface
-/*interface ::= INTERFACE:i NAME:name COLON NEWLINE  funcSigs:a  {:
+interface ::= INTERFACE:i NAME:name COLON NEWLINE  funcSigs:a  {:
         ArrayList<TrustConstraint> trust_list = new ArrayList<>();
         RESULT = new Interface((String)name, trust_list, a);
         RESULT.setLoc(new CodeLocation(ileft, iright));
@@ -465,7 +464,7 @@ ifLabelOrNull ::= ifLabel:x {:
             RESULT = new Interface((String)name, trust_list, a);
             RESULT.setLoc(new CodeLocation(ileft, iright));
     :};
-*/
+
 funcSigs ::=
     funcSig:a {:
         ArrayList<FunctionSig> list = new ArrayList<>();

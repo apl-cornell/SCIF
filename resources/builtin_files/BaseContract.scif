@@ -1,17 +1,21 @@
-contract BaseContract {
+import TrustManager;
+import LockManager;
+
+contract BaseContract implements BaseRuntime {
     address owner;
     address[] trustees;
     map(address, uint) trusteeIndex;
-    ITrustManager trustManager;
-    ILockManager lockManager;
+    TrustManager trustManager;
+    LockManager lockManager;
 
-
-    constructor(ITrustManager _trustManager, ILockManager _lockManager) {
+    deploy(TrustManager _trustManager, SLockManager _lockManager) {
         owner = sender;
         trustManager = _trustManager;
         lockManager = _lockManager;
         trustManager.register();
         lockManager.register();
+        setTrust(trustManager);
+        setTrust(lockManager);
         setTrust(owner);
     }
 
@@ -52,6 +56,11 @@ contract BaseContract {
         owner = newOwner;
         setTrust(owner);
         return true;
+    }
+
+    @public
+    address owner() {
+        return owner;
     }
 
     @public
