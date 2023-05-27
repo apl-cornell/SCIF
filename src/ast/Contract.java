@@ -15,6 +15,7 @@ public class Contract extends TopLayerNode {
 
     String contractName;
     String superContractName = "";
+    final boolean extendsSuperContract;
     TrustSetting trustSetting;
     List<StateVariableDeclaration> varDeclarations;
     List<ExceptionDef> exceptionDefs;
@@ -30,15 +31,20 @@ public class Contract extends TopLayerNode {
         this.varDeclarations = varDeclarations;
         this.exceptionDefs = exceptionDefs;
         this.methodDeclarations = methodDeclarations;
+
         setDefault();
+        extendsSuperContract = true;
     }
 
-    public Contract(String contractName, String superContractName, TrustSetting trustSetting,
+    public Contract(String contractName,
+            String superContractName, boolean extendOrImplement,
+            TrustSetting trustSetting,
             List<StateVariableDeclaration> varDeclarations,
             List<ExceptionDef> exceptionDefs,
             List<FunctionDef> methodDeclarations) {
         this.contractName = contractName;
         this.superContractName = superContractName;
+        this.extendsSuperContract = extendOrImplement;
         this.trustSetting = trustSetting;
         this.trustSetting.labelTable.put("this", "address(this)");
         this.varDeclarations = varDeclarations;

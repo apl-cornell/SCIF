@@ -67,6 +67,7 @@ import java.util.HashMap;
         // keywords.put("struct", Integer.valueOf(sym.STRUCT));
         keywords.put("lock", Integer.valueOf(sym.GUARD));
         keywords.put("extends", Integer.valueOf(sym.EXTENDS));
+        keywords.put("implements", Integer.valueOf(sym.IMPLEMENTS));
         //keywords.put("super", Integer.valueOf(sym.SUPER));
         // keywords.put("lock", Integer.valueOf(sym.LOCK));
         keywords.put("else", Integer.valueOf(sym.ELSE));

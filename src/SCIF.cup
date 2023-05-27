@@ -89,7 +89,7 @@ terminal ENDORSE, ENDORSEIF, GUARD;
 terminal MAP;
 terminal CONTRACT, INTERFACE;
 terminal EQUALGREATER;
-terminal EXTENDS;
+terminal EXTENDS, IMPLEMENTS;
 terminal FINAL, STATIC;
 terminal TRY, ATOMIC, CATCH, RESCUE, EXCEPTION, THROW, THROWS;
 terminal DELETE;
@@ -271,7 +271,20 @@ contract ::=
         RBRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, c_extends, t_setting, v_decs, e_defs, f_defs);
+        RESULT = new Contract((String) name, c_extends, true, t_setting, v_decs, e_defs, f_defs);
+        RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
+    :}
+    | CONTRACT NAME: name IMPLEMENTS NAME: supercontract
+        LBRACE
+            trust_setting: t_setting
+            state_var_decs: v_decs
+            exp_defs: e_defs
+            constructors: constructors
+            func_defs: f_defs
+        RBRACE {:
+        // TrustSetting t_setting = new TrustSetting();
+        constructors.addAll(f_defs);
+        RESULT = new Contract((String) name, (String) supercontract, false, t_setting, v_decs, e_defs, f_defs);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | error:err {:
