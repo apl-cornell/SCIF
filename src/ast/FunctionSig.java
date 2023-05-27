@@ -165,7 +165,7 @@ public class FunctionSig extends TopLayerNode {
         contractSym.symTab = new SymTab(contractSym.symTab);
         addBuiltInVars(contractSym.symTab, scopeContext);
         VarSym sender = (VarSym) contractSym.symTab.lookup(typecheck.Utils.LABEL_SENDER);
-        ArrayList<VarSym> argsInfo = args.parseArgs(contractSym);
+        List<VarSym> argsInfo = args.parseArgs(contractSym);
         Label ifl = null;
         if (rtn instanceof LabeledType) {
             ifl = contractSym.newLabel(((LabeledType) rtn).label());

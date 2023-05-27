@@ -23,18 +23,31 @@ public class Subscript extends TrailerExpr {
     @Override
     public VarSym getVarInfo(NTCEnv env) {
         VarSym valueVarSym = value.getVarInfo(env);
-        assert valueVarSym.typeSym instanceof MapTypeSym;
+        VarSym subscriptVarSym = null;
+        if (valueVarSym.typeSym instanceof MapTypeSym) {
 
-        VarSym subscriptVarSym = new VarSym(
+            subscriptVarSym = new VarSym(
+                    valueVarSym.getName() + ".sub",
+                    ((MapTypeSym) valueVarSym.typeSym).valueType,
+                    null,
+                    location,
+                    valueVarSym.defContext(),
+                    false,
+                    false,
+                    true
+            );
+        } else if (valueVarSym.typeSym instanceof ArrayTypeSym) {
+            subscriptVarSym = new VarSym(
                 valueVarSym.getName() + ".sub",
-                ((MapTypeSym) valueVarSym.typeSym).valueType,
-                null,
-                location,
-                valueVarSym.defContext(),
-                false,
-                false,
-                true
-        );
+                    ((ArrayTypeSym) valueVarSym.typeSym).valueType,
+                    null,
+                    location,
+                    valueVarSym.defContext(),
+                    false,
+                    false,
+                    true
+            );
+        }
         return subscriptVarSym;
     }
 
@@ -65,6 +78,11 @@ public class Subscript extends TrailerExpr {
             // index matches the keytype
             env.addCons(idx.genCons(typeInfo.keyType.getName(), Relation.LEQ, env, location));
             // valueType matches the result exp
+            env.addCons(now.genCons(typeInfo.valueType.getName(), Relation.EQ, env, location));
+            return now;
+        } else if (valueVarSym.typeSym instanceof ArrayTypeSym) {
+            ArrayTypeSym typeInfo = (ArrayTypeSym) valueVarSym.typeSym;
+            env.addCons(idx.genCons(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.LEQ, env, location));
             env.addCons(now.genCons(typeInfo.valueType.getName(), Relation.EQ, env, location));
             return now;
         } else {

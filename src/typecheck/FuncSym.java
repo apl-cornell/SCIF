@@ -5,12 +5,13 @@ import com.owlike.genson.GensonBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FuncSym extends Sym {
     public String funcName;
     // public FuncLabels funcLabels;
-    public ArrayList<VarSym> parameters;
+    public List<VarSym> parameters;
     public TypeSym returnType;
     // public IfLabel returnLabel;
 
@@ -24,7 +25,7 @@ public class FuncSym extends Sym {
                    Label external_pc,
                    Label internal_pc,
                    Label gamma,
-                   ArrayList<VarSym> parameters,
+                   List<VarSym> parameters,
                    TypeSym returnType,
                    Label returnLabel,
                    Map<ExceptionTypeSym, String> exceptions,

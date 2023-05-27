@@ -54,7 +54,7 @@ public class ScopeContext {
         } else if (cur instanceof While) {
             localPostfix = "while" + cur.locToString();
         } else if (cur instanceof Interface) {
-            localPostfix = ((Interface) cur).contractName;
+            localPostfix = ((Interface) cur).getContractName();
         } else if (cur instanceof GuardBlock) {
             localPostfix = "guardBlock" + cur.locToString();
         } else if (cur instanceof Try) {

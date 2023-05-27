@@ -1,11 +1,20 @@
 package typecheck;
 
-import ast.*;
-
+import ast.AnnAssign;
+import ast.Arguments;
+import ast.ComplexIfLabel;
+import ast.Contract;
+import ast.DepMap;
+import ast.IfLabel;
+import ast.Interface;
+import ast.LabeledType;
+import ast.Map;
+import ast.PrimitiveIfLabel;
+import ast.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ContractSym extends TypeSym {
+public class InterfaceSym extends TypeSym {
 
     // public HashSet<String> iptContracts;
     /*public HashMap<String, Type> typeMap;
@@ -15,25 +24,25 @@ public class ContractSym extends TypeSym {
     // private Label label;
     // public ArrayList<TrustConstraint> trustCons;
     private List<Assumption> assumptions;
-    private final Contract astNode;
+    private final Interface astNode;
     //private VarSym thisSym;
 
-    public ContractSym(String name,
+    public InterfaceSym(String name,
             SymTab symTab,
             // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
             List<Assumption> assumptions,
             // Label label,
-            Contract contract) {
-        super(name, contract.getScopeContext());
+            Interface itrface) {
+        super(name, itrface.getScopeContext());
         this.symTab = symTab;
         this.assumptions = assumptions;
         // this.label = label;
-        astNode = contract;
+        astNode = itrface;
     }
 
-    public ContractSym(String contractName, Contract contract) {
-        super(contractName, contract.getScopeContext());
-        astNode = contract;
+    public InterfaceSym(String contractName, Interface itrface) {
+        super(contractName, itrface.getScopeContext());
+        astNode = itrface;
         symTab = new SymTab();
         assumptions = new ArrayList<>();
     }
@@ -46,28 +55,11 @@ public class ContractSym extends TypeSym {
         return null;
     }
 
-    public TypeSym toStructType(String typeName, ArrayList<AnnAssign> members) {
-        Sym sym = symTab.lookup(typeName);
-        if (sym != null) {
-            if (sym instanceof TypeSym) {
-                return (TypeSym) sym;
-            } else {
-                return null;
-            }
-        }
-        ArrayList<VarSym> memberList = new ArrayList<>();
-        for (AnnAssign member : members) {
-            VarSym tmp = member.toVarInfo(this);
-            memberList.add(tmp);
-        }
-        return new StructTypeSym(typeName, memberList, astNode.getScopeContext());
-    }
-
     /**
         Look up a type symbol.
         If there is no such a symbol, create one with the given defining scope.
      */
-    public TypeSym toTypeSym(ast.Type astType, ScopeContext defContext) {
+    public TypeSym toTypeSym(Type astType, ScopeContext defContext) {
         if (astType == null) {
             return new BuiltinTypeSym("void");
         }
@@ -110,7 +102,7 @@ public class ContractSym extends TypeSym {
         return typeSym;
     }
 
-    public VarSym newVarSym(String localName, ast.LabeledType astType, boolean isStatic, boolean isFinal, boolean isBuiltIn,
+    public VarSym newVarSym(String localName, LabeledType astType, boolean isStatic, boolean isFinal, boolean isBuiltIn,
             CodeLocation loc, ScopeContext defContext) {
         System.err.println("toVarSym: " + localName + " " + astType.type().name());
         TypeSym typeSym = toTypeSym(astType.type(), defContext);
@@ -147,7 +139,7 @@ public class ContractSym extends TypeSym {
         symTab.add(typename, typeSym);
     }
 
-    public void addContract(String typename, ContractSym typeSym) {
+    public void addContract(String typename, InterfaceSym typeSym) {
         symTab.add(typename, typeSym);
     }
 
@@ -174,15 +166,15 @@ public class ContractSym extends TypeSym {
     }
 
     public String getLabelNameContract() {
-        return Utils.getLabelNameContract(getContractNode().getScopeContext());
+        return Utils.getLabelNameContract(getInterfaceNode().getScopeContext());
     }
 
     public String getLabelContract() {
-        return Utils.getLabelNameContract(getContractNode().getScopeContext());
+        return Utils.getLabelNameContract(getInterfaceNode().getScopeContext());
         // return ifl.toSHErrLocFmt(name());
     }
 
-    public Contract getContractNode() {
+    public Interface getInterfaceNode() {
         return astNode;
     }
 

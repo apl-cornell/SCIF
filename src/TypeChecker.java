@@ -1,6 +1,7 @@
 import java.io.*;
 
 import ast.*;
+import java.util.Map;
 import java_cup.runtime.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,7 +40,7 @@ public class TypeChecker {
         // add all built-in source files
         for (File builtinFile: Utils.BUILTIN_FILES) {
             Symbol result = Parser.parse(builtinFile, null);//p.parse();
-            SourceFile root = new SourceFile((SourceFile) result.value, true);
+            SourceFile root = ((SourceFile) result.value).makeBuiltIn();
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(builtinFile.getAbsolutePath()),
                     StandardCharsets.UTF_8);
@@ -68,12 +69,15 @@ public class TypeChecker {
         // Step 1: typecheck, generate constraints and check via SHErrLoc
 
         // Code-paste superclasses' methods and data fields
-        HashMap<String, Contract> contractMap = new HashMap<>();
+        Map<String, Contract> contractMap = new HashMap<>();
+        Map<String, Interface> interfaceMap = new HashMap<>();
         InheritGraph graph = new InheritGraph();
         for (SourceFile root : roots) {
             assert root.ntcInherit(graph);
-            if (root.getContract() != null) {
-                contractMap.put(root.getContractName(), root.getContract());
+            if (root instanceof ContractFile) {
+                contractMap.put(root.getContractName(), ((ContractFile) root).getContract());
+            } else if (root instanceof InterfaceFile) {
+                interfaceMap.put(root.getContractName(), ((InterfaceFile) root).getInterface());
             }
         }
 
@@ -82,7 +86,7 @@ public class TypeChecker {
                         + graph.getAllNodes());
         // check if there is any non-existent contract name
         for (String contractName : graph.getAllNodes()) {
-            assert contractMap.containsKey(contractName);
+            assert contractMap.containsKey(contractName) || interfaceMap.containsKey(contractName);
             /*if (!contractMap.containsKey(contractName)) {
                 // TODO: mentioning non-existent contract
                 return null;
@@ -104,7 +108,7 @@ public class TypeChecker {
                 assert false;
                 return null;
             }
-            if (!rt.codePasteContract(x, contractMap)) {
+            if (!rt.codePasteContract(x, contractMap, interfaceMap)) {
                 // TODO: inherit failed
                 assert false;
                 return null;
@@ -115,7 +119,9 @@ public class TypeChecker {
         NTCEnv ntcEnv = new NTCEnv(null);
         for (SourceFile root : roots) {
             ntcEnv.addSourceFile(root.getContractName(), root);
-            root.addBuiltIns();
+            if (root instanceof ContractFile) {
+                ((ContractFile) root).addBuiltIns();
+            }
             root.passScopeContext(null);
             assert root.ntcGlobalInfo(ntcEnv, null);
         }
@@ -157,23 +163,35 @@ public class TypeChecker {
 
         // HashMap<String, ContractSym> contractMap = new HashMap<>();
         SymTab contractMap = new SymTab();
-        ArrayList<String> contractNames = new ArrayList<>();
+        List<String> contractNames = new ArrayList<>();
         //HashSet<String> principalSet = new HashSet<>();
         //env.principalSet.add("this");
 
         //ArrayList<Constraint> cons = new ArrayList<>();
 
         for (SourceFile root : roots) {
-            ContractSym contractSym = new ContractSym(root.getContractName(), root.getContract());
-            // contractSym.name = ((SourceFile) root).getContractName();
-            // contractSym.astNode = root;
-            if (contractNames.contains(contractSym.getName())) {
-                throw new RuntimeException("duplicate contract names");
-                //TODO: duplicate contract names
+            if (root instanceof ContractFile) {
+                ContractSym contractSym = new ContractSym(root.getContractName(),
+                        ((ContractFile) root).getContract());
+                // contractSym.name = ((SourceFile) root).getContractName();
+                // contractSym.astNode = root;
+                if (contractNames.contains(contractSym.getName())) {
+                    throw new RuntimeException("duplicate contract names");
+                    //TODO: duplicate contract names
+                }
+                contractNames.add(contractSym.getName());
+                contractMap.add(contractSym.getName(), contractSym);
+                //root.findPrincipal(principalSet);
+            } else {
+                InterfaceSym interfaceSym = new InterfaceSym(root.getContractName(),
+                        ((InterfaceFile) root).getInterface());
+                if (contractNames.contains(interfaceSym.getName())) {
+                    throw new RuntimeException("duplicate contract names");
+                    //TODO: duplicate contract names
+                }
+                contractNames.add(interfaceSym.getName());
+                contractMap.add(interfaceSym.getName(), interfaceSym);
             }
-            contractNames.add(contractSym.getName());
-            contractMap.add(contractSym.getName(), contractSym);
-            //root.findPrincipal(principalSet);
         }
 
         logger.debug("contracts: \n" + contractMap.getTypeSet());
@@ -209,13 +227,14 @@ public class TypeChecker {
             buildSignatureConstraints(root, env);
         }*/
 
-        for (SourceFile root : roots) {
-            env.programMap.put(root.getContractName(), root);
-            env.sigReq.clear();
-            if (!ifcTypecheck(root, env, outputFileMap.get(root), DEBUG)) {
-                return false;
+        for (SourceFile root : roots)
+            if (root instanceof ContractFile) {
+                env.programMap.put(root.getContractName(), root);
+                env.sigReq.clear();
+                if (!ifcTypecheck((ContractFile) root, env, outputFileMap.get(root), DEBUG)) {
+                    return false;
+                }
             }
-        }
 
         logger.trace("typecheck finishes");
         return true;
@@ -327,9 +346,9 @@ public class TypeChecker {
         // env.addSigCons(contractName, trustCons, cons);
     }
 
-    private static boolean ifcTypecheck(SourceFile root, VisitEnv env, File outputFile,
+    private static boolean ifcTypecheck(ContractFile contractFile, VisitEnv env, File outputFile,
             boolean DEBUG) {
-        String contractName = root.getContractName();//contractNames.get(fileIdx);
+        String contractName = contractFile.getContractName();//contractNames.get(fileIdx);
         ContractSym contractSym = env.getContract(contractName);
         logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n"
                 + env.curSymTab.getTypeSet());
@@ -359,20 +378,12 @@ public class TypeChecker {
             //System.err.println(": " + var + "\n");
         }
 
-        //SigCons curSigCons = env.getSigCons(contractName);
-        //env.trustCons.addAll(curSigCons.trustcons);
-        //env.cons.addAll(curSigCons.cons);
-        // System.out.println("before prinSet size: " + env.principalSet().size());
-
-        SourceFile sourceFile = root;
-        // env.varNameMap = new LookupMaps(varMap);
-
-        sourceFile.genConsVisit(env, true);
+        contractFile.genConsVisit(env, true);
         // System.out.println("mid prinSet size: " + env.principalSet().size());
-        buildSignatureConstraints(sourceFile.getContractName(), env, sourceFile.getContractName(),
-                sourceFile.getContractName());
+        buildSignatureConstraints(contractFile.getContractName(), env, contractFile.getContractName(),
+                contractFile.getContractName());
         env.sigReq.forEach((name, curContractName) -> {
-            buildSignatureConstraints(curContractName, env, name, sourceFile.getContractName());
+            buildSignatureConstraints(curContractName, env, name, contractFile.getContractName());
         });
 
         // System.out.println("prinSet size: " + env.principalSet().size());

@@ -43,6 +43,7 @@ public class Utils {
 
     public static final String ADDRESS_TYPE = "address";
     public static final String MAP_TYPE = "map";
+    public static final String ARRAY_TYPE = "array";
     public static final String PUBLIC_DECORATOR = "public";
     public static final String PROTECTED_DECORATOR = "protected";
     public static final String FINAL_DECORATOR = "final";
@@ -66,16 +67,16 @@ public class Utils {
     public static final String VOID_TYPE = "void";
     public static final String BUILTIN_CONTRACT = "Builtin";
     public static final String BASECONTRACTNAME = "BaseContract";
-    public static final Iterable<? extends File> BUILTIN_FILES = generateBuiltInFiles();
     public static final List<String> BUILTIN_FILENAMES = Arrays.asList(
             "builtin_files/BaseContract.scif",
+            "builtin_files/IBaseRuntime.scif",
             "builtin_files/ILockManager.scif",
             "builtin_files/ITrustManager.scif"
     );
+    public static final Iterable<? extends File> BUILTIN_FILES = generateBuiltInFiles();
 
     private static Iterable<? extends File> generateBuiltInFiles() {
         List<File> builtin_files = new ArrayList<>();
-        assert BUILTIN_FILENAMES != null;
         for (String filename : BUILTIN_FILENAMES) {
             URL input = ClassLoader.getSystemResource(filename);
             File inputFile = new File((input.getFile()));

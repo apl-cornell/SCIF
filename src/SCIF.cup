@@ -72,7 +72,7 @@ parser code {:
 
 terminal String NAME, STRING_LITERAL;
 terminal NUMBER;
-terminal FALSE, TRUE, NONE, ELLIPSIS;
+terminal FALSE, TRUE, NONE;
 terminal AND, AS, ASSERT;
 terminal BREAK, CONTINUE;
 terminal ELSE;//, FROM;
@@ -87,11 +87,11 @@ terminal RARROW;
 terminal UNARY, COMP, BIT, ADDISH, MULISH;
 terminal ENDORSE, ENDORSEIF, GUARD;
 terminal MAP;
-terminal CONTRACT;
+terminal CONTRACT, INTERFACE;
 terminal EQUALGREATER;
-terminal NEWLINE, EXTENDS;
+terminal EXTENDS;
 terminal FINAL, STATIC;
-terminal TRY, ATOMIC, CATCH, RESCUE, EXCEPTION, THROW, THROWS, ALL;
+terminal TRY, ATOMIC, CATCH, RESCUE, EXCEPTION, THROW, THROWS;
 terminal DELETE;
 terminal ERROR, CONSTRUCTOR;//, PERCENTEQUAL;
 terminal ASSUME;
@@ -116,14 +116,14 @@ nonterminal List<String> decorators;
 nonterminal FunctionDef funcdef;
 nonterminal Arguments parameters, typedarglist, probinittfpdef;
 nonterminal Arg tfpdef;
-nonterminal List<Statement> simple_stmt, small_stmts;
-nonterminal Statement small_stmt, assign_stmt;
+nonterminal List<Statement> stmts;
+nonterminal Statement stmt, assign_stmt;
 nonterminal AnnAssign varDec, annassign;
 nonterminal Statement del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt, excborder_stmt;
 nonterminal String ipt_stmt;
 nonterminal String ipt_name;
 nonterminal String ipt_as_names;
-nonterminal Statement assert_stmt, compound_stmt;
+nonterminal Statement assert_stmt;
 nonterminal CallStatement call_stmt;
 nonterminal If if_stmt;
 nonterminal Statement try_stmt, atomic_stmt;
@@ -131,13 +131,13 @@ nonterminal Statement try_stmt, atomic_stmt;
 nonterminal List<ExceptHandler> except_stmts, exceptall_stmts;
 nonterminal ExceptHandler except_clause, exceptall_clause;
 nonterminal List<Statement> suite;
-nonterminal Expression expr;
+nonterminal Expression expr, assignable;
 nonterminal CompareOperator comp_op;
 nonterminal BinaryOperator bit_op, addish_op, mulish_op;
 nonterminal UnaryOperator unary_op;
 // nonterminal ArrayList<Expression> trailers;
 nonterminal TrailerExpr trailer_expr;
-nonterminal Expression atom;
+nonterminal Expression atom, constant;
 nonterminal Str strings;
 nonterminal TrailerExpr trailer;
 nonterminal List<Expression> exprlist, exprlist_sub;
@@ -150,8 +150,10 @@ nonterminal Call arglist;
 nonterminal LabeledType labeledType, maybeLabeledType;
 nonterminal IfLabel ifLabel, unitIfLabel;
 nonterminal PrimitiveIfLabel primitiveIfLabel;
-nonterminal Type type;
+nonterminal Type type, nonarray_type;
 nonterminal ast.Map mapType;
+nonterminal Array arrayType;
+nonterminal List<Integer> arraySubs;
 // nonterminal Autoendorse autoendorse;
 //nonterminal IfLabel maybeAutoendorseIfLabel;
 nonterminal List<String> polyDescription;
@@ -192,7 +194,7 @@ precedence left BIT, VBAR, CIRCUMFLEX, AMPER, LEFTSHIFT, RIGHTSHIFT;
 precedence left ADDISH, PLUS, MINUS;
 precedence left MULISH, STAR, AT, PERCENT, SLASH;
 precedence left UNARY;
-precedence left LPAR, RPAR, LSQB, RSQB, LBRACE, RBRACE;
+// precedence left LPAR, RPAR, LSQB, RSQB, LBRACE, RBRACE;
 
 
 start with sourceCode;
@@ -455,19 +457,19 @@ ifLabelOrNull ::= ifLabel:x {:
     :};
 // ---
 
-interface ::= INTERFACE:i NAME:name COLON NEWLINE  funcSigs:a  {:
-        ArrayList<TrustConstraint> trust_list = new ArrayList<>();
-        RESULT = new Interface((String)name, trust_list, a);
-        RESULT.setLoc(new CodeLocation(ileft, iright));
-    :}
-    | INTERFACE:i NAME:name COLON NEWLINE  trust_setting:trust_list funcSigs:a  {:
-            RESULT = new Interface((String)name, trust_list, a);
-            RESULT.setLoc(new CodeLocation(ileft, iright));
+interface ::=
+    INTERFACE:i NAME:name contract_extends: c_extends
+        LBRACE
+            exp_defs: e_defs
+            funcSigs:a
+        RBRACE {:
+            RESULT = new Interface((String)name, c_extends, e_defs, a);
+            RESULT.setLoc(new CodeLocation(ileft, iright, filename));
     :};
 
 funcSigs ::=
     funcSig:a {:
-        ArrayList<FunctionSig> list = new ArrayList<>();
+        List<FunctionSig> list = new ArrayList<>();
         if (a != null) {
             list.add(a);
         }
@@ -480,10 +482,7 @@ funcSigs ::=
         RESULT = list;
     :};
 
-funcSig ::= r_funcSig:a NEWLINE {: RESULT = a;
-    :}
-    | r_funcSig:a SEMI NEWLINE {: RESULT = a; :}
-    | NEWLINE funcSig:x {:RESULT = x;:};
+funcSig ::= r_funcSig:a SEMI {: RESULT = a; :};
 
 
 errorDef ::=
@@ -614,7 +613,7 @@ primitiveIfLabel ::= NAME:a {:
         name.setLoc(new CodeLocation(aleft, aright, filename));
         RESULT = new PrimitiveIfLabel(name);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-                         :};
+:};
 
 funcdef ::=
     r_funcSig:funcSig suite:d {:
@@ -627,8 +626,19 @@ funcdef ::=
     :};
 
 type ::=
-    NAME:a {:
-        RESULT = new Type((String)a);
+    nonarray_type:a {:
+        RESULT = a;
+    :}
+    | arrayType:a {:
+        RESULT = a;
+    :};
+
+nonarray_type ::=
+    atom:a {:
+        if (!(a instanceof Name)) {
+            assert false;
+        }
+        RESULT = new Type((((Name)a).id));
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | mapType:m {:
@@ -643,6 +653,34 @@ mapType ::=
     | depMap:a {:
         RESULT = a;
     :};
+
+arrayType ::=
+    nonarray_type:a arraySubs:b {:
+        Type last = a;
+        for (int i = b.size() - 1; i >= 0; --i) {
+            RESULT = new Array(b.get(i), last);
+            last = RESULT;
+        }
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :};
+
+arraySubs ::=
+    LSQB RSQB {:
+        RESULT = new ArrayList<>();
+        RESULT.add(0);
+    :}
+    /*| LSQB NUMBER:x RSQB {:
+        RESULT = new ArrayList<>();
+        RESULT.add(Integer.valueOf((String)x));
+    :}*/
+    | arraySubs:a LSQB RSQB {:
+        a.add(0);
+        RESULT = a;
+    :}
+    /*| arraySubs:a LSQB NUMBER:x RSQB {:
+        a.add(Integer.valueOf((String)x));
+        RESULT = a;
+    :}*/;
 
 except_types ::=
     except_type:a {:
@@ -662,7 +700,7 @@ polyDescription ::=
 nameList ::=
     NAME:x {:
         logger.debug("parsing names in polyList");
-        ArrayList<String> rtn = new ArrayList<String>();
+        List<String> rtn = new ArrayList<String>();
         rtn.add((String)x);
         RESULT = rtn;
     :}
@@ -687,7 +725,7 @@ typedarglist ::=
     :}; 
 probinittfpdef ::=
     tfpdef:a  {:
-        ArrayList<Arg> args = new ArrayList<Arg>();
+        List<Arg> args = new ArrayList<Arg>();
         args.add(a);
         RESULT = new Arguments(args);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
@@ -728,18 +766,17 @@ varDec ::= maybeLabeledType:a annassign:b SEMI {:
         RESULT = b;
     :};
 
-simple_stmt ::= small_stmts:a {: RESULT = a; :};
-small_stmts ::=
-    small_stmt:a {:
-        ArrayList<Statement> list = new ArrayList<Statement>();
+stmts ::=
+    stmt:a {:
+        List<Statement> list = new ArrayList<Statement>();
         list.add(a);
         RESULT = list;
     :}
-    | small_stmts:list small_stmt:a {:
+    | stmts:list stmt:a {:
         list.add(a);
         RESULT = list;
     :};
-small_stmt ::=  assign_stmt:a {: RESULT = a; :}
+stmt ::=  assign_stmt:a {: RESULT = a; :}
     | varDec:a {: RESULT = a; :}
     | del_stmt:a {: RESULT = a; :}
     | pass_stmt:a {: RESULT = a; :}  
@@ -762,6 +799,10 @@ small_stmt ::=  assign_stmt:a {: RESULT = a; :}
     :}
     | call_stmt:a {:
         RESULT = a;
+    :}
+    | error:err SEMI {:
+        report_fatal_error("Statement syntax error when parsing source file " + filename + "\n", err);
+        RESULT = new ErrorStmt();
     :}
     ;
 
@@ -895,7 +936,7 @@ dynamic_stmt ::= AT:x NAME:a trailer:b SEMI {:
 :};
 
 assign_stmt ::=
-    expr:a EQUAL expr:b SEMI {:
+    assignable:a EQUAL expr:b SEMI {:
         /*ArrayList<Expression> list = new ArrayList<Expression>();
         list.add(a);*/
         Assign rnt = new Assign(a, b);
@@ -993,18 +1034,6 @@ call_stmt ::=
         RESULT.setLoc(new CodeLocation(cleft, cright, filename));
     :};
 
-// compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt
-// if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
-// while_stmt: 'while' test ':' suite ['else' ':' suite]
-// try_stmt: ('try' ':' suite
-//            ((except_clause ':' suite)+
-//             ['else' ':' suite]
-//             ['finally' ':' suite] |
-//            'finally' ':' suite))
-compound_stmt ::= if_stmt:a {:RESULT = a;:}
-    // | funcdef:a {:RESULT = a;:}
-    | guard_block:a {:RESULT = a;:};
-
 guard_block ::=
     GUARD:x LPAR ifLabel:l RPAR suite:body {:
         RESULT = new GuardBlock(l, body, null);
@@ -1020,7 +1049,7 @@ if_stmt ::=
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 // , ref_stmt, new_stmt, deref_stmt;
-suite ::= LBRACE small_stmts:a RBRACE {:
+suite ::= LBRACE stmts:a RBRACE {:
         // System.out.println("parsing suite");
         RESULT = a;
     :}
@@ -1062,7 +1091,19 @@ expr ::=
         RESULT = new UnaryOp(o, a);
         RESULT.setLoc(new CodeLocation(oleft, oright, filename));
     :} %prec UNARY
-    | trailer_expr:a {:RESULT = a; :}
+    | endorseExpression:a {:
+        RESULT = a;
+    :}
+    | assignable:a {:
+        RESULT = a;
+    :}
+    | constant:a {:
+        RESULT = a;
+    :}
+    ;
+
+assignable ::=
+    trailer_expr:a {:RESULT = a; :}
     | atom:a {:
         //System.out.println("atom expr parsed");
         RESULT = a;
@@ -1150,24 +1191,9 @@ trailer_expr ::=
         RESULT = a;
     :};*/
 
-atom ::= 
-    /*LPAR:a RPAR {:
-        RESULT = new Expression();
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}
-    | */LPAR expr:a RPAR {:RESULT = a; :}
-    /*| LBRACE:a RBRACE {:
-        RESULT = new Expression();
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}*/
-    | LBRACE dictmaker:a RBRACE {:RESULT = a;:}
-    | LBRACE setmaker:a RBRACE {:RESULT = a;:}
-    | NAME:a {:
-        RESULT = new Name((String)a);
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}
+constant ::=
     //| labeledType:a {: RESULT = a; :}
-    | NUMBER:a {:
+    NUMBER:a {:
         RESULT = new Num<Integer>(Integer.valueOf((String)a));
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
@@ -1184,8 +1210,21 @@ atom ::=
         RESULT = new ConstantExpr(Constant.FALSE);
         RESULT.setLoc(new CodeLocation(kleft, kright, filename));
     :}
-    | endorseExpression:a {:
-        RESULT = a;
+    ;
+
+atom ::= 
+    /*LPAR:a RPAR {:
+        RESULT = new Expression();
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :}
+    | */LPAR expr:a RPAR {:RESULT = a; :}
+    /*| LBRACE:a RBRACE {:
+        RESULT = new Expression();
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :}*/
+    | NAME:a {:
+        RESULT = new Name((String)a);
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     ;
 /*strings ::=

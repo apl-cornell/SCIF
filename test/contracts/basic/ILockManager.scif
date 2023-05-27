@@ -1,0 +1,6 @@
+interface ILockManager {
+    bool register();
+    bool addlock(address l);
+    bool unlock(address l);
+    bool ifLocked(address l);
+}

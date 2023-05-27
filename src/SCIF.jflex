@@ -63,7 +63,7 @@ import java.util.HashMap;
         keywords.put("endorse", Integer.valueOf(sym.ENDORSE));
         keywords.put("map", Integer.valueOf(sym.MAP));
         keywords.put("contract", Integer.valueOf(sym.CONTRACT));
-        //keywords.put("interface", Integer.valueOf(sym.INTERFACE));
+        keywords.put("interface", Integer.valueOf(sym.INTERFACE));
         // keywords.put("struct", Integer.valueOf(sym.STRUCT));
         keywords.put("lock", Integer.valueOf(sym.GUARD));
         keywords.put("extends", Integer.valueOf(sym.EXTENDS));
@@ -80,7 +80,6 @@ import java.util.HashMap;
         keywords.put("catch", Integer.valueOf(sym.CATCH));
         keywords.put("rescue", Integer.valueOf(sym.RESCUE));
         keywords.put("exception", Integer.valueOf(sym.EXCEPTION));
-        keywords.put("all", Integer.valueOf(sym.ALL));
         keywords.put("constructor", Integer.valueOf(sym.CONSTRUCTOR));
         keywords.put("assume", Integer.valueOf(sym.ASSUME));
     }
@@ -102,8 +101,18 @@ lowercase = [a-z]
 
 letter = {uppercase}|{lowercase}
 NAME = ( {letter} | "_") ({letter} | {digit} | "_")*
-comment_body = .*
-comment         = "//"{comment_body}
+// comment_body = .*
+// comment         = "//"{comment_body}
+
+/* comments */
+Comment = {TraditionalComment} | {EndOfLineComment} |
+          {DocumentationComment}
+
+TraditionalComment = "/*" [^*] ~"*/" | "/*" "*"+ "/"
+InputCharacter = [^\r\n]
+EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
+DocumentationComment = "/*" "*"+ [^/*] ~"*/"
+
 whitespace      = [ \n\t]
 // encodingDeclaration = ""[^\n]*"coding"[:=][^\n]*
 indent = \t
@@ -146,7 +155,7 @@ LineTerminator = \r|\n|\r\n
 %%
 
 <YYINITIAL> {
-    {comment}   {}
+    {Comment}   {}
     {NAME}  { 
             Integer i = keywords.get(yytext());
             if (i == null) return id();

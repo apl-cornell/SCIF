@@ -39,6 +39,12 @@ public class Arg extends Node {
         return varSym;
     }
 
+    public VarSym parseArg(InterfaceSym interfaceSym) {
+        VarSym varSym = interfaceSym.newVarSym(name, annotation, isStatic, isFinal, true, location, scopeContext);
+        interfaceSym.symTab.add(name, varSym);
+        return varSym;
+    }
+
     public VarSym parseArg(NTCEnv env, ScopeContext parent) {
         // ScopeContext now = new ScopeContext(this, parent);
         VarSym varSym = env.newVarSym(name, annotation, isStatic, isFinal, true, location, parent);

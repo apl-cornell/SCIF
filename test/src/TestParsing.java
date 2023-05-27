@@ -19,6 +19,8 @@ public class TestParsing {
             "basic/BaseContract",
             "basic/ExceptionThrowAndCatch",
             "basic/EndroseIf",
+            "basic/ILockManager",
+            "basic/ITrustManager",
             "regularTypechecking/LocalTrust_W01",
             "regularTypechecking/FinalVarNotInitialized_W01",
             "regularTypechecking/FinalVarNotInitialized_W02",
@@ -27,6 +29,7 @@ public class TestParsing {
             // "examples/ERC20",
     })
     void testPositive(String contractName) {
+        //if (!contractName.equals("basic/DependentMap")) return;
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         try {

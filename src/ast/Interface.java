@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import java.util.List;
 import typecheck.ContractSym;
 import typecheck.ScopeContext;
 import typecheck.NTCEnv;
@@ -10,14 +11,20 @@ import java.util.HashSet;
 
 public class Interface extends TopLayerNode {
 
-    public String contractName;
-    public TrustSetting trustSetting;
-    public ArrayList<FunctionSig> funcSigs;
+    String contractName;
+    String superContractName;
+    TrustSetting trustSetting;
 
-    public Interface(String contractName, TrustSetting trustSetting,
-            ArrayList<FunctionSig> funcSigs) {
+    List<ExceptionDef> exceptionDefs;
+    List<FunctionSig> funcSigs;
+
+    public Interface(String contractName,
+            String superContractName,
+            List<ExceptionDef> exceptionDefs,
+            List<FunctionSig> funcSigs) {
         this.contractName = contractName;
-        this.trustSetting = trustSetting;
+        this.superContractName = superContractName;
+        this.exceptionDefs = exceptionDefs;
         this.funcSigs = funcSigs;
     }
 
@@ -78,5 +85,8 @@ public class Interface extends TopLayerNode {
         rtn.addAll(trustSetting.trust_list);
         rtn.addAll(funcSigs);
         return rtn;
+    }
+    public String getContractName() {
+        return contractName;
     }
 }

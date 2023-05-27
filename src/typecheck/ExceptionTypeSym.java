@@ -8,7 +8,7 @@ public class ExceptionTypeSym extends TypeSym {
     // Struct type should be initialized in a way like: varName = new typeName(member0, member1, ..., )
     private List<VarSym> parameters;
 
-    public ExceptionTypeSym(String typeName, ArrayList<VarSym> parameters, ScopeContext defContext) {
+    public ExceptionTypeSym(String typeName, List<VarSym> parameters, ScopeContext defContext) {
         super(typeName, defContext);
         // System.err.println("ExceptionTypeSym: " + typeName);
         //this.name = typeName;
