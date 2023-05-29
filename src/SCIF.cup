@@ -96,6 +96,7 @@ terminal DELETE;
 terminal ERROR, CONSTRUCTOR;//, PERCENTEQUAL;
 terminal ASSUME;
 terminal REVERT;
+terminal WHILE, FOR;
 
 nonterminal SourceFile sourceCode;
 nonterminal Interface interface;
@@ -117,7 +118,8 @@ nonterminal FunctionDef funcdef;
 nonterminal Arguments parameters, typedarglist, probinittfpdef;
 nonterminal Arg tfpdef;
 nonterminal List<Statement> stmts;
-nonterminal Statement stmt, assign_stmt;
+nonterminal Statement stmt;
+nonterminal Statement assign_stmt, augassign_stmt;
 nonterminal AnnAssign varDec, annassign;
 nonterminal Statement del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt, excborder_stmt;
 nonterminal String ipt_stmt;
@@ -127,13 +129,15 @@ nonterminal Statement assert_stmt;
 nonterminal CallStatement call_stmt;
 nonterminal If if_stmt;
 nonterminal Statement try_stmt, atomic_stmt;
-// nonterminal Statement while_stmt;
+nonterminal Statement while_stmt, for_stmt;
+nonterminal List<Statement> iter_stmts;
+nonterminal Statement iter_stmt, inc_stmt, augassign_stmt_withoutsemi;
 nonterminal List<ExceptHandler> except_stmts, exceptall_stmts;
 nonterminal ExceptHandler except_clause, exceptall_clause;
 nonterminal List<Statement> suite;
 nonterminal Expression expr, assignable;
 nonterminal CompareOperator comp_op;
-nonterminal BinaryOperator bit_op, addish_op, mulish_op;
+nonterminal BinaryOperator bin_op, bit_op, addish_op, mulish_op;
 nonterminal UnaryOperator unary_op;
 // nonterminal ArrayList<Expression> trailers;
 nonterminal TrailerExpr trailer_expr;
@@ -789,7 +793,8 @@ stmts ::=
         list.add(a);
         RESULT = list;
     :};
-stmt ::=  assign_stmt:a {: RESULT = a; :}
+stmt ::= assign_stmt:a {: RESULT = a; :}
+    | augassign_stmt:a {: RESULT = a; :}
     | varDec:a {: RESULT = a; :}
     | del_stmt:a {: RESULT = a; :}
     | pass_stmt:a {: RESULT = a; :}  
@@ -798,6 +803,8 @@ stmt ::=  assign_stmt:a {: RESULT = a; :}
     | assert_stmt:a {: RESULT = a; :}
     | guard_block:a {: RESULT = a; :}
     | if_stmt:a {:RESULT = a;:}
+    | while_stmt:a {: RESULT = a; :}
+    | for_stmt:a {: RESULT = a; :}
     | dynamic_stmt:a {: RESULT = a; :}
     | excborder_stmt:a {: RESULT = a; :}
     | try_stmt:a {: RESULT = a; :}
@@ -957,10 +964,36 @@ assign_stmt ::=
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 
-//annassign: ':' test ['=' test]
-//testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
-//augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
-//            '<<=' | '>>=' | '**=' | '//=')
+augassign_stmt ::=
+    augassign_stmt_withoutsemi:a SEMI {: RESULT = a; :};
+
+augassign_stmt_withoutsemi ::=
+    assignable:a bin_op:o EQUAL expr:b {:
+        BinOp e = new BinOp(a, o, b);
+        e.setLoc(new CodeLocation(bleft, bright, filename));
+        RESULT = new Assign(a, e);
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :}
+    | assignable:a OR:o EQUAL expr:b {:
+        BoolOp e = new BoolOp(a, BoolOperator.Or, b);
+        e.setLoc(new CodeLocation(bleft, bright, filename));
+        RESULT = new Assign(a, e);
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :}
+    | assignable:a AND:o EQUAL expr:b {:
+        BoolOp e = new BoolOp(a, BoolOperator.And, b);
+        e.setLoc(new CodeLocation(bleft, bright, filename));
+        RESULT = new Assign(a, e);
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :}
+    ;
+
+bin_op ::=
+    bit_op:o {: RESULT = o; :}
+    | addish_op:o {: RESULT = o; :}
+    | mulish_op:o {: RESULT = o; :}
+    ;
+
 annassign ::=
     NAME:a EQUAL expr:b {:
         //System.out.println("Annassign case 1 parsing");
@@ -1069,6 +1102,62 @@ suite ::= LBRACE stmts:a RBRACE {:
     | LBRACE RBRACE {:
         RESULT = new ArrayList<Statement>();
     :};
+
+while_stmt ::=
+    WHILE:x LPAR expr:a RPAR suite:b {:
+        RESULT = new While(a, b);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :};
+
+for_stmt ::=
+    FOR:x LPAR varDec:newVars expr:test SEMI iter_stmts:iters RPAR suite:b {:
+        RESULT = new For(newVars, test, iters, b);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :};
+
+iter_stmts ::=
+    iter_stmt:s {:
+        List<Statement> list = new ArrayList<>();
+        list.add(s);
+        RESULT = list;
+    :}
+    | iter_stmts:a COMMA iter_stmt:s {:
+        a.add(s);
+        RESULT = a;
+    :}
+    ;
+
+iter_stmt ::=
+    inc_stmt:a {: RESULT = a; :}
+    | augassign_stmt_withoutsemi:a {: RESULT = a; :}
+    ;
+
+inc_stmt ::=
+    PLUS:x PLUS assignable:a {:
+        BinOp e = new BinOp(a, BinaryOperator.Add, new Num<Integer>(1));
+        e.setLoc(new CodeLocation(xleft, xright, filename));
+        RESULT = new Assign(a, e);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
+    | assignable:a PLUS PLUS {:
+        BinOp e = new BinOp(a, BinaryOperator.Add, new Num<Integer>(1));
+        e.setLoc(new CodeLocation(aleft, aright, filename));
+        RESULT = new Assign(a, e);
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :}
+    | MINUS:x MINUS assignable:a {:
+        BinOp e = new BinOp(a, BinaryOperator.Sub, new Num<Integer>(1));
+        e.setLoc(new CodeLocation(xleft, xright, filename));
+        RESULT = new Assign(a, e);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
+    | assignable:a MINUS MINUS {:
+        BinOp e = new BinOp(a, BinaryOperator.Sub, new Num<Integer>(1));
+        e.setLoc(new CodeLocation(aleft, aright, filename));
+        RESULT = new Assign(a, e);
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :}
+    ;
 
 expr ::=
     expr:a OR:o expr:b {:

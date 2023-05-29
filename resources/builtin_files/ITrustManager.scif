@@ -1,5 +1,5 @@
-interface TrustManager {
-    exception NotRegistered;
+interface ITrustManager {
+    exception NotRegistered();
     bool register();
     /**
         if a trusts b.

@@ -1,6 +1,10 @@
 package ast;
 
 import compile.SolCode;
+import java.nio.file.Path;
+import java.util.List;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -10,19 +14,11 @@ import java.util.HashSet;
 public class While extends Statement {
 
     Expression test;
-    ArrayList<Statement> body;
-    ArrayList<Statement> orelse; //TODO: ignoring for now
+    List<Statement> body;
 
-    public While(Expression test, ArrayList<Statement> body, ArrayList<Statement> orelse) {
+    public While(Expression test, List<Statement> body) {
         this.test = test;
         this.body = body;
-        this.orelse = orelse;
-    }
-
-    public While(Expression test, ArrayList<Statement> body) {
-        this.test = test;
-        this.body = body;
-        this.orelse = null;
     }
 
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
@@ -36,9 +32,6 @@ public class While extends Statement {
         for (Statement s : body) {
             ScopeContext tmp = s.ntcGenCons(env, now);
         }
-        for (Statement s : orelse) {
-            ScopeContext tmp = s.ntcGenCons(env, now);
-        }
         env.exitNewScope();
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         return now;
@@ -46,51 +39,44 @@ public class While extends Statement {
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        // TODO
-        /*
         Context beginContext = env.inContext;
-        Context endContext = new Context(Utils.getLabelNamePc(location),
-                Utils.getLabelNameLock(location));
+        Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
+                Utils.getLabelNameLock(toSHErrLocFmt()));
 
-        Context testContext = test.genConsVisit(env, tail_position && body.size() == 0);
-        String IfNameTestValue = testContext.valueLabelName;
-        String IfNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
-        String IfNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis,
-                location, env.curContractSym.name,
+        ExpOutcome to = test.genConsVisit(env, false);
+
+        String ifNameTest = to.valueLabelName;
+        String ifNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
+        String ifNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
+
+        env.cons.add(new Constraint(new Inequality(ifNamePcBefore, ifNamePcAfter), env.hypothesis(),
+                location, env.curContractSym().getName(),
                 "Control flow before this while statement contributes to the one in its scope"));
 
-        env.cons.add(new Constraint(new Inequality(IfNameTestValue, IfNamePcAfter), env.hypothesis,
-                location, env.curContractSym.name,
+        env.cons.add(new Constraint(new Inequality(ifNameTest, ifNamePcAfter), env.hypothesis(),
+                location, env.curContractSym().getName(),
                 "Integrity of the test condition contributes to control flow of this while statement"));
 
         env.incScopeLayer();
+
+        env.inContext = new Context(ifNamePcAfter, beginContext.lambda);
         CodeLocation loc = null;
+        PathOutcome ifo = to.psi;
         for (Statement stmt : body) {
-            env.context = curContext;
-            Context tmp = stmt.genConsVisit(env, false);
+            ifo = stmt.genConsVisit(env, false);
+
+            PsiUnit normalUnit = ifo.getNormalPath();
+            if (normalUnit == null) break;
+
+            env.inContext = normalUnit.c;
             loc = stmt.location;
         }
+
         env.decScopeLayer();
-        env.cons.add(new Constraint(new Inequality(curContext.lambda, curContext.inLockName),
-                env.hypothesis, location, env.curContractSym.name,
-                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
 
-        return curContext;
-
-         */
-        return null;
+        return ifo;
 
     }
-/*
-    public void findPrincipal(HashSet<String> principalSet) {
-        for (Statement stmt : body) {
-            stmt.findPrincipal(principalSet);
-        }
-        for (Statement stmt : orelse) {
-            stmt.findPrincipal(principalSet);
-        }
-    }*/
 
     @Override
     public void solidityCodeGen(SolCode code) {
@@ -118,7 +104,6 @@ public class While extends Statement {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(test);
         rtn.addAll(body);
-        rtn.addAll(orelse);
         return rtn;
     }
 }

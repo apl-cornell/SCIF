@@ -70,9 +70,13 @@ public class FunctionSig extends TopLayerNode {
         if (rtn != null && ((LabeledType) rtn).label() != null) {
 
         } else {
-            assert rtn != null;
-            rtn = new LabeledType(rtn.type(),
+            if (name.equals(Utils.CONSTRUCTOR_NAME)) {
+                // pass
+            } else {
+                assert rtn != null;
+                rtn = new LabeledType(rtn.type(),
                         new PrimitiveIfLabel(new Name(typecheck.Utils.LABEL_THIS)));
+            }
         }
         for (LabeledType exception : exceptionList) {
             exception.setToDefault(rtn.label());

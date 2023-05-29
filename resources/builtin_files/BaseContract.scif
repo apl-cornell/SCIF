@@ -1,14 +1,11 @@
-import TrustManager;
-import LockManager;
-
-contract BaseContract implements BaseRuntime {
+contract BaseContract implements IBaseRuntime {
     address owner;
     address[] trustees;
     map(address, uint) trusteeIndex;
-    TrustManager trustManager;
-    LockManager lockManager;
+    ITrustManager trustManager;
+    ILockManager lockManager;
 
-    deploy(TrustManager _trustManager, SLockManager _lockManager) {
+    constructor(ITrustManager _trustManager, ILockManager _lockManager) {
         owner = sender;
         trustManager = _trustManager;
         lockManager = _lockManager;
@@ -37,21 +34,27 @@ contract BaseContract implements BaseRuntime {
 
     @public
     bool setTrust{this}(address trustee) {
-        if (sender != owner) return false;
+        if (sender != owner) {
+            return false;
+        }
         setLocalTrust(trustee);
         return trustManager.setTrust(trustee);
     }
 
     @public
     bool revokeTrust{this}(address trustee) {
-        if (sender != owner) return false;
+        if (sender != owner) {
+            return false;
+        }
         revokeLocalTrust(trustee);
         return trustManager.revokeTrust(trustee);
     }
 
     @public
     bool changeOwner{this}(address newOwner) {
-        if (sender != owner) return false;
+        if (sender != owner) {
+            return false;
+        }
         revokeTrust(owner);
         owner = newOwner;
         setTrust(owner);
@@ -65,7 +68,7 @@ contract BaseContract implements BaseRuntime {
 
     @public
     bool ifDTrust(address trustee) {
-        for (uint i = 0; i < trustees.length; ++i) {
+        for (uint i = 0; i < trustees.length; i += 1) {
             if (trustees[i] == trustee) {
                 return true;
             }
