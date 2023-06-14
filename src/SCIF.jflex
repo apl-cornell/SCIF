@@ -209,6 +209,8 @@ LineTerminator = \r|\n|\r\n
     //"+="    { return op(sym.PLUSEQUAL); }
     //"-="    { return op(sym.MINEQUAL); }
     "->"    { return op(sym.RARROW); }
+    "⨆"      { return op(sym.JOIN); }
+    "⨅"      { return op(sym.MEET); }
     //"*="    { return op(sym.STAREQUAL); }
     //"/="    { return op(sym.SLASHEQUAL); }
     //"|="    { return op(sym.VBAREQUAL); }

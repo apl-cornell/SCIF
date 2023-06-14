@@ -36,12 +36,18 @@ public class Arg extends Node {
     public VarSym parseArg(ContractSym contractSym) {
         VarSym varSym = contractSym.newVarSym(name, annotation, isStatic, isFinal, true, location, scopeContext);
         contractSym.symTab.add(name, varSym);
+        if (annotation.label() != null) {
+            varSym.setLabel(contractSym.newLabel(annotation.label()));
+        }
         return varSym;
     }
 
     public VarSym parseArg(InterfaceSym interfaceSym) {
         VarSym varSym = interfaceSym.newVarSym(name, annotation, isStatic, isFinal, true, location, scopeContext);
         interfaceSym.symTab.add(name, varSym);
+        if (annotation.label() != null) {
+            varSym.setLabel(interfaceSym.newLabel(annotation.label()));
+        }
         return varSym;
     }
 
@@ -49,17 +55,23 @@ public class Arg extends Node {
         // ScopeContext now = new ScopeContext(this, parent);
         VarSym varSym = env.newVarSym(name, annotation, isStatic, isFinal, true, location, parent);
         env.addSym(name, varSym);
+        if (annotation.label() != null) {
+            varSym.setLabel(env.newLabel(annotation.label()));
+        }
         return varSym;
     }
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        // System.err.println(scopeContext);
         ScopeContext now = new ScopeContext(this, parent);
+        VarSym varSym = env.newVarSym(name, annotation, isStatic, isFinal, true, location, now);
 
+        env.addSym(name, varSym);
+        if (annotation.label() != null) {
+            varSym.setLabel(env.newLabel(annotation.label()));
+        }
         ScopeContext type = annotation.ntcGenCons(env, now);
 
-        env.addSym(name, env.newVarSym(name, annotation, isStatic, isFinal, true, location, now));
 
         env.addCons(type.genCons(now, Relation.EQ, env, location));
 
@@ -76,6 +88,9 @@ public class Arg extends Node {
         VarSym varSym = env.curContractSym().newVarSym(name, annotation, isStatic, isFinal, true, location,
                 scopeContext);
         env.addVar(name, varSym);
+        if (annotation.label() != null) {
+            varSym.setLabel(env.toLabel(annotation.label()));
+        }
 
         if (varSym.isFinal && varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)) {
             env.addPrincipal(varSym);

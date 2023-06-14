@@ -68,6 +68,17 @@ public class VarSym extends Sym {
         this.isBuiltIn = varSym.isBuiltIn;
     }
 
+    public VarSym(VarSym varSym, ScopeContext context) {
+        super(varSym.getName(), context);
+        // this.name = varSym.name;
+        this.typeSym = varSym.typeSym;
+        this.ifl = varSym.ifl;
+        this.location = varSym.location;
+        this.isStatic = varSym.isStatic;
+        this.isFinal = varSym.isFinal;
+        this.isBuiltIn = varSym.isBuiltIn;
+    }
+
     /**
      * Return the value of this symbol's label in SHErrLoc format
      * @return
@@ -112,5 +123,14 @@ public class VarSym extends Sym {
 
     public boolean isPrincipalVar() {
         return isFinal && (typeSym instanceof ContractSym || typeSym.getName().equals(Utils.ADDRESS_TYPE));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof VarSym vo) {
+            return vo.toSHErrLocFmt().equals(toSHErrLocFmt());
+        } else {
+            return false;
+        }
     }
 }

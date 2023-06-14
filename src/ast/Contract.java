@@ -1,7 +1,9 @@
 package ast;
 
 import compile.SolCode;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.swing.plaf.nimbus.State;
 import jdk.jshell.execution.Util;
 import sherrloc.constraint.ast.Top;
@@ -122,11 +124,12 @@ public class Contract extends TopLayerNode {
         return now;
     }
 
-    public void globalInfoVisit(ContractSym contractSym) {
+    @Override
+    public void globalInfoVisit(InterfaceSym contractSym) {
         // contractSym.name = contractName;
 //        contractSym.trustSetting = trustSetting;
         // contractSym.ifl = ifl;
-        contractSym.addContract(contractName, contractSym);
+        // contractSym.addContract(contractName, contractSym);
         Utils.addBuiltInTypes(contractSym.symTab);
         /*String name = "this";
         contractSym.addVar(name, contractSym.toVarSym(name,
@@ -196,10 +199,10 @@ public class Contract extends TopLayerNode {
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.solidityCodeGen(code);
         }
-
-        for (ExceptionDef expDef : exceptionDefs) {
-            expDef.solidityCodeGen(code);
-        }
+//
+//        for (ExceptionDef expDef : exceptionDefs) {
+//            expDef.solidityCodeGen(code);
+//        }
 
         for (FunctionDef fDef : methodDeclarations) {
             fDef.solidityCodeGen(code);
@@ -227,7 +230,6 @@ public class Contract extends TopLayerNode {
     }
 
     public boolean codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
-        // TODO: add exception
         if (superContractName.equals("")) {
             return true;
         }
@@ -237,49 +239,82 @@ public class Contract extends TopLayerNode {
         // trust_list is also inherited
         Contract superContract = contractMap.get(superContractName);
         if (superContract == null) {
-            // TODO: superContract not found
-            return false;
+            Interface itrface = interfaceMap.get(superContractName);
+            if (itrface == null) {
+                assert false: superContractName;
+                return false;
+            }
+            // check that all methods are implemented
+
+            Map<String, FunctionSig> funcMap = new HashMap<>();
+            for (FunctionDef f: methodDeclarations) {
+                funcMap.put(f.name, f);
+            }
+            for (FunctionSig f: itrface.funcSigs) {
+                String name = f.name;
+                if (funcMap.containsKey(name)) {
+                    if (!f.typeMatch(funcMap.get(name))) {
+                        assert false: f.signature() + " $ " + funcMap.get(name).signature();
+                        return false;
+                    }
+                } else {
+                    assert false: name;
+                    return false;
+                }
+            }
+            return true;
         }
 
         // inherit from superContract
 
         // trust_list
-        ArrayList<TrustConstraint> newTrustCons = new ArrayList<>();
+        List<TrustConstraint> newTrustCons = new ArrayList<>();
         newTrustCons.addAll(superContract.trustSetting.trust_list);
         newTrustCons.addAll(trustSetting.trust_list);
         trustSetting.trust_list = newTrustCons;
 
         // Statement
-        HashMap<String, StateVariableDeclaration> varNames = new HashMap<>();
-        HashMap<String, FunctionSig> funcNames = new HashMap<>();
+        Map<String, StateVariableDeclaration> varNames = new HashMap<>();
+        Map<String, ExceptionDef> expDefs = new HashMap<>();
+        Map<String, FunctionSig> funcNames = new HashMap<>();
+        Set<String> nameSet = new HashSet<>();
 
         for (StateVariableDeclaration a : varDeclarations) {
             Name x = a.name();
-            if (varNames.containsKey(x.id)) {
+            if (nameSet.contains(x.id)) {
                 //TODO: duplicate names
                 return false;
             }
             varNames.put(x.id, a);
+            nameSet.add(x.id);
+        }
+
+        for (ExceptionDef exp: exceptionDefs) {
+            if (nameSet.contains(exp.exceptionName)) {
+                // TODO: duplicate names
+                return false;
+            }
+            nameSet.add(exp.exceptionName);
+            expDefs.put(exp.exceptionName, exp);
         }
 
         for (FunctionDef f : methodDeclarations) {
-            if (varNames.containsKey(f.name) || funcNames.containsKey(f.name)) {
+            if (nameSet.contains(f.name)) {
                 //TODO: duplicate names
                 return false;
             }
+            nameSet.add(f.name);
             funcNames.put(f.name, f);
         }
 
-        ArrayList<StateVariableDeclaration> newStateVarDecs = new ArrayList<>();
-        ArrayList<FunctionDef> newFuncDefs = new ArrayList<>();
+        List<StateVariableDeclaration> newStateVarDecs = new ArrayList<>();
+        List<ExceptionDef> newExpDefs = new ArrayList<>();
+        List<FunctionDef> newFuncDefs = new ArrayList<>();
 
         for (StateVariableDeclaration a : superContract.varDeclarations) {
             Name x = a.name();
-            if (varNames.containsKey(x.id)) {
-                // TODO: var being overridden
-                return false;
-            } else if (funcNames.containsKey(x.id)) {
-                // TODO: func overridden by var
+            if (nameSet.contains(x.id)) {
+                // TODO: duplicate names
                 return false;
             }
 
@@ -287,7 +322,16 @@ public class Contract extends TopLayerNode {
         }
         newStateVarDecs.addAll(varDeclarations);
 
-        for (FunctionDef f : methodDeclarations) {
+        for (ExceptionDef exp: superContract.exceptionDefs) {
+            if (nameSet.contains(exp.exceptionName)) {
+                // TODO: duplicate names
+                return false;
+            }
+            newExpDefs.add(exp);
+        }
+        newExpDefs.addAll(exceptionDefs);
+
+        for (FunctionDef f : superContract.methodDeclarations) {
             boolean overridden = false;
             if (funcNames.containsKey(f.name)) {
                 if (!funcNames.get(f.name).typeMatch(f)) {
@@ -298,6 +342,9 @@ public class Contract extends TopLayerNode {
             } else if (varNames.containsKey(f.name)) {
                 // TODO: var overridden by func
                 return false;
+            } else if (expDefs.containsKey(f.name)) {
+                // TODO: exp overridden by func
+                return false;
             }
 
             if (!overridden) {
@@ -307,6 +354,7 @@ public class Contract extends TopLayerNode {
         newFuncDefs.addAll(methodDeclarations);
 
         varDeclarations = newStateVarDecs;
+        exceptionDefs = newExpDefs;
         methodDeclarations = newFuncDefs;
         return true;
     }
@@ -332,6 +380,9 @@ public class Contract extends TopLayerNode {
         final IfLabel labelThis = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
         final IfLabel labelTop = new PrimitiveIfLabel(new Name(Utils.LABEL_TOP));
         final IfLabel labelBot = new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM));
+        labelThis.setLoc(CodeLocation.builtinCodeLocation());
+        labelTop.setLoc(CodeLocation.builtinCodeLocation());
+        labelBot.setLoc(CodeLocation.builtinCodeLocation());
 
         // @protected
         // @final
@@ -339,14 +390,14 @@ public class Contract extends TopLayerNode {
         List<Arg> args = new ArrayList<>();
         Arg tmparg = new Arg(
                 "target",
-                new LabeledType(Utils.ADDRESS_TYPE, labelThis),
+                new LabeledType(Utils.ADDRESS_TYPE, labelThis, CodeLocation.builtinCodeLocation()),
                 false,
                 true
         );
         args.add(tmparg);
         tmparg = new Arg(
                 "amount",
-                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), labelThis),
+                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), labelThis, CodeLocation.builtinCodeLocation()),
                 false,
                 true
         );
@@ -373,9 +424,10 @@ public class Contract extends TopLayerNode {
                 new Arguments(args),
                 new ArrayList<>(),
                 decs,
-                new LabeledType(new Type(Utils.BuiltinType2ID(BuiltInT.VOID))),
+                Utils.builtinLabeldType(BuiltInT.VOID),
                 false,
-                true
+                true,
+                CodeLocation.builtinCodeLocation()
         );
         methodDeclarations.add(sendDef);
 
@@ -385,7 +437,7 @@ public class Contract extends TopLayerNode {
         args = new ArrayList<>();
         args.add(new Arg(
                 "addr",
-                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM))),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)), CodeLocation.builtinCodeLocation()),
                 false,
                 true
         ));
@@ -411,9 +463,10 @@ public class Contract extends TopLayerNode {
                 new Arguments(args),
                 new ArrayList<>(),
                 decs,
-                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), labelTop),
+                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), labelTop, CodeLocation.builtinCodeLocation()),
                 false,
-                true
+                true,
+                CodeLocation.builtinCodeLocation()
         );
         methodDeclarations.add(balanceDef);
     }
@@ -433,29 +486,32 @@ public class Contract extends TopLayerNode {
         // final This{this} this;
         StateVariableDeclaration thisDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_THIS),
-                new LabeledType(contractName, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS))),
+                new LabeledType(contractName, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)), CodeLocation.builtinCodeLocation()),
                 null,
                 true,
                 true,
                 true
         );
+        thisDec.setLoc(CodeLocation.builtinCodeLocation());
         StateVariableDeclaration topDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_TOP),
-                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP))),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP)), CodeLocation.builtinCodeLocation()),
                 null,
                 true,
                 true,
                 true
         );
+        topDec.setLoc(CodeLocation.builtinCodeLocation());
         StateVariableDeclaration botDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_BOTTOM),
-                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM))),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)), CodeLocation.builtinCodeLocation()),
                 null,
                 true,
                 true,
                 true
         );
-        ArrayList<StateVariableDeclaration> newDecs = new ArrayList<>();
+        botDec.setLoc(CodeLocation.builtinCodeLocation());
+        List<StateVariableDeclaration> newDecs = new ArrayList<>();
         newDecs.add(topDec);
         newDecs.add(botDec);
         newDecs.add(thisDec);

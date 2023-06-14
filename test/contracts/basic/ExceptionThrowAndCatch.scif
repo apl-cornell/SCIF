@@ -3,7 +3,7 @@ contract ExceptionDefinition {
     exception Y(uint aug1, uint aug2);
 
     @public
-    void foo() throws (X) {
+    void foo{sender -> this; any}() throws (X) {
         try {
             bar(1, 2);
         } catch (Y expY) {

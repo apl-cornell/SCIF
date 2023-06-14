@@ -18,7 +18,7 @@ public abstract class Node {
     /**
      * Record where the corresponding code is in original source file
      */
-    CodeLocation location = new CodeLocation();
+    CodeLocation location = new CodeLocation(0, 0, "unknown");
 
     public CodeLocation getLocation() {
         return location;

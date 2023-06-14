@@ -4,6 +4,7 @@ import compile.SolCode;
 import compile.Utils;
 import java.util.Arrays;
 import java.util.List;
+import javax.swing.plaf.InsetsUIResource;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -40,7 +41,8 @@ public class FunctionSig extends TopLayerNode {
      * @param rtn           Type of the return value
      */
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
-            List<String> decoratorList, LabeledType rtn, boolean isConstructor) {
+            List<String> decoratorList, LabeledType rtn, boolean isConstructor,
+            CodeLocation location) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
@@ -49,10 +51,12 @@ public class FunctionSig extends TopLayerNode {
         this.exceptionList = new ArrayList<>();
         this.isConstructor = isConstructor;
         this.isBuiltIn = false;
+        this.location = location;
         setDefault();
     }
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
-            List<String> decoratorList, LabeledType rtn, boolean isConstructor, boolean isBuiltIn) {
+            List<String> decoratorList, LabeledType rtn, boolean isConstructor, boolean isBuiltIn,
+            CodeLocation location) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
@@ -61,14 +65,15 @@ public class FunctionSig extends TopLayerNode {
         this.exceptionList = new ArrayList<>();
         this.isConstructor = isConstructor;
         this.isBuiltIn = isBuiltIn;
+        this.location = location;
         setDefault();
     }
 
     private void setDefault() {
-        funcLabels.setToDefault(isConstructor, this.decoratorList);
+        funcLabels.setToDefault(isConstructor, this.decoratorList, location);
         args.setToDefault(funcLabels.begin_pc);
-        if (rtn != null && ((LabeledType) rtn).label() != null) {
-
+        if (rtn != null && rtn.label() != null) {
+            // pass
         } else {
             if (name.equals(Utils.CONSTRUCTOR_NAME)) {
                 // pass
@@ -88,13 +93,15 @@ public class FunctionSig extends TopLayerNode {
             return new ArrayList<>(Arrays.asList(Utils.PRIVATE_DECORATOR));
         } else {
             boolean isPublic = false, isPrivate = false;
-            if (decoratorList.contains(Utils.PUBLIC_DECORATOR)) {
-                isPublic = true;
+            for (String dec: decoratorList) {
+                if (dec.equals(Utils.PUBLIC_DECORATOR)) {
+                    isPublic = true;
+                }
+                if (dec.equals(Utils.PRIVATE_DECORATOR)) {
+                    isPrivate = true;
+                }
             }
-            if (decoratorList.contains(Utils.PRIVATE_DECORATOR)) {
-                isPrivate = true;
-            }
-            if (!(isPrivate && isPublic)) {
+            if (!(isPrivate || isPublic)) {
                 decoratorList.add(Utils.PRIVATE_DECORATOR);
             } else if (isPrivate && isPublic) {
                 return null;
@@ -106,7 +113,7 @@ public class FunctionSig extends TopLayerNode {
 
     public FunctionSig(String name, FuncLabels funcLabels, Arguments args,
             List<String> decoratorList, LabeledType rtn, List<LabeledType> exceptionList,
-            boolean isConstructor) {
+            boolean isConstructor, CodeLocation location) {
         this.name = name;
         this.funcLabels = funcLabels;
         this.args = args;
@@ -115,6 +122,7 @@ public class FunctionSig extends TopLayerNode {
         this.exceptionList = exceptionList;
         this.isConstructor = isConstructor;
         this.isBuiltIn = false;
+        this.location = location;
         setDefault();
     }
 
@@ -127,6 +135,7 @@ public class FunctionSig extends TopLayerNode {
         this.exceptionList = funcSig.exceptionList;
         this.isConstructor = funcSig.isConstructor;
         this.isBuiltIn = false;
+        this.location = funcSig.location;
         setDefault();
     }
 
@@ -138,24 +147,20 @@ public class FunctionSig extends TopLayerNode {
         addBuiltInVars(env.curSymTab(), now);
         VarSym sender = (VarSym) env.getCurSym(typecheck.Utils.LABEL_SENDER);
 
-        ArrayList<VarSym> argsInfo = args.parseArgs(env, now);
-        HashMap<ExceptionTypeSym, String> exceptions = new HashMap<>();
+        List<VarSym> argsInfo = args.parseArgs(env, now);
+        Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
         for (LabeledType t : exceptionList) {
-            // t.setContractName(env.curContractSym().getName());
             ExceptionTypeSym t1 = env.getExceptionTypeSym(t.type());
             assert t1 != null;
-            // System.err.println("add func exp: " +  t1.name);
-            // ExceptionTypeSym exceptionType = env.get(t);
             exceptions.put(t1, null);
         }
-        System.err.println(((LabeledType) rtn).label());
         contractSymTab.add(name,
                 new FuncSym(name,
                         env.newLabel(funcLabels.begin_pc),
                         env.newLabel(funcLabels.to_pc),
                         env.newLabel(funcLabels.gamma_label),
                         argsInfo, env.toTypeSym(rtn.type(), now),
-                        env.newLabel(((LabeledType) rtn).label()),
+                        env.newLabel(rtn.label()),
                         exceptions,
                         parent, sender, location));
         env.exitNewScope();
@@ -164,14 +169,14 @@ public class FunctionSig extends TopLayerNode {
     }
 
     @Override
-    public void globalInfoVisit(ContractSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) {
         SymTab realContractSymTab = contractSym.symTab;
         contractSym.symTab = new SymTab(contractSym.symTab);
         addBuiltInVars(contractSym.symTab, scopeContext);
         VarSym sender = (VarSym) contractSym.symTab.lookup(typecheck.Utils.LABEL_SENDER);
         List<VarSym> argsInfo = args.parseArgs(contractSym);
         Label ifl = null;
-        if (rtn instanceof LabeledType) {
+        if (rtn != null) {
             ifl = contractSym.newLabel(((LabeledType) rtn).label());
         }
         Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
@@ -191,7 +196,7 @@ public class FunctionSig extends TopLayerNode {
                         contractSym.newLabel(funcLabels.to_pc),
                         contractSym.newLabel(funcLabels.gamma_label),
                         argsInfo, contractSym.toTypeSym(rtn.type(), scopeContext), ifl, exceptions,
-                        contractSym.getContractNode().scopeContext, sender, location));
+                        contractSym.defContext(), sender, location));
         contractSym.symTab = contractSym.symTab.getParent();
     }
 
@@ -202,6 +207,10 @@ public class FunctionSig extends TopLayerNode {
     @Override
     public void passScopeContext(ScopeContext parent) {
         scopeContext = new ScopeContext(this, parent);
+        passScopeContext();
+    }
+
+    public void passScopeContext() {
         for (Node node : children()) {
             if (node != null) //TODO: remove null check
             {
@@ -217,11 +226,20 @@ public class FunctionSig extends TopLayerNode {
 
     @Override
     public void solidityCodeGen(SolCode code) {
-
+        boolean isPublic = false, isPayable = false;
+        if (decoratorList != null) {
+            if (decoratorList.contains(typecheck.Utils.PUBLIC_DECORATOR)) {
+                isPublic = true;
+            }
+            if (decoratorList.contains(typecheck.Utils.PAYABLE_DECORATOR)) {
+                isPayable = true;
+            }
+        }
     }
 
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
 
+        assert false;
         return null;
     }
 
@@ -239,6 +257,9 @@ public class FunctionSig extends TopLayerNode {
     }
 
     public boolean typeMatch(FunctionSig f) {
+        if (true) {
+            return f.signature().equals(signature());
+        }
         if (!f.name.equals(name)) {
             return false;
         }
@@ -274,7 +295,7 @@ public class FunctionSig extends TopLayerNode {
 
 
     protected void addBuiltInVars(SymTab curSymTab, ScopeContext now) {
-        // final address{sender} sender;
+        // final address{this} sender;
         VarSym varSender =
                 new VarSym(
                         typecheck.Utils.LABEL_SENDER,
@@ -303,5 +324,38 @@ public class FunctionSig extends TopLayerNode {
                         true
                 ));
 
+    }
+
+    public void setPublic() {
+        decoratorList.removeIf(d -> d.equals(Utils.PRIVATE_DECORATOR));
+        decoratorList.add(Utils.PUBLIC_DECORATOR);
+    }
+
+    public String signature() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(name);
+        for (String s: decoratorList) {
+            sb.append(s);
+        }
+        sb.append("|");
+        sb.append(funcLabels.begin_pc);
+        sb.append(funcLabels.to_pc);
+        sb.append(funcLabels.gamma_label);
+        sb.append("|");
+
+        for (Arg arg: args.args()) {
+            sb.append(arg.isFinal);
+            sb.append(arg.annotation.type().name);
+            sb.append(arg.annotation.label());
+        }
+        sb.append("|");
+        for (LabeledType exp: exceptionList) {
+            sb.append(exp.type().name);
+            sb.append(exp.label());
+        }
+        sb.append("|");
+        sb.append(rtn.type().name);
+        sb.append(rtn.label());
+        return sb.toString();
     }
 }

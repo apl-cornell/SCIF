@@ -1,18 +1,21 @@
 interface ITrustManager {
-    exception NotRegistered();
+    @public
     bool register();
     /**
         if a trusts b.
-        Checks: this is a's manager. Throw E otherwise.
         True: a trusts b.
-        False: a doesn't trust b
-        E: not sure
+        False: not sure
     */
-    bool ifTrust(address a, address b) throws (NotRegistered);
-    bool ifTrust(address a, address b, address[] proof) throws (NotRegistered);
+    @public
+    bool ifTrust(address a, address b);
+    @public
+    bool ifTrustWithProof(address a, address b, address[] proof);
+
     /**
         Set that the sender trusts trustee.
     */
-    void setTrust(address trustee) throws (NotRegistered);
-    void revokeTrust(address trustee) throws (NotRegistered);
+    @public
+    bool setTrust(address trustee);
+    @public
+    bool revokeTrust(address trustee);
 }

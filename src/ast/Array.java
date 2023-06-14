@@ -1,6 +1,7 @@
 package ast;
 
 import java.util.ArrayList;
+import typecheck.ArrayTypeSym;
 import typecheck.MapTypeSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
@@ -43,7 +44,7 @@ public class Array extends Type {
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         valueType.ntcGenCons(env, parent);
-        MapTypeSym typeSym = (MapTypeSym) env.toTypeSym(this, scopeContext);
+        ArrayTypeSym typeSym = (ArrayTypeSym) env.toTypeSym(this, scopeContext);
         assert typeSym != null : name;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
         return now;

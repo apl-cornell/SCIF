@@ -2,6 +2,7 @@ package ast;
 
 import compile.SolCode;
 import java.util.List;
+import typecheck.CodeLocation;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.Utils;
@@ -55,7 +56,7 @@ public class FuncLabels extends Node {
 
     @Override
     public void solidityCodeGen(SolCode code) {
-
+        assert false;
     }
 
     @Override
@@ -79,16 +80,20 @@ public class FuncLabels extends Node {
                 && ((l4 && r4) || (!(l4 || r4) && end_pc.typeMatch(funcLabels.begin_pc)));
     }
 
-    public void setToDefault(boolean isConstructor, List<String> decoratorList) {
+    public void setToDefault(boolean isConstructor, List<String> decoratorList, CodeLocation funcLocation) {
         //TODO: set end_pc
         IfLabel thisLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
+        thisLbl.setLoc(funcLocation);
         if (isConstructor) {
             begin_pc = to_pc = gamma_label = end_pc = thisLbl;
+            location = funcLocation;
         } else {
             if (gamma_label != null) {
+                assert begin_pc != null;
                 return;
             } else {
                 if (to_pc != null) {
+                    assert begin_pc != null;
                     gamma_label = to_pc;
                 } else if (begin_pc != null) {
                     gamma_label = to_pc = begin_pc;
@@ -101,16 +106,20 @@ public class FuncLabels extends Node {
                         }
                     }
                     if (isPublic) {
-                        IfLabel botLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM));
-                        begin_pc = botLbl;//new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER));
+                        IfLabel senderLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER));
+                        senderLbl.setLoc(funcLocation);
+                        begin_pc = senderLbl;//new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER));
                         to_pc = thisLbl;
-                        gamma_label = botLbl;
+                        gamma_label = thisLbl;
                         end_pc = thisLbl;
+                        location = funcLocation;
                     } else {
                         begin_pc = to_pc = gamma_label = end_pc = thisLbl;
+                        location = funcLocation;
                     }
                 }
             }
         }
+        // assert !gamma_label.location.fileName.equals("Builtin");
     }
 }

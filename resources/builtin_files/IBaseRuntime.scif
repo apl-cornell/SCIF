@@ -1,13 +1,19 @@
-import TrustManager;
-import LockManager;
+import ILockManager;
+import ITrustManager;
 
 interface IBaseRuntime {
+    @public
     bool setTrust{this}(address trustee);
+    @public
     bool revokeTrust{this}(address trustee);
 
+    @public
     bool ifDTrust(address trustee);
+    @public
     address[] getDTrustList();
 
-    TrustManager trustManager();
-    LockManager lockManager();
+    @public
+    ITrustManager getTrustManager();
+    @public
+    ILockManager getLockManager();
 }

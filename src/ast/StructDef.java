@@ -1,12 +1,9 @@
 package ast;
 
 import compile.SolCode;
-import java.util.HashSet;
-import typecheck.ContractSym;
+import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
-import typecheck.PathOutcome;
 import typecheck.ScopeContext;
-import typecheck.VisitEnv;
 
 import java.util.ArrayList;
 
@@ -23,7 +20,7 @@ public class StructDef extends TopLayerNode {
     //TODO: struct def NTCgenCons
 
     @Override
-    public void globalInfoVisit(ContractSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) {
         // assuming there is no double declaration
 
         contractSym.addType(structName, contractSym.toStructType(structName, members));

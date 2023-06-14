@@ -17,7 +17,7 @@ public class NTCEnv {
     // external contracts will be added to the global SymTab
     private ArrayList<Constraint> cons;
     private Hypothesis globalHypothesis;
-    private ContractSym curContractSym;
+    private InterfaceSym curContractSym;
     private HashMap<String, SourceFile> programMap;
 
     public NTCEnv(ContractSym contractSym) {
@@ -48,7 +48,7 @@ public class NTCEnv {
         curSymTab = curSymTab.getParent();
     }
 
-    public void setCurContractSym(ContractSym curContractSym) {
+    public void setCurContractSym(InterfaceSym curContractSym) {
         this.curContractSym = curContractSym;
     }
 
@@ -66,46 +66,27 @@ public class NTCEnv {
         if (astType == null) {
             return new BuiltinTypeSym(Utils.BuiltinType2ID(BuiltInT.VOID));
         }
-        // System.err.println("[in]toTypeSym: " + astType.x);
 
         Sym s = getCurSym(astType.name());
         if (s instanceof TypeSym)//Utils.isPrimitiveType(astType.x))
         {
             typeSym = (TypeSym) s;// new BuiltinTypeSym(astType.x);
         } else {
-            if (astType instanceof DepMap) {
-                DepMap depMap = (DepMap) astType;
+            if (astType instanceof DepMap depMap) {
                 typeSym = new DepMapTypeSym(toTypeSym(depMap.keyType, defContext), depMap.keyName(), toTypeSym(depMap.valueType, defContext),
                         newLabel(depMap.valueLabel()),
                         defContext, new ScopeContext(depMap, defContext));
-            } else if (astType instanceof Map) {
-                Map map = (Map) astType;
+            } else if (astType instanceof Map map) {
                 typeSym = new MapTypeSym(toTypeSym(map.keyType, defContext), toTypeSym(map.valueType, defContext), defContext);
+            } else if (astType instanceof Array array) {
+                typeSym = new ArrayTypeSym(array.size, toTypeSym(array.valueType, defContext), defContext);
             } else {
                 // return null;
                 // typeSym = new BuiltinTypeSym(lt.x);
             }
         }
-        // System.err.println("[out]toTypeSym: " + typeSym.name);
         return typeSym;
     }
-
-    /*private Type toType(LabeledType lt) {
-        Type rtn = null;
-        if (lt instanceof DepMap) {
-            DepMapTypeInfo
-        } else if (lt instanceof Map) {
-
-        } else {
-            TypeSym tp = (TypeSym) getCurSym(lt.x);
-            rtn = tp.type;
-        }
-        return rtn;
-    }*/
-
-//    public String getSymName(String id) {
-//        return curSymTab.lookup(id).getSLCName();
-//    }
 
     public Sym getSym(BuiltInT type) {
         Sym symbol = curSymTab.lookup(Utils.BuiltinType2ID(type));
@@ -169,7 +150,7 @@ public class NTCEnv {
         return getContract(iptContract) != null;
     }
 
-    public void addGlobalSym(String contractName, ContractSym contractSym) {
+    public void addGlobalSym(String contractName, Sym contractSym) {
         globalSymTab.add(contractName, contractSym);
     }
 
@@ -210,7 +191,7 @@ public class NTCEnv {
         return globalHypothesis;
     }
 
-    public ContractSym curContractSym() {
+    public InterfaceSym curContractSym() {
         return curContractSym;
     }
 
@@ -231,5 +212,17 @@ public class NTCEnv {
         } else {
             throw new RuntimeException();
         }
+    }
+
+    public boolean containsInterface(String name) {
+        return getInterface(name) != null;
+    }
+
+    private InterfaceSym getInterface(String name) {
+        Sym sym = globalSymTab.lookup(name);
+        if (sym != null && sym instanceof InterfaceSym) {
+            return (InterfaceSym) sym;
+        }
+        return null;
     }
 }

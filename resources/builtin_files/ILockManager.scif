@@ -1,6 +1,10 @@
 interface ILockManager {
+    @public
     bool register();
+    @public
     bool addlock(address l);
+    @public
     bool unlock(address l);
+    @public
     bool ifLocked(address l);
 }

@@ -30,17 +30,16 @@ public class If extends Statement {
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         // consider to be a new scope
         // must contain at least one Statement
-        ScopeContext now = new ScopeContext(this, parent);
+        ScopeContext now = scopeContext;
         ScopeContext rtn = null;
 
         rtn = test.ntcGenCons(env, now);
         Constraint testCon = rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
         env.addCons(testCon);
-        System.err.println(testCon.toSherrlocFmt(true));
 
         env.enterNewScope();
         for (Statement s : body) {
-            assert !now.getSHErrLocName().startsWith("null");
+            assert !now.getSHErrLocName().startsWith("null"): now.getSHErrLocName();
             rtn = s.ntcGenCons(env, now);
         }
         env.exitNewScope();
@@ -76,39 +75,20 @@ public class If extends Statement {
         //TestableVarInfo testedVar = null;
         //String beforeTestedLabel = "";
         boolean tested = false;
-        if (test instanceof Compare) {
-            Compare bo = (Compare) test;
-            if ((bo.op == CompareOperator.Eq || bo.op == CompareOperator.GtE
-                    || bo.op == CompareOperator.LtE) &&
-                    bo.left instanceof Name && bo.right instanceof Name) {
-                Name left = (Name) bo.left, right = (Name) bo.right;
-                if (env.containsVar(left.id) && env.containsVar(right.id)) {
+        if (test instanceof FlowsToExp fte) {
+            Name left = (Name) fte.lhs, right = (Name) fte.rhs;
+            if (env.containsVar(left.id) && env.containsVar(right.id)) {
 
-                    logger.debug("if both exists");
-                    //System.err.println("if both exists");
-                    VarSym l = env.getVar(left.id), r = env.getVar(right.id);
-                    logger.debug(l.toString());
-                    logger.debug(r.toString());
-                    //System.err.println(l.toString());
-                    //System.err.println(r.toString());
-                    if (l.typeSym.getName().equals(Utils.ADDRESS_TYPE) && r.typeSym.getName().equals(
-                            Utils.ADDRESS_TYPE)) {
-                        /*testedVar = ((TestableVarInfo) l);
-                        beforeTestedLabel = testedVar.testedLabel;
-                        tested = testedVar.tested;
-                        testedVar.setTested(r.toSHErrLocFmt());*/
+                logger.debug("if both exists");
+                VarSym l = env.getVar(left.id), r = env.getVar(right.id);
+                logger.debug(l.toString());
+                logger.debug(r.toString());
+                createdHypo = true;
+                Inequality hypo = new Inequality(l.toSHErrLocFmt(), Relation.LEQ,
+                        r.toSHErrLocFmt());
 
-                        createdHypo = true;
-                        Inequality hypo = new Inequality(l.toSHErrLocFmt(), bo.op,
-                                r.toSHErrLocFmt());
-
-                        env.hypothesis().add(hypo);
-                        //System.err.println("testing label");
-                        logger.debug("testing label");
-                    }
-                } else {
-                    //TODO: cannot find both the variables
-                }
+                env.hypothesis().add(hypo);
+                logger.debug("testing label");
             }
         }
         env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis(),
@@ -178,9 +158,7 @@ public class If extends Statement {
                 "Lock of else branch contributes to lock of this if statement"));*/
 
         logger.debug("finished orelse branch");
-        //System.err.println("finished orelse branch");
 
-        // env.ctxt = originalCtxt;
         return ifo;
     }
 
@@ -212,15 +190,15 @@ public class If extends Statement {
     @Override
     public void passScopeContext(ScopeContext parent) {
         scopeContext = new ScopeContext(this, parent);
+        test.passScopeContext(parent);
         for (Node node : children()) {
             node.passScopeContext(scopeContext);
         }
     }
 
     @Override
-    public ArrayList<Node> children() {
+    public List<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        rtn.add(test);
         rtn.addAll(body);
         rtn.addAll(orelse);
         return rtn;

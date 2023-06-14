@@ -1,0 +1,7 @@
+contract WEx1 {
+    uint high;
+    @public
+    void set(uint{any} low) {
+        high = low;
+    }
+}

@@ -35,7 +35,7 @@ public class FuncSym extends Sym {
         this.funcName = funcName;
         this.sender = sender;
         // this.funcLabels = funcLabels;
-        assert external_pc != null;
+        assert external_pc != null: funcName;
         this.external_pc = external_pc;
         this.internal_pc = internal_pc;
         this.gamma = gamma;

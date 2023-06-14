@@ -17,14 +17,11 @@ parser code {:
 
     public void syntax_error(Symbol cur_token) {
         logger.error("Syntax error at (" + cur_token.left + ", " + cur_token.right + ")", cur_token);
-        //System.err.println();
         report_error("Syntax error ", cur_token);
     }
 
     public void debuglog(String s) {
         logger.debug(s);
-        //if (DEBUG)
-        //    System.err.println(s);
     }
 
     /*public Node<String> makeKeyword(Object kw) {
@@ -52,13 +49,9 @@ parser code {:
 
             Parser p = new Parser(lexer);
             logger.trace("Parser init: " + filename);
-            //System.err.println("Parser init\n");
 
             rtn = p.parse();
-            //p.debug_parse();
             logger.trace("Finish");
-
-            //System.err.println("Finish\n");
 
             if (astFile != null) {
                 System.setErr(System.err);
@@ -76,6 +69,7 @@ terminal FALSE, TRUE, NONE;
 terminal AND, AS, ASSERT;
 terminal BREAK, CONTINUE;
 terminal ELSE;//, FROM;
+terminal JOIN, MEET;
 terminal IF, IMPORT, IN, IS, NOT;
 terminal OR, PASS, RAISE, RETURN;
 terminal LPAR, RPAR, LSQB, RSQB, COLON, COMMA, SEMI;
@@ -190,6 +184,7 @@ nonterminal Call call_expr;
 nonterminal Revert revert_stmt;
 nonterminal List<Name> name_list, name_list_oneplus;
 
+precedence left EQUALGREATER;
 precedence left OR;
 precedence left AND;
 precedence left NOT;
@@ -429,7 +424,8 @@ constructors ::=
 
 constructor ::=
     CONSTRUCTOR:c parameters:p suite:s {:
-        FunctionDef cons = new FunctionDef((String) c, new FuncLabels(), p, s, new ArrayList<>(), null, true);
+        CodeLocation location = new CodeLocation(cleft, cright, filename);
+        FunctionDef cons = new FunctionDef((String) c, new FuncLabels(), p, s, new ArrayList<>(), null, true, location);
         RESULT = cons;
     :}
     ;
@@ -516,49 +512,31 @@ r_funcSig ::=
     maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b {:
         // System.out.println("parsing function");
         logger.debug("parsing func sig");
-        RESULT = new FunctionSig((String) funcName, funclabels, b, null, c, false);
-        RESULT.setLoc(new CodeLocation(cleft, cright, filename));
+        CodeLocation location = new CodeLocation(cleft, cright, filename);
+        RESULT = new FunctionSig((String) funcName, funclabels, b, null, c, false, location);
         //makeNode("funcdef", a, b, c, d);
     :}
     | decorators:d maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b  {:
         // System.out.println("parsing function");
         // logger.debug("parsing func sig");
-        RESULT = new FunctionSig((String) funcName, funclabels, b, d, c, false);
-        RESULT.setLoc(new CodeLocation(cleft, cright, filename));
+        CodeLocation location = new CodeLocation(cleft, cright, filename);
+        RESULT = new FunctionSig((String) funcName, funclabels, b, d, c, false, location);
         //makeNode("funcdef", a, b, c, d);
     :}
     | maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b THROWS LPAR except_types:t RPAR  {:
         // System.out.println("parsing function");
         // logger.debug("parsing func sig");
-        RESULT = new FunctionSig((String) funcName, funclabels, b, null, c, t, false);
-        RESULT.setLoc(new CodeLocation(cleft, cright, filename));
+        CodeLocation location = new CodeLocation(cleft, cright, filename);
+        RESULT = new FunctionSig((String) funcName, funclabels, b, null, c, t, false, location);
         //makeNode("funcdef", a, b, c, d);
     :}
     | decorators:d maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b THROWS LPAR except_types:t RPAR {:
         // System.out.println("parsing function");
         // logger.debug("parsing func sig");
-        RESULT = new FunctionSig((String) funcName, funclabels, b, d, c, t, false);
-        RESULT.setLoc(new CodeLocation(cleft, cright, filename));
+        CodeLocation location = new CodeLocation(cleft, cright, filename);
+        RESULT = new FunctionSig((String) funcName, funclabels, b, d, c, t, false, location);
         //makeNode("funcdef", a, b, c, d);
-    :}
-    /*| DEF:name NAME:funcName tFuncLabels:funclabels parameters:b {:
-        logger.debug("parsing function");
-        //System.err.println("parsing function");
-        RESULT = new FunctionSig((String) funcName, funclabels, b, null, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
-    | DEF:name NAME:a  polyDescription:p tFuncLabels:funclabels parameters:b {:
-        logger.debug("Finished parsing the poly func");
-        String funId = (String) a;
-        RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, null);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
-    | DEF:name NAME:a polyDescription:p tFuncLabels:funclabels parameters:b RARROW typeSym:c {:
-        logger.debug("Finished parsing the poly func");
-        String funId = (String) a;
-        RESULT = new PolyFunctionSig(funId, funclabels, p, b, null, c);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}*/;
+    :};
 
 decorator ::= AT:x NAME:a {:
         logger.debug("parsing a decorator @" + (String) a);
@@ -599,6 +577,7 @@ depMap ::=
     MAP:x LPAR NAME:keyTypeName NAME:keyName COMMA labeledType:valueType RPAR {:
         String name = (String) keyName;
         Type keyType = new Type((String) keyTypeName);
+        keyType.setLoc(new CodeLocation(keyTypeNameleft, keyTypeNameright, filename));
         RESULT = new ast.DepMap(keyType, keyName, valueType);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
@@ -611,11 +590,11 @@ ifLabel ::= unitIfLabel:a {:
         RESULT = a;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :} 
-    | ifLabel:a AND ifLabel:b {:
+    | ifLabel:a MEET ifLabel:b {:
         RESULT = new ComplexIfLabel(a, IfOperator.MEET, b);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
-    | ifLabel:a OR ifLabel:b {:
+    | ifLabel:a JOIN ifLabel:b {:
         RESULT = new ComplexIfLabel(a, IfOperator.JOIN, b);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
@@ -634,9 +613,7 @@ primitiveIfLabel ::= NAME:a {:
 
 funcdef ::=
     r_funcSig:funcSig suite:d {:
-        // System.err.println("parsing function");
         RESULT = new FunctionDef(funcSig, d);
-        RESULT.setLoc(new CodeLocation(funcSigleft, funcSigright, filename));
     :}
     | error:err {:
         report_fatal_error("Syntax error when parsing a method", err);
@@ -676,9 +653,9 @@ arrayType ::=
         Type last = a;
         for (int i = b.size() - 1; i >= 0; --i) {
             RESULT = new Array(b.get(i), last);
+            RESULT.setLoc(new CodeLocation(aleft, aright, filename));
             last = RESULT;
         }
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 
 arraySubs ::=
@@ -756,7 +733,6 @@ probinittfpdef ::=
     :};
 tfpdef ::= 
      modifiers:m maybeLabeledType:b NAME:a{:
-        // System.err.println("pair (" + b + " " + a + ")");
         String name = (String)a;
         RESULT = new Arg(name, b, false, m.contains(sym.FINAL));
         RESULT.setLoc(new CodeLocation(bleft, bright, filename));
@@ -1160,6 +1136,11 @@ inc_stmt ::=
     ;
 
 expr ::=
+    expr:a EQUALGREATER expr:b {:
+        RESULT = new FlowsToExp(a, b);
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :}
+    |
     expr:a OR:o expr:b {:
         RESULT = new BoolOp(a, BoolOperator.Or, b);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));

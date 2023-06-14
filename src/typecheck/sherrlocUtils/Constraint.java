@@ -23,10 +23,24 @@ public class Constraint {
     }*/
 
     public Constraint(Inequality inequality, Hypothesis hypothesis, CodeLocation location, String contractName, String explanation) {
+        assert location != null;
         this.inequality = inequality;
         this.hypothesis = new Hypothesis(hypothesis);
-        this.position = location == null ? null : new Position(location);
-        this.contractName = contractName;
+        this.position = new Position(location);
+        this.contractName = position.fileName;
+        this.explanation = explanation + "@" + this.contractName;
+        if (explanation.equals(Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION)) {
+            this.weight = WEIGHT1;
+        } else {
+            this.weight = WEIGHT2;
+        }
+    }
+    public Constraint(Inequality inequality, Hypothesis hypothesis, CodeLocation location, String explanation) {
+        assert location != null;
+        this.inequality = inequality;
+        this.hypothesis = new Hypothesis(hypothesis);
+        this.position = new Position(location);
+        this.contractName = position.fileName;
         this.explanation = explanation + "@" + contractName;
         if (explanation.equals(Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION)) {
             this.weight = WEIGHT1;
@@ -34,11 +48,11 @@ public class Constraint {
             this.weight = WEIGHT2;
         }
     }
-    public Constraint(Inequality inequality, Hypothesis hypothesis, CodeLocation location, String contractName, String explanation, int weight) {
+    public Constraint(Inequality inequality, Hypothesis hypothesis, CodeLocation location, String explanation, int weight) {
         this.inequality = inequality;
         this.hypothesis = new Hypothesis(hypothesis);
         this.position = location == null ? null : new Position(location);
-        this.contractName = contractName;
+        this.contractName = position.fileName;
         this.explanation = explanation + "@" + contractName;
         this.weight = weight;
     }
@@ -50,12 +64,24 @@ public class Constraint {
         this.contractName = contractName;
     }*/
 
+    public Constraint(Inequality inequality, CodeLocation location, String explanation) {
+        this.inequality = inequality;
+        this.hypothesis = new Hypothesis();
+        this.position = location == null ? null : new Position(location);
+        this.contractName = position.fileName;
+        this.explanation = explanation + "@" + contractName;
+        if (explanation.equals(Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION)) {
+            this.weight = WEIGHT1;
+        } else {
+            this.weight = WEIGHT2;
+        }
+    }
     public Constraint(Inequality inequality, CodeLocation location, String contractName, String explanation) {
         this.inequality = inequality;
         this.hypothesis = new Hypothesis();
         this.position = location == null ? null : new Position(location);
-        this.contractName = contractName;
-        this.explanation = explanation + "@" + contractName;
+        this.contractName = position.fileName;
+        this.explanation = explanation + "@" + this.contractName;
         if (explanation.equals(Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION)) {
             this.weight = WEIGHT1;
         } else {

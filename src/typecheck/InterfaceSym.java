@@ -2,6 +2,7 @@ package typecheck;
 
 import ast.AnnAssign;
 import ast.Arguments;
+import ast.Array;
 import ast.ComplexIfLabel;
 import ast.Contract;
 import ast.DepMap;
@@ -9,10 +10,12 @@ import ast.IfLabel;
 import ast.Interface;
 import ast.LabeledType;
 import ast.Map;
+import ast.Node;
 import ast.PrimitiveIfLabel;
 import ast.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 public class InterfaceSym extends TypeSym {
 
@@ -23,8 +26,8 @@ public class InterfaceSym extends TypeSym {
     public SymTab symTab;
     // private Label label;
     // public ArrayList<TrustConstraint> trustCons;
-    private List<Assumption> assumptions;
-    private final Interface astNode;
+    protected List<Assumption> assumptions;
+    protected Node astNode;
     //private VarSym thisSym;
 
     public InterfaceSym(String name,
@@ -39,10 +42,27 @@ public class InterfaceSym extends TypeSym {
         // this.label = label;
         astNode = itrface;
     }
+    public InterfaceSym(String name,
+            SymTab symTab,
+            // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
+            List<Assumption> assumptions,
+            // Label label,
+            ScopeContext context) {
+        super(name, context);
+        this.symTab = symTab;
+        this.assumptions = assumptions;
+        // this.label = label;
+        astNode = null;
+    }
 
     public InterfaceSym(String contractName, Interface itrface) {
         super(contractName, itrface.getScopeContext());
         astNode = itrface;
+        symTab = new SymTab();
+        assumptions = new ArrayList<>();
+    }
+    public InterfaceSym(String contractName, ScopeContext scopeContext) {
+        super(contractName, scopeContext);
         symTab = new SymTab();
         assumptions = new ArrayList<>();
     }
@@ -63,7 +83,6 @@ public class InterfaceSym extends TypeSym {
         if (astType == null) {
             return new BuiltinTypeSym("void");
         }
-        // System.err.println("[in]toTypeSym: " + astType.x);
 
         Sym s = symTab.lookup(astType.name());
         TypeSym typeSym = null;
@@ -94,19 +113,19 @@ public class InterfaceSym extends TypeSym {
                 symTab = symTab.parent;
             } else if (astType instanceof Map map) {
                 typeSym = new MapTypeSym(toTypeSym(map.keyType, defContext), toTypeSym(map.valueType, defContext), defContext);
+            } else if (astType instanceof Array array) {
+                typeSym = new ArrayTypeSym(array.size, toTypeSym(array.valueType, defContext), defContext);
             }
 
         }
-        assert typeSym != null;
-        // System.err.println("[out]toTypeSym: " + typeSym.name);
+        assert typeSym != null: astType.name();
         return typeSym;
     }
 
     public VarSym newVarSym(String localName, LabeledType astType, boolean isStatic, boolean isFinal, boolean isBuiltIn,
             CodeLocation loc, ScopeContext defContext) {
-        System.err.println("toVarSym: " + localName + " " + astType.type().name());
         TypeSym typeSym = toTypeSym(astType.type(), defContext);
-        System.err.println("toVarSym: " + localName + " " + typeSym);
+        assert typeSym != null;
         Label ifl;
         ifl = newLabel(astType.label());
         return new VarSym(localName, typeSym, ifl, loc, defContext, isStatic, isFinal, isBuiltIn);
@@ -115,8 +134,8 @@ public class InterfaceSym extends TypeSym {
     public Label newLabel(IfLabel ifl) {
         if (ifl instanceof PrimitiveIfLabel) {
             VarSym label = (VarSym) lookupSym(((PrimitiveIfLabel) ifl).value().id);
-            if (label == null) return null;
-            return new PrimitiveLabel(label, ifl.getLocation());
+            // assert label != null: ((PrimitiveIfLabel) ifl).value().id;
+            return label != null ? new PrimitiveLabel(label, ifl.getLocation()) : null;
         } else if (ifl instanceof ComplexIfLabel) {
             return new ComplexLabel(newLabel(((ComplexIfLabel) ifl).getLeft()),
                     ((ComplexIfLabel) ifl).getOp(),
@@ -139,7 +158,7 @@ public class InterfaceSym extends TypeSym {
         symTab.add(typename, typeSym);
     }
 
-    public void addContract(String typename, InterfaceSym typeSym) {
+    public void addInterface(String typename, InterfaceSym typeSym) {
         symTab.add(typename, typeSym);
     }
 
@@ -166,17 +185,17 @@ public class InterfaceSym extends TypeSym {
     }
 
     public String getLabelNameContract() {
-        return Utils.getLabelNameContract(getInterfaceNode().getScopeContext());
+        return Utils.getLabelNameContract(defContext());
     }
 
     public String getLabelContract() {
-        return Utils.getLabelNameContract(getInterfaceNode().getScopeContext());
+        return Utils.getLabelNameContract(defContext());
         // return ifl.toSHErrLocFmt(name());
     }
 
-    public Interface getInterfaceNode() {
-        return astNode;
-    }
+    /*public Interface getInterfaceNode() {
+        return (Interface) astNode;
+    }*/
 
     public ExceptionTypeSym toExceptionType(String exceptionName, Arguments arguments, ScopeContext defContext) {
 
@@ -196,26 +215,6 @@ public class InterfaceSym extends TypeSym {
         return (ExceptionTypeSym) sym;
     }
 
-    /**
-     * Get all principals and addresses
-     * @return
-     */
-//    public Set<Sym> getPrincipalSet() {
-//        Set<Sym> rtn = new HashSet<>();
-//        for (Entry<String, VarSym> entry : symTab.getVars().entrySet()) {
-//            //if (sym instanceof VarSym) {
-//            VarSym sym = entry.getValue();
-//            if (sym.typeSym.name().equals(Utils.PRINCIPAL_TYPE)
-//                    || (sym.isFinal
-//                    && (sym.typeSym instanceof ContractSym
-//                        || sym.typeSym.name().equals(Utils.ADDRESS_TYPE)))) {
-//                rtn.add(sym);
-//            }
-//            //}
-//        }
-//        return rtn;
-//    }
-
     public Iterable<Assumption> assumptions() {
         return assumptions;
     }
@@ -228,5 +227,35 @@ public class InterfaceSym extends TypeSym {
         VarSym thisSym = (VarSym) lookupSym(Utils.LABEL_THIS);
         assert thisSym != null;
         return thisSym;
+    }
+    public void addContract(String typename, InterfaceSym typeSym) {
+        symTab.add(typename, typeSym);
+    }
+
+    public TypeSym toStructType(String typeName, ArrayList<AnnAssign> members) {
+        Sym sym = symTab.lookup(typeName);
+        if (sym != null) {
+            if (sym instanceof TypeSym) {
+                return (TypeSym) sym;
+            } else {
+                return null;
+            }
+        }
+        ArrayList<VarSym> memberList = new ArrayList<>();
+        for (AnnAssign member : members) {
+            VarSym tmp = member.toVarInfo(this);
+            memberList.add(tmp);
+        }
+        return new StructTypeSym(typeName, memberList, astNode.getScopeContext());
+    }
+
+    public String info() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getName());
+        for (Entry<String, FuncSym> sym: symTab.getAllFuncs().entrySet()) {
+            sb.append("|");
+            sb.append(sym.getKey());
+        }
+        return sb.toString();
     }
 }

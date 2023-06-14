@@ -117,11 +117,9 @@ public class Subscript extends TrailerExpr {
 
             if (indexVarSym.isPrincipalVar()) {
                 logger.debug("typename {} to {}", valueVarSym.typeSym.getName(), ifNameIndex);
-                System.err.println("typename " + depMapTypeSym.key().toSHErrLocFmt() + " to " + ifNameIndex);
 
                 String ifDepMapValue = depMapTypeSym.label().toSHErrLocFmt(depMapTypeSym.key().toSHErrLocFmt(),
                         ifNameIndex);
-                System.err.println("DepMapValue: " + ifDepMapValue + " - " + depMapTypeSym.key().toSHErrLocFmt() + "/" + ifNameIndex);
 
                 env.cons.add(
                         new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue),

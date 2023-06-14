@@ -12,6 +12,7 @@ public class Name extends Variable {
     //Context ctx;
     public Name(String x) {
         id = x;
+        location = CodeLocation.builtinCodeLocation();
         // id = new ScopedName(name, "");
         // ctx = null;
     }

@@ -16,7 +16,7 @@ import java.util.Map;
 public class ScopeContext {
 
     private Node cur;
-    private HashMap<ExceptionTypeSym, Boolean> funcExceptionMap;
+    private Map<ExceptionTypeSym, Boolean> funcExceptionMap;
     private ScopeContext parent;
     private final String SHErrLocName;
 
@@ -32,7 +32,7 @@ public class ScopeContext {
     }
     
     public ScopeContext(Node cur, ScopeContext parent,
-            HashMap<ExceptionTypeSym, Boolean> funcExceptionMap) {
+            Map<ExceptionTypeSym, Boolean> funcExceptionMap) {
         this.cur = cur;
         this.parent = parent;
         this.funcExceptionMap = new HashMap<>(funcExceptionMap);
@@ -51,8 +51,12 @@ public class ScopeContext {
             localPostfix = ((FunctionSig) cur).getName();
         } else if (cur instanceof If) {
             localPostfix = "if" + cur.locToString();
+        } else if (cur instanceof EndorseIfStatement) {
+            localPostfix = "endorseIf" + cur.locToString();
         } else if (cur instanceof While) {
             localPostfix = "while" + cur.locToString();
+        } else if (cur instanceof For) {
+            localPostfix = "for" + cur.locToString();
         } else if (cur instanceof Interface) {
             localPostfix = ((Interface) cur).getContractName();
         } else if (cur instanceof GuardBlock) {
@@ -65,6 +69,7 @@ public class ScopeContext {
             localPostfix = ((SourceFile) cur).getSourceFileId();
         } else {
             assert cur != null;
+            assert !cur.toSHErrLocFmt().startsWith("null"): cur.toSHErrLocFmt();
             // localPostfix = cur.toSHErrLocFmt();
             return cur.toSHErrLocFmt();
             //throw new RuntimeException();
@@ -85,12 +90,12 @@ public class ScopeContext {
     public Constraint genCons(ScopeContext rhs, Relation op, NTCEnv env, CodeLocation location) {
 
         return new Constraint(new Inequality(getSHErrLocName(), op, rhs.getSHErrLocName()),
-                env.globalHypothesis(), location, env.curContractSym().getName(), "");
+                env.globalHypothesis(), location, "");
     }
 
     public Constraint genCons(String rhs, Relation op, NTCEnv env, CodeLocation location) {
         return new Constraint(new Inequality(getSHErrLocName(), op, rhs), env.globalHypothesis(),
-                location, env.curContractSym().getName(), "");
+                location, "");
     }
 
     public boolean isContractLevel() {
@@ -151,6 +156,6 @@ public class ScopeContext {
     public Constraint genEqualCons(Sym sym, NTCEnv env, CodeLocation location, String explanation) {
         assert !getSHErrLocName().startsWith("null") : getSHErrLocName();
         return new Constraint(new Inequality(getSHErrLocName(), CompareOperator.Eq, sym.toSHErrLocFmt()),
-                env.globalHypothesis(), location, env.curContractSym().getName(), explanation);
+                env.globalHypothesis(), location, explanation);
     }
 }

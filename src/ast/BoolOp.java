@@ -2,6 +2,7 @@ package ast;
 
 import compile.SolCode;
 import compile.Utils;
+import java.util.List;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -83,8 +84,8 @@ public class BoolOp extends Expression {
     }
 
     @Override
-    public ArrayList<Node> children() {
-        ArrayList<Node> rtn = new ArrayList<>();
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
         rtn.add(left);
         rtn.add(right);
         return rtn;

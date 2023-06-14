@@ -19,13 +19,13 @@ contract BaseContract implements IBaseRuntime {
     @private
     void setLocalTrust(address trustee) {
         trustees.push(trustee);
-        trusteeIndex[trustee] = trustees.length;
+        trusteeIndex[trustee] = trustees.length();
     }
 
     @private
     void revokeLocalTrust(address trustee) {
         uint ind = trusteeIndex[trustee];
-        address lastTrustee = trustees[trustees.length - 1];
+        address lastTrustee = trustees[trustees.length() - 1];
         trustees[ind - 1] = lastTrustee;
         trusteeIndex[lastTrustee] = ind;
         trustees.pop();
@@ -62,14 +62,15 @@ contract BaseContract implements IBaseRuntime {
     }
 
     @public
-    address owner() {
+    address getOwner() {
         return owner;
     }
 
     @public
     bool ifDTrust(address trustee) {
-        for (uint i = 0; i < trustees.length; i += 1) {
-            if (trustees[i] == trustee) {
+        address _trustee = endorse(trustee, any -> this);
+        for (uint i = 0; i < trustees.length(); i += 1) {
+            if (trustees[i] == _trustee) {
                 return true;
             }
         }
@@ -82,12 +83,12 @@ contract BaseContract implements IBaseRuntime {
     }
 
     @public
-    address trustManager() {
+    ITrustManager getTrustManager() {
         return trustManager;
     }
 
     @public
-    address lockManager() {
+    ILockManager getLockManager() {
         return lockManager;
     }
 }

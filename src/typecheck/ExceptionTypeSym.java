@@ -10,8 +10,6 @@ public class ExceptionTypeSym extends TypeSym {
 
     public ExceptionTypeSym(String typeName, List<VarSym> parameters, ScopeContext defContext) {
         super(typeName, defContext);
-        // System.err.println("ExceptionTypeSym: " + typeName);
-        //this.name = typeName;
         this.parameters = parameters;
         this.hashCode = Objects.hash(this.getName(), parameters);
     }

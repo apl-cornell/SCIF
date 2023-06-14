@@ -42,25 +42,55 @@ public class Call extends TrailerExpr {
         boolean extern = false;
         if (!(value instanceof Name)) {
             if (value instanceof Attribute) {
-                // a.b(c), a must be a contract
+                // a.b(c), a must be a contract or an array
                 extern = true;
                 Attribute att = (Attribute) value;
                 String varName = ((Name) att.value).id;
                 funcName = att.attr.id;
                 Sym s = env.getCurSym(varName);
                 logger.debug("var " + varName + ": " + s.getName());
-                if (!(s instanceof VarSym) || !(((VarSym) s).typeSym instanceof ContractSym)) {
-                    System.err.println("a.b not found");
-                    return null;
-                }
-                ContractSym contractSym = (ContractSym) ((VarSym) s).typeSym;
-                s = contractSym.getFunc(funcName);
-                if (s == null) {
-                    System.err.println("func in a.b() not found");
-                    return null;
-                }
+                if (s instanceof VarSym varSym) {
+                    if (varSym.typeSym instanceof InterfaceSym contractSym) {
+                        s = contractSym.getFunc(funcName);
+                        assert s != null: "func in " + varName + "." + funcName + "() not found";
 
-                funcSym = (FuncSym) s;
+                        funcSym = (FuncSym) s;
+                    } else if (varSym.typeSym instanceof ArrayTypeSym arrayTypeSym) {
+                        // TODO: change the hard-code style
+                        TypeSym arrayTSym = arrayTypeSym.valueType;
+                        String arrayTName = arrayTSym.toSHErrLocFmt();
+                        if (funcName.equals("pop")) {
+                            // return T
+                            assert args.size() == 0: "type error";
+                            env.addCons(now.genCons(arrayTName, Relation.EQ, env, location));
+                            return now;
+                        } else if (funcName.equals("push")) {
+                            // require one T, return void
+                            assert args.size() == 1: "type error";
+                            Expression arg = args.get(0);
+                            ScopeContext argContext = arg.ntcGenCons(env, now);
+                            env.addCons(argContext.genCons(arrayTName, Relation.GEQ, env, arg.location));
+                            TypeSym rtnTypeSym = (TypeSym) env.getSym(BuiltInT.VOID);
+                            env.addCons(now.genCons(rtnTypeSym.toSHErrLocFmt(), Relation.EQ, env, location));
+                            return now;
+                        } else if (funcName.equals("length")) {
+                            // return uint
+                            assert args.size() == 0: "type error";
+                            TypeSym rtnTypeSym = (TypeSym) env.getSym(BuiltInT.UINT);
+                            env.addCons(now.genCons(rtnTypeSym.toSHErrLocFmt(), Relation.EQ, env, location));
+                            return now;
+                        } else {
+                            assert false: "type error";
+                            return null;
+                        }
+                    } else {
+                        assert false: "type error: " + varName + "." + funcName + "() " + varSym.typeSym.toSHErrLocFmt() + (varSym.typeSym instanceof ContractSym);
+                        return null;
+                    }
+                } else {
+                    assert false;
+                    return null;
+                }
             } else {
                 return null;
             }
@@ -69,7 +99,6 @@ public class Call extends TrailerExpr {
             funcName = ((Name) value).id;
             Sym s = env.getCurSym(funcName);
             if (s == null) {
-                System.err.println("func not found");
                 return null;
             }
             if (!(s instanceof FuncSym)) {
@@ -135,12 +164,12 @@ public class Call extends TrailerExpr {
         ExpOutcome vo = null;
 
         boolean externalCall = false;
-        ContractSym externalContractSym = null;
+        InterfaceSym externalContractSym = null;
         VarSym externalTargetSym = null;
         String ifContRtn = null;
         if (!(value instanceof Name)) {
             if (value instanceof Attribute) {
-                //  the case: a.b(c) where a is a contract, b is a function and c are the arguments
+                //  the case: a.b(c) where a is a contract or an array, b is a function and c are the arguments
                 // att = a.b
 
                 logger.debug("call value: " + value.toSolCode());
@@ -151,15 +180,77 @@ public class Call extends TrailerExpr {
                 ifContRtn = vo.valueLabelName;
 
                 //TODO: assuming a's depth is 1
+                funcName = (att.attr).id;
                 String varName = ((Name) att.value).id;
                 VarSym var = env.getVar(varName);
+                if (var.typeSym instanceof ArrayTypeSym arrayTypeSym) {
+                    //TODO: change the hard-code style
+
+                    TypeSym arrayTSym = arrayTypeSym.valueType;
+                    String arrayTName = arrayTSym.toSHErrLocFmt();
+                    if (funcName.equals("pop")) {
+                        // requires pc => integrity of the array var
+                        Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
+                        ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
+                        env.cons.add(
+                                new Constraint(new Inequality(ifNamePc, ifContRtn), env.hypothesis(),
+                                        location,
+                                        "Current control flow must be trusted to call this method"));
+                        if (!tail_position) {
+                            env.cons.add(new Constraint(
+                                    new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
+                                    env.hypothesis(), location,
+                                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                        }
+                        return new ExpOutcome(ifNamePc, psi);
+                    } else if (funcName.equals("push")) {
+                        // require one T, return void
+                        // requires pc => integrity of the array var
+                        // require the element => integrity of the array var
+                        Expression arg = args.get(0);
+                        ExpOutcome argOutcome = arg.genConsVisit(env, false);
+                        psi.join(argOutcome.psi);
+                        String argLabel = argOutcome.valueLabelName;
+                        Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
+                        ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
+                        env.cons.add(
+                                new Constraint(new Inequality(ifNamePc, var.ifl.toSHErrLocFmt()), env.hypothesis(),
+                                        location, env.curContractSym().getName(),
+                                        "Current control flow must be trusted to call this method"));
+                        env.cons.add(
+                                new Constraint(new Inequality(argLabel, var.ifl.toSHErrLocFmt()), env.hypothesis(),
+                                        location, env.curContractSym().getName(),
+                                        "Current control flow must be trusted to call this method"));
+                        if (!tail_position) {
+                            env.cons.add(new Constraint(
+                                    new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
+                                    env.hypothesis(), location, env.curContractSym().getName(),
+                                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                        }
+                        return new ExpOutcome(ifNamePc, psi);
+                    } else if (funcName.equals("length")) {
+                        // return uint the same as
+                        Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
+                        ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
+                        if (!tail_position) {
+                            env.cons.add(new Constraint(
+                                    new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
+                                    env.hypothesis(), location, env.curContractSym().getName(),
+                                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                        }
+                        return new ExpOutcome(var.ifl.toSHErrLocFmt(), psi);
+                    } else {
+                        assert false: "type error";
+                        return null;
+                    }
+                }
+
                 externalTargetSym = var;
                 namespace = var.toSHErrLocFmt();
                 TypeSym conType = var.typeSym;
                 externalContractSym = env.getContract(conType.getName());
 
                 env.addSigReq(namespace, conType.getName());
-                funcName = (att.attr).id;
                 ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
                 funcSym = env.getContract(conType.getName()).getFunc(funcName);
 
@@ -174,7 +265,6 @@ public class Call extends TrailerExpr {
             }
         } else {
             //a(b)
-            System.err.println("a(b)");
             funcName = ((Name) value).id;
             ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
             if (!env.containsFunc(funcName)) {
@@ -240,7 +330,8 @@ public class Call extends TrailerExpr {
 
             // env.prevContext = prevContext = tmp;
             String ifNameArgValue = argValueLabelNames.get(i);
-            Label ifArgLabel = funcSym.getLabelArg(i); // TODO: dependent
+            Label ifArgLabel = funcSym.getLabelArg(i);
+            assert ifArgLabel != null : argSym.getName();
             env.cons.add(
                     new Constraint(
                             new Inequality(
@@ -388,7 +479,7 @@ public class Call extends TrailerExpr {
             Sym s = env.getCurSym(funcName);
             assert s != null;
             if (!(s instanceof FuncSym)) {
-                if (s instanceof ContractSym || s instanceof BuiltinTypeSym) {
+                if (s instanceof InterfaceSym || s instanceof BuiltinTypeSym) {
                     return true;
                 }
                 assert false;

@@ -26,7 +26,11 @@ public class TestParsing {
             "regularTypechecking/FinalVarNotInitialized_W02",
             "ifcTypechecking/LocalTrust",
             "ifcTypechecking/Wallet_lock_exception",
-            // "examples/ERC20",
+            "builtin_files/BaseContract",
+            "builtin_files/IBaseRuntime",
+            "builtin_files/ILockManager",
+            "builtin_files/ITrustManager",
+            "examples/ERC20",
     })
     void testPositive(String contractName) {
         //if (!contractName.equals("basic/DependentMap")) return;

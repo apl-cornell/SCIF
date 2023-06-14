@@ -152,9 +152,7 @@ public class PrimitiveIfLabel extends IfLabel {
 //            return null;
 //        }
         Sym s = env.getCurSym(value.id);
-        logger.debug("Label Name: " + value.id);
-        System.err.println("Label Name: " + value.id);
-        logger.debug(s.toString());
+        assert s != null: value.id;
         if (s instanceof VarSym) {
             valueSym = (VarSym) s;
             ScopeContext now = new ScopeContext(this, parent);

@@ -230,7 +230,7 @@ public class Utils {
     }
 
     public static boolean writeCons2File(Set<? extends Sym> constructors, List<Constraint> assumptions,
-            List<Constraint> constraints, File outputFile, boolean isIFC) {
+            List<Constraint> constraints, File outputFile, boolean isIFC, InterfaceSym contractSym) {
         try {
             // transform every "this" to "contractName.this"
             BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
@@ -275,6 +275,7 @@ public class Utils {
                             consFile.write(top.toSHErrLocFmt() + " <= " + x.toSHErrLocFmt() + ";" + "\n");
                         }
                     }
+                    consFile.write(top.toSHErrLocFmt() + " == " + contractSym.thisSym().toSHErrLocFmt() + ";\n");
                 }
                 for (Constraint con : assumptions) {
                     consFile.write(con.toSherrlocFmt(false) + "\n");
@@ -510,10 +511,10 @@ public class Utils {
             return null;
         }
         ++l;
-        String explanation = "";
+        StringBuilder explanation = new StringBuilder();
         while (s.charAt(l + 1) != '\"') {
             ++l;
-            explanation += s.charAt(l);
+            explanation.append(s.charAt(l));
         }
         l += 2;
 
@@ -522,38 +523,49 @@ public class Utils {
             // if (DEBUG) System.out.println("no range digit found");
             return null;
         }
-        String slin = "", scol = "";
+        StringBuilder slin = new StringBuilder();
+        StringBuilder scol = new StringBuilder();
         while (s.charAt(l + 1) != ',') {
             ++l;
-            slin = slin + s.charAt(l);
+            slin.append(s.charAt(l));
         }
         ++l;
         while (s.charAt(l + 1) != '-') {
             ++l;
-            scol = scol + s.charAt(l);
+            scol.append(s.charAt(l));
         }
 
-        int lin = Integer.parseInt(slin), col = Integer.parseInt(scol);
+        int lin = Integer.parseInt(slin.toString()), col = Integer.parseInt(scol.toString());
 
-        int p = explanation.indexOf('@');
+        int p = explanation.toString().indexOf('@');
         String contractName = explanation.substring(p + 1);
-        explanation = explanation.substring(0, p);
+        explanation = new StringBuilder(explanation.substring(0, p));
         // if (DEBUG) System.out.println("position of #:" + p + " " + contractName);
-        SourceFile program = programMap.get(contractName);
+        SourceFile program = null; //= programMap.get(contractName);
+        for (SourceFile sourceFile: programMap.values()) {
+            if (sourceFile.getSourceFileFullName().equals(contractName)) {
+                program = sourceFile;
+                break;
+            }
+        }
+
+        assert program != null : contractName;
 
         if (lin == 0 || col == 0) {
             // Built-in or default
             return program.getSourceFileFullName() + "\n" + explanation + ".\n";
         }
-        String rtn =
-                program.getSourceFileFullName() + "(" + slin + "," + scol + "): " + "\n" + explanation + ".\n";
-        rtn += program.getSourceCodeLine(lin - 1) + "\n";
+        StringBuilder rtn =
+                new StringBuilder(
+                        program.getSourceFileFullName() + "(" + slin + "," + scol + "): " + "\n"
+                                + explanation + ".\n");
+        rtn.append(program.getSourceCodeLine(lin - 1)).append("\n");
         for (int i = 1; i < col; ++i) {
-            rtn += " ";
+            rtn.append(" ");
         }
-        rtn += '^';
+        rtn.append('^');
 
-        return rtn;
+        return rtn.toString();
     }
 
     public static String ordNumString(int i) {
@@ -603,12 +615,16 @@ public class Utils {
         }
     }
 
-    public static CodeLocation placeholder() {
-        return new CodeLocation();
-    }
-
     public static ScopeContext globalScopeContext() {
         return new ScopeContext(null, null);
+    }
+
+    public static LabeledType builtinLabeldType(BuiltInT builtInT) {
+        Type typeNode = new Type(BuiltinType2ID(builtInT));
+        typeNode.setLoc(CodeLocation.builtinCodeLocation());
+        LabeledType labeledTypeNode = new LabeledType(typeNode);
+        labeledTypeNode.setLoc(CodeLocation.builtinCodeLocation());
+        return labeledTypeNode;
     }
 }
 

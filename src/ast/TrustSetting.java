@@ -6,6 +6,7 @@ import java.util.List;
 import typecheck.Assumption;
 import typecheck.ContractSym;
 import typecheck.DynamicSystemOption;
+import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.Utils;
@@ -87,7 +88,7 @@ public class TrustSetting extends Node {
 
     }
 
-    public void globalInfoVisit(ContractSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) {
         List<Assumption> assumptions = new ArrayList<>();
         for (TrustConstraint constraint : trust_list) {
             assumptions.add(constraint.toAssumption(contractSym));

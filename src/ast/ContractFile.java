@@ -2,12 +2,11 @@ package ast;
 
 import compile.SolCode;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import typecheck.ContractSym;
 import typecheck.InheritGraph;
+import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.ScopeContext;
@@ -59,6 +58,9 @@ public class ContractFile extends SourceFile {
 
     @Override
     public boolean ntcInherit(InheritGraph graph) {
+        for (String name: iptContracts) {
+            graph.addEdge(name, contractName);
+        }
         return contract.ntcInherit(graph);
     }
     @Override
@@ -76,7 +78,7 @@ public class ContractFile extends SourceFile {
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         for (String iptContract : iptContracts) {
-            if (!env.containsContract(iptContract)) {
+            if (!env.containsContract(iptContract) && !env.containsInterface(iptContract)) {
                 logger.debug("not containing imported contract: " + iptContract);
                 return false;
             }
@@ -92,7 +94,7 @@ public class ContractFile extends SourceFile {
     }
 
     @Override
-    public void globalInfoVisit(ContractSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) {
         if (contract == null) {
             return;
         }
@@ -132,9 +134,8 @@ public class ContractFile extends SourceFile {
     public Contract getContract() {
         return contract;
     }
-    /**
-     * Add built-in variables, trust assumptions, exceptions, and methods in the AST with this as the root.
-     */
+
+    @Override
     public void addBuiltIns() {
         contract.addBuiltIns();
     }

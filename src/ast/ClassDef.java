@@ -2,13 +2,10 @@ package ast;
 
 import compile.SolCode;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import typecheck.ContractSym;
+import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
-import typecheck.PathOutcome;
 import typecheck.ScopeContext;
-import typecheck.VisitEnv;
 
 public class ClassDef extends TopLayerNode {
 
@@ -23,7 +20,7 @@ public class ClassDef extends TopLayerNode {
     }
 
     @Override
-    public void globalInfoVisit(ContractSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) {
 
     }
 

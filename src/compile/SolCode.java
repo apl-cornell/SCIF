@@ -46,7 +46,6 @@ public class SolCode {
     }
 
     public void addLine(String line) {
-        // System.err.println("ADDING: " + currentIndent + line);
         if (line.equals("assert(true);") || line.equals("assert(!false);")) {
             line = "//" + line;
         }
@@ -74,11 +73,21 @@ public class SolCode {
     }
 
     public void enterContractDef(String contractName) {
-        addLine("contract " + contractName + " is BaseContractCentralized {");
+        addLine("contract " + contractName + " {");
+        addIndent();
+    }
+
+    public void enterInterfaceDef(String name) {
+        addLine("interface " + name + " {");
         addIndent();
     }
 
     public void leaveContractDef() {
+        decIndent();
+        addLine("}");
+    }
+
+    public void leaveInterfaceDef() {
         decIndent();
         addLine("}");
     }
@@ -109,23 +118,23 @@ public class SolCode {
 
     public void enterConstructorDef(String args, List<Statement> body) {
         addLine("constructor (" + args + ")");
-        if (dynamicSystemOption == DynamicSystemOption.BaseContractCentralized) {
-            boolean foundOption = false;
-            addIndent();
-            for (Statement stmt : body) {
-                if (stmt instanceof DynamicStatement) {
-                    String inherit = ((DynamicStatement) stmt).toSolCode();
-                    addLine(inherit);
-                    foundOption = true;
-                    break; //TODO: handle duplicate calls
-                }
-            }
-            if (!foundOption) {
-                //TODO: error report
-                addLine("No constructor for Dynamic System setting found");
-            }
-            decIndent();
-        }
+//        if (dynamicSystemOption == DynamicSystemOption.BaseContractCentralized) {
+//            boolean foundOption = false;
+//            addIndent();
+//            for (Statement stmt : body) {
+//                if (stmt instanceof DynamicStatement) {
+//                    String inherit = ((DynamicStatement) stmt).toSolCode();
+//                    addLine(inherit);
+//                    foundOption = true;
+//                    break; //TODO: handle duplicate calls
+//                }
+//            }
+//            if (!foundOption) {
+//                //TODO: error report
+//                addLine("No constructor for Dynamic System setting found");
+//            }
+//            decIndent();
+//        }
         addLine("{");
         addIndent();
     }

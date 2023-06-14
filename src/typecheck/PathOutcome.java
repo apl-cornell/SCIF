@@ -46,7 +46,7 @@ public class PathOutcome {
     public void join(PathOutcome other) {
         for (Map.Entry<ExceptionTypeSym, PsiUnit> entry : other.psi.entrySet()) {
             ExceptionTypeSym key = entry.getKey();
-            if (psi.containsKey(key)) {
+            if (psi.containsKey(key) && psi.get(key).c != null) {
                 psi.put(key, Utils.joinPsiUnit(psi.get(key), other.psi.get(key)));
             } else {
                 psi.put(key, entry.getValue());

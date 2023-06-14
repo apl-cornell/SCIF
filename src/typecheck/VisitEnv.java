@@ -1,5 +1,9 @@
 package typecheck;
 
+import ast.ComplexIfLabel;
+import ast.IfLabel;
+import ast.Interface;
+import ast.PrimitiveIfLabel;
 import ast.SourceFile;
 import java.util.Collections;
 import typecheck.sherrlocUtils.Constraint;
@@ -23,8 +27,8 @@ public class VisitEnv {
     public SymTab globalSymTab;
     public SymTab curSymTab;
     private Hypothesis hypothesis;
-    private final Set<VarSym> principalSet; // TODO: better imp
-    private ContractSym curContractSym;
+    private final Set<VarSym> principalSet;
+    private InterfaceSym curContractSym;
     private FuncSym curFuncSym;
     // public HashMap<String, ContractInfo> contractMap;
     //public HashMap<String, SigCons> sigConsMap;
@@ -43,7 +47,7 @@ public class VisitEnv {
                     SymTab curSymTab,
                     Hypothesis hypothesis,
                     Set<VarSym> principalSet,
-                    ContractSym curContractSym,
+                    InterfaceSym curContractSym,
                     HashMap<String, SourceFile> programMap
                     // HashMap<ExceptionTypeSym, PsiUnit> psi
                     //HashMap<String, SigCons> sigConsMap
@@ -88,10 +92,10 @@ public class VisitEnv {
         }
     }
 
-    public ContractSym getContract(String id) {
+    public InterfaceSym getContract(String id) {
         Sym sym = curSymTab.lookup(id);
-        if (sym instanceof ContractSym)
-            return (ContractSym) sym;
+        if (sym instanceof InterfaceSym)
+            return (InterfaceSym) sym;
         else
             return null;
     }
@@ -144,7 +148,7 @@ public class VisitEnv {
     public Sym getExtSym(String contractName, String funcName) {
         Sym extST = globalSymTab.lookup(contractName);
         if (extST == null) return null;
-        return ((ContractSym) extST).lookupSym(funcName);
+        return ((InterfaceSym) extST).lookupSym(funcName);
     }
 
     public ExceptionTypeSym toExceptionTypeSym(ast.Type t) {
@@ -164,7 +168,7 @@ public class VisitEnv {
     }
 
     public ScopeContext getScopeContext() {
-        return curContractSym.getContractNode().getScopeContext();
+        return curContractSym.defContext();
     }
 
     public Set<VarSym> principalSet() {
@@ -191,16 +195,31 @@ public class VisitEnv {
         return curFuncSym.sender();
     }
 
-    public ContractSym curContractSym() {
+    public InterfaceSym curContractSym() {
         return curContractSym;
     }
 
-    public void setCurContract(ContractSym contractSym) {
+    public void setCurContract(InterfaceSym contractSym) {
         curContractSym = contractSym;
         curSymTab = contractSym.symTab;
     }
 
     public void setCurFuncSym(FuncSym funcSym) {
         curFuncSym = funcSym;
+    }
+
+    public Label toLabel(IfLabel ifl) {
+        if (ifl instanceof PrimitiveIfLabel) {
+            VarSym label = (VarSym) getVar(((PrimitiveIfLabel) ifl).value().id);
+            if (label == null) return null;
+            return new PrimitiveLabel(label, ifl.getLocation());
+        } else if (ifl instanceof ComplexIfLabel) {
+            return new ComplexLabel(toLabel(((ComplexIfLabel) ifl).getLeft()),
+                    ((ComplexIfLabel) ifl).getOp(),
+                    toLabel(((ComplexIfLabel) ifl).getRight()),
+                    ifl.getLocation());
+        } else {
+            throw new RuntimeException("Unable to resolve the label: " + ifl);
+        }
     }
 }

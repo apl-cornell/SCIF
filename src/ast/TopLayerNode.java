@@ -1,14 +1,12 @@
 package ast;
 
-import typecheck.ContractSym;
-
-import java.util.HashSet;
+import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 
 public abstract class TopLayerNode extends Node {
 
-    public abstract void globalInfoVisit(ContractSym contractSym);
+    public abstract void globalInfoVisit(InterfaceSym contractSym);
 
     public abstract boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent);
 

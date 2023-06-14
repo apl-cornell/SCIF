@@ -1,11 +1,12 @@
 package ast;
 
 import compile.SolCode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import typecheck.ContractSym;
 import typecheck.InheritGraph;
+import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 
@@ -30,51 +31,96 @@ public class InterfaceFile extends SourceFile {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        return null;
+        ScopeContext now = new ScopeContext(this, parent);
+        env.setGlobalSymTab(env.getContract(contractName).symTab);
+        env.initCurSymTab();
+        itrface.ntcGenCons(env, now);
+        return now;
     }
 
     @Override
     public void solidityCodeGen(SolCode code) {
+        code.addVersion(compile.Utils.SOLITIDY_VERSION);
 
+
+        for (String contractName : iptContracts) {
+            boolean exists = false;
+            if (itrface.contractName.equals(contractName)) {
+                exists = true;
+                break;
+            }
+            if (!exists) {
+                code.addImport(contractName);
+            }
+        }
+        itrface.solidityCodeGen(code);
     }
 
     @Override
     public List<Node> children() {
-        return null;
+        List<Node> rtn = new ArrayList<>();
+        rtn.add(itrface);
+        return rtn;
     }
 
     @Override
     public SourceFile makeBuiltIn() {
-        return null;
+        return new InterfaceFile(this, true);
     }
 
     @Override
     public boolean containContract(String name) {
-        return false;
+        return contractName.equals(name);
     }
 
     @Override
     public boolean codePasteContract(String name, Map<String, Contract> contractMap,
             Map<String, Interface> interfaceMap) {
-        return false;
+        if (!itrface.contractName.equals(name)) {
+            return false;
+        }
+        return itrface.codePasteContract(contractMap, interfaceMap);
     }
 
     @Override
     public boolean ntcInherit(InheritGraph graph) {
-        return false;
+        for (String name: iptContracts) {
+            graph.addEdge(name, contractName);
+        }
+        return itrface.ntcInherit(graph);
     }
 
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
-        return false;
+        ScopeContext now = new ScopeContext(this, parent);
+        for (String iptContract : iptContracts) {
+            if (!env.containsContract(iptContract) && !env.containsInterface(iptContract)) {
+                logger.debug("not containing imported contract: " + iptContract);
+                return false;
+            }
+        }
+        // env.setGlobalSymTab(new SymTab());
+        env.initCurSymTab();
+        // Utils.addBuiltInASTNode(env.globalSymTab, contract.trustSetting);
+        if (!itrface.ntcGlobalInfo(env, now)) {
+            logger.debug("GlobalInfo failed with: " + itrface);
+            return false;
+        }
+        return true;
     }
 
     @Override
-    public void globalInfoVisit(ContractSym contractSym) {
-
+    public void globalInfoVisit(InterfaceSym contractSym) {
+        iptContracts.add(itrface.contractName);
+        itrface.globalInfoVisit(contractSym);
     }
 
     public Interface getInterface() {
         return itrface;
+    }
+
+    @Override
+    public void addBuiltIns() {
+        itrface.addBuiltIns();
     }
 }

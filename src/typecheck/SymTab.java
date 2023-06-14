@@ -3,6 +3,7 @@ package typecheck;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -32,8 +33,6 @@ public class SymTab {
         return parent == null ? null : parent.lookup(id);
     }
     public void add(String id, Sym sym) {
-        // System.out.println("sym add: " + id + " @" + this);
-        // System.out.println(sym.name);
         if (table.containsKey(id)) {
             throw new RuntimeException("SymTab adding a symbol that existed: " + id);
         }
@@ -54,8 +53,8 @@ public class SymTab {
         return rtn;
     }
 
-    public HashMap<String, VarSym> getVars() {
-        HashMap<String, VarSym> rtn = new HashMap<>();
+    public Map<String, VarSym> getVars() {
+        Map<String, VarSym> rtn = new HashMap<>();
         for (Sym sym : table.values()) {
             if (sym instanceof VarSym)
                 rtn.put(sym.getName(), (VarSym) sym);
@@ -63,13 +62,23 @@ public class SymTab {
         return rtn;
     }
 
-    public HashMap<String, FuncSym> getFuncs() {
-        HashMap<String, FuncSym> rtn = new HashMap<>();
+    public Map<String, FuncSym> getFuncs() {
+        Map<String, FuncSym> rtn = new HashMap<>();
         for (Sym sym : table.values()) {
             if (sym instanceof FuncSym)
                 rtn.put(sym.getName(), (FuncSym) sym);
         }
         return rtn;
+    }
+
+    public Map<String, FuncSym> getAllFuncs() {
+        if (parent == null) {
+            return getFuncs();
+        } else {
+            Map<String, FuncSym> rtn = parent.getAllFuncs();
+            rtn.putAll(getFuncs());
+            return rtn;
+        }
     }
 
     public void setParent(SymTab parent) {

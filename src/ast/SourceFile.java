@@ -1,6 +1,5 @@
 package ast;
 
-import compile.SolCode;
 import typecheck.*;
 
 import java.util.*;
@@ -27,7 +26,7 @@ public abstract class SourceFile extends Node {
      * @param sourceFileName
      * @return
      */
-    private static String sourceFileNameId(String sourceFileName) {
+    public static String sourceFileNameId(String sourceFileName) {
         if (!sourceFileNameIds.containsKey(sourceFileName)) {
             String id = "s" + idCounter;
             ++idCounter;
@@ -88,7 +87,7 @@ public abstract class SourceFile extends Node {
     // abstract public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent);
     abstract public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent);
 
-    abstract public void globalInfoVisit(ContractSym contractSym);
+    abstract public void globalInfoVisit(InterfaceSym contractSym);
 
 
     public void findPrincipal(HashSet<String> principalSet) {
@@ -116,4 +115,9 @@ public abstract class SourceFile extends Node {
     public boolean isBuiltIn() {
         return builtIn;
     }
+
+    /**
+     * Add built-in variables, trust assumptions, exceptions, and methods in the AST with this as the root.
+     */
+    abstract public void addBuiltIns();
 }

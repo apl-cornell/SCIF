@@ -18,12 +18,12 @@ public class TestIfcTypechecking {
             "basic/DependentMap",
             "basic/EmptyContract",
             "basic/ExceptionThrowAndCatch",
-            // "basic/EndroseIf",
+            "basic/EndroseIf",
             "examples/SimpleStorage",
             "ifcTypechecking/LocalTrust",
             "ifcTypechecking/Wallet_lock_exception",
             // "basic/Seq",
-            // "examples/ERC20",
+            "examples/ERC20",
     })
     void testPositive(String contractName) {
         File logDir = new File("./.scif");
@@ -66,6 +66,7 @@ public class TestIfcTypechecking {
     }
     @ParameterizedTest
     @ValueSource(strings = {
+            "ifcTypechecking/WEx1",
             "ifcTypechecking/LocalTrust_W01",
             "ifcTypechecking/Wallet_lock_exception_W01",
             "ifcTypechecking/Wallet_lock_exception_W02",

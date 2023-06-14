@@ -3,13 +3,13 @@ package ast;
 import compile.SolCode;
 import typecheck.Assumption;
 import typecheck.ContractSym;
+import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.PrimitiveLabel;
 import typecheck.ScopeContext;
 import typecheck.sherrlocUtils.Relation;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class TrustConstraint extends TopLayerNode {
 
@@ -23,7 +23,7 @@ public class TrustConstraint extends TopLayerNode {
     }
 
     @Override
-    public void globalInfoVisit(ContractSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) {
         
     }
 
@@ -57,7 +57,7 @@ public class TrustConstraint extends TopLayerNode {
         return rtn;
     }
 
-    public Assumption toAssumption(ContractSym contractSym) {
+    public Assumption toAssumption(InterfaceSym contractSym) {
         return new Assumption((PrimitiveLabel) contractSym.newLabel(lhs),
                 optor,
                 (PrimitiveLabel) contractSym.newLabel(rhs),

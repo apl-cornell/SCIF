@@ -1,16 +1,30 @@
 package typecheck;
 
+import ast.SourceFile;
+
 public class CodeLocation {
-    public int lineNo = 0, columnNo = 0;
-    public String fileName = "Builtin";
+    public final int lineNo, columnNo;
+    public final String fileName;
+    String fileId;
+
 
     public CodeLocation(int lineNo, int columnNo, String fileName) {
         this.lineNo = lineNo;
         this.columnNo = columnNo;
         this.fileName = fileName;
+        this.fileId = SourceFile.sourceFileNameId(fileName);
     }
 
-    public CodeLocation() {
+    /*public CodeLocation() {
+        lineNo = 0;
+        columnNo = 0;
+        fileName = "Builtin";
+        fileId = SourceFile.sourceFileNameId(fileName);
+    }*/
+
+    public static CodeLocation builtinCodeLocation() {
+        String name ="Builtin";
+        return new CodeLocation(0, 0, name);
     }
 
     public boolean valid() {
@@ -23,6 +37,6 @@ public class CodeLocation {
 
     @Override
     public String toString() {
-        return String.format("L%dC%d", lineNo, columnNo);//, fileName.replace("/", "..."));
+        return String.format("L%dC%d", lineNo, columnNo) + fileId;
     }
 }

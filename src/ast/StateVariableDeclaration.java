@@ -6,6 +6,7 @@ import typecheck.CodeLocation;
 import typecheck.Context;
 import typecheck.ContractSym;
 import typecheck.ExpOutcome;
+import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.PsiUnit;
@@ -72,7 +73,10 @@ public class StateVariableDeclaration extends TopLayerNode {
         String vname = name.id;
         VarSym varSym = env.newVarSym(vname, type, isStatic, isFinal, isBuiltIn, location, parent);
         // assert varSym.ifl != null;
-        env.globalSymTab().add(vname, varSym);
+        env.addSym(vname, varSym);
+        if (type.label() != null) {
+            varSym.setLabel(env.newLabel(type.label()));
+        }
         return true;
     }
 
@@ -95,14 +99,15 @@ public class StateVariableDeclaration extends TopLayerNode {
     }
 
     @Override
-    public void globalInfoVisit(ContractSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) {
         String id = name.id;
         CodeLocation loc = location;
-        System.err.println(id + " " + type.label());
         VarSym varSym =
                 contractSym.newVarSym(id, type, isStatic, isFinal, isBuiltIn, loc, contractSym.defContext());
         contractSym.addVar(id, varSym);
-        varSym.setLabel(contractSym.newLabel(type.label()));
+        if (type.label() != null) {
+            varSym.setLabel(contractSym.newLabel(type.label()));
+        }
         assert varSym.ifl != null;
     }
 
@@ -159,7 +164,6 @@ public class StateVariableDeclaration extends TopLayerNode {
                                 new Inequality(SLCNameVar, CompareOperator.Eq, equalPrincipal.toSHErrLocFmt()),
                                 env.hypothesis(),
                                 location,
-                                env.curContractSym().getName(),
                                 "New principal declaration"
                         ));
             } else if (!isBuiltIn) {
@@ -177,21 +181,20 @@ public class StateVariableDeclaration extends TopLayerNode {
 
         env.cons.add(
                 new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis(), location,
-                        env.curContractSym().getName(),
                         "Integrity of control flow must be trusted to allow this assignment"));
 
         //env.outContext = endContext;
 
         if (!tail_position) {
             env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym().getName(),
+                    env.hypothesis(), location,
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
         if (value != null) {
             env.inContext = beginContext;
             ExpOutcome valueOutcome = value.genConsVisit(env, scopeContext.isContractLevel());
             env.cons.add(new Constraint(new Inequality(valueOutcome.valueLabelName, SLCNameVarLbl),
-                    env.hypothesis(), value.location, env.curContractSym().getName(),
+                    env.hypothesis(), value.location,
                     "Integrity of the value being assigned must be trusted to allow this assignment"));
             typecheck.Utils.contextFlow(env, valueOutcome.psi.getNormalPath().c, endContext,
                     value.location);

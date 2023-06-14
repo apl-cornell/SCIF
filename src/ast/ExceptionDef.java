@@ -1,7 +1,6 @@
 package ast;
 
 import compile.SolCode;
-import java.util.HashSet;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ public class ExceptionDef extends TopLayerNode {
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         // exceptionType.setContractName(env.curContractSym().getName());
-        env.globalSymTab().add(exceptionName,
+        env.addSym(exceptionName,
                 env.newExceptionType(exceptionName, arguments, parent));
         return true;
     }
@@ -31,7 +30,7 @@ public class ExceptionDef extends TopLayerNode {
      * @param contractSym
      */
     @Override
-    public void globalInfoVisit(ContractSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) {
         // exceptionType.setContractName(contractSym.getName());
         contractSym.addType(exceptionName,
                 contractSym.toExceptionType(exceptionName, arguments, contractSym.defContext()));

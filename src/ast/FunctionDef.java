@@ -17,13 +17,15 @@ public class FunctionDef extends FunctionSig {
     List<Statement> body;
 
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
-            List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor) {
-        super(name, funcLabels, args, decoratorList, rtn, isConstructor);
+            List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor,
+            CodeLocation location) {
+        super(name, funcLabels, args, decoratorList, rtn, isConstructor, location);
         this.body = body;
     }
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
-            List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor, boolean isBuiltIn) {
-        super(name, funcLabels, args, decoratorList, rtn, isConstructor, isBuiltIn);
+            List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor, boolean isBuiltIn,
+            CodeLocation location) {
+        super(name, funcLabels, args, decoratorList, rtn, isConstructor, isBuiltIn, location);
         this.body = body;
     }
 
@@ -40,15 +42,14 @@ public class FunctionDef extends FunctionSig {
         String funcName = this.name;
         logger.debug("func: " + funcName);
         FuncSym funcSym = ((FuncSym) env.getCurSym(funcName));
-        HashMap<ExceptionTypeSym, Boolean> exceptionTypeSyms = new HashMap<>();
-        for (HashMap.Entry<ExceptionTypeSym, String> t : funcSym.exceptions.entrySet()) {
+        Map<ExceptionTypeSym, Boolean> exceptionTypeSyms = new HashMap<>();
+        for (Map.Entry<ExceptionTypeSym, String> t : funcSym.exceptions.entrySet()) {
             exceptionTypeSyms.put(t.getKey(), true);
-            // System.err.println("func sig exp: " + t.name);
         }
 
         ScopeContext now = new ScopeContext(this, parent, exceptionTypeSyms);
-        System.err.println("functiondef: " + funcName + " " + now.getSHErrLocName());
-        // now.printExceptionSet();
+        scopeContext = now;
+        passScopeContext();
 
         // add built-in vars
         addBuiltInVars(env.curSymTab(), now);
@@ -60,7 +61,6 @@ public class FunctionDef extends FunctionSig {
         if (funcSym.returnType != null) {
             env.addCons(new Constraint(new Inequality(funcSym.returnTypeSLC(), Relation.EQ,
                     funcSym.returnType.toSHErrLocFmt()), env.globalHypothesis(), location,
-                    env.curContractSym().getName(),
                     "Label of this method's return value"));
         }
 
@@ -105,21 +105,21 @@ public class FunctionDef extends FunctionSig {
         String ifNameCall = funcSym.internalPcSLC();
         env.addTrustConstraint(
                 new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis(),
-                        funcLabels.to_pc.location, env.curContractSym().getName(),
+                        funcLabels.to_pc.location,
                         "Control flow of this method start with its call-after(second) label"));
 
         String ifNameContract = env.curContractSym().getLabelNameContract();
         env.addTrustConstraint(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis(),
-                funcLabels.begin_pc.location, env.curContractSym().getName(),
+                funcLabels.begin_pc.location,
                 "This contract should be trusted enough to call this method"));
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
         env.addTrustConstraint(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis(),
-                funcLabels.to_pc.location, env.curContractSym().getName(),
+                funcLabels.to_pc.location,
                 "The statically locked integrity must be at least as trusted as initial pc integrity"));
         env.cons.add(
                 new Constraint(new Inequality(Utils.joinLabels(inLockName, outLockName), ifNameGamma),
-                        env.hypothesis(), funcLabels.gamma_label.location, env.curContractSym().getName(),
+                        env.hypothesis(), funcLabels.gamma_label.location,
                         "This function does not maintain reentrancy locks as specified in signature"));
 
         HashMap<ExceptionTypeSym, PsiUnit> psi = new HashMap<>();

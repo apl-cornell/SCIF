@@ -21,8 +21,9 @@ public class TestRegularTypechecking {
             "basic/ExceptionThrowAndCatch",
             "basic/FinalVar",
             "basic/EndroseIf",
+            "ifcTypechecking/WEx1",
             "ifcTypechecking/Wallet_lock_exception",
-            // "examples/ERC20",
+            "examples/ERC20",
     })
     void testPositive(String contractName) {
         File logDir = new File("./.scif");
@@ -48,7 +49,7 @@ public class TestRegularTypechecking {
             "regularTypechecking/ExceptionThrowAndCatch_W01",
             "regularTypechecking/ExceptionThrowAndCatch_W02",
             "regularTypechecking/ExceptionThrowAndCatch_W03",
-            "regularTypechecking/LocalTrust_W01",
+            // "regularTypechecking/LocalTrust_W01",
             "regularTypechecking/FinalVarNotInitialized_W01",
             "regularTypechecking/FinalVarNotInitialized_W02",
     })

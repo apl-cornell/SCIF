@@ -2,18 +2,25 @@ package ast;
 
 import compile.SolCode;
 import java.util.List;
-import typecheck.ContractSym;
+import java.util.Map;
+import java.util.Set;
+import typecheck.BuiltInT;
+import typecheck.CodeLocation;
+import typecheck.InheritGraph;
+import typecheck.InterfaceSym;
 import typecheck.ScopeContext;
 import typecheck.NTCEnv;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import typecheck.Utils;
 
 public class Interface extends TopLayerNode {
 
     String contractName;
     String superContractName;
     TrustSetting trustSetting;
+    List<StateVariableDeclaration> varDeclarations;
 
     List<ExceptionDef> exceptionDefs;
     List<FunctionSig> funcSigs;
@@ -26,30 +33,68 @@ public class Interface extends TopLayerNode {
         this.superContractName = superContractName;
         this.exceptionDefs = exceptionDefs;
         this.funcSigs = funcSigs;
+
+        varDeclarations = new ArrayList<>();
+        trustSetting = new TrustSetting();
+        /*for (FunctionSig f: funcSigs) {
+            f.setPublic();
+        }*/
     }
 
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        for (FunctionSig functionSig : funcSigs) {
-            if (!functionSig.ntcGlobalInfo(env, now)) {
+        // SymTab curSymTab = new SymTab(env.curSymTab());
+        env.enterNewScope();
+        Utils.addBuiltInTypes(env.curSymTab());
+        // env.initSymTab(curSymTab);
+        InterfaceSym interfaceSym = new InterfaceSym(contractName, env.curSymTab(), new ArrayList<>(), this);
+        env.addGlobalSym(contractName, interfaceSym);
+        env.setCurContractSym(interfaceSym);
+        // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
+
+        for (StateVariableDeclaration varDef: varDeclarations) {
+            if (!varDef.ntcGlobalInfo(env, now)) {
                 return false;
             }
         }
-        ContractSym contractSym = new ContractSym(contractName, env.globalSymTab(), new ArrayList<>(),
-                null);
-        env.addSym(contractName, contractSym);
+
+        for (ExceptionDef def : exceptionDefs) {
+            if (!def.ntcGlobalInfo(env, now)) {
+                return false;
+            }
+        }
+
+        for (FunctionSig fDef : funcSigs) {
+            if (!fDef.ntcGlobalInfo(env, now)) {
+                return false;
+            }
+        }
+
+        env.exitNewScope();
         return true;
     }
 
 
-    public void globalInfoVisit(ContractSym contractSym) {
-        // contractSym.name = contractName;
-        // contractSym.trustSetting = trustSetting;
+    public void globalInfoVisit(InterfaceSym contractSym) {
+        // contractSym.addContract(contractName, contractSym);
+        Utils.addBuiltInTypes(contractSym.symTab);
+
+        for (StateVariableDeclaration dec : varDeclarations) {
+            dec.globalInfoVisit(contractSym);
+        }
+
         trustSetting.globalInfoVisit(contractSym);
+
+        for (ExceptionDef expDef : exceptionDefs) {
+            expDef.globalInfoVisit(contractSym);
+        }
+
+
         for (FunctionSig stmt : funcSigs) {
             stmt.globalInfoVisit(contractSym);
         }
+
     }
 
 //    public void findPrincipal(HashSet<String> principalSet) {
@@ -76,17 +121,234 @@ public class Interface extends TopLayerNode {
 
     @Override
     public void solidityCodeGen(SolCode code) {
+        code.enterInterfaceDef(contractName);
 
+        for (FunctionSig functionSig: funcSigs) {
+            functionSig.solidityCodeGen(code);
+        }
+
+        code.leaveInterfaceDef();
     }
 
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        rtn.addAll(trustSetting.trust_list);
         rtn.addAll(funcSigs);
         return rtn;
     }
     public String getContractName() {
         return contractName;
+    }
+
+    public boolean ntcInherit(InheritGraph graph) {
+        // add an edge from superclass to this contract
+        if (!superContractName.isEmpty()) {
+            graph.addEdge(superContractName, contractName);
+        }
+        return true;
+    }
+
+    public boolean codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
+        if (superContractName.isEmpty()) {
+            return true;
+        }
+
+        Interface superContract = interfaceMap.get(superContractName);
+        if (superContract == null) {
+            assert false: superContractName;
+            return false;
+        }
+
+        // check that there are no duplicates
+        Set<String> nameSet = new HashSet<>();
+        for (ExceptionDef exp: exceptionDefs) {
+            nameSet.add(exp.exceptionName);
+        }
+        for (FunctionSig f: funcSigs) {
+            nameSet.add(f.name);
+        }
+
+        for (ExceptionDef exp: superContract.exceptionDefs) {
+            if (nameSet.contains(exp.exceptionName)) {
+                assert false: exp.exceptionName;
+                return false;
+            }
+        }
+        for (FunctionSig f: funcSigs) {
+            if (nameSet.contains(f.name)) {
+                assert false: f.name;
+                return false;
+            }
+        }
+
+        // paste exceptions and methods
+        List<ExceptionDef> newExpDefs = new ArrayList<>();
+        List<FunctionSig> newFuncSigs = new ArrayList<>();
+
+        newExpDefs.addAll(superContract.exceptionDefs);
+        newExpDefs.addAll(exceptionDefs);
+        newFuncSigs.addAll(funcSigs);
+        newFuncSigs.addAll(funcSigs);
+
+        exceptionDefs = newExpDefs;
+        funcSigs = newFuncSigs;
+        return true;
+    }
+
+    public void addBuiltIns() {
+        addBuiltInTrustSettings();
+        addBuiltInVars();
+        addBuiltInExceptions();
+        addBuiltInMethods();
+    }
+
+
+
+    private void addBuiltInMethods() {
+        // add methods:
+        final IfLabel labelThis = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
+        final IfLabel labelTop = new PrimitiveIfLabel(new Name(Utils.LABEL_TOP));
+        final IfLabel labelBot = new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM));
+        labelThis.setLoc(CodeLocation.builtinCodeLocation());
+        labelTop.setLoc(CodeLocation.builtinCodeLocation());
+        labelBot.setLoc(CodeLocation.builtinCodeLocation());
+
+        // @protected
+        // @final
+        // void send{this -> TOP; BOT}(address target, uint amount);
+        List<Arg> args = new ArrayList<>();
+        Arg tmparg = new Arg(
+                "target",
+                new LabeledType(Utils.ADDRESS_TYPE, labelThis, CodeLocation.builtinCodeLocation()),
+                false,
+                true
+        );
+        args.add(tmparg);
+        tmparg = new Arg(
+                "amount",
+                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), labelThis, CodeLocation.builtinCodeLocation()),
+                false,
+                true
+        );
+        args.add(tmparg);
+        int count = 0;
+        for (Arg arg : args) {
+            CodeLocation location = new CodeLocation(1, count, "Builtin");
+            arg.setLoc(location);
+            arg.annotation.setLoc(location);
+            arg.annotation.type().setLoc(location);
+            ++count;
+        }
+        List<String> decs = new ArrayList<>();
+        decs.add(Utils.PROTECTED_DECORATOR);
+        decs.add(Utils.FINAL_DECORATOR);
+        FunctionDef sendDef = new FunctionDef(
+                Utils.METHOD_SEND_NAME,
+                new FuncLabels(
+                        labelThis,
+                        labelTop,
+                        labelBot,
+                        labelBot
+                ),
+                new Arguments(args),
+                new ArrayList<>(),
+                decs,
+                Utils.builtinLabeldType(BuiltInT.VOID),
+                false,
+                true,
+                CodeLocation.builtinCodeLocation()
+        );
+        funcSigs.add(sendDef);
+
+        // @public
+        // final
+        // uint{TOP} balance{BOT -> TOP; TOP}(final address addr);
+        args = new ArrayList<>();
+        args.add(new Arg(
+                "addr",
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)), CodeLocation.builtinCodeLocation()),
+                false,
+                true
+        ));
+        count = 0;
+        for (Arg arg : args) {
+            CodeLocation location = new CodeLocation(1, count, "Builtin");
+            arg.setLoc(location);
+            arg.annotation.setLoc(location);
+            arg.annotation.type().setLoc(location);
+            ++count;
+        }
+        decs = new ArrayList<>();
+        decs.add(Utils.PUBLIC_DECORATOR);
+        decs.add(Utils.FINAL_DECORATOR);
+        FunctionDef balanceDef = new FunctionDef(
+                Utils.METHOD_BALANCE_NAME,
+                new FuncLabels(
+                        labelBot,
+                        labelTop,
+                        labelTop,
+                        labelTop
+                ),
+                new Arguments(args),
+                new ArrayList<>(),
+                decs,
+                new LabeledType(Utils.BuiltinType2ID(BuiltInT.UINT), labelTop, CodeLocation.builtinCodeLocation()),
+                false,
+                true,
+                CodeLocation.builtinCodeLocation()
+        );
+        funcSigs.add(balanceDef);
+    }
+
+    private void addBuiltInExceptions() {
+        // add exceptions:
+        // exception{BOT} Error();
+        ExceptionDef error = new ExceptionDef(
+                Utils.EXCEPTION_ERROR_NAME,
+                new Arguments()
+        );
+        exceptionDefs.add(error);
+    }
+
+    private void addBuiltInVars() {
+        // add variables:
+        // final This{this} this;
+        StateVariableDeclaration thisDec = new StateVariableDeclaration(
+                new Name(Utils.LABEL_THIS),
+                new LabeledType(contractName, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)), CodeLocation.builtinCodeLocation()),
+                null,
+                true,
+                true,
+                true
+        );
+        thisDec.setLoc(CodeLocation.builtinCodeLocation());
+        StateVariableDeclaration topDec = new StateVariableDeclaration(
+                new Name(Utils.LABEL_TOP),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP)), CodeLocation.builtinCodeLocation()),
+                null,
+                true,
+                true,
+                true
+        );
+        topDec.setLoc(CodeLocation.builtinCodeLocation());
+        StateVariableDeclaration botDec = new StateVariableDeclaration(
+                new Name(Utils.LABEL_BOTTOM),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)), CodeLocation.builtinCodeLocation()),
+                null,
+                true,
+                true,
+                true
+        );
+        botDec.setLoc(CodeLocation.builtinCodeLocation());
+        List<StateVariableDeclaration> newDecs = new ArrayList<>();
+        newDecs.add(topDec);
+        newDecs.add(botDec);
+        newDecs.add(thisDec);
+        newDecs.addAll(varDeclarations);
+        varDeclarations = newDecs;
+    }
+
+    private void addBuiltInTrustSettings() {
+        trustSetting.addBuiltIns();
     }
 }

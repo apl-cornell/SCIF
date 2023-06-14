@@ -2,6 +2,7 @@ package ast;
 
 import java.util.ArrayList;
 import java.util.List;
+import typecheck.CodeLocation;
 import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
@@ -20,9 +21,11 @@ public class LabeledType extends Expression {
     public LabeledType(Type x) {
         this.type = x;
     }
-    public LabeledType(String x, IfLabel ifl) {
+    public LabeledType(String x, IfLabel ifl, CodeLocation location) {
         this.type = new Type(x);
+        this.type.setLoc(location);
         this.ifl = ifl;
+        this.location = location;
     }
 
     @Override
