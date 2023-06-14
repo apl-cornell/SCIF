@@ -69,7 +69,7 @@ public class Utils {
     public static final String BASECONTRACTNAME = "BaseContract";
     public static final List<String> BUILTIN_FILENAMES = Arrays.asList(
             "builtin_files/BaseContract.scif",
-            "builtin_files/IBaseRuntime.scif",
+            "builtin_files/IBaseContract.scif",
             "builtin_files/ILockManager.scif",
             "builtin_files/ITrustManager.scif"
     );

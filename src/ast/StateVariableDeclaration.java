@@ -29,7 +29,7 @@ public class StateVariableDeclaration extends TopLayerNode {
     private Expression value;
     private boolean isStatic;
     private boolean isFinal;
-    private boolean isBuiltIn = false;
+    private boolean isBuiltin = false;
 
     public StateVariableDeclaration(Name name, LabeledType type, Expression value,
             boolean isConst, boolean isFinal) {
@@ -50,7 +50,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         this.isStatic = isConst;
         this.isFinal = isFinal;
         this.location = Utils.BUILTIN_LOCATION;
-        this.isBuiltIn = isBuiltIn;
+        this.isBuiltin = isBuiltIn;
         this.type.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
 
@@ -71,7 +71,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         // ScopeContext tgt = new ScopeContext(name, now);
 
         String vname = name.id;
-        VarSym varSym = env.newVarSym(vname, type, isStatic, isFinal, isBuiltIn, location, parent);
+        VarSym varSym = env.newVarSym(vname, type, isStatic, isFinal, isBuiltin, location, parent);
         // assert varSym.ifl != null;
         env.addSym(vname, varSym);
         if (type.label() != null) {
@@ -92,7 +92,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         if (value != null) {
             ScopeContext v = value.ntcGenCons(env, now);
             env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
-        } else if (isFinal && !isBuiltIn) {
+        } else if (isFinal && !isBuiltin) {
             throw new RuntimeException("final variable " + name.id + " not initialized");
         }
         return now;
@@ -103,7 +103,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         String id = name.id;
         CodeLocation loc = location;
         VarSym varSym =
-                contractSym.newVarSym(id, type, isStatic, isFinal, isBuiltIn, loc, contractSym.defContext());
+                contractSym.newVarSym(id, type, isStatic, isFinal, isBuiltin, loc, contractSym.defContext());
         contractSym.addVar(id, varSym);
         if (type.label() != null) {
             varSym.setLabel(contractSym.newLabel(type.label()));
@@ -166,7 +166,7 @@ public class StateVariableDeclaration extends TopLayerNode {
                                 location,
                                 "New principal declaration"
                         ));
-            } else if (!isBuiltIn) {
+            } else if (!isBuiltin) {
                 throw new RuntimeException("A final address/Contract must be initialized to another final address/Contract: " + id);
             }
 
@@ -208,9 +208,9 @@ public class StateVariableDeclaration extends TopLayerNode {
 
     public void solidityCodeGen(SolCode code) {
         if (value != null) {
-            code.addVarDef(type.toSolCode(), type.toSolCode(), isStatic, value.toSolCode());
+            code.addVarDef(type.toSolCode(), name.toSolCode(), isStatic, value.toSolCode());
         } else {
-            code.addVarDef(type.toSolCode(), type.toSolCode(), isStatic);
+            code.addVarDef(type.toSolCode(), name.toSolCode(), isStatic);
         }
     }
 
@@ -227,6 +227,10 @@ public class StateVariableDeclaration extends TopLayerNode {
 
     public Name name() {
         return name;
+    }
+
+    public boolean isBuiltin() {
+        return isBuiltin;
     }
 
     /*public boolean typeMatch(AnnAssign a) {

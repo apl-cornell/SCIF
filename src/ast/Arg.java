@@ -99,7 +99,7 @@ public class Arg extends Node {
     }
 
     public String toSolCode() {
-        return annotation.toSolCode() + " " + name;
+        return annotation.toSolCode() + (annotation.type().isPrimitive() ? " " : " memory ") + name;
     }
 
     @Override

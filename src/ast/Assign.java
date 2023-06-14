@@ -1,6 +1,7 @@
 package ast;
 
 import compile.SolCode;
+import java.util.List;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -94,7 +95,12 @@ public class Assign extends Statement {
     }
 
     @Override
-    public ArrayList<Node> children() {
+    public String toSolCode() {
+        return SolCode.genAssign(target.toSolCode(), value.toSolCode());
+    }
+
+    @Override
+    public List<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(target);
         rtn.add(value);

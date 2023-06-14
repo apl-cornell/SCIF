@@ -4,9 +4,6 @@ import compile.SolCode;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.swing.plaf.nimbus.State;
-import jdk.jshell.execution.Util;
-import sherrloc.constraint.ast.Top;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -196,17 +193,19 @@ public class Contract extends TopLayerNode {
         // code.setDynamicOption(trustSetting);
         code.enterContractDef(contractName);
 
-        for (StateVariableDeclaration dec : varDeclarations) {
-            dec.solidityCodeGen(code);
-        }
+        for (StateVariableDeclaration dec : varDeclarations)
+            if (!dec.isBuiltin()) {
+                dec.solidityCodeGen(code);
+            }
 //
 //        for (ExceptionDef expDef : exceptionDefs) {
 //            expDef.solidityCodeGen(code);
 //        }
 
-        for (FunctionDef fDef : methodDeclarations) {
-            fDef.solidityCodeGen(code);
-        }
+        for (FunctionDef fDef : methodDeclarations)
+            if (!fDef.isBuiltin()) {
+                fDef.solidityCodeGen(code);
+            }
 
         code.leaveContractDef();
     }

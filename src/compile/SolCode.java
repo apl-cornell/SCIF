@@ -19,13 +19,14 @@ public class SolCode {
     String unitIndent;
     String currentIndent;
     public List<String> code; //each line with no newline char
-    public Map<String, String> labelTable; // map label names to on-chain addresses
+    private Map<String, String> labelTable; // map label names to on-chain addresses
     public typecheck.DynamicSystemOption dynamicSystemOption;
 
     public SolCode() {
         code = new ArrayList<>();
         labelTable = new HashMap<>();
         labelTable.put("this", "address(this)");
+        labelTable.put("sender", "msg.sender");
         indentWidth = 4;
         indentLevel = 0;
         unitIndent = "";
@@ -33,6 +34,33 @@ public class SolCode {
             unitIndent += " ";
         }
         currentIndent = "";
+    }
+
+    static String ifTrust(String l, String r) {
+        if (l.equals(r)) {
+            return "true";
+        } else {
+            return "getTrustManager().ifTrust(" + l + ", " + r + ")";
+        }
+    }
+    static String ifLocked(String l) {
+        return "getLockManager().ifLocked(" + l + ")";
+    }
+
+    public static String toIterations(List<String> iters) {
+        return String.join(", ", iters);
+    }
+
+    public static String genVarDef(String type, String name, boolean isFinal) {
+        return type + " " + (isFinal ? "constant" : "") + name;
+    }
+
+    public static String genVarDef(String type, String name, boolean isFinal, String value) {
+        return type + " " + (isFinal ? "constant" : "") + name + " = " + value;
+    }
+
+    public static String genAssign(String target, String value) {
+        return target + " = " + value;
     }
 
     void addIndent() {
@@ -47,7 +75,7 @@ public class SolCode {
 
     public void addLine(String line) {
         if (line.equals("assert(true);") || line.equals("assert(!false);")) {
-            line = "//" + line;
+            line = "// " + line;
         }
         code.add(currentIndent + line);
     }
@@ -61,7 +89,7 @@ public class SolCode {
     }
 
     public void addAssign(String target, String value) {
-        addLine(target + " = " + value + ";");
+        addLine(genAssign(target, value) + ";");
     }
 
     public void addBreak() {
@@ -94,16 +122,23 @@ public class SolCode {
 
     public void enterFunctionDef(String name, String args, String returnType, boolean isPublic,
             boolean isPayable) {
-        if (name.equals(Utils.CONSTRUCTOR_NAME)) {
-            addLine("constructor (" + args + ")");
-        } else {
-            addLine("function " + name + "(" + args + ")");
-        }
+        addFunctionHeader(name, args, returnType, isPublic, isPayable);
+        addLine("{");
+        addIndent();
+    }
+
+    public void addFunctionSig(String name, String args, String returnType, boolean isPublic, boolean isPayable) {
+        addFunctionHeader(name, args, returnType, isPublic, isPayable);
+        addLine(";");
+    }
+
+    void addFunctionHeader(String name, String args, String returnType, boolean isPublic, boolean isPayable) {
+        addLine("function " + name + "(" + args + ")");
         addIndent();
         if (isPublic) {
-            addLine(Utils.PUBLIC_DECORATOR);
+            addLine("external");
         } else {
-            addLine(Utils.PRIVATE_DECORATOR);
+            addLine("internal");
         }
         if (isPayable) {
             addLine(Utils.PAYABLE_DECORATOR);
@@ -112,31 +147,19 @@ public class SolCode {
             addLine("returns (" + returnType + ")");
         }
         decIndent();
-        addLine("{");
-        addIndent();
     }
 
     public void enterConstructorDef(String args, List<Statement> body) {
-        addLine("constructor (" + args + ")");
-//        if (dynamicSystemOption == DynamicSystemOption.BaseContractCentralized) {
-//            boolean foundOption = false;
-//            addIndent();
-//            for (Statement stmt : body) {
-//                if (stmt instanceof DynamicStatement) {
-//                    String inherit = ((DynamicStatement) stmt).toSolCode();
-//                    addLine(inherit);
-//                    foundOption = true;
-//                    break; //TODO: handle duplicate calls
-//                }
-//            }
-//            if (!foundOption) {
-//                //TODO: error report
-//                addLine("No constructor for Dynamic System setting found");
-//            }
-//            decIndent();
-//        }
-        addLine("{");
+        addLine(genConstructorSig(args) + " {");
         addIndent();
+    }
+
+    public void addConstructorSig(String args) {
+        addLine(genConstructorSig(args) + ";");
+    }
+
+    static String genConstructorSig(String args) {
+        return "constructor (" + args + ")";
     }
 
     public void leaveFunctionDef() {
@@ -170,6 +193,17 @@ public class SolCode {
 
     public void leaveWhile() {
         decIndent();
+        addLine("}");
+    }
+
+    public void enterFor(String newVars, String test, String iters) {
+        addLine("for (" + newVars + "; " + test + "; " + iters + ") {");
+        addIndent();
+    }
+
+    public void leaveFor() {
+        decIndent();
+        addLine("}");
     }
 
     public void addVarDef(String type, String name, boolean isConst, String value) {
@@ -244,13 +278,15 @@ public class SolCode {
             if (name.equals(typecheck.Utils.LABEL_BOTTOM)) {
                 return "true"; //TODO
             }
-            String addr = labelTable.get(name);
-            return "ifTrust(" + addr + ", msg.sender)";
+            String addr = labelTable.containsKey(name) ? labelTable.get(name) : ((PrimitiveIfLabel) l).value().id;
+            // return "ifTrust(" + addr + ", msg.sender)";
+            return ifTrust(addr, "msg.sender");
         } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).getOp() == IfOperator.JOIN) {
             return "(" + checkIfTrustSender(((ComplexIfLabel) l).getLeft()) + " || "
                     + checkIfTrustSender(((ComplexIfLabel) l).getRight()) + ")";
         } else {
             // TODO: error report;
+            assert false;
             return "NaL";
         }
     }
@@ -260,6 +296,7 @@ public class SolCode {
         String name_1, name_2;
         if (!(l_2 instanceof PrimitiveIfLabel)) {
             //TODO: error report
+            assert false;
             return null;
         } else {
             name_2 = ((PrimitiveIfLabel) l_2).toString();
@@ -268,17 +305,13 @@ public class SolCode {
             // TODO: error report when missing this entry
             name_1 = ((PrimitiveIfLabel) l_1).toString();
 
-            if (name_2.equals(typecheck.Utils.LABEL_BOTTOM)
-                    || name_1.equals(name_2)) {
+            if (name_1.equals(name_2)) {
                 return "false";
             }
-            String addr_2 = labelTable.get(name_2);
+            String addr_1 = labelTable.containsKey(name_1) ? labelTable.get(name_1) : ((PrimitiveIfLabel) l_1).value().id;
+            String addr_2 = labelTable.containsKey(name_2) ? labelTable.get(name_2) : ((PrimitiveIfLabel) l_2).value().id;
 
-            if (name_1.equals(typecheck.Utils.LABEL_BOTTOM)) {
-                return "ifLocked(" + addr_2 + ")";
-            }
-            String addr_1 = labelTable.get(name_1);
-            return "ifLocked(" + addr_1 + ", " + addr_2 + ")";// + name;
+            return "(" + ifLocked(addr_1) + " && !" + ifTrust(addr_2, addr_1) + ")";// + name;
         } else if (l_1 instanceof ComplexIfLabel
                 && ((ComplexIfLabel) l_1).getOp() == IfOperator.JOIN) {
             return "(" + checkIfLocked(((ComplexIfLabel) l_1).getLeft(), l_2) + " && "
@@ -309,12 +342,12 @@ public class SolCode {
     private String lock(IfLabel l) {
         if (l instanceof PrimitiveIfLabel) {
             // TODO: error report when missing this entry
-            String name = ((PrimitiveIfLabel) l).toString();
+            String name = ((PrimitiveIfLabel) l).value().id;
             if (name.equals(typecheck.Utils.LABEL_BOTTOM)) {
                 return "false";//TODO: should make a nop statement
             }
-            String addr = labelTable.get(name);
-            return "lock(" + addr + ")";
+            String addr = labelTable.containsKey(name) ? labelTable.get(name) : ((PrimitiveIfLabel) l).value().id;
+            return lock(addr);
         } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).getOp() == IfOperator.MEET) {
             return "(" + lock(((ComplexIfLabel) l).getLeft()) + " && " + lock(
                     ((ComplexIfLabel) l).getRight())
@@ -325,6 +358,14 @@ public class SolCode {
         }
     }
 
+    static String lock(String addr) {
+        return "getLockManager().addlock(" + addr + ")";
+    }
+
+    static String unlock(String addr) {
+        return "getLockManager().unlock(" + addr + ")";
+    }
+
     private String unlock(IfLabel l) {
         if (l instanceof PrimitiveIfLabel) {
             // TODO: error report when missing this entry
@@ -332,8 +373,8 @@ public class SolCode {
             if (name.equals(typecheck.Utils.LABEL_BOTTOM)) {
                 return "false";//TODO: should make a nop statement
             }
-            String addr = labelTable.get(name);
-            return "unlock(" + addr + ")";
+            String addr = labelTable.containsKey(name) ? labelTable.get(name) : ((PrimitiveIfLabel) l).value().id;
+            return unlock(addr);
         } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).getOp() == IfOperator.MEET) {
             return "(" + unlock(((ComplexIfLabel) l).getLeft()) + " && " + unlock(
                     ((ComplexIfLabel) l).getRight()) + ")";

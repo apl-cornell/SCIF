@@ -62,4 +62,8 @@ public class Type extends Expression {
         List<Node> rtn = new ArrayList<>();
         return rtn;
     }
+
+    public boolean isPrimitive() {
+        return Utils.isPrimitiveType(name);
+    }
 }

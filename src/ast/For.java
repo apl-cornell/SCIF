@@ -108,7 +108,18 @@ public class For extends Statement {
 
     @Override
     public void solidityCodeGen(SolCode code) {
-        assert false;
+        String solNewVars = newVars.toSolCode();
+        String solTest = test.toSolCode();
+        List<String> iters = new ArrayList<>();
+        for (Statement s: iter) {
+            iters.add(s.toSolCode());
+        }
+        code.enterFor(solNewVars, solTest, SolCode.toIterations(iters));
+
+        for (Statement s: body) {
+            s.solidityCodeGen(code);
+        }
+        code.leaveFor();
     }
 
     @Override

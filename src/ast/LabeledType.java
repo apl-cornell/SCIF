@@ -1,5 +1,6 @@
 package ast;
 
+import compile.SolCode;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.CodeLocation;
@@ -69,4 +70,8 @@ public class LabeledType extends Expression {
         return ifl;
     }
 
+    @Override
+    public String toSolCode() {
+        return type.toSolCode();
+    }
 }

@@ -211,6 +211,16 @@ public class AnnAssign extends Statement {
     }
 
     @Override
+    public String toSolCode() {
+        if (value != null) {
+            return SolCode.genVarDef(annotation.toSolCode(), target.toSolCode(), isFinal,
+                    value.toSolCode());
+        } else {
+            return SolCode.genVarDef(annotation.toSolCode(), target.toSolCode(), isFinal);
+        }
+    }
+
+    @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(target);

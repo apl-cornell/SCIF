@@ -123,9 +123,10 @@ public class Interface extends TopLayerNode {
     public void solidityCodeGen(SolCode code) {
         code.enterInterfaceDef(contractName);
 
-        for (FunctionSig functionSig: funcSigs) {
-            functionSig.solidityCodeGen(code);
-        }
+        for (FunctionSig functionSig: funcSigs)
+            if (!functionSig.isBuiltin()) {
+                functionSig.solidityCodeGen(code);
+            }
 
         code.leaveInterfaceDef();
     }

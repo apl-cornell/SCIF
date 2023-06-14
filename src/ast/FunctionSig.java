@@ -4,7 +4,6 @@ import compile.SolCode;
 import compile.Utils;
 import java.util.Arrays;
 import java.util.List;
-import javax.swing.plaf.InsetsUIResource;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -30,7 +29,7 @@ public class FunctionSig extends TopLayerNode {
     List<LabeledType> exceptionList;
     boolean isConstructor;
 
-    final private boolean isBuiltIn;
+    final private boolean isBuiltin;
 
     /**
      * @param name          local name of this method
@@ -50,7 +49,7 @@ public class FunctionSig extends TopLayerNode {
         this.rtn = rtn;
         this.exceptionList = new ArrayList<>();
         this.isConstructor = isConstructor;
-        this.isBuiltIn = false;
+        this.isBuiltin = false;
         this.location = location;
         setDefault();
     }
@@ -64,7 +63,7 @@ public class FunctionSig extends TopLayerNode {
         this.rtn = rtn;
         this.exceptionList = new ArrayList<>();
         this.isConstructor = isConstructor;
-        this.isBuiltIn = isBuiltIn;
+        this.isBuiltin = isBuiltIn;
         this.location = location;
         setDefault();
     }
@@ -121,7 +120,7 @@ public class FunctionSig extends TopLayerNode {
         this.rtn = rtn;
         this.exceptionList = exceptionList;
         this.isConstructor = isConstructor;
-        this.isBuiltIn = false;
+        this.isBuiltin = false;
         this.location = location;
         setDefault();
     }
@@ -134,7 +133,7 @@ public class FunctionSig extends TopLayerNode {
         this.rtn = funcSig.rtn;
         this.exceptionList = funcSig.exceptionList;
         this.isConstructor = funcSig.isConstructor;
-        this.isBuiltIn = false;
+        this.isBuiltin = false;
         this.location = funcSig.location;
         setDefault();
     }
@@ -235,6 +234,14 @@ public class FunctionSig extends TopLayerNode {
                 isPayable = true;
             }
         }
+
+        String returnTypeCode = (rtn == null || rtn.type().isVoid()) ? "" : rtn.toSolCode();
+
+        if (isConstructor) {
+            code.addConstructorSig(args.toSolCode());
+        } else {
+            code.addFunctionSig(name, args.toSolCode(), returnTypeCode, isPublic, isPayable);
+        }
     }
 
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
@@ -289,8 +296,8 @@ public class FunctionSig extends TopLayerNode {
         return true;
     }
 
-    public boolean isBuiltIn() {
-        return isBuiltIn;
+    public boolean isBuiltin() {
+        return isBuiltin;
     }
 
 

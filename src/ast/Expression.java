@@ -16,14 +16,15 @@ public abstract class Expression extends Node {
     }
 
     public String toSolCode() {
-        return "unknown exp";
+        assert false;
+        return "unknown";
     }
 
     public abstract ExpOutcome genConsVisit(VisitEnv env, boolean tail_position);
 
     @Override
     public void solidityCodeGen(SolCode code) {
-        code.addLine(toSolCode());
+        code.addLine(toSolCode() + ";");
     }
 
     public void SolCodeGenStmt(SolCode code) {

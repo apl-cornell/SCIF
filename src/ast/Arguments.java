@@ -66,18 +66,11 @@ public class Arguments extends Node {
     }
 
     public String toSolCode() {
-        String rtn = "";
-        boolean first = true;
+        List<String> solArgs = new ArrayList<>();
         for (Arg arg : args) {
-            if (!first) {
-                rtn += ", ";
-            } else {
-                first = false;
-            }
-            // rnt += "type name"
-            rtn += arg.toSolCode();
+            solArgs.add(arg.toSolCode());
         }
-        return rtn;
+        return String.join(", ", solArgs);
     }
 
     @Override

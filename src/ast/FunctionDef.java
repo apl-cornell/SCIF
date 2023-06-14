@@ -8,7 +8,6 @@ import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,7 +63,7 @@ public class FunctionDef extends FunctionSig {
                     "Label of this method's return value"));
         }
 
-        if (!isBuiltIn()) {
+        if (!isBuiltin()) {
             // TODO: add support for signatures
             for (Statement stmt : body) {
                 // logger.debug("stmt: " + stmt);
@@ -79,7 +78,7 @@ public class FunctionDef extends FunctionSig {
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        if (isBuiltIn()) return null;
+        if (isBuiltin()) return null;
         env.incScopeLayer();
         addBuiltInVars(env.curSymTab, scopeContext);
 
@@ -179,7 +178,8 @@ public class FunctionDef extends FunctionSig {
         }
     }*/
 
-    public void SolCodeGen(SolCode code) {
+    @Override
+    public void solidityCodeGen(SolCode code) {
         boolean pub = false;
         boolean payable = false;
         if (decoratorList != null) {

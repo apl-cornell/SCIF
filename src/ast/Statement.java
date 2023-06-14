@@ -11,4 +11,12 @@ public abstract class Statement extends Node {
     public String toString() {
         return "";
     }
+
+    /**
+     *  return Solidity statement without the delimiter.
+     */
+    public String toSolCode() {
+        assert false;
+        return "";
+    }
 }
