@@ -74,9 +74,9 @@ public class TypeChecker {
         for (SourceFile root : roots) {
             assert root.ntcInherit(graph);
             if (root instanceof ContractFile) {
-                contractMap.put(root.getContractName(), ((ContractFile) root).getContract());
+                contractMap.put(root.getSourceFilePath(), ((ContractFile) root).getContract());
             } else if (root instanceof InterfaceFile) {
-                interfaceMap.put(root.getContractName(), ((InterfaceFile) root).getInterface());
+                interfaceMap.put(root.getSourceFilePath(), ((InterfaceFile) root).getInterface());
             }
         }
 
@@ -84,8 +84,8 @@ public class TypeChecker {
                 " check if there is any non-existent contract name: " + contractMap.keySet() + " "
                         + graph.getAllNodes());
         // check if there is any non-existent contract name
-        for (String contractName : graph.getAllNodes()) {
-            assert contractMap.containsKey(contractName) || interfaceMap.containsKey(contractName);
+        for (String contractPath : graph.getAllNodes()) {
+            assert contractMap.containsKey(contractPath) || interfaceMap.containsKey(contractPath) : contractPath;
             /*if (!contractMap.containsKey(contractName)) {
                 // TODO: mentioning non-existent contract
                 return null;
@@ -109,18 +109,14 @@ public class TypeChecker {
                 assert false;
                 return null;
             }
-            if (!rt.codePasteContract(x, contractMap, interfaceMap)) {
-                // TODO: inherit failed
-                assert false: x;
-                return null;
-            }
+            rt.codePasteContract(x, contractMap, interfaceMap);
         }
         roots = toporder;
 
         // Add built-ins and Collect global info
         NTCEnv ntcEnv = new NTCEnv(null);
         for (SourceFile root : roots) {
-            ntcEnv.addSourceFile(root.getContractName(), root);
+            ntcEnv.addSourceFile(root.getSourceFilePath(), root);
 
             root.addBuiltIns();
             root.passScopeContext(null);
@@ -398,7 +394,7 @@ public class TypeChecker {
         return result;
     }
 
-    static boolean runSLC(HashMap<String, SourceFile> programMap, String outputFileName,
+    static boolean runSLC(Map<String, SourceFile> programMap, String outputFileName,
             boolean DEBUG) throws Exception {
         logger.trace("running SLC");
 

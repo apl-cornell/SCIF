@@ -1,5 +1,7 @@
 package ast;
 
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import typecheck.*;
 
 import java.util.*;
@@ -10,9 +12,16 @@ public abstract class SourceFile extends Node {
     static Map<String, String> sourceFileNameIds = new HashMap<>();
     static int idCounter = 0;
 
-    final String sourceFileFullName; // e.g., "A.scif"
+    final Path sourceFilePath;
+    // final String sourceFileFullName; // e.g., "A.scif"
     final String sourceFileNameId;
-    protected final Set<String> iptContracts; // imported contracts
+
+    /*
+        imported files;
+        resolved to absolute path after inheritance graph generation;
+        joined with super contracts' imports after code pasting
+     */
+    protected Set<String> iptContracts;
     protected final String contractName;
 
     /*
@@ -35,18 +44,18 @@ public abstract class SourceFile extends Node {
         return sourceFileNameIds.get(sourceFileName);
     }
 
-    public SourceFile(String sourceFileName, Set<String> iptContracts, String contractName) {
-        this.sourceFileFullName = sourceFileName;
-        this.sourceFileNameId = sourceFileNameId(sourceFileName);
+    public SourceFile(String sourceFilePath, Set<String> iptContracts, String contractName) {
+        this.sourceFilePath = FileSystems.getDefault().getPath(sourceFilePath);
+        this.sourceFileNameId = sourceFileNameId(sourceFilePath);
         this.contractName = contractName;
         this.iptContracts = iptContracts;
         sourceCode = null;
         builtIn = false;
     }
 
-    public SourceFile(String sourceFileName, String contractName) {
-        this.sourceFileFullName = sourceFileName;
-        this.sourceFileNameId = sourceFileNameId(sourceFileName);
+    public SourceFile(String sourceFilePath, String contractName) {
+        this.sourceFilePath = FileSystems.getDefault().getPath(sourceFilePath);
+        this.sourceFileNameId = sourceFileNameId(sourceFilePath);
         this.contractName = contractName;
         this.iptContracts = new HashSet<>();
         this.sourceCode = null;
@@ -55,7 +64,7 @@ public abstract class SourceFile extends Node {
 
     abstract public SourceFile makeBuiltIn();
     public SourceFile(SourceFile source, boolean builtIn) {
-        this.sourceFileFullName = source.sourceFileFullName;
+        this.sourceFilePath = source.sourceFilePath;
         this.sourceFileNameId = source.sourceFileNameId;
         this.contractName = source.contractName;
         this.iptContracts = source.iptContracts;
@@ -75,9 +84,9 @@ public abstract class SourceFile extends Node {
         this.sourceCode = sourceCode;
     }
 
-    abstract public boolean containContract(String name);
+    abstract public boolean containContract(String fullPath);
 
-    abstract public boolean codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap);
+    abstract public void codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap);
 
     abstract public boolean ntcInherit(InheritGraph graph);
 
@@ -94,8 +103,8 @@ public abstract class SourceFile extends Node {
         // contract.findPrincipal(principalSet);
     }
 
-    public String getSourceFileFullName() {
-        return sourceFileFullName;
+    public String getSourceFilePath() {
+        return sourceFilePath.toString();
     }
 
     public String getSourceFileId() {

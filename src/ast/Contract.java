@@ -57,14 +57,14 @@ public class Contract extends TopLayerNode {
             superContractName = Utils.BASECONTRACTNAME;
         }
     }
-
-    public boolean ntcInherit(InheritGraph graph) {
-        // add an edge from superclass to this contract
-        if (!superContractName.isEmpty()) {
-            graph.addEdge(superContractName, contractName);
-        }
-        return true;
-    }
+//
+//    public boolean ntcInherit(InheritGraph graph) {
+//        // add an edge from superclass to this contract
+//        if (!superContractName.isEmpty()) {
+//            graph.addEdge(superContractName, contractName);
+//        }
+//        return true;
+//    }
 
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
@@ -228,9 +228,9 @@ public class Contract extends TopLayerNode {
         return rtn;
     }
 
-    public boolean codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
+    public void codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
         if (superContractName.equals("")) {
-            return true;
+            return;
         }
 
         // check no functions with the same name
@@ -241,7 +241,7 @@ public class Contract extends TopLayerNode {
             Interface itrface = interfaceMap.get(superContractName);
             if (itrface == null) {
                 assert false: superContractName;
-                return false;
+                return;
             }
             // check that all methods are implemented
 
@@ -254,14 +254,12 @@ public class Contract extends TopLayerNode {
                 if (funcMap.containsKey(name)) {
                     if (!f.typeMatch(funcMap.get(name))) {
                         assert false: f.signature() + " $ " + funcMap.get(name).signature();
-                        return false;
                     }
                 } else {
                     assert false: name;
-                    return false;
                 }
             }
-            return true;
+            return;
         }
 
         // inherit from superContract
@@ -280,28 +278,19 @@ public class Contract extends TopLayerNode {
 
         for (StateVariableDeclaration a : varDeclarations) {
             Name x = a.name();
-            if (nameSet.contains(x.id)) {
-                //TODO: duplicate names
-                return false;
-            }
+            assert !nameSet.contains(x.id);
             varNames.put(x.id, a);
             nameSet.add(x.id);
         }
 
         for (ExceptionDef exp: exceptionDefs) {
-            if (nameSet.contains(exp.exceptionName)) {
-                // TODO: duplicate names
-                return false;
-            }
+            assert !nameSet.contains(exp.exceptionName);
             nameSet.add(exp.exceptionName);
             expDefs.put(exp.exceptionName, exp);
         }
 
         for (FunctionDef f : methodDeclarations) {
-            if (nameSet.contains(f.name)) {
-                //TODO: duplicate names
-                return false;
-            }
+            assert !nameSet.contains(f.name);
             nameSet.add(f.name);
             funcNames.put(f.name, f);
         }
@@ -312,20 +301,14 @@ public class Contract extends TopLayerNode {
 
         for (StateVariableDeclaration a : superContract.varDeclarations) {
             Name x = a.name();
-            if (nameSet.contains(x.id)) {
-                // TODO: duplicate names
-                return false;
-            }
+            assert !nameSet.contains(x.id);
 
             newStateVarDecs.add(a);
         }
         newStateVarDecs.addAll(varDeclarations);
 
         for (ExceptionDef exp: superContract.exceptionDefs) {
-            if (nameSet.contains(exp.exceptionName)) {
-                // TODO: duplicate names
-                return false;
-            }
+            assert !nameSet.contains(exp.exceptionName);
             newExpDefs.add(exp);
         }
         newExpDefs.addAll(exceptionDefs);
@@ -333,18 +316,13 @@ public class Contract extends TopLayerNode {
         for (FunctionDef f : superContract.methodDeclarations) {
             boolean overridden = false;
             if (funcNames.containsKey(f.name)) {
-                if (!funcNames.get(f.name).typeMatch(f)) {
-                    // TODO: func overridden type not match
-                    return false;
-                }
+                assert funcNames.get(f.name).typeMatch(f);
                 overridden = true;
             } else if (varNames.containsKey(f.name)) {
                 // TODO: var overridden by func
-                return false;
-            } else if (expDefs.containsKey(f.name)) {
-                // TODO: exp overridden by func
-                return false;
-            }
+                assert false;
+            } else
+                assert !expDefs.containsKey(f.name);
 
             if (!overridden) {
                 newFuncDefs.add(f);
@@ -355,7 +333,6 @@ public class Contract extends TopLayerNode {
         varDeclarations = newStateVarDecs;
         exceptionDefs = newExpDefs;
         methodDeclarations = newFuncDefs;
-        return true;
     }
 
     public String toString() {

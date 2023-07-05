@@ -49,4 +49,9 @@ public class Array extends Type {
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
         return now;
     }
+
+    @Override
+    public boolean isPrimitive() {
+        return false;
+    }
 }

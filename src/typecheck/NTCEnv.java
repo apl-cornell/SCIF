@@ -18,7 +18,7 @@ public class NTCEnv {
     private ArrayList<Constraint> cons;
     private Hypothesis globalHypothesis;
     private InterfaceSym curContractSym;
-    private HashMap<String, SourceFile> programMap;
+    private java.util.Map<String, SourceFile> programMap;
 
     public NTCEnv(ContractSym contractSym) {
         globalSymTab = new SymTab();
@@ -183,7 +183,7 @@ public class NTCEnv {
         return cons;
     }
 
-    public HashMap<String, SourceFile> programMap() {
+    public java.util.Map<String, SourceFile> programMap() {
         return programMap;
     }
 

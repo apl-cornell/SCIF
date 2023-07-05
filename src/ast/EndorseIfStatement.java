@@ -42,8 +42,7 @@ public class EndorseIfStatement extends Statement {
 
     @Override
     public void solidityCodeGen(SolCode code) {
-        // TODO
-        assert false;
+        ifStatement.solidityCodeGen(code);
     }
 
     @Override

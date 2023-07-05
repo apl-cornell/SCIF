@@ -244,20 +244,20 @@ ipt_stmts ::=
 
 ipt_stmt ::= ipt_name:a SEMI {:RESULT = a; :};
 
-ipt_name ::= IMPORT:x ipt_as_names:a {:
+ipt_name ::= IMPORT:x STRING_LITERAL:a {:
         RESULT = a;//new Import();
         //RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
-
-ipt_as_names ::=
-    NAME:a {:
-        RESULT = (String) a;//new Name((String)a);
-        //RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}
-    | NAME:a AS NAME:b {:
-        RESULT = (String) a;//new Name((String)a); //TODO
-        //RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :};
+//
+//ipt_as_names ::=
+//    NAME:a {:
+//        RESULT = (String) a;//new Name((String)a);
+//        //RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+//    :}
+//    | NAME:a AS NAME:b {:
+//        RESULT = (String) a;//new Name((String)a); //TODO
+//        //RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+//    :};
 
 contract ::=
     CONTRACT NAME: name contract_extends: c_extends
@@ -900,6 +900,11 @@ except_clause ::=
 exceptall_clause ::=
     RESCUE:p LPAR except_type:t NAME:x RPAR suite:s {:
         RESULT = new ExceptHandler(t, (String)x, s);
+        RESULT.setLoc(new CodeLocation(pleft, pright, filename));
+    :}
+    |
+    RESCUE:p LPAR STAR RPAR suite:s {:
+        RESULT = new ExceptHandler(s);
         RESULT.setLoc(new CodeLocation(pleft, pright, filename));
     :};
 

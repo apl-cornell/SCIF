@@ -1,12 +1,9 @@
 package ast;
 
-import java.util.ArrayList;
+import java.util.List;
 import typecheck.DepMapTypeSym;
-import typecheck.Label;
-import typecheck.MapTypeSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
-import typecheck.SymTab;
 import typecheck.TypeSym;
 import typecheck.Utils;
 import typecheck.VarSym;
@@ -31,8 +28,8 @@ public class DepMap extends Map {
     }
 
     @Override
-    public ArrayList<Node> children() {
-        ArrayList<Node> rtn = super.children();
+    public List<Node> children() {
+        List<Node> rtn = super.children();
         rtn.add(valueLabel);
         return rtn;
     }
@@ -75,4 +72,5 @@ public class DepMap extends Map {
     public IfLabel valueLabel() {
         return valueLabel;
     }
+
 }

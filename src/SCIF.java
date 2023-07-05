@@ -30,6 +30,9 @@ public class SCIF implements Callable<Integer> {
     @Option(names = "-lg", arity = "1..*", description = "The log file.")
     private String[] m_outputFileNames;
 
+    @Option(names = "-o", arity = "1..*", description = "The output file.")
+    private String[] m_solFileNames;
+
     @ArgGroup(exclusive = true)
     private FuncRequest m_funcRequest;
 
@@ -132,17 +135,17 @@ public class SCIF implements Callable<Integer> {
             if (roots == null) {
                 return 1;
             }
-            String outputFileName;
-            File outputFile;
-            if (m_outputFileNames == null) {
-                outputFile = File.createTempFile("tmp", "sol");
-                outputFileName = outputFile.getAbsolutePath();
-                outputFile.deleteOnExit();
+            String solFileName;
+            File solFile;
+            if (m_solFileNames == null) {
+                solFile = File.createTempFile("tmp", "sol");
+                solFileName = solFile.getAbsolutePath();
+                solFile.deleteOnExit();
             } else {
-                outputFileName = m_outputFileNames[0];
-                outputFile = new File(outputFileName);
+                solFileName = m_solFileNames[0];
+                solFile = new File(solFileName);
             }
-            SolCompiler.compile(roots, outputFile);
+            SolCompiler.compile(roots, solFile);
         } else if (m_funcRequest.typecheck) {
             try {
                 _typecheck(m_outputFileNames);

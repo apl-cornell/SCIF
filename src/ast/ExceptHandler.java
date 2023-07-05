@@ -10,11 +10,22 @@ public class ExceptHandler extends Statement {
     private LabeledType labeledType;
     private String name;
     private List<Statement> body;
+    final private boolean acceptall;
 
     public ExceptHandler(LabeledType type, String name, List<Statement> body) {
         this.labeledType = type;
         this.name = name;
         this.body = body;
+        acceptall = false;
+    }
+
+    /**
+     * Create a handler that accept all other types of exceptions(try/catch) or failures(atomic/rescue)
+     * @param body
+     */
+    public ExceptHandler(List<Statement> body) {
+        this.body = body;
+        acceptall = true;
     }
 
     public void setBody(List<Statement> body) {
@@ -26,12 +37,14 @@ public class ExceptHandler extends Statement {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterNewScope();
 
-        VarSym var = env.newVarSym(name, labeledType, true, true, true, location, now);
-        if (var == null) {
-            System.err.println("Exception type " + labeledType.type().name() + " not found");
-            throw new RuntimeException();
+        if (!acceptall) {
+            VarSym var = env.newVarSym(name, labeledType, true, true, true, location, now);
+            if (var == null) {
+                System.err.println("Exception type " + labeledType.type().name() + " not found");
+                throw new RuntimeException();
+            }
+            env.addSym(name, var);
         }
-        env.addSym(name, var);
 
         for (Statement s : body) {
             ScopeContext tmp = s.ntcGenCons(env, now);

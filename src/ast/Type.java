@@ -64,6 +64,6 @@ public class Type extends Expression {
     }
 
     public boolean isPrimitive() {
-        return Utils.isPrimitiveType(name);
+        return true;
     }
 }

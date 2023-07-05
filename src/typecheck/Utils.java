@@ -2,6 +2,7 @@ package typecheck;
 
 import ast.*;
 import java.net.URL;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sherrloc.constraint.ast.Constructor;
@@ -497,7 +498,7 @@ public class Utils {
         return rtn;
     }
 
-    public static String SLCSuggestionToString(HashMap<String, SourceFile> programMap,
+    public static String SLCSuggestionToString(Map<String, SourceFile> programMap,
             sherrloc.diagnostic.explanation.Explanation exp, boolean DEBUG) {
         String s = exp.toConsoleStringWithExp();
         if (DEBUG) {
@@ -543,7 +544,7 @@ public class Utils {
         // if (DEBUG) System.out.println("position of #:" + p + " " + contractName);
         SourceFile program = null; //= programMap.get(contractName);
         for (SourceFile sourceFile: programMap.values()) {
-            if (sourceFile.getSourceFileFullName().equals(contractName)) {
+            if (sourceFile.getSourceFilePath().equals(contractName)) {
                 program = sourceFile;
                 break;
             }
@@ -553,11 +554,11 @@ public class Utils {
 
         if (lin == 0 || col == 0) {
             // Built-in or default
-            return program.getSourceFileFullName() + "\n" + explanation + ".\n";
+            return program.getSourceFilePath() + "\n" + explanation + ".\n";
         }
         StringBuilder rtn =
                 new StringBuilder(
-                        program.getSourceFileFullName() + "(" + slin + "," + scol + "): " + "\n"
+                        program.getSourceFilePath() + "(" + slin + "," + scol + "): " + "\n"
                                 + explanation + ".\n");
         rtn.append(program.getSourceCodeLine(lin - 1)).append("\n");
         for (int i = 1; i < col; ++i) {

@@ -40,11 +40,11 @@ public class SolCode {
         if (l.equals(r)) {
             return "true";
         } else {
-            return "getTrustManager().ifTrust(" + l + ", " + r + ")";
+            return "getTrustManager().trusts(" + l + ", " + r + ")";
         }
     }
     static String ifLocked(String l) {
-        return "getLockManager().ifLocked(" + l + ")";
+        return "getLockManager().locked(" + l + ")";
     }
 
     public static String toIterations(List<String> iters) {
@@ -61,6 +61,10 @@ public class SolCode {
 
     public static String genAssign(String target, String value) {
         return target + " = " + value;
+    }
+
+    public static String genInterfaceType(Type type) {
+        return (type.isPrimitive())? type.toSolCode() : type.toSolCode() + " memory";
     }
 
     void addIndent() {
@@ -184,6 +188,7 @@ public class SolCode {
 
     public void leaveElse() {
         decIndent();
+        addLine("}");
     }
 
     public void enterWhile(String cond) {

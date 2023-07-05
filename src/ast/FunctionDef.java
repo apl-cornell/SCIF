@@ -192,7 +192,7 @@ public class FunctionDef extends FunctionSig {
         }
         String rtnTypeCode = "";
         if (rtn != null && !this.rtn.type().isVoid()) {
-            rtnTypeCode = rtn.toSolCode();
+            rtnTypeCode = SolCode.genInterfaceType(rtn.type());
         }
 
         if (isConstructor) {

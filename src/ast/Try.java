@@ -54,7 +54,7 @@ public class Try extends Statement {
 
     @Override
     public void solidityCodeGen(SolCode code) {
-
+        assert false;
     }
 
     @Override

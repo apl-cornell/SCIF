@@ -140,24 +140,24 @@ public class Interface extends TopLayerNode {
     public String getContractName() {
         return contractName;
     }
+//
+//    public boolean ntcInherit(InheritGraph graph) {
+//        // add an edge from superclass to this contract
+//        if (!superContractName.isEmpty()) {
+//            graph.addEdge(superContractName, contractName);
+//        }
+//        return true;
+//    }
 
-    public boolean ntcInherit(InheritGraph graph) {
-        // add an edge from superclass to this contract
-        if (!superContractName.isEmpty()) {
-            graph.addEdge(superContractName, contractName);
-        }
-        return true;
-    }
-
-    public boolean codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
+    public void codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
         if (superContractName.isEmpty()) {
-            return true;
+            return;
         }
 
         Interface superContract = interfaceMap.get(superContractName);
         if (superContract == null) {
             assert false: superContractName;
-            return false;
+            return;
         }
 
         // check that there are no duplicates
@@ -172,13 +172,11 @@ public class Interface extends TopLayerNode {
         for (ExceptionDef exp: superContract.exceptionDefs) {
             if (nameSet.contains(exp.exceptionName)) {
                 assert false: exp.exceptionName;
-                return false;
             }
         }
         for (FunctionSig f: funcSigs) {
             if (nameSet.contains(f.name)) {
                 assert false: f.name;
-                return false;
             }
         }
 
@@ -193,7 +191,6 @@ public class Interface extends TopLayerNode {
 
         exceptionDefs = newExpDefs;
         funcSigs = newFuncSigs;
-        return true;
     }
 
     public void addBuiltIns() {

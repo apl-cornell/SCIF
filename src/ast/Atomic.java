@@ -61,7 +61,7 @@ public class Atomic extends Statement {
 
     @Override
     public void solidityCodeGen(SolCode code) {
-
+        assert false;
     }
 
     @Override

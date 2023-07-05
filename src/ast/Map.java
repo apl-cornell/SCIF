@@ -1,11 +1,10 @@
 package ast;
 
-import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 import typecheck.MapTypeSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
-import typecheck.TypeSym;
 import typecheck.Utils;
 
 public class Map extends Type {
@@ -27,7 +26,7 @@ public class Map extends Type {
     }
 
     @Override
-    public ArrayList<Node> children() {
+    public List<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(keyType);
         rtn.add(valueType);
@@ -51,5 +50,10 @@ public class Map extends Type {
         assert typeSym != null : name;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
         return now;
+    }
+
+    @Override
+    public boolean isPrimitive() {
+        return false;
     }
 }

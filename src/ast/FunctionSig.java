@@ -235,7 +235,8 @@ public class FunctionSig extends TopLayerNode {
             }
         }
 
-        String returnTypeCode = (rtn == null || rtn.type().isVoid()) ? "" : rtn.toSolCode();
+        String returnTypeCode = (rtn == null || rtn.type().isVoid()) ? "" :
+                SolCode.genInterfaceType(rtn.type());;
 
         if (isConstructor) {
             code.addConstructorSig(args.toSolCode());

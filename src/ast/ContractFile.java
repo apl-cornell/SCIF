@@ -1,7 +1,11 @@
 package ast;
 
 import compile.SolCode;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,16 +34,16 @@ public class ContractFile extends SourceFile {
         this.contract = source.contract;
     }
 
-    public Contract findContract(String name) {
-        if (contract.contractName.equals(name)) {
+    public Contract findContract(String fullPath) {
+        if (sourceFilePath.toString().equals(fullPath)) {
             return contract;
         }
         return null;
     }
 
     @Override
-    public boolean containContract(String name) {
-        return findContract(name) != null;
+    public boolean containContract(String fullPath) {
+        return findContract(fullPath) != null;
     }
 
     @Override
@@ -48,20 +52,41 @@ public class ContractFile extends SourceFile {
     }
 
     @Override
-    public boolean codePasteContract(String name, java.util.Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
+    public void codePasteContract(String name, java.util.Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
         Contract contract = findContract(name);
-        if (contract == null) {
-            return false;
+        assert contract != null;
+
+        // construct contract table and interface table this contract imported
+        // mapping from local names to the object
+        Map<String, Contract> importedContractMap = new HashMap<>();
+        Map<String, Interface> importedInterfaceMap = new HashMap<>();
+
+        for (String path : iptContracts) {
+            assert contractMap.containsKey(path) || interfaceMap.containsKey(path) : path;
+            if (contractMap.containsKey(path)) {
+                importedContractMap.put(contractMap.get(path).getContractName(), contractMap.get(path));
+            } else if (interfaceMap.containsKey(path)) {
+                importedInterfaceMap.put(interfaceMap.get(path).getContractName(), interfaceMap.get(path));
+            }
         }
-        return contract.codePasteContract(contractMap, interfaceMap);
+        contract.codePasteContract(importedContractMap, importedInterfaceMap);
     }
 
     @Override
     public boolean ntcInherit(InheritGraph graph) {
-        for (String name: iptContracts) {
-            graph.addEdge(name, contractName);
+        Set<String> resolvedIptContracts = new HashSet<>();
+        for (String contract: iptContracts) {
+            Path path = Paths.get(contract);
+            if (!path.isAbsolute()) {
+                path = sourceFilePath.getParent().resolve(path).normalize().toAbsolutePath();
+                System.err.println(contract + " -> " + path + " from " + sourceFilePath);
+            }
+            resolvedIptContracts.add(path.toString());
+            graph.addEdge(path.toString(), getSourceFilePath());
         }
-        return contract.ntcInherit(graph);
+        iptContracts = resolvedIptContracts;
+        return true;
+        // return contract.ntcInherit(graph);
     }
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
