@@ -1,19 +1,14 @@
 interface ITrustManager {
-    @public
-    bool register();
     /**
         if a trusts b.
         True: a trusts b.
         False: not sure
     */
     @public
-    bool ifTrust(address a, address b);
+    bool trusts(address a, address b);
     @public
-    bool ifTrustWithProof(address a, address b, address[] proof);
+    bool trustsWithProof(address a, address b, address[] proof);
 
-    /**
-        Set that the sender trusts trustee.
-    */
     @public
     bool setTrust(address trustee);
     @public

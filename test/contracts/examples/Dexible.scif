@@ -1,0 +1,33 @@
+import "./IERC20.scif";
+import "./IExchange.scif";
+
+contract Dexible {
+    exception FailedSwap();
+    @public
+    void swap(IERC20 tokenIn, IERC20 tokenOut, final IExchange router, uint amount)
+        throws (FailedSwap) {
+        atomic {
+            tokenIn.approve(sender, router, amount);
+            assert router => sender;
+            router.exchange(sender, tokenIn, tokenOut, amount);
+        } rescue (*) {
+            throw FailedSwap();
+        }
+    }
+
+    @public
+    void multiSwap(IERC20[] tokens, IExchange[] routers, uint[] amounts, bytes extraData)
+        throws (FailedSwap) {
+        atomic {
+            for (uint i = 0; i < tokens.length() - 1; ++i) {
+                final IExchange router = routers[i];
+                token[i].approve(sender, router, amounts[i]);
+                assert router => sender;
+                router.exchange(
+                    sender, tokens[i], tokens[i + 1], amounts[i], extraData);
+            }
+        } rescue (*) {
+            throw FailedSwap();
+        }
+    }
+}

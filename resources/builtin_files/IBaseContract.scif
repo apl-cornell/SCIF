@@ -1,19 +1,14 @@
-import ILockManager;
-import ITrustManager;
+import "./ILockManager.scif";
+import "./ITrustManager.scif";
 
-interface IBaseRuntime {
+interface IBaseContract {
     @public
-    bool setTrust{this}(address trustee);
+    bool directlyTrusts(address trustee);
     @public
-    bool revokeTrust{this}(address trustee);
-
-    @public
-    bool ifDTrust(address trustee);
-    @public
-    address[] getDTrustList();
+    address[] directTrustees();
 
     @public
-    ITrustManager getTrustManager();
+    ITrustManager trustManager();
     @public
-    ILockManager getLockManager();
+    ILockManager lockManager();
 }

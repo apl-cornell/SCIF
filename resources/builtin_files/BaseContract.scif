@@ -1,29 +1,29 @@
-contract BaseContract implements IBaseRuntime {
+import "./IBaseContract.scif";
+
+contract BaseContract implements IBaseContract {
     address owner;
     address[] trustees;
     map(address, uint) trusteeIndex;
-    ITrustManager trustManager;
-    ILockManager lockManager;
+    ITrustManager m_trustManager;
+    ILockManager m_lockManager;
 
     constructor(ITrustManager _trustManager, ILockManager _lockManager) {
         owner = sender;
-        trustManager = _trustManager;
-        lockManager = _lockManager;
-        trustManager.register();
-        lockManager.register();
-        setTrust(trustManager);
-        setTrust(lockManager);
+        m_trustManager = _trustManager;
+        m_lockManager = _lockManager;
+        setTrust(m_trustManager);
+        setTrust(m_lockManager);
         setTrust(owner);
     }
 
     @private
-    void setLocalTrust(address trustee) {
+    void setDirectTrust(address trustee) {
         trustees.push(trustee);
         trusteeIndex[trustee] = trustees.length();
     }
 
     @private
-    void revokeLocalTrust(address trustee) {
+    void revokeDirectTrust(address trustee) {
         uint ind = trusteeIndex[trustee];
         address lastTrustee = trustees[trustees.length() - 1];
         trustees[ind - 1] = lastTrustee;
@@ -37,8 +37,8 @@ contract BaseContract implements IBaseRuntime {
         if (sender != owner) {
             return false;
         }
-        setLocalTrust(trustee);
-        return trustManager.setTrust(trustee);
+        setDirectTrust(trustee);
+        return m_trustManager.setTrust(trustee);
     }
 
     @public
@@ -46,8 +46,8 @@ contract BaseContract implements IBaseRuntime {
         if (sender != owner) {
             return false;
         }
-        revokeLocalTrust(trustee);
-        return trustManager.revokeTrust(trustee);
+        revokeDirectTrust(trustee);
+        return m_trustManager.revokeTrust(trustee);
     }
 
     @public
@@ -67,7 +67,7 @@ contract BaseContract implements IBaseRuntime {
     }
 
     @public
-    bool ifDTrust(address trustee) {
+    bool directlyTrusts(address trustee) {
         address _trustee = endorse(trustee, any -> this);
         for (uint i = 0; i < trustees.length(); i += 1) {
             if (trustees[i] == _trustee) {
@@ -78,17 +78,17 @@ contract BaseContract implements IBaseRuntime {
     }
 
     @public
-    address[] getDTrustList() {
+    address[] directTrustees() {
         return trustees;
     }
 
     @public
-    ITrustManager getTrustManager() {
-        return trustManager;
+    ITrustManager trustManager() {
+        return m_trustManager;
     }
 
     @public
-    ILockManager getLockManager() {
-        return lockManager;
+    ILockManager lockManager() {
+        return m_lockManager;
     }
 }
