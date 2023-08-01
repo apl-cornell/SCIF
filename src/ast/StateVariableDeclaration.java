@@ -229,7 +229,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         return name;
     }
 
-    public boolean isBuiltin() {
+    public boolean isBuiltIn() {
         return isBuiltin;
     }
 

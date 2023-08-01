@@ -1,5 +1,8 @@
 package ast;
 
+import static typecheck.Utils.BUILTIN_FILES;
+
+import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import typecheck.*;
@@ -46,7 +49,7 @@ public abstract class SourceFile extends Node {
 
     public SourceFile(String sourceFilePath, Set<String> iptContracts, String contractName) {
         this.sourceFilePath = FileSystems.getDefault().getPath(sourceFilePath);
-        this.sourceFileNameId = sourceFileNameId(sourceFilePath);
+        this.sourceFileNameId = sourceFileNameId(this.sourceFilePath.toString());
         this.contractName = contractName;
         this.iptContracts = iptContracts;
         sourceCode = null;
@@ -88,7 +91,7 @@ public abstract class SourceFile extends Node {
 
     abstract public void codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap);
 
-    abstract public boolean ntcInherit(InheritGraph graph);
+    abstract public boolean ntcAddImportEdges(InheritGraph graph);
 
     /**
      *  Generate constraints for regular typechecking in the current source file.
@@ -129,4 +132,22 @@ public abstract class SourceFile extends Node {
      * Add built-in variables, trust assumptions, exceptions, and methods in the AST with this as the root.
      */
     abstract public void addBuiltIns();
+
+    void addBuiltInImports() {
+        if (isBuiltIn()) return;
+        for (File importFile: BUILTIN_FILES) {
+            iptContracts.add(importFile.toString());
+            System.err.println(contractName + " imports " + importFile.toString());
+        }
+    }
+
+    public void updateImports(Map<String, SourceFile> fileMap) {
+        Set<String> newIptContracts = new HashSet<>(iptContracts);
+        for (String x: iptContracts) {
+            SourceFile file = fileMap.get(x);
+            assert file != null;
+            newIptContracts.addAll(file.iptContracts);
+        }
+        iptContracts = newIptContracts;
+    }
 }

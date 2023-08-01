@@ -37,8 +37,9 @@ public class InterfaceFile extends SourceFile {
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        env.setGlobalSymTab(env.getContract(contractName).symTab);
-        env.initCurSymTab();
+        // env.setGlobalSymTab(env.getContract(contractName).symTab);
+        // env.initCurSymTab();
+        env.setCurSymTab(env.currentSourceFileFullName());
         itrface.ntcGenCons(env, now);
         return now;
     }
@@ -79,8 +80,7 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public void codePasteContract(String name, Map<String, Contract> contractMap,
-            Map<String, Interface> interfaceMap) {
+    public void codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
         assert sourceFilePath.toString().equals(name);
 
         // construct contract table and interface table this contract imported
@@ -100,7 +100,7 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public boolean ntcInherit(InheritGraph graph) {
+    public boolean ntcAddImportEdges(InheritGraph graph) {
         Set<String> resolvedIptContracts = new HashSet<>();
         for (String contract: iptContracts) {
             Path path = Paths.get(contract);
@@ -119,15 +119,11 @@ public class InterfaceFile extends SourceFile {
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
+        env.enterSourceFile(getSourceFilePath());
+        env.setNewCurSymTab();
         for (String iptContract : iptContracts) {
-            if (!env.containsContract(iptContract) && !env.containsInterface(iptContract)) {
-                logger.debug("not containing imported contract: " + iptContract);
-                return false;
-            }
+            env.importContract(iptContract);
         }
-        // env.setGlobalSymTab(new SymTab());
-        env.initCurSymTab();
-        // Utils.addBuiltInASTNode(env.globalSymTab, contract.trustSetting);
         if (!itrface.ntcGlobalInfo(env, now)) {
             logger.debug("GlobalInfo failed with: " + itrface);
             return false;
@@ -137,7 +133,7 @@ public class InterfaceFile extends SourceFile {
 
     @Override
     public void globalInfoVisit(InterfaceSym contractSym) {
-        iptContracts.add(itrface.contractName);
+        // iptContracts.add(itrface.contractName);
         itrface.globalInfoVisit(contractSym);
     }
 
@@ -147,6 +143,8 @@ public class InterfaceFile extends SourceFile {
 
     @Override
     public void addBuiltIns() {
+        addBuiltInImports();
         itrface.addBuiltIns();
     }
+
 }

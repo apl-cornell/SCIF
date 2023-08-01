@@ -12,7 +12,7 @@ import java.util.Set;
 
 public class SymTab {
     SymTab parent;
-    HashMap<String, Sym> table;
+    Map<String, Sym> table;
     public SymTab() {
         parent = null;
         table = new HashMap<>();
@@ -24,7 +24,7 @@ public class SymTab {
     }
 
     public Sym lookup(String id) {
-        // System.out.println("sym lookup: " + id + " @" + this);
+        System.err.println("sym lookup: " + id + " @" + this);
         if (table.get(id) != null) {
             // System.out.println("SUCC");
 
@@ -33,6 +33,7 @@ public class SymTab {
         return parent == null ? null : parent.lookup(id);
     }
     public void add(String id, Sym sym) {
+        System.err.println("sym add: " + id + " @" + this);
         if (table.containsKey(id)) {
             throw new RuntimeException("SymTab adding a symbol that existed: " + id);
         }
@@ -84,4 +85,5 @@ public class SymTab {
     public void setParent(SymTab parent) {
         this.parent = parent;
     }
+
 }

@@ -73,7 +73,8 @@ public class Contract extends TopLayerNode {
         Utils.addBuiltInTypes(env.curSymTab());
         // env.initSymTab(curSymTab);
         ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), new ArrayList<>(), this);
-        env.addGlobalSym(contractName, contractSym);
+        env.addContractSym(env.currentSourceFileFullName(), contractSym);
+        env.addSym(contractName, contractSym);
         env.setCurContractSym(contractSym);
         // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
 
@@ -194,7 +195,7 @@ public class Contract extends TopLayerNode {
         code.enterContractDef(contractName);
 
         for (StateVariableDeclaration dec : varDeclarations)
-            if (!dec.isBuiltin()) {
+            if (!dec.isBuiltIn()) {
                 dec.solidityCodeGen(code);
             }
 //
@@ -203,7 +204,7 @@ public class Contract extends TopLayerNode {
 //        }
 
         for (FunctionDef fDef : methodDeclarations)
-            if (!fDef.isBuiltin()) {
+            if (!fDef.isBuiltIn()) {
                 fDef.solidityCodeGen(code);
             }
 
@@ -299,21 +300,42 @@ public class Contract extends TopLayerNode {
         List<ExceptionDef> newExpDefs = new ArrayList<>();
         List<FunctionDef> newFuncDefs = new ArrayList<>();
 
+        int builtInIndex = 0;
+        for (StateVariableDeclaration a : varDeclarations) {
+            if (a.isBuiltIn()) newStateVarDecs.add(a);
+            else break;
+            builtInIndex += 1;
+        }
         for (StateVariableDeclaration a : superContract.varDeclarations) {
+            if (a.isBuiltIn()) continue;
             Name x = a.name();
-            assert !nameSet.contains(x.id);
+            assert !nameSet.contains(x.id): x.id;
 
             newStateVarDecs.add(a);
         }
-        newStateVarDecs.addAll(varDeclarations);
+        newStateVarDecs.addAll(varDeclarations.subList(builtInIndex, varDeclarations.size()));
 
+        builtInIndex = 0;
+        for (ExceptionDef a : exceptionDefs) {
+            if (a.isBuiltIn()) newExpDefs.add(a);
+            else break;
+            builtInIndex += 1;
+        }
         for (ExceptionDef exp: superContract.exceptionDefs) {
-            assert !nameSet.contains(exp.exceptionName);
+            if (exp.isBuiltIn()) continue;
+            assert !nameSet.contains(exp.exceptionName): exp.exceptionName;
             newExpDefs.add(exp);
         }
-        newExpDefs.addAll(exceptionDefs);
+        newExpDefs.addAll(exceptionDefs.subList(builtInIndex, exceptionDefs.size()));
 
+        builtInIndex = 0;
+        for (FunctionDef a : newFuncDefs) {
+            if (a.isBuiltIn()) newFuncDefs.add(a);
+            else break;
+            builtInIndex += 1;
+        }
         for (FunctionDef f : superContract.methodDeclarations) {
+            if (f.isBuiltIn()) continue;
             boolean overridden = false;
             if (funcNames.containsKey(f.name)) {
                 assert funcNames.get(f.name).typeMatch(f);
@@ -328,7 +350,7 @@ public class Contract extends TopLayerNode {
                 newFuncDefs.add(f);
             }
         }
-        newFuncDefs.addAll(methodDeclarations);
+        newFuncDefs.addAll(methodDeclarations.subList(builtInIndex, methodDeclarations.size()));
 
         varDeclarations = newStateVarDecs;
         exceptionDefs = newExpDefs;
@@ -452,7 +474,8 @@ public class Contract extends TopLayerNode {
         // exception{BOT} Error();
         ExceptionDef error = new ExceptionDef(
                 Utils.EXCEPTION_ERROR_NAME,
-                new Arguments()
+                new Arguments(),
+                true
         );
         exceptionDefs.add(error);
     }
@@ -462,31 +485,34 @@ public class Contract extends TopLayerNode {
         // final This{this} this;
         StateVariableDeclaration thisDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_THIS),
-                new LabeledType(contractName, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)), CodeLocation.builtinCodeLocation()),
+                new LabeledType(contractName, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)), CodeLocation.builtinCodeLocation(0, 1)),
                 null,
                 true,
                 true,
                 true
         );
-        thisDec.setLoc(CodeLocation.builtinCodeLocation());
+        thisDec.name().setLoc(CodeLocation.builtinCodeLocation(0, 0));
+        thisDec.setLoc(CodeLocation.builtinCodeLocation(0, 0));
         StateVariableDeclaration topDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_TOP),
-                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP)), CodeLocation.builtinCodeLocation()),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP)), CodeLocation.builtinCodeLocation(1, 1)),
                 null,
                 true,
                 true,
                 true
         );
-        topDec.setLoc(CodeLocation.builtinCodeLocation());
+        topDec.name().setLoc(CodeLocation.builtinCodeLocation(1, 0));
+        topDec.setLoc(CodeLocation.builtinCodeLocation(1, 0));
         StateVariableDeclaration botDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_BOTTOM),
-                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)), CodeLocation.builtinCodeLocation()),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)), CodeLocation.builtinCodeLocation(2, 1)),
                 null,
                 true,
                 true,
                 true
         );
-        botDec.setLoc(CodeLocation.builtinCodeLocation());
+        botDec.name().setLoc(CodeLocation.builtinCodeLocation(2, 0));
+        botDec.setLoc(CodeLocation.builtinCodeLocation(2, 0));
         List<StateVariableDeclaration> newDecs = new ArrayList<>();
         newDecs.add(topDec);
         newDecs.add(botDec);

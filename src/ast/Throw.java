@@ -33,7 +33,7 @@ public class Throw extends Statement {
                 exceptionName = att.attr.id;
                 ContractSym s = env.getContract(contractTypeName);
                 logger.debug("contract " + contractTypeName + ": " + s.getName());
-                if (!(env.getExtSym(exceptionName, contractTypeName) == null)) {
+                if (!(env.getExtSym(contractTypeName, exceptionName) == null)) {
                     System.err.println("a.b not found");
                     return null;
                 }

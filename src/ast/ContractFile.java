@@ -73,7 +73,7 @@ public class ContractFile extends SourceFile {
     }
 
     @Override
-    public boolean ntcInherit(InheritGraph graph) {
+    public boolean ntcAddImportEdges(InheritGraph graph) {
         Set<String> resolvedIptContracts = new HashSet<>();
         for (String contract: iptContracts) {
             Path path = Paths.get(contract);
@@ -91,10 +91,10 @@ public class ContractFile extends SourceFile {
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
+        env.enterSourceFile(getSourceFilePath());
         logger.debug("contract: " + contract.contractName + "\n" + env.getContract(
                 contract.contractName));
-        env.setGlobalSymTab(env.getContract(contract.contractName).symTab);
-        env.initCurSymTab();
+        env.setCurSymTab(env.currentSourceFileFullName());
         contract.ntcGenCons(env, now);
         return now;
     }
@@ -102,15 +102,15 @@ public class ContractFile extends SourceFile {
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
+        env.enterSourceFile(getSourceFilePath());
+        env.setNewCurSymTab();
         for (String iptContract : iptContracts) {
-            if (!env.containsContract(iptContract) && !env.containsInterface(iptContract)) {
-                logger.debug("not containing imported contract: " + iptContract);
-                return false;
-            }
+            env.importContract(iptContract);
         }
         // env.setGlobalSymTab(new SymTab());
-        env.initCurSymTab();
+        // env.initCurSymTab();
         // Utils.addBuiltInASTNode(env.globalSymTab, contract.trustSetting);
+        assert env.getCurSym("ITrustManager") != null: env.currentSourceFileFullName();
         if (!contract.ntcGlobalInfo(env, now)) {
             logger.debug("GlobalInfo failed with: " + contract);
             return false;
@@ -123,7 +123,7 @@ public class ContractFile extends SourceFile {
         if (contract == null) {
             return;
         }
-        iptContracts.add(contract.contractName);
+        // iptContracts.add(contract.contractName);
         // contractSym.iptContracts = iptContracts;
         logger.debug("visit Contract: " + contract.contractName + "\n"
                 + contractSym.symTab.getTypeSet());
@@ -162,6 +162,7 @@ public class ContractFile extends SourceFile {
 
     @Override
     public void addBuiltIns() {
+        addBuiltInImports();
         contract.addBuiltIns();
     }
 }

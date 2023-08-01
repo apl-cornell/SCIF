@@ -26,6 +26,10 @@ public class CodeLocation {
         String name ="Builtin";
         return new CodeLocation(0, 0, name);
     }
+    public static CodeLocation builtinCodeLocation(int lineNo, int colNo) {
+        String name ="Builtin";
+        return new CodeLocation(lineNo, colNo, name);
+    }
 
     public boolean valid() {
         return lineNo > 0 && columnNo > 0;

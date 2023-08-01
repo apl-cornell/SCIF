@@ -9,10 +9,17 @@ public class ExceptionDef extends TopLayerNode {
 
     String exceptionName;
     Arguments arguments;
+    boolean isBuiltIn = false;
 
     public ExceptionDef(String name, Arguments members) {
         exceptionName = name;
         this.arguments = members;
+        arguments.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+    }
+    public ExceptionDef(String name, Arguments members, Boolean isBuiltIn) {
+        exceptionName = name;
+        this.arguments = members;
+        this.isBuiltIn = isBuiltIn;
         arguments.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
 
@@ -62,5 +69,9 @@ public class ExceptionDef extends TopLayerNode {
     public String toString() {
         // return genson.serialize(exceptionName);
         return "";
+    }
+
+    public boolean isBuiltIn() {
+        return isBuiltIn;
     }
 }

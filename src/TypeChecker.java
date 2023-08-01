@@ -45,6 +45,7 @@ public class TypeChecker {
             List<String> sourceCode = Files.readAllLines(Paths.get(builtinFile.getAbsolutePath()),
                     StandardCharsets.UTF_8);
             root.setSourceCode(sourceCode);
+            root.addBuiltIns();
             roots.add(root);
         }
 
@@ -60,23 +61,28 @@ public class TypeChecker {
                 List<String> sourceCode = Files.readAllLines(Paths.get(inputFile.getAbsolutePath()),
                         StandardCharsets.UTF_8);
                 root.setSourceCode(sourceCode);
+                root.addBuiltIns();
                 roots.add(root);
                 logger.debug("Finish");
 
         }
 
-        // Step 1: typecheck, generate constraints and check via SHErrLoc
 
         // Code-paste superclasses' methods and data fields
+        Map<String, SourceFile> fileMap = new HashMap<>();
         Map<String, Contract> contractMap = new HashMap<>();
         Map<String, Interface> interfaceMap = new HashMap<>();
         InheritGraph graph = new InheritGraph();
         for (SourceFile root : roots) {
-            assert root.ntcInherit(graph);
+            fileMap.put(root.getSourceFilePath(), root);
+            assert root.ntcAddImportEdges(graph);
+            System.err.println("sourcefile: " + root.getSourceFilePath());
             if (root instanceof ContractFile) {
                 contractMap.put(root.getSourceFilePath(), ((ContractFile) root).getContract());
             } else if (root instanceof InterfaceFile) {
                 interfaceMap.put(root.getSourceFilePath(), ((InterfaceFile) root).getInterface());
+            } else {
+                assert false: root.getContractName();
             }
         }
 
@@ -96,19 +102,14 @@ public class TypeChecker {
         List<SourceFile> toporder = new ArrayList<>();
         // code-paste in a topological order
         for (String x : graph.getTopologicalQueue()) {
-            SourceFile rt = null;
-            for (SourceFile root : roots) {
-                if (root.containContract(x)) {
-                    rt = root;
-                    toporder.add(root);
-                    break;
-                }
-            }
+            SourceFile rt = fileMap.get(x);
             if (rt == null) {
                 // TODO: contract not found
                 assert false;
                 return null;
             }
+            toporder.add(rt);
+            rt.updateImports(fileMap);
             rt.codePasteContract(x, contractMap, interfaceMap);
         }
         roots = toporder;
@@ -118,12 +119,10 @@ public class TypeChecker {
         for (SourceFile root : roots) {
             ntcEnv.addSourceFile(root.getSourceFilePath(), root);
 
-            root.addBuiltIns();
             root.passScopeContext(null);
+            System.err.println("Global checking " + root.getContractName());
             assert root.ntcGlobalInfo(ntcEnv, null): root.getContractName();
         }
-
-        logger.debug("Current Contracts: " + ntcEnv.globalSymTab().getTypeSet());
 
         // Generate constraints
         for (SourceFile root : roots) {

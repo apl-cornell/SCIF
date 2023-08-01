@@ -47,9 +47,9 @@ public class Interface extends TopLayerNode {
         // SymTab curSymTab = new SymTab(env.curSymTab());
         env.enterNewScope();
         Utils.addBuiltInTypes(env.curSymTab());
-        // env.initSymTab(curSymTab);
         InterfaceSym interfaceSym = new InterfaceSym(contractName, env.curSymTab(), new ArrayList<>(), this);
-        env.addGlobalSym(contractName, interfaceSym);
+        env.addContractSym(env.currentSourceFileFullName(), interfaceSym);
+        env.addSym(contractName, interfaceSym);
         env.setCurContractSym(interfaceSym);
         // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
 
@@ -124,7 +124,7 @@ public class Interface extends TopLayerNode {
         code.enterInterfaceDef(contractName);
 
         for (FunctionSig functionSig: funcSigs)
-            if (!functionSig.isBuiltin()) {
+            if (!functionSig.isBuiltIn()) {
                 functionSig.solidityCodeGen(code);
             }
 
@@ -170,11 +170,13 @@ public class Interface extends TopLayerNode {
         }
 
         for (ExceptionDef exp: superContract.exceptionDefs) {
+            if (exp.isBuiltIn()) continue;
             if (nameSet.contains(exp.exceptionName)) {
                 assert false: exp.exceptionName;
             }
         }
         for (FunctionSig f: funcSigs) {
+            if (f.isBuiltIn()) continue;
             if (nameSet.contains(f.name)) {
                 assert false: f.name;
             }
@@ -303,7 +305,8 @@ public class Interface extends TopLayerNode {
         // exception{BOT} Error();
         ExceptionDef error = new ExceptionDef(
                 Utils.EXCEPTION_ERROR_NAME,
-                new Arguments()
+                new Arguments(),
+                true
         );
         exceptionDefs.add(error);
     }
@@ -313,31 +316,34 @@ public class Interface extends TopLayerNode {
         // final This{this} this;
         StateVariableDeclaration thisDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_THIS),
-                new LabeledType(contractName, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)), CodeLocation.builtinCodeLocation()),
+                new LabeledType(contractName, new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)), CodeLocation.builtinCodeLocation(0, 1)),
                 null,
                 true,
                 true,
                 true
         );
-        thisDec.setLoc(CodeLocation.builtinCodeLocation());
+        thisDec.name().setLoc(CodeLocation.builtinCodeLocation(0, 0));
+        thisDec.setLoc(CodeLocation.builtinCodeLocation(0, 0));
         StateVariableDeclaration topDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_TOP),
-                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP)), CodeLocation.builtinCodeLocation()),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP)), CodeLocation.builtinCodeLocation(1, 1)),
                 null,
                 true,
                 true,
                 true
         );
-        topDec.setLoc(CodeLocation.builtinCodeLocation());
+        topDec.name().setLoc(CodeLocation.builtinCodeLocation(1, 0));
+        topDec.setLoc(CodeLocation.builtinCodeLocation(1, 0));
         StateVariableDeclaration botDec = new StateVariableDeclaration(
                 new Name(Utils.LABEL_BOTTOM),
-                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)), CodeLocation.builtinCodeLocation()),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)), CodeLocation.builtinCodeLocation(2, 1)),
                 null,
                 true,
                 true,
                 true
         );
-        botDec.setLoc(CodeLocation.builtinCodeLocation());
+        botDec.name().setLoc(CodeLocation.builtinCodeLocation(2, 0));
+        botDec.setLoc(CodeLocation.builtinCodeLocation(2, 0));
         List<StateVariableDeclaration> newDecs = new ArrayList<>();
         newDecs.add(topDec);
         newDecs.add(botDec);

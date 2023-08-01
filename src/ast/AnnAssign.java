@@ -59,19 +59,19 @@ public class AnnAssign extends Statement {
         return contractSym.newVarSym(((Name) target).id, annotation, isStatic, isFinal, isBuiltIn, location,
                 scopeContext);
     }
-
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
-        if (!(target instanceof Name)) {
-            return false;
-        }
-        ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext tgt = new ScopeContext(target, now);
-
-        String name = ((Name) target).id;
-        env.globalSymTab().add(name,
-                env.newVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, tgt));
-        return true;
-    }
+//
+//    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+//        if (!(target instanceof Name)) {
+//            return false;
+//        }
+//        ScopeContext now = new ScopeContext(this, parent);
+//        ScopeContext tgt = new ScopeContext(target, now);
+//
+//        String name = ((Name) target).id;
+//        env.globalSymTab().add(name,
+//                env.newVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, tgt));
+//        return true;
+//    }
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {

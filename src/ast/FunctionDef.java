@@ -63,7 +63,7 @@ public class FunctionDef extends FunctionSig {
                     "Label of this method's return value"));
         }
 
-        if (!isBuiltin()) {
+        if (!isBuiltIn()) {
             // TODO: add support for signatures
             for (Statement stmt : body) {
                 // logger.debug("stmt: " + stmt);
@@ -78,7 +78,7 @@ public class FunctionDef extends FunctionSig {
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        if (isBuiltin()) return null;
+        if (isBuiltIn()) return null;
         env.incScopeLayer();
         addBuiltInVars(env.curSymTab, scopeContext);
 

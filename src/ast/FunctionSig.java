@@ -297,7 +297,7 @@ public class FunctionSig extends TopLayerNode {
         return true;
     }
 
-    public boolean isBuiltin() {
+    public boolean isBuiltIn() {
         return isBuiltin;
     }
 
