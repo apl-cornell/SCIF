@@ -2,6 +2,8 @@ import java.io.*;
 
 import ast.*;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java_cup.runtime.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,6 +39,12 @@ public class TypeChecker {
             parse all SCIF source files and store AST roots in roots.
          */
         List<SourceFile> roots = new ArrayList<>();
+
+        Queue<File> mentionedFiles = new ArrayDeque<>(inputFiles);
+        InheritGraph graph = new InheritGraph();
+        Map<String, SourceFile> fileMap = new HashMap<>();
+        Set<String> includedFilePaths = inputFiles.stream().flatMap(file -> Stream.of(file.getAbsolutePath())).collect(
+                Collectors.toSet());
         // add all built-in source files
         for (File builtinFile: Utils.BUILTIN_FILES) {
             Symbol result = Parser.parse(builtinFile, null);//p.parse();
@@ -47,35 +55,38 @@ public class TypeChecker {
             root.setSourceCode(sourceCode);
             root.addBuiltIns();
             roots.add(root);
+            assert root.ntcAddImportEdges(graph);
+            includedFilePaths.add(builtinFile.getAbsolutePath());
+            fileMap.put(builtinFile.getAbsolutePath(), root);
         }
+        while (!mentionedFiles.isEmpty()) {
+            File file = mentionedFiles.poll();
+            Symbol result = Parser.parse(file, null);
+            SourceFile root = (SourceFile) result.value;
+            fileMap.put(root.getSourceFilePath(), root);
+            // TODO root.setName(inputFile.name());
+            List<String> sourceCode = Files.readAllLines(Paths.get(file.getAbsolutePath()),
+                    StandardCharsets.UTF_8);
+            root.setSourceCode(sourceCode);
+            root.addBuiltIns();
+            roots.add(root);
+            assert root.ntcAddImportEdges(graph);
 
-        for (File inputFile : inputFiles) {
-                logger.debug(inputFile);
-
-                //Lexer lexer = new Lexer(new FileReader(inputFile));
-                //Parser p = new Parser(lexer);
-
-                Symbol result = Parser.parse(inputFile, null);//p.parse();
-                SourceFile root = (SourceFile) result.value;
-                // TODO root.setName(inputFile.name());
-                List<String> sourceCode = Files.readAllLines(Paths.get(inputFile.getAbsolutePath()),
-                        StandardCharsets.UTF_8);
-                root.setSourceCode(sourceCode);
-                root.addBuiltIns();
-                roots.add(root);
-                logger.debug("Finish");
-
+            for (String filePath: root.importPaths()) {
+                if (!includedFilePaths.contains(filePath)) {
+                    mentionedFiles.add(new File(filePath));
+                    includedFilePaths.add(filePath);
+                }
+            }
         }
 
 
         // Code-paste superclasses' methods and data fields
-        Map<String, SourceFile> fileMap = new HashMap<>();
         Map<String, Contract> contractMap = new HashMap<>();
         Map<String, Interface> interfaceMap = new HashMap<>();
-        InheritGraph graph = new InheritGraph();
         for (SourceFile root : roots) {
-            fileMap.put(root.getSourceFilePath(), root);
-            assert root.ntcAddImportEdges(graph);
+//            fileMap.put(root.getSourceFilePath(), root);
+            // assert root.ntcAddImportEdges(graph);
             System.err.println("sourcefile: " + root.getSourceFilePath());
             if (root instanceof ContractFile) {
                 contractMap.put(root.getSourceFilePath(), ((ContractFile) root).getContract());

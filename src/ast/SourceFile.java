@@ -145,9 +145,13 @@ public abstract class SourceFile extends Node {
         Set<String> newIptContracts = new HashSet<>(iptContracts);
         for (String x: iptContracts) {
             SourceFile file = fileMap.get(x);
-            assert file != null;
+            assert file != null: x;
             newIptContracts.addAll(file.iptContracts);
         }
         iptContracts = newIptContracts;
+    }
+
+    public Set<String> importPaths() {
+        return Collections.unmodifiableSet(iptContracts);
     }
 }

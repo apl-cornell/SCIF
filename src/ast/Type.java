@@ -66,4 +66,8 @@ public class Type extends Expression {
     public boolean isPrimitive() {
         return true;
     }
+
+    public void setToDefault(IfLabel ifl) {
+        // normal types don't carry any labels
+    }
 }

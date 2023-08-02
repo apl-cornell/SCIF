@@ -56,4 +56,9 @@ public class Map extends Type {
     public boolean isPrimitive() {
         return false;
     }
+
+    @Override
+    public void setToDefault(IfLabel ifl) {
+        valueType.setToDefault(ifl);
+    }
 }

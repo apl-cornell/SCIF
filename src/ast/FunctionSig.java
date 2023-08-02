@@ -150,7 +150,7 @@ public class FunctionSig extends TopLayerNode {
         Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
         for (LabeledType t : exceptionList) {
             ExceptionTypeSym t1 = env.getExceptionTypeSym(t.type());
-            assert t1 != null;
+            assert t1 != null: t.type().name;
             exceptions.put(t1, null);
         }
         contractSymTab.add(name,

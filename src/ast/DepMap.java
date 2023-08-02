@@ -11,7 +11,7 @@ import typecheck.VarSym;
 public class DepMap extends Map {
     final private String keyName;
     final private LabeledType labeledKeyType;
-    final private IfLabel valueLabel;
+    private IfLabel valueLabel;
     public DepMap(Type keyType, String keyName, LabeledType valueType) {
         super(keyType, valueType.type());
         this.keyName = keyName;
@@ -73,4 +73,11 @@ public class DepMap extends Map {
         return valueLabel;
     }
 
+    @Override
+    public void setToDefault(IfLabel ifl) {
+        if (valueLabel == null) {
+            valueLabel = ifl;
+        }
+        valueType.setToDefault(valueLabel);
+    }
 }

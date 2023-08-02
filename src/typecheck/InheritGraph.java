@@ -30,7 +30,7 @@ public class InheritGraph {
 
     public ArrayList<String> getTopologicalQueue() {
         // return null if there is any circle
-        HashMap<String, Integer> ind = new HashMap<>();
+        Map<String, Integer> ind = new HashMap<>();
         for (String x : getAllNodes()) {
             ind.put(x, 0);
         }
@@ -57,7 +57,7 @@ public class InheritGraph {
             }
             ++index;
         }
-        if (index < getAllNodes().size()) return null;
+        assert index == getAllNodes().size();
         return q;
     }
 }

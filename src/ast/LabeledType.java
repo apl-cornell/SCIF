@@ -54,6 +54,7 @@ public class LabeledType extends Expression {
         if (this.ifl == null) {
             this.ifl = lbl;
         }
+        type.setToDefault(this.ifl);
     }
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
