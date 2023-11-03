@@ -1,9 +1,7 @@
-contract TownCrier [this]
-    where sgx => this
-{
+contract TownCrier {
     address requester;
     BaseContract callback;
-    address sgx;
+    final address sgx;
     uint FEE;
     exception NoPendingRequest();
     exception NotEnoughPayment();
@@ -15,23 +13,25 @@ contract TownCrier [this]
         FEE = _FEE;
     }
 
-    public payable void request(address _callback) throw NotEnoughPayment() {
-        endorse(msg.sender, _callback, BOT => this) if (msg.value >= FEE) {
-            requester = msg.sender;
+    @public
+    void request(address _callback) throw NotEnoughPayment() {
+        endorse(sender, _callback, BOT => this) if (value >= FEE) {
+            requester = sender;
             callback = _callback;
         } else {
             throw NotEnoughPayment();
         }
     }
 
-    public void deliver{this; BOT}(bytes{this} data) throw NoPendingRequest() {
-        assert requester != 0, NoPendingRequest();
-
-        try {
-            callback.call(data);
-        } catch (*) {
-            // the call reverted but TownCrier still keeps the fee 
-            log();
+    @public
+    void deliver{this; any}(bytes data) throws (NoPendingRequest) {
+        if (requester == 0) {
+            throw NoPendingRequest();
+        }
+        atomic {
+            requester.callback(data);
+        } rescue (*) {
+            // pass, the call reverted but TownCrier still keeps the fee
         }
         requester = 0;
         send(sgx, FEE);

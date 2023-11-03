@@ -1,5 +1,7 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.ast.PrimitiveType;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.ExpOutcome;
@@ -9,7 +11,7 @@ import typecheck.TypeSym;
 import typecheck.Utils;
 import typecheck.VisitEnv;
 
-public class Type extends Expression {
+public class Type extends Node {
 
     public String name() {
         return name;
@@ -41,14 +43,12 @@ public class Type extends Expression {
         return name;
     }
 
-    @Override
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         assert false;
         return null;
     }
 
-    @Override
-    public boolean typeMatch(Expression expression) {
+    public boolean typeMatch(Type expression) {
         return expression instanceof Type &&
                 name.equals(((Type) expression).name);
     }
@@ -69,5 +69,9 @@ public class Type extends Expression {
 
     public void setToDefault(IfLabel ifl) {
         // normal types don't carry any labels
+    }
+
+    public compile.ast.Type solidityCodeGen(CompileEnv code) {
+        return new PrimitiveType(name);
     }
 }

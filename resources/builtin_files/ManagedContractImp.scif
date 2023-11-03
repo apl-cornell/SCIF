@@ -1,0 +1,83 @@
+import "./ManagedContract.scif";
+
+contract ManagedContractImp implements ManagedContract {
+    address[] trustees;
+    map(address, uint) trusteeIndex;
+    bool m_lock;
+
+    constructor() {
+        addTrust(sender);
+    }
+
+    @public
+    bool addTrust{this}(address trustee) {
+        trustees.push(trustee);
+        trusteeIndex[trustee] = trustees.length();
+        return true;
+    }
+
+    @public
+    bool revokeTrust{this}(address trustee) {
+        if (trustees.length() <= 1) {
+            return false;
+        }
+        uint ind = trusteeIndex[trustee];
+        address lastTrustee = trustees[trustees.length() - 1];
+        trustees[ind - 1] = lastTrustee;
+        trusteeIndex[lastTrustee] = ind;
+        trustees.pop();
+        trusteeIndex[trustee] = 0;
+        return true;
+    }
+
+    @public
+    @native
+    bool trusts(address a, address b) {
+        if (a == b || b == address(this)) {
+            return true;
+        }
+        if (a != address(this)) {
+            return false;
+        }
+        uint i = 0;
+        while (i < trustees.length()) {
+            if (trustees[i] == b) {
+                return true;
+            }
+            i = i + 1;
+        }
+        return false;
+    }
+
+    @private
+    @native
+    bool bypassLocks(address from) {
+        if (m_lock) {
+            return trusts(address(this), from);
+        } else {
+            return true;
+        }
+    }
+
+    @private
+    @native
+    bool acquireLock(address l) {
+        if (trusts(address(this), l)) {
+            m_lock = true;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @private
+    @native
+    bool releaseLock(address l) {
+        if (trusts(address(this), l)) {
+            m_lock = false;
+            return true;
+        } else {
+            return false;
+        }
+    }
+}

@@ -1,6 +1,6 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.NTCEnv;
@@ -31,8 +31,9 @@ public class AugAssign extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        assert false;
+        return null;
     }
     @Override
     public List<Node> children() {

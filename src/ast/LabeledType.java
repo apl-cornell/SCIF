@@ -1,6 +1,5 @@
 package ast;
 
-import compile.SolCode;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.CodeLocation;
@@ -9,7 +8,7 @@ import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.VisitEnv;
 
-public class LabeledType extends Expression {
+public class LabeledType extends Node {
 
     private Type type;
     private IfLabel ifl;
@@ -37,14 +36,12 @@ public class LabeledType extends Expression {
         return rtn;
     }
 
-    @Override
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         assert false;
         return null;
     }
 
-    @Override
-    public boolean typeMatch(Expression annotation) {
+    public boolean typeMatch(LabeledType annotation) {
         return annotation instanceof LabeledType &&
                 type.typeMatch(((LabeledType) annotation).type) &&
                 ifl.typeMatch(((LabeledType) annotation).ifl);
@@ -71,7 +68,6 @@ public class LabeledType extends Expression {
         return ifl;
     }
 
-    @Override
     public String toSolCode() {
         return type.toSolCode();
     }

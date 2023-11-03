@@ -1,7 +1,22 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.CompileEnv.ScopeType;
+import compile.ast.Assign;
+import compile.ast.BinaryExpression;
+import compile.ast.Call;
+import compile.ast.Function;
+import compile.ast.IfStatement;
+import compile.ast.Literal;
+import compile.ast.Revert;
+import compile.ast.SingleVar;
+import compile.ast.Type;
+import compile.ast.VarDec;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
@@ -53,8 +68,71 @@ public class Try extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        assert false;
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+
+        List<compile.ast.Statement> solBody = new ArrayList<>();
+
+        Map<String, compile.ast.Type> readMap, writeMap;
+        readMap = new HashMap<>();
+        writeMap = new HashMap<>();
+
+        // find out read and written local variables
+        for (Statement s : body) {
+            readMap.putAll(s.readMap(code));
+            writeMap.putAll(s.writeMap(code));
+            // solBody.addAll(s.solidityCodeGen(code));
+        }
+        readMap.putAll(writeMap);
+        code.enterNewVarScope();
+        Function newTempFunction = code.makeMethod(body, readMap, writeMap, ScopeType.TRY);
+        code.exitVarScope();
+        code.addTemporaryFunction(newTempFunction);
+
+        // generate an internal call: stat, data = newTempFunction(...);
+        // UINT: stat
+        // BYTES: data
+        SingleVar statVar = new SingleVar(code.newTempVarName());
+        SingleVar dataVar = new SingleVar(code.newTempVarName());
+        solBody.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_UINT, statVar.name()));
+        solBody.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_BYTES, dataVar.name()));
+        solBody.add(new Assign(
+                List.of(statVar, dataVar),
+                new Call(newTempFunction.funcName(), newTempFunction.argNames().stream().map(name -> new SingleVar(name)).collect(
+                        Collectors.toList()))
+        ));
+
+        IfStatement handlingBranches;
+
+        // if should return method arguments
+        IfStatement ifShouldReturn = new IfStatement(
+                new BinaryExpression(compile.Utils.SOL_BOOL_EQUAL, statVar, new Literal(compile.Utils.RETURNCODE_RETURN)),
+                code.genMethodReturn(dataVar),
+                List.of(new Revert(new Literal("Unexpected Exception")))
+                );
+
+        List<compile.ast.Statement> elseBody = new ArrayList<>();
+
+        IfStatement ifNormalEnd = new IfStatement(
+                new BinaryExpression(compile.Utils.SOL_BOOL_EQUAL, statVar, new Literal(compile.Utils.RETURNCODE_NORMAL)),
+                writeMap.isEmpty() ? new ArrayList<>() : List.of(new Assign(
+                        writeMap.entrySet().stream().map(entry -> new SingleVar(entry.getKey())).collect(
+                                Collectors.toList()),
+                        code.decodeVars(writeMap, dataVar)
+                        )),
+                List.of(ifShouldReturn)
+                );
+
+        handlingBranches = ifNormalEnd;
+        code.setCurrentStatVar(statVar);
+        code.enterNewVarScope();
+        // test if there are any matching exceptions
+        for (ExceptHandler handler : handlers) {
+            handlingBranches = new IfStatement((IfStatement) handler.solidityCodeGen(code, writeMap, dataVar), List.of(handlingBranches));
+        }
+        code.exitVarScope();
+
+        solBody.add(handlingBranches);
+        return solBody;
     }
 
     @Override
@@ -146,10 +224,39 @@ public class Try extends Statement {
     }
 
     @Override
-    public ArrayList<Node> children() {
+    public List<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.addAll(body);
         rtn.addAll(handlers);
         return rtn;
+    }
+    @Override
+    public boolean exceptionHandlingFree() {
+        return false;
+    }
+
+
+    @Override
+    protected Map<String,? extends Type> readMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.readMap(code));
+        }
+        for (ExceptHandler s: handlers) {
+            result.putAll(s.readMap(code));
+        }
+        return result;
+    }
+
+    @Override
+    protected Map<String,? extends Type> writeMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.writeMap(code));
+        }
+        for (ExceptHandler s: handlers) {
+            result.putAll(s.writeMap(code));
+        }
+        return result;
     }
 }

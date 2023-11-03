@@ -1,0 +1,42 @@
+contract ExceptionDefinition {
+    exception X();
+    exception Y(uint aug1, uint aug2);
+
+    // CA.
+    @public
+    void foo{sender -> this; any}() throws (Z, X{this}) {
+        try {
+            bar(1, 2);
+            chigh.f(); // f throws (Y);
+            clow.g(); // g throws (X{this}); THROWS Z SECRETLY
+            clow2.g(); // throws (X{this});
+            // return (true, SUCC, T), (true, EID, T),
+            //  or (false, bytes)
+            chigh.g(); // g throws (X{this});
+            // Path set P: E->pc
+        } catch (Y excY) {
+            throw X();
+        } catch (X{P[X]} excX) {
+            // P[X]
+        }
+    }
+
+    E e' = null;
+    atomic {
+        try {
+            f();
+        } catch (E e) {
+            e' = e;
+        }
+    } rescue (...) {...}
+    throw e';
+
+    atomic throws E { f() } rescue (...) {...}
+
+    @public
+    void bar(uint a, uint b) throws (Y) {
+        if (a != b) {
+            throw Y(a, b);
+        }
+    }
+}

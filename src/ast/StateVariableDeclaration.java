@@ -1,7 +1,12 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.PrimitiveType;
+import compile.ast.Statement;
+import compile.ast.Type;
+import compile.ast.VarDec;
 import java.util.ArrayList;
+import java.util.List;
 import typecheck.CodeLocation;
 import typecheck.Context;
 import typecheck.ContractSym;
@@ -71,7 +76,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         // ScopeContext tgt = new ScopeContext(name, now);
 
         String vname = name.id;
-        VarSym varSym = env.newVarSym(vname, type, isStatic, isFinal, isBuiltin, location, parent);
+        VarSym varSym = env.newVarSym(vname, type, isStatic, isFinal, isBuiltin, location, parent, true);
         // assert varSym.ifl != null;
         env.addSym(vname, varSym);
         if (type.label() != null) {
@@ -87,7 +92,6 @@ public class StateVariableDeclaration extends TopLayerNode {
         ScopeContext vtype = type.ntcGenCons(env, now);
         ScopeContext tgt = name.ntcGenCons(env, now);
 
-        logger.debug("1: \n" + env + "\n2: " + name.toSolCode() + "\n" + tgt);
         env.addCons(vtype.genCons(tgt, Relation.EQ, env, location));
         if (value != null) {
             ScopeContext v = value.ntcGenCons(env, now);
@@ -206,11 +210,17 @@ public class StateVariableDeclaration extends TopLayerNode {
 
     }
 
-    public void solidityCodeGen(SolCode code) {
+    public VarDec solidityCodeGen(CompileEnv code) {
+        Type varType = type.type().solidityCodeGen(code);
+        String varName = name.id;
+        code.addGlobalVar(varName, varType);
         if (value != null) {
-            code.addVarDef(type.toSolCode(), name.toSolCode(), isStatic, value.toSolCode());
+            List<Statement> result = new ArrayList<>();
+            compile.ast.Expression valueExp = value.solidityCodeGen(result, code);
+            assert result.size() == 0;
+            return new VarDec(false, varType, varName, valueExp);
         } else {
-            code.addVarDef(type.toSolCode(), name.toSolCode(), isStatic);
+            return new VarDec(false, varType, varName);
         }
     }
 

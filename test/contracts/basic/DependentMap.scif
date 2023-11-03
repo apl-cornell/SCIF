@@ -4,7 +4,7 @@ contract DependentMap {
     map(address name, uint{name}) balances;
 
     @public
-    void{y} foo{y}(final address{this} y, uint{y} amount) {
+    void{y} foo{y}(final address y, uint amount) {
         balances[y] = amount;
     }
 }

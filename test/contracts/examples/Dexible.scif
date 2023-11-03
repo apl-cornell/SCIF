@@ -10,7 +10,7 @@ contract Dexible {
             tokenIn.approve(sender, router, amount);
             assert router => sender;
             router.exchange(sender, tokenIn, tokenOut, amount);
-        } rescue (*) {
+        } rescue * {
             throw FailedSwap();
         }
     }
@@ -26,7 +26,7 @@ contract Dexible {
                 router.exchange(
                     sender, tokens[i], tokens[i + 1], amounts[i], extraData);
             }
-        } rescue (*) {
+        } rescue * {
             throw FailedSwap();
         }
     }

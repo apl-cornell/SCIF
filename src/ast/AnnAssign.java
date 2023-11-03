@@ -1,6 +1,13 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.SingleVar;
+import compile.ast.PrimitiveType;
+import compile.ast.Type;
+import compile.ast.VarDec;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -10,14 +17,14 @@ import java.util.ArrayList;
 
 public class AnnAssign extends Statement {
 
-    private final Expression target;
+    private final Name target;
     private LabeledType annotation;
     private Expression value;
     private boolean isStatic;
     private boolean isFinal;
     private boolean isBuiltIn = false;
 
-    public AnnAssign(Expression target, LabeledType annotation, Expression value,
+    public AnnAssign(Name target, LabeledType annotation, Expression value,
             boolean isConst, boolean isFinal) {
         this.target = target;
         this.annotation = annotation;
@@ -25,7 +32,7 @@ public class AnnAssign extends Statement {
         this.isStatic = isConst;
         this.isFinal = isFinal;
     }
-    public AnnAssign(Expression target, LabeledType annotation, Expression value,
+    public AnnAssign(Name target, LabeledType annotation, Expression value,
             boolean isConst, boolean isFinal, boolean isBuiltIn) {
         this.target = target;
         this.annotation = annotation;
@@ -77,6 +84,10 @@ public class AnnAssign extends Statement {
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         String name = ((Name) target).id;
+        Sym symValue = env.getCurSym(name);
+        if (symValue != null && !symValue.isGlobal()) {
+            throw new RuntimeException("local duplicate variable name " + name + " at " + location);
+        }
         VarSym varSym = new VarSym(env.newVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, now));
         env.addSym(name, varSym);
         if (annotation.label() != null) {
@@ -85,7 +96,6 @@ public class AnnAssign extends Statement {
         ScopeContext type = annotation.ntcGenCons(env, now);
         ScopeContext tgt = target.ntcGenCons(env, now);
 
-        logger.debug("1: \n" + env + "\n2: " + target.toSolCode() + "\n" + tgt);
         env.addCons(type.genCons(tgt, Relation.EQ, env, location));
         if (value != null) {
             ScopeContext v = value.ntcGenCons(env, now);
@@ -202,23 +212,31 @@ public class AnnAssign extends Statement {
 //        }
 //    }
 
-    public void solidityCodeGen(SolCode code) {
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        PrimitiveType varType = new PrimitiveType(annotation.type().name);
+        String varName = target.id;
+        List<compile.ast.Statement> result = new ArrayList<>();
         if (value != null) {
-            code.addVarDef(annotation.toSolCode(), target.toSolCode(), isStatic, value.toSolCode());
+            compile.ast.Expression valueExp;
+            valueExp = value.solidityCodeGen(result, code);
+            result.add(new VarDec(varType, varName,
+                     valueExp));
         } else {
-            code.addVarDef(annotation.toSolCode(), target.toSolCode(), isStatic);
+            result.add(new VarDec(varType, varName));
         }
+        code.addLocalVar(varName, varType);
+        return result;
     }
 
-    @Override
-    public String toSolCode() {
-        if (value != null) {
-            return SolCode.genVarDef(annotation.toSolCode(), target.toSolCode(), isFinal,
-                    value.toSolCode());
-        } else {
-            return SolCode.genVarDef(annotation.toSolCode(), target.toSolCode(), isFinal);
-        }
-    }
+//    @Override
+//    public String toSolCode() {
+//        if (value != null) {
+//            return CompileEnv.genVarDef(annotation.toSolCode(), target.toSolCode(), isFinal,
+//                    value.toSolCode());
+//        } else {
+//            return CompileEnv.genVarDef(annotation.toSolCode(), target.toSolCode(), isFinal);
+//        }
+//    }
 
     @Override
     public ArrayList<Node> children() {
@@ -238,4 +256,10 @@ public class AnnAssign extends Statement {
                 isConst == a.isConst &&
                 simple == a.simple;
     }*/
+
+    @Override
+    protected java.util.Map<String,? extends compile.ast.Type> readMap(CompileEnv code) {
+        return value == null ? new HashMap<>() : value.readMap(code);
+    }
+
 }

@@ -1,5 +1,9 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.ast.SingleVar;
+import compile.ast.Statement;
+import java.util.List;
 import java.util.Objects;
 import typecheck.BuiltInT;
 import typecheck.ContractSym;
@@ -107,6 +111,11 @@ public class PrimitiveIfLabel extends IfLabel {
     @Override
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         return null;
+    }
+
+    @Override
+    public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        return new SingleVar(value.id);
     }
 
 //    @Override

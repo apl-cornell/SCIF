@@ -1,0 +1,26 @@
+contract CompilerService {
+    final LogContract logContract;
+
+    @public
+    @payable
+    void compile{any->this;any}(bytes code, final Updatable1 targetContract) {
+        //endorse(code, any -> this) in {
+            bytes binary, log;
+            binary, log = runCompile(code);
+            // internal call
+            // (bytes{any}, bytes{this}) runCompile(bytes{any} code)
+
+            logContract.update(log);
+
+            //if (sender => targetContract && this => targetContract)
+            targetContract.update(binary);
+            //else
+            //    revert("...");
+
+            assert value >= logContract.calcPrice(); //calcPrice{any->this}
+        //}
+    }
+}
+void update{any}(bytes{any} data) in Updatable1;
+void update{this}(bytes{this} data) in Updatable2;
+LogContract extends Updatable2;

@@ -1,0 +1,14 @@
+contract ParityWallet {
+    address owner;
+    @public
+    void changeOwner{this}(address newOwner) {
+        owner = newOwner;
+    }
+}
+
+contract IncorrectWallet extends ParityWallet {
+    @public
+    void untrustedAttempt{any}(address newOwner) {
+        changeOwner(newOwner);
+    }
+}

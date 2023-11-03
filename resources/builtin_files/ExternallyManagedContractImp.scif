@@ -1,23 +1,23 @@
-import "./IBaseContract.scif";
+import "./ExternallyManagedContract.scif";
 
-contract BaseContract implements IBaseContract {
+contract ExternallyManagedContractImp implements ExternallyManagedContract {
     address owner;
     address[] trustees;
     map(address, uint) trusteeIndex;
-    ITrustManager m_trustManager;
-    ILockManager m_lockManager;
+    TrustManager m_trustManager;
+    LockManager m_lockManager;
 
-    constructor(ITrustManager _trustManager, ILockManager _lockManager) {
+    constructor(TrustManager _trustManager, LockManager _lockManager) {
         owner = sender;
         m_trustManager = _trustManager;
         m_lockManager = _lockManager;
-        setTrust(m_trustManager);
-        setTrust(m_lockManager);
-        setTrust(owner);
+        addTrust(m_trustManager);
+        addTrust(m_lockManager);
+        addTrust(owner);
     }
 
     @private
-    void setDirectTrust(address trustee) {
+    void addDirectTrust(address trustee) {
         trustees.push(trustee);
         trusteeIndex[trustee] = trustees.length();
     }
@@ -33,12 +33,12 @@ contract BaseContract implements IBaseContract {
     }
 
     @public
-    bool setTrust{this}(address trustee) {
+    bool addTrust{this}(address trustee) {
         if (sender != owner) {
             return false;
         }
-        setDirectTrust(trustee);
-        return m_trustManager.setTrust(trustee);
+        addDirectTrust(trustee);
+        return m_trustManager.addTrust(trustee);
     }
 
     @public
@@ -57,7 +57,7 @@ contract BaseContract implements IBaseContract {
         }
         revokeTrust(owner);
         owner = newOwner;
-        setTrust(owner);
+        addTrust(owner);
         return true;
     }
 
@@ -69,10 +69,12 @@ contract BaseContract implements IBaseContract {
     @public
     bool directlyTrusts(address trustee) {
         address _trustee = endorse(trustee, any -> this);
-        for (uint i = 0; i < trustees.length(); i += 1) {
+        uint i = 0;
+        while (i < trustees.length()) {
             if (trustees[i] == _trustee) {
                 return true;
             }
+            i = i + 1;
         }
         return false;
     }
@@ -83,12 +85,30 @@ contract BaseContract implements IBaseContract {
     }
 
     @public
-    ITrustManager trustManager() {
+    TrustManager trustManager() {
         return m_trustManager;
     }
 
     @public
-    ILockManager lockManager() {
+    LockManager lockManager() {
         return m_lockManager;
+    }
+
+    @public
+    @native
+    bool trusts(address a, address b) {
+        return m_trustManager.trusts(a, b);
+    }
+    @private
+    bool bypassLocks(address l) {
+        return m_lockManager.bypassLocks(l);
+    }
+    @private
+    bool acquireLock(address l) {
+        return m_lockManager.acquireLock(l);
+    }
+    @private
+    bool releaseLock(address l) {
+        return m_lockManager.releaseLock(l);
     }
 }

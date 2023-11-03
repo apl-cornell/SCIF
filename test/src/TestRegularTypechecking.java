@@ -18,6 +18,7 @@ public class TestRegularTypechecking {
     @ValueSource(strings = {
             "basic/DependentMap",
             "basic/EmptyContract",
+            "basic/EmptyContract2",
             "basic/ExceptionThrowAndCatch",
             "basic/FinalVar",
             "basic/EndroseIf",

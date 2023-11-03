@@ -1,6 +1,7 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.SolNode;
 import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
@@ -32,19 +33,14 @@ public class StructDef extends TopLayerNode {
         return false;
     }
 
-//    @Override
-//    public void findPrincipal(HashSet<String> principalSet) {
-//
-//    }
-
-    @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        assert false;
         return null;
     }
 
-    @Override
-    public void solidityCodeGen(SolCode code) {
-
+    public SolNode solidityCodeGen(CompileEnv code) {
+        assert false;
+        return null;
     }
 
     @Override

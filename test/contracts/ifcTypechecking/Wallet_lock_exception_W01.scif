@@ -11,7 +11,7 @@ contract Wallet {
                 if (amount > 0) {
                     send(sender, amount);
                 }
-            } rescue (error e) {
+            } rescue * {
                 // any
                 throw transferFailure();
             }

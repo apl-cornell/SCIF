@@ -1,10 +1,10 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.SolNode;
 import java.util.Collections;
 import java.util.List;
 import typecheck.Assumption;
-import typecheck.ContractSym;
 import typecheck.DynamicSystemOption;
 import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
@@ -56,11 +56,11 @@ public class TrustSetting extends Node {
         }
         return context;
     }
-
-    @Override
-    public void solidityCodeGen(SolCode code) {
-
-    }
+//
+//    @Override
+//    public SolNode solidityCodeGen(CompileEnv code) {
+//
+//    }
 
     @Override
     public List<Node> children() {

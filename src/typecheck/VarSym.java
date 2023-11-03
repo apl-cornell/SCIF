@@ -48,6 +48,18 @@ public class VarSym extends Sym {
         this.isFinal = isFinal;
         this.isBuiltIn = isBuiltIn;
     }
+    public VarSym(String localName, TypeSym type, Label ifl,
+            CodeLocation location, ScopeContext context,
+            boolean isConst, boolean isFinal, boolean isBuiltIn, boolean isGlobal) {
+        super(localName, context, isGlobal);
+        // this.name = localName;
+        this.typeSym = type;
+        this.ifl = ifl;
+        this.location = location;
+        this.isStatic = isConst;
+        this.isFinal = isFinal;
+        this.isBuiltIn = isBuiltIn;
+    }
 
     /*public VarInfo(String localName, TypeInfo type, CodeLocation location, boolean isConst) {
         this.name = localName;
@@ -58,7 +70,7 @@ public class VarSym extends Sym {
     }*/
 
     public VarSym(VarSym varSym) {
-        super(varSym.getName(), varSym.defContext());
+        super(varSym.getName(), varSym.defContext(), varSym.isGlobal());
         // this.name = varSym.name;
         this.typeSym = varSym.typeSym;
         this.ifl = varSym.ifl;
@@ -69,7 +81,7 @@ public class VarSym extends Sym {
     }
 
     public VarSym(VarSym varSym, ScopeContext context) {
-        super(varSym.getName(), context);
+        super(varSym.getName(), context, varSym.isGlobal());
         // this.name = varSym.name;
         this.typeSym = varSym.typeSym;
         this.ifl = varSym.ifl;

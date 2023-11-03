@@ -1,0 +1,29 @@
+package compile.ast;
+
+import static compile.Utils.addLine;
+
+import compile.Utils;
+import java.util.ArrayList;
+import java.util.List;
+
+public class InterfaceFile implements SourceFile {
+    List<Import> imports;
+
+    Interface itrface;
+
+    public InterfaceFile(List<Import> imports, Interface itrface) {
+        this.imports = imports;
+        this.itrface = itrface;
+    }
+
+    @Override
+    public List<String> toSolCode(int indentLevel) {
+        List<String> result = new ArrayList<>();
+        addLine(result, Utils.version(Utils.DEFAULT_SOLITIDY_VERSION), indentLevel);
+        for (Import imp: imports) {
+            result.addAll(imp.toSolCode(indentLevel));
+        }
+        result.addAll(itrface.toSolCode(indentLevel));
+        return result;
+    }
+}

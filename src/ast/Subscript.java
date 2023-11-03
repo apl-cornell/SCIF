@@ -1,5 +1,10 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.ast.Statement;
+import compile.ast.Type;
+import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -146,6 +151,11 @@ public class Subscript extends TrailerExpr {
         }
     }
 
+    @Override
+    public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        return new compile.ast.Subscript(value.solidityCodeGen(result, code), index.solidityCodeGen(result, code));
+    }
+
     public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
         VarSym rtnVarSym = null;
         VarSym valueVarSym = value.getVarInfo(env, false);
@@ -196,12 +206,12 @@ public class Subscript extends TrailerExpr {
         return rtnVarSym;
     }
 
-    @Override
-    public String toSolCode() {
-        String i = index.toSolCode();
-        String v = value.toSolCode();
-        return v + "[" + i + "]";
-    }
+//    @Override
+//    public String toSolCode() {
+//        String i = index.toSolCode();
+//        String v = value.toSolCode();
+//        return v + "[" + i + "]";
+//    }
 
     @Override
     public ArrayList<Node> children() {
@@ -216,5 +226,17 @@ public class Subscript extends TrailerExpr {
         return expression instanceof Subscript &&
                 super.typeMatch(expression) &&
                 index.typeMatch(((Subscript) expression).index);
+    }
+
+    @Override
+    public java.util.Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, Type> result = index.readMap(code);
+        result.putAll(value.readMap(code));
+        return result;
+    }
+
+    @Override
+    public Map<String,? extends Type> writeMap(CompileEnv code) {
+        return value.writeMap(code);
     }
 }

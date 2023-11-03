@@ -1,14 +1,18 @@
 package ast;
 
-import compile.SolCode;
-import java.nio.file.Path;
+import compile.CompileEnv;
+import compile.CompileEnv.ScopeType;
+import compile.ast.Literal;
+import compile.ast.Return;
+import compile.ast.Revert;
+import compile.ast.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
-
-import java.util.HashSet;
 
 public class Throw extends Statement {
 
@@ -89,8 +93,44 @@ public class Throw extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        List<compile.ast.Statement> result = new ArrayList<>();
+        String exceptionName = null;
+        if (!(exception.value instanceof Name)) {
+            if (exception.value instanceof Attribute) {
+                // a.b(c), a must be a contract
+                Attribute att = (Attribute) exception.value;
+                // (att.value).(att.attr)
+                String contractTypeName = ((Name) att.value).id;
+                exceptionName = att.attr.id;
+            }
+        } else {
+            // a(b)
+            exceptionName = ((Name) exception.value).id;
+        }
+        ExceptionTypeSym exceptionTypeSym = code.findExceptionTypeSym(exceptionName);
+        List<compile.ast.Expression> args = new ArrayList<>();
+        // typecheck arguments
+        for (int i = 0; i < exception.args.size(); ++i) {
+            Expression arg = exception.args.get(i);
+            args.add(arg.solidityCodeGen(result, code));
+        }
+        if (code.currentScope() == ScopeType.METHOD) {
+            result.add(new Return(
+                    List.of(
+                            new Literal(String.valueOf(code.getExceptionId(exceptionTypeSym))),
+                            CompileEnv.encodeException(exceptionTypeSym, args)
+                    )));
+        } else if (code.currentScope() == ScopeType.TRY) {
+            result.add(new Return(
+                    List.of(
+                            new Literal(String.valueOf(code.getExceptionId(exceptionTypeSym))),
+                            code.encodeVarsAndException(exceptionTypeSym, args)
+                    )));
+        } else if (code.currentScope() == ScopeType.ATOMIC) {
+            result.add(new Revert(new Literal(exceptionName)));
+        }
+        return result;
     }
 
     @Override
@@ -131,5 +171,10 @@ public class Throw extends Statement {
         psi.join(psi2);
 
         return psi;
+    }
+
+    @Override
+    protected java.util.Map<String,? extends Type> readMap(CompileEnv code) {
+        return exception.readMap(code);
     }
 }

@@ -1,0 +1,6 @@
+contract HelloWorld {
+    @public
+    void helloWorld() {
+        revert "Hello World!";
+    }
+}

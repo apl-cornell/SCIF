@@ -1,7 +1,11 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.ScopeContext;
@@ -21,8 +25,10 @@ public class CallStatement extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        call.solidityCodeGen(code);
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        List<compile.ast.Statement> result = new ArrayList<>();
+        result.add(call.solidityCodeGen(result, code));
+        return result;
     }
 
     @Override
@@ -37,4 +43,8 @@ public class CallStatement extends Statement {
         return rtn;
     }
 
+    @Override
+    protected Map<String,? extends Type> readMap(CompileEnv code) {
+        return call.readMap(code);
+    }
 }

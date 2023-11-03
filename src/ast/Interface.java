@@ -1,12 +1,12 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.SolNode;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import typecheck.BuiltInT;
 import typecheck.CodeLocation;
-import typecheck.InheritGraph;
 import typecheck.InterfaceSym;
 import typecheck.ScopeContext;
 import typecheck.NTCEnv;
@@ -119,16 +119,15 @@ public class Interface extends TopLayerNode {
         return null;
     }
 
-    @Override
-    public void solidityCodeGen(SolCode code) {
-        code.enterInterfaceDef(contractName);
+    public compile.ast.Interface solidityCodeGen(CompileEnv code) {
 
+        List<compile.ast.FunctionSig> functionSigs = new ArrayList<>();
         for (FunctionSig functionSig: funcSigs)
             if (!functionSig.isBuiltIn()) {
-                functionSig.solidityCodeGen(code);
+                functionSigs.add(functionSig.solidityCodeGen(code));
             }
 
-        code.leaveInterfaceDef();
+        return new compile.ast.Interface(contractName, functionSigs);
     }
 
     @Override
@@ -156,7 +155,7 @@ public class Interface extends TopLayerNode {
 
         Interface superContract = interfaceMap.get(superContractName);
         if (superContract == null) {
-            assert false: superContractName;
+            assert false: "super contract not found: " + superContractName;
             return;
         }
 
@@ -175,10 +174,10 @@ public class Interface extends TopLayerNode {
                 assert false: exp.exceptionName;
             }
         }
-        for (FunctionSig f: funcSigs) {
+        for (FunctionSig f: superContract.funcSigs) {
             if (f.isBuiltIn()) continue;
             if (nameSet.contains(f.name)) {
-                assert false: f.name;
+                assert false: f.name + " from " + contractName;
             }
         }
 
@@ -188,8 +187,11 @@ public class Interface extends TopLayerNode {
 
         newExpDefs.addAll(superContract.exceptionDefs);
         newExpDefs.addAll(exceptionDefs);
-        newFuncSigs.addAll(funcSigs);
-        newFuncSigs.addAll(funcSigs);
+        newFuncSigs.addAll(superContract.funcSigs);
+        for (FunctionSig functionSig: funcSigs) {
+            if (functionSig.isBuiltIn()) continue;
+            newFuncSigs.add(functionSig);
+        }
 
         exceptionDefs = newExpDefs;
         funcSigs = newFuncSigs;
@@ -303,12 +305,12 @@ public class Interface extends TopLayerNode {
     private void addBuiltInExceptions() {
         // add exceptions:
         // exception{BOT} Error();
-        ExceptionDef error = new ExceptionDef(
-                Utils.EXCEPTION_ERROR_NAME,
-                new Arguments(),
-                true
-        );
-        exceptionDefs.add(error);
+//        ExceptionDef error = new ExceptionDef(
+//                Utils.EXCEPTION_ERROR_NAME,
+//                new Arguments(),
+//                true
+//        );
+//        exceptionDefs.add(error);
     }
 
     private void addBuiltInVars() {

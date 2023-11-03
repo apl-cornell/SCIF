@@ -1,6 +1,7 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Import;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -13,7 +14,6 @@ import typecheck.InheritGraph;
 import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
-import typecheck.Utils;
 
 public class InterfaceFile extends SourceFile {
     private final Interface itrface;
@@ -45,10 +45,8 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        code.addVersion(compile.Utils.SOLITIDY_VERSION);
-
-
+    public compile.ast.SourceFile solidityCodeGen(CompileEnv code) {
+        List<Import> imports = new ArrayList<>();
         for (String contractName : iptContracts) {
             boolean exists = false;
             if (itrface.contractName.equals(contractName)) {
@@ -56,10 +54,10 @@ public class InterfaceFile extends SourceFile {
                 break;
             }
             if (!exists) {
-                code.addImport(contractName);
+                imports.add(new Import(contractName));
             }
         }
-        itrface.solidityCodeGen(code);
+        return new compile.ast.InterfaceFile(imports, itrface.solidityCodeGen(code));
     }
 
     @Override

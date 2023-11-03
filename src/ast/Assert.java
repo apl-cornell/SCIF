@@ -1,6 +1,12 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.SingleVar;
+import compile.ast.Type;
+import java.beans.PersistenceDelegate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -29,8 +35,10 @@ public class Assert extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        code.addLine("assert(" + test.toSolCode() + ");");
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        List<compile.ast.Statement> result = new ArrayList<>();
+        result.add(new compile.ast.Assert(test.solidityCodeGen(result, code)));
+        return result;
     }
 
     @Override
@@ -40,4 +48,14 @@ public class Assert extends Statement {
         rtn.add(msg);
         return rtn;
     }
+
+    @Override
+    protected Map<String,? extends compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, Type> result = test.readMap(code);
+        if (msg != null) {
+            result.putAll(msg.readMap(code));
+        }
+        return result;
+    }
+
 }

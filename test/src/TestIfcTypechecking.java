@@ -17,6 +17,7 @@ public class TestIfcTypechecking {
     @ValueSource(strings = {
             "basic/DependentMap",
             "basic/EmptyContract",
+            "basic/EmptyContract2",
             "basic/ExceptionThrowAndCatch",
             "basic/EndroseIf",
             "examples/SimpleStorage",

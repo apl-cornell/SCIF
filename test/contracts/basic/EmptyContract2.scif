@@ -1,0 +1,3 @@
+contract EmptyContract2 extends ManagedContractImp {
+
+}

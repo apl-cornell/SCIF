@@ -1,5 +1,9 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.ast.ArrayType;
+import compile.ast.FixedArrayType;
+import compile.ast.MapType;
 import java.util.ArrayList;
 import typecheck.ArrayTypeSym;
 import typecheck.MapTypeSym;
@@ -33,7 +37,7 @@ public class Array extends Type {
     }
 
     @Override
-    public boolean typeMatch(Expression annotation) {
+    public boolean typeMatch(Type annotation) {
         return annotation instanceof Array &&
                 super.typeMatch(annotation) &&
                 size == (((Array) annotation).size) &&
@@ -53,5 +57,13 @@ public class Array extends Type {
     @Override
     public boolean isPrimitive() {
         return false;
+    }
+    @Override
+    public compile.ast.Type solidityCodeGen(CompileEnv code) {
+        if (size == 0) {
+            return new ArrayType(valueType.solidityCodeGen(code));
+        } else {
+            return new FixedArrayType(valueType.solidityCodeGen(code), size);
+        }
     }
 }

@@ -3,6 +3,7 @@ package typecheck;
 public abstract class Sym {
     private String name;
     private ScopeContext defContext;
+    private boolean isGlobal = false;
     protected int hashCode;
     abstract boolean isLValue();
     /*public String getSLCName() {
@@ -14,6 +15,13 @@ public abstract class Sym {
         assert defContext != null;
         this.name = name;
         this.defContext = defContext;
+        hashCode = name.hashCode();
+    }
+    public Sym(String name, ScopeContext defContext, boolean isGlobal) {
+        assert defContext != null;
+        this.name = name;
+        this.defContext = defContext;
+        this.isGlobal = isGlobal;
         hashCode = name.hashCode();
     }
 
@@ -45,4 +53,9 @@ public abstract class Sym {
     public ScopeContext defContext() {
         return defContext;
     }
+
+    public boolean isGlobal() {
+        return isGlobal;
+    }
+
 }

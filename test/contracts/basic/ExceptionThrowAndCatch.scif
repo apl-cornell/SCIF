@@ -1,18 +1,19 @@
 contract ExceptionDefinition {
     exception X();
     exception Y(uint aug1, uint aug2);
+    exception Z();
 
     // CA.
     @public
     void foo{sender -> this; any}() throws (Z, X{this}) {
         try {
             bar(1, 2);
-            chigh.f(); // f throws (Y);
-            clow.g(); // g throws (X{this}); THROWS Z SECRETLY
-            clow2.g(); // throws (X{this});
+            //chigh.f(); // f throws (Y);
+            //clow.g(); // g throws (X{this}); THROWS Z SECRETLY
+            //clow2.g(); // throws (X{this});
             // return (true, SUCC, T), (true, EID, T),
             //  or (false, bytes)
-            chigh.g(); // g throws (X{this});
+            //chigh.g(); // g throws (X{this});
             // Path set P: E->pc
         } catch (Y excY) {
             throw X();

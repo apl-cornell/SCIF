@@ -1,6 +1,8 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Function;
+import compile.ast.VarDec;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,6 +21,11 @@ public class Contract extends TopLayerNode {
     List<StateVariableDeclaration> varDeclarations;
     List<ExceptionDef> exceptionDefs;
     List<FunctionDef> methodDeclarations;
+
+    /*
+        fields that are supposed to complete after typechecking
+     */
+    Map<String, ExceptionTypeSym> exceptionTypeSymMap;
 
     public Contract(String contractName, TrustSetting trustSetting,
             List<StateVariableDeclaration> varDeclarations,
@@ -53,8 +60,8 @@ public class Contract extends TopLayerNode {
     }
 
     private void setDefault() {
-        if (superContractName.isEmpty() && !contractName.equals(Utils.BASECONTRACTNAME)) {
-            superContractName = Utils.BASECONTRACTNAME;
+        if (superContractName.isEmpty() && !contractName.equals(Utils.BASE_CONTRACT_IMP_NAME)) {
+            superContractName = Utils.BASE_CONTRACT_IMP_NAME;
         }
     }
 //
@@ -95,7 +102,7 @@ public class Contract extends TopLayerNode {
                 return false;
             }
         }
-
+        exceptionTypeSymMap = env.getExceptionTypeSymMap();
         env.exitNewScope();
         return true;
     }
@@ -167,6 +174,7 @@ public class Contract extends TopLayerNode {
         }
 
         for (FunctionDef fDef : methodDeclarations) {
+            System.err.println("Typechecking " + fDef.name + "@" + contractName + ": " + fDef.isNative);
             fDef.genConsVisit(env, tail_position);
         }
     }
@@ -190,25 +198,31 @@ public class Contract extends TopLayerNode {
 //        }
 //    }
 
-    public void solidityCodeGen(SolCode code) {
-        // code.setDynamicOption(trustSetting);
-        code.enterContractDef(contractName);
+    public compile.ast.Contract solidityCodeGen(CompileEnv code) {
 
+        code.setExceptionMap(exceptionTypeSymMap);
+        List<VarDec> stateVarDecs = new ArrayList<>();
+        List<compile.ast.StructDef> excDefs = new ArrayList<>();
+        List<Function> methods = new ArrayList<>();
         for (StateVariableDeclaration dec : varDeclarations)
             if (!dec.isBuiltIn()) {
-                dec.solidityCodeGen(code);
+                stateVarDecs.add(dec.solidityCodeGen(code));
             }
-//
-//        for (ExceptionDef expDef : exceptionDefs) {
-//            expDef.solidityCodeGen(code);
-//        }
+
+        for (ExceptionDef exceptionDef: exceptionDefs) {
+            if (!exceptionDef.arguments.empty()) {
+                excDefs.add(exceptionDef.solidityCodeGen(code));
+            }
+        }
 
         for (FunctionDef fDef : methodDeclarations)
             if (!fDef.isBuiltIn()) {
-                fDef.solidityCodeGen(code);
+                methods.add(fDef.solidityCodeGen(code));
             }
 
-        code.leaveContractDef();
+        methods.addAll(code.tempFunctions());
+        code.clearTempFunctions();
+        return new compile.ast.Contract(contractName, stateVarDecs, excDefs, methods);
     }
 
     @Override
@@ -241,7 +255,7 @@ public class Contract extends TopLayerNode {
         if (superContract == null) {
             Interface itrface = interfaceMap.get(superContractName);
             if (itrface == null) {
-                assert false: superContractName;
+                assert false: "super contract not found: " + superContractName;
                 return;
             }
             // check that all methods are implemented
@@ -254,10 +268,10 @@ public class Contract extends TopLayerNode {
                 String name = f.name;
                 if (funcMap.containsKey(name)) {
                     if (!f.typeMatch(funcMap.get(name))) {
-                        assert false: f.signature() + " $ " + funcMap.get(name).signature();
+                        assert false: contractName + ": implemented method carries unmatched types: " + f.signature() + " $ " + funcMap.get(name).signature();
                     }
                 } else {
-                    assert false: name;
+                    assert false: name + " is not implemented in " + contractName;
                 }
             }
             return;
@@ -279,19 +293,19 @@ public class Contract extends TopLayerNode {
 
         for (StateVariableDeclaration a : varDeclarations) {
             Name x = a.name();
-            assert !nameSet.contains(x.id);
+            assert !nameSet.contains(x.id): "duplicate variable: " + x.id;
             varNames.put(x.id, a);
             nameSet.add(x.id);
         }
 
         for (ExceptionDef exp: exceptionDefs) {
-            assert !nameSet.contains(exp.exceptionName);
+            assert !nameSet.contains(exp.exceptionName): "duplicate exception: " + exp.exceptionName;
             nameSet.add(exp.exceptionName);
             expDefs.put(exp.exceptionName, exp);
         }
 
         for (FunctionDef f : methodDeclarations) {
-            assert !nameSet.contains(f.name);
+            assert !nameSet.contains(f.name) : "duplicate method: " + f.name;
             nameSet.add(f.name);
             funcNames.put(f.name, f);
         }
@@ -329,7 +343,7 @@ public class Contract extends TopLayerNode {
         newExpDefs.addAll(exceptionDefs.subList(builtInIndex, exceptionDefs.size()));
 
         builtInIndex = 0;
-        for (FunctionDef a : newFuncDefs) {
+        for (FunctionDef a : methodDeclarations) {
             if (a.isBuiltIn()) newFuncDefs.add(a);
             else break;
             builtInIndex += 1;
@@ -472,12 +486,12 @@ public class Contract extends TopLayerNode {
     private void addBuiltInExceptions() {
         // add exceptions:
         // exception{BOT} Error();
-        ExceptionDef error = new ExceptionDef(
-                Utils.EXCEPTION_ERROR_NAME,
-                new Arguments(),
-                true
-        );
-        exceptionDefs.add(error);
+//        ExceptionDef error = new ExceptionDef(
+//                Utils.EXCEPTION_ERROR_NAME,
+//                new Arguments(),
+//                true
+//        );
+//        exceptionDefs.add(error);
     }
 
     private void addBuiltInVars() {

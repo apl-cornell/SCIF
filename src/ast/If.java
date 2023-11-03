@@ -1,7 +1,11 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.IfStatement;
+import compile.ast.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -163,28 +167,27 @@ public class If extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        String cond = test.toSolCode();
-        code.enterIf(cond);
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        List<compile.ast.Statement> result = new ArrayList<>();
+        List<compile.ast.Statement> ifBranch = new ArrayList<>();
+        compile.ast.Expression cond = test.solidityCodeGen(result, code);
+        code.enterNewVarScope();
         for (Statement stmt : body) {
-            /*if (stmt instanceof Expression) {
-                ((Expression) stmt).SolCodeGenStmt(code);
-            } else {*/
-            stmt.solidityCodeGen(code);
-            //}
+            ifBranch.addAll(stmt.solidityCodeGen(code));
         }
-        code.leaveIf();
+        code.exitVarScope();
         if (!orelse.isEmpty()) {
-            code.enterElse();
+            List<compile.ast.Statement> elseBranch = new ArrayList<>();
+            code.enterNewVarScope();
             for (Statement stmt : orelse) {
-                /*if (stmt instanceof Expression) {
-                    ((Expression) stmt).SolCodeGenStmt(code);
-                } else {*/
-                stmt.solidityCodeGen(code);
-                //}
+                elseBranch.addAll(stmt.solidityCodeGen(code));
             }
-            code.leaveElse();
+            code.exitVarScope();
+            result.add(new IfStatement(cond, ifBranch, elseBranch));
+        } else {
+            result.add(new IfStatement(cond, ifBranch));
         }
+        return result;
     }
 
     @Override
@@ -202,5 +205,43 @@ public class If extends Statement {
         rtn.addAll(body);
         rtn.addAll(orelse);
         return rtn;
+    }
+    @Override
+    public boolean exceptionHandlingFree() {
+        for (Statement s: body) {
+            if (!s.exceptionHandlingFree()) {
+                return false;
+            }
+        }
+        for (Statement s: orelse) {
+            if (!s.exceptionHandlingFree()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    protected java.util.Map<String,? extends Type> readMap(CompileEnv code) {
+        java.util.Map<String, Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.readMap(code));
+        }
+        for (Statement s: orelse) {
+            result.putAll(s.readMap(code));
+        }
+        return result;
+    }
+
+    @Override
+    protected java.util.Map<String,? extends Type> writeMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.writeMap(code));
+        }
+        for (Statement s: orelse) {
+            result.putAll(s.writeMap(code));
+        }
+        return result;
     }
 }

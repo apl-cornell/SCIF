@@ -10,7 +10,7 @@ contract Wallet {
             lock(this) {
                 atomic {
                     send(sender, amount);
-                } rescue (error e) {
+                } rescue * {
                     throw transferFailure();
                 }
                 balances[sender] = balances[sender] - amount;
@@ -21,7 +21,6 @@ contract Wallet {
     }
 
     @public
-    @payable
     void deposit() {
         balances[sender] = balances[sender] + value;
     }

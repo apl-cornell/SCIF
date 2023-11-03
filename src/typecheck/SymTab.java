@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -86,4 +87,13 @@ public class SymTab {
         this.parent = parent;
     }
 
+    public Map<String, ExceptionTypeSym> getExceptionMap() {
+        Map<String, ExceptionTypeSym> result = parent == null ? new HashMap<>() : parent.getExceptionMap();
+        for (Entry<String, Sym> entry: table.entrySet()) {
+            if (entry.getValue() instanceof ExceptionTypeSym value) {
+                result.put(entry.getKey(), value);
+            }
+        }
+        return result;
+    }
 }

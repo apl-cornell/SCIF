@@ -1,7 +1,15 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.Utils;
+import compile.ast.Call;
+import compile.ast.SingleVar;
+import compile.ast.Statement;
+import compile.ast.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import typecheck.BuiltInT;
 import typecheck.Context;
 import typecheck.ExpOutcome;
@@ -15,9 +23,9 @@ import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 
 public class FlowsToExp extends Expression {
-    Expression lhs, rhs;
+    Name lhs, rhs;
 
-    public FlowsToExp(Expression a, Expression b) {
+    public FlowsToExp(Name a, Name b) {
         lhs = a;
         rhs = b;
     }
@@ -63,6 +71,13 @@ public class FlowsToExp extends Expression {
     }
 
     @Override
+    public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        // lhs => rhs:
+        // trusts(lhs, rhs);
+        return new Call(Utils.TRUSTS_CALL, List.of(new SingleVar(rhs.id), new SingleVar(lhs.id)));
+    }
+
+    @Override
     public boolean typeMatch(Expression expression) {
         if (expression instanceof FlowsToExp o) {
             return lhs.typeMatch(o.lhs) && rhs.typeMatch(o.rhs);
@@ -73,7 +88,7 @@ public class FlowsToExp extends Expression {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        if (lhs instanceof Name && rhs instanceof Name) {
+        if (lhs != null && rhs != null) {
             ScopeContext now = new ScopeContext(this, parent);
             Name left = (Name) lhs, right = (Name) rhs;
             Sym lsym = env.getCurSym(left.id), rsym = env.getCurSym(right.id);
@@ -94,5 +109,11 @@ public class FlowsToExp extends Expression {
         rtn.add(lhs);
         rtn.add(rhs);
         return rtn;
+    }
+    @Override
+    public java.util.Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, Type> result = lhs.readMap(code);
+        result.putAll(rhs.readMap(code));
+        return result;
     }
 }

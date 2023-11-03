@@ -1,6 +1,10 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Type;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -80,8 +84,12 @@ public class Return extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        code.addReturn(value != null ? value.toSolCode() : "");
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        // if inside any try/atomic,
+        // otherwise,
+        List<compile.ast.Statement> result = new ArrayList<>();
+        result.addAll(code.compileReturn(value != null ? value.solidityCodeGen(result, code) : null));
+        return result;
     }
 
     @Override
@@ -91,5 +99,10 @@ public class Return extends Statement {
             rtn.add(value);
         }
         return rtn;
+    }
+
+    @Override
+    protected java.util.Map<String,? extends Type> readMap(CompileEnv code) {
+        return value != null ? value.readMap(code) : new HashMap<>();
     }
 }

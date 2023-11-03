@@ -6,10 +6,11 @@ import java.util.Objects;
 
 public class ExceptionTypeSym extends TypeSym {
     // Struct type should be initialized in a way like: varName = new typeName(member0, member1, ..., )
-    private List<VarSym> parameters;
+    private final List<VarSym> parameters;
 
     public ExceptionTypeSym(String typeName, List<VarSym> parameters, ScopeContext defContext) {
         super(typeName, defContext);
+        assert parameters != null;
         this.parameters = parameters;
         this.hashCode = Objects.hash(this.getName(), parameters);
     }

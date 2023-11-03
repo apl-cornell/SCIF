@@ -1,7 +1,13 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Assert;
+import compile.ast.Assign;
+import compile.ast.Call;
+import compile.ast.SingleVar;
+import compile.ast.Type;
 import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
@@ -11,11 +17,11 @@ import java.util.HashMap;
 
 public class GuardBlock extends Statement {
 
-    IfLabel l;
+    PrimitiveIfLabel l;
     List<Statement> body;
     Expression target;
 
-    public GuardBlock(IfLabel l, List<Statement> body, Expression target) {
+    public GuardBlock(PrimitiveIfLabel l, List<Statement> body, Expression target) {
         this.l = l;
         this.body = body;
         this.target = target;
@@ -142,23 +148,17 @@ public class GuardBlock extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        /*
-            guard{l}
-            lock(l)
-         */
-        code.enterGuard(l);
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        List<compile.ast.Statement> result = new ArrayList<>();
+        code.enterNewVarScope();
+        String lockP = l.value().id;
+        result.add(new Assert(code.lock(lockP)));
         for (Statement stmt : body) {
-            /*if (stmt instanceof Expression) {
-                ((Expression) stmt).SolCodeGenStmt(code);
-            } else {*/
-            stmt.solidityCodeGen(code);
-            //}
+            result.addAll(stmt.solidityCodeGen(code));
         }
-        /*
-            unlock(l);
-         */
-        code.exitGuard(l);
+        result.add(new Assert(code.unlock(lockP)));
+        code.exitVarScope();
+        return result;
     }
 
     @Override
@@ -178,5 +178,32 @@ public class GuardBlock extends Statement {
             rtn.add(target);
         }
         return rtn;
+    }
+    @Override
+    public boolean exceptionHandlingFree() {
+        for (Statement s: body) {
+            if (!s.exceptionHandlingFree()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    protected java.util.Map<String,? extends Type> readMap(CompileEnv code) {
+        java.util.Map<String, Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.readMap(code));
+        }
+        return result;
+    }
+
+    @Override
+    protected java.util.Map<String,? extends Type> writeMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.writeMap(code));
+        }
+        return result;
     }
 }

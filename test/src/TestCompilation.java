@@ -13,7 +13,15 @@ public class TestCompilation {
 
     @ParameterizedTest
     @ValueSource(strings = {
+//            "basic/DependentMap",
             "basic/EmptyContract",
+            "basic/EmptyContract2",
+//            "basic/ExceptionThrowAndCatch",
+//            "basic/FinalVar",
+//            "basic/EndroseIf",
+            "ifcTypechecking/Wallet_lock_exception",
+//            "examples/ERC20",
+//            "examples/SimpleStorage",
     })
     void testPositive(String contractName) {
         File logDir = new File("./.scif");
@@ -54,11 +62,19 @@ public class TestCompilation {
 
         assert passIFC;
 
+        SourceFile root = null;
+        for (SourceFile r: roots) {
+            if (r.getSourceFilePath().equals(input.getPath())) {
+                root = r;
+                break;
+            }
+        }
+        assert root != null: input.getPath();
 
         try {
             File outputFile = File.createTempFile("tmp", "sol");
             outputFile.deleteOnExit();
-            SolCompiler.compile(roots, outputFile);
+            SolCompiler.compile(root, outputFile);
         } catch (Exception exp) {
             exp.printStackTrace();
             assert false;

@@ -1,0 +1,11 @@
+contract SimpleStorage {
+    uint num;
+    @public
+    void set(uint _num){
+        num = endorse(_num, any -> this);
+    }
+    @public
+    uint get(){
+        return num;
+    }
+}

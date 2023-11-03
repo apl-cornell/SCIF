@@ -1,7 +1,10 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.ScopeContext;
@@ -28,13 +31,30 @@ public class Delete extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        assert false;
+        return null;
     }
     @Override
     public List<Node> children() {
         List<Node> rtn = new ArrayList<>();
         rtn.addAll(targets);
         return rtn;
+    }
+    @Override
+    public java.util.Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Expression target: targets) {
+            result.putAll(target.readMap(code));
+        }
+        return result;
+    }
+    @Override
+    public java.util.Map<String, compile.ast.Type> writeMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Expression target: targets) {
+            result.putAll(target.writeMap(code));
+        }
+        return result;
     }
 }

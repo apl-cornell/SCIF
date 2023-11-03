@@ -1,0 +1,8 @@
+interface LockManager {
+    @public
+    bool acquireLock(address l);
+    @public
+    bool releaseLock(address l);
+    @public
+    bool bypassLocks(address from);
+}

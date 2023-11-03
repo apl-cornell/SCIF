@@ -2,6 +2,8 @@
 
 import ast.SourceFile;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
@@ -75,7 +77,7 @@ public class SCIF implements Callable<Integer> {
         }
 
         //List<File> files = ImmutableList.copyOf(m_inputFiles);
-        ArrayList<File> files = new ArrayList<>();
+        List<File> files = new ArrayList<>();
         for (File file : m_inputFiles) {
             files.add(file);
         }
@@ -92,7 +94,7 @@ public class SCIF implements Callable<Integer> {
             return null;
         }
         // System.out.println("["+ outputFileName + "]");
-        ArrayList<File> IFCConsFiles = new ArrayList<>();
+        List<File> IFCConsFiles = new ArrayList<>();
         for (int i = 0; i < roots.size(); ++i) {
             File IFCConsFile;
             if (outputFileNames == null || outputFileNames.length <= i + 1) {
@@ -145,7 +147,15 @@ public class SCIF implements Callable<Integer> {
                 solFileName = m_solFileNames[0];
                 solFile = new File(solFileName);
             }
-            SolCompiler.compile(roots, solFile);
+            Map<String, SourceFile> rootMap = new HashMap<>();
+            for (SourceFile r: roots) {
+                rootMap.put(r.getSourceFilePath(), r);
+            }
+            for (File f: m_inputFiles) {
+                SourceFile r = rootMap.get(f.getAbsolutePath());
+                assert r != null: f.getAbsolutePath();
+                SolCompiler.compile(r, solFile);
+            }
         } else if (m_funcRequest.typecheck) {
             try {
                 _typecheck(m_outputFileNames);

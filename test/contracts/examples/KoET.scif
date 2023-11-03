@@ -1,0 +1,18 @@
+contract KoET {
+    address currentMonarch;
+    uint currentClaimPrice;
+
+    @public
+    void claimThrone() {
+        assert value == currentClaimPrice;
+        uint compensation = calcCompensation(currentClaimPrice);
+        send(currentMonarch, compensation);
+        currentMonarch = sender;
+        currentClaimPrice = calcNewClaimPrice(currentClaimPrice);
+    }
+
+    @private
+    uint calcCompensation(uint price) { /* ... */ }
+    @private
+    uint calcNewClaimPrice(uint price) { /* ... */ }
+}

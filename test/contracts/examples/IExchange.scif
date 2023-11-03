@@ -1,0 +1,6 @@
+interface IExchange {
+    void exchange{user -> this}(
+        final address user,
+        IERC20{user} tokenIn, IERC20{user} tokenOut, uint{user} amount,
+        bytes{user} extraData); // reverts (FailedExchange);
+}

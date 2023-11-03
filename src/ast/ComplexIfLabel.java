@@ -1,5 +1,7 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.ast.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.ExpOutcome;
@@ -102,6 +104,12 @@ public class ComplexIfLabel extends IfLabel {
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
 
         // TODO: deal with dynamic labels
+        return null;
+    }
+
+    @Override
+    public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        assert false;
         return null;
     }
 

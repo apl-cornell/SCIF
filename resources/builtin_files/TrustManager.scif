@@ -1,4 +1,4 @@
-interface ITrustManager {
+interface TrustManager {
     /**
         if a trusts b.
         True: a trusts b.
@@ -6,11 +6,11 @@ interface ITrustManager {
     */
     @public
     bool trusts(address a, address b);
-    @public
-    bool trustsWithProof(address a, address b, address[] proof);
+    // @public
+    // bool trustsWithProof(address a, address b, address[] proof);
 
     @public
-    bool setTrust(address trustee);
+    bool addTrust(address trustee);
     @public
     bool revokeTrust(address trustee);
 }

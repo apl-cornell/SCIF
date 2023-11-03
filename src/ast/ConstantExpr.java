@@ -1,5 +1,8 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.ast.Literal;
+import compile.ast.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.sherrlocUtils.Constraint;
@@ -42,9 +45,14 @@ public class ConstantExpr extends Expression {
     }
 
     @Override
-    public String toSolCode() {
-        return compile.Utils.toConstant(value);
+    public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        return new Literal(compile.Utils.toConstant(value));
     }
+
+//    @Override
+//    public String toSolCode() {
+//        return compile.Utils.toConstant(value);
+//    }
 
     @Override
     public boolean typeMatch(Expression expression) {

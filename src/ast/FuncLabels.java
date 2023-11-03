@@ -1,6 +1,7 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.SolNode;
 import java.util.List;
 import typecheck.CodeLocation;
 import typecheck.NTCEnv;
@@ -8,7 +9,6 @@ import typecheck.ScopeContext;
 import typecheck.Utils;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class FuncLabels extends Node {
 
@@ -53,11 +53,11 @@ public class FuncLabels extends Node {
         if (end_pc != null) end_pc.ntcGenCons(env, parent);
         return parent;
     }
-
-    @Override
-    public void solidityCodeGen(SolCode code) {
-        assert false;
-    }
+//
+//    @Override
+//    public SolNode solidityCodeGen(CompileEnv code) {
+//        assert false;
+//    }
 
     @Override
     public ArrayList<Node> children() {

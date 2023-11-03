@@ -1,0 +1,6 @@
+interface Contract {
+    @public bool trusts(address a, address b);
+    bool bypassLocks(address from);
+    bool acquireLock(address l);
+    bool releaseLock(address l);
+}

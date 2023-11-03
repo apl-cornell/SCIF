@@ -20,7 +20,7 @@ public class DepMap extends Map {
     }
 
     @Override
-    public boolean typeMatch(Expression annotation) {
+    public boolean typeMatch(Type annotation) {
         return annotation instanceof DepMap &&
                 super.typeMatch(annotation) &&
                 keyName.equals(((DepMap) annotation).keyName) &&

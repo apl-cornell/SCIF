@@ -1,15 +1,18 @@
 package ast;
 
-import compile.SolCode;
-import java.nio.file.Path;
+import compile.CompileEnv;
+import compile.ast.Type;
+import compile.ast.VarDec;
+import compile.ast.WhileStatement;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class While extends Statement {
 
@@ -79,16 +82,26 @@ public class While extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        code.enterWhile(test.toSolCode());
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        List<compile.ast.Statement> result = new ArrayList<>();
+        List<compile.ast.Statement> condPrep = new ArrayList<>();
+        List<compile.ast.Statement> whileBody = new ArrayList<>();
+        compile.ast.Expression cond = test.solidityCodeGen(condPrep, code);
+        result.addAll(condPrep);
+        code.enterNewVarScope();
         for (Statement stmt : body) {
-            /*if (stmt instanceof Expression) {
-                ((Expression) stmt).SolCodeGenStmt(code);
-            } else {*/
-            stmt.solidityCodeGen(code);
-            // }
+            whileBody.addAll(stmt.solidityCodeGen(code));
         }
-        code.leaveWhile();
+
+        // add prep the end of whileBody excluding declarations
+        for (compile.ast.Statement s: condPrep) {
+            if (!(s instanceof VarDec)) {
+                whileBody.add(s);
+            }
+        }
+        code.exitVarScope();
+        result.add(new WhileStatement(cond, whileBody));
+        return result;
     }
 
     @Override
@@ -105,5 +118,32 @@ public class While extends Statement {
         rtn.add(test);
         rtn.addAll(body);
         return rtn;
+    }
+    @Override
+    public boolean exceptionHandlingFree() {
+        for (Statement s: body) {
+            if (!s.exceptionHandlingFree()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    protected java.util.Map<String,? extends Type> readMap(CompileEnv code) {
+        java.util.Map<String, Type> result = test.readMap(code);
+        for (Statement s: body) {
+            result.putAll(s.readMap(code));
+        }
+        return result;
+    }
+
+    @Override
+    protected java.util.Map<String,? extends Type> writeMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.writeMap(code));
+        }
+        return result;
     }
 }

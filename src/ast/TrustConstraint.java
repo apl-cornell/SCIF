@@ -1,8 +1,8 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.SolNode;
 import typecheck.Assumption;
-import typecheck.ContractSym;
 import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.PrimitiveLabel;
@@ -43,11 +43,11 @@ public class TrustConstraint extends TopLayerNode {
         rhs.ntcGenCons(env, parent);
         return parent;
     }
-
-    @Override
-    public void solidityCodeGen(SolCode code) {
-
-    }
+//
+//    @Override
+//    public SolNode solidityCodeGen(CompileEnv code) {
+//
+//    }
 
     @Override
     public ArrayList<Node> children() {

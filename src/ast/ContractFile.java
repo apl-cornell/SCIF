@@ -1,6 +1,8 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Import;
+import compile.ast.SolNode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -110,7 +112,7 @@ public class ContractFile extends SourceFile {
         // env.setGlobalSymTab(new SymTab());
         // env.initCurSymTab();
         // Utils.addBuiltInASTNode(env.globalSymTab, contract.trustSetting);
-        assert env.getCurSym("ITrustManager") != null: env.currentSourceFileFullName();
+        // assert env.getCurSym("TrustManager") != null: env.currentSourceFileFullName();
         if (!contract.ntcGlobalInfo(env, now)) {
             logger.debug("GlobalInfo failed with: " + contract);
             return false;
@@ -133,25 +135,21 @@ public class ContractFile extends SourceFile {
         contract.genConsVisit(env, tail_position);
         return null;
     }
-    public void solidityCodeGen(SolCode code) {
-        code.addVersion(compile.Utils.SOLITIDY_VERSION);
 
+    @Override
+    public compile.ast.SourceFile solidityCodeGen(CompileEnv code) {
+        List<Import> imports = new ArrayList<>();
 
         for (String contractName : iptContracts) {
-            boolean exists = false;
-            if (contract.contractName.equals(contractName)) {
-                exists = true;
-                break;
-            }
-            if (!exists) {
-                code.addImport(contractName);
+            if (!contract.contractName.equals(contractName)) {
+                imports.add(new Import(contractName));
             }
         }
-        contract.solidityCodeGen(code);
+        return new compile.ast.ContractFile(imports, contract.solidityCodeGen(code));
     }
     @Override
     public List<Node> children() {
-        ArrayList<Node> rtn = new ArrayList<>();
+        List<Node> rtn = new ArrayList<>();
         rtn.add(contract);
         return rtn;
     }
@@ -165,4 +163,5 @@ public class ContractFile extends SourceFile {
         addBuiltInImports();
         contract.addBuiltIns();
     }
+
 }

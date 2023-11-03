@@ -1,7 +1,6 @@
 package ast;
 
-import compile.SolCode;
-import java.nio.file.Path;
+import compile.CompileEnv;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.BuiltInT;
@@ -107,19 +106,9 @@ public class For extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        String solNewVars = newVars.toSolCode();
-        String solTest = test.toSolCode();
-        List<String> iters = new ArrayList<>();
-        for (Statement s: iter) {
-            iters.add(s.toSolCode());
-        }
-        code.enterFor(solNewVars, solTest, SolCode.toIterations(iters));
-
-        for (Statement s: body) {
-            s.solidityCodeGen(code);
-        }
-        code.leaveFor();
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        assert false;
+        return null;
     }
 
     @Override
@@ -138,5 +127,15 @@ public class For extends Statement {
         rtn.addAll(iter);
         rtn.addAll(body);
         return rtn;
+    }
+
+    @Override
+    public boolean exceptionHandlingFree() {
+        for (Statement s: body) {
+            if (!s.exceptionHandlingFree()) {
+                return false;
+            }
+        }
+        return true;
     }
 }

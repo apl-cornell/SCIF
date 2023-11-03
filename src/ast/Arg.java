@@ -1,12 +1,14 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Argument;
+import compile.ast.SolNode;
+import compile.ast.Type;
 import java.util.List;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class Arg extends Node {
 
@@ -78,9 +80,10 @@ public class Arg extends Node {
         return now;
     }
 
-    @Override
-    public void solidityCodeGen(SolCode code) {
-        
+    public Argument solidityCodeGen(CompileEnv code) {
+        Type varType = annotation.type().solidityCodeGen(code);
+        code.addLocalVar(name, varType);
+        return new Argument(varType, name);
     }
 
     public void genConsVisit(VisitEnv env, boolean tail_position) {

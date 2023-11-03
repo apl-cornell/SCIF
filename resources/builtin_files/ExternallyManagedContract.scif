@@ -1,0 +1,15 @@
+import "./LockManager.scif";
+import "./TrustManager.scif";
+import "./ManagedContract.scif";
+
+interface ExternallyManagedContract extends ManagedContract {
+    @public
+    bool directlyTrusts(address trustee);
+    @public
+    address[] directTrustees();
+
+    @public
+    TrustManager trustManager();
+    @public
+    LockManager lockManager();
+}

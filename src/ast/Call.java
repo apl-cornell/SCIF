@@ -1,6 +1,22 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Assign;
+import compile.ast.Attr;
+import compile.ast.BinaryExpression;
+import compile.ast.ExternalCall;
+import compile.ast.IfStatement;
+import compile.ast.Literal;
+import compile.ast.PrimitiveType;
+import compile.ast.Return;
+import compile.ast.SingleVar;
+import compile.ast.Statement;
+import compile.ast.Subscript;
+import compile.ast.Type;
+import compile.ast.VarDec;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -12,13 +28,19 @@ import java.util.Map;
 
 public class Call extends TrailerExpr {
 
-    ArrayList<Expression> args;
+    List<Expression> args;
+
+
+    // store the called func symbol after regular typechecking
+    FuncSym funcSym = null;
+    private boolean isCast;
+    boolean builtIn = false, ntced = false;
 
     public Call() {
         this.args = new ArrayList<>();
     }
 
-    public Call(Expression x, ArrayList<Expression> ys) {
+    public Call(Expression x, List<Expression> ys) {
         value = x;
         args = ys;
     }
@@ -27,7 +49,7 @@ public class Call extends TrailerExpr {
         this.args.add(arg);
     }
 
-    private void setArgs(ArrayList<Expression> args) {
+    private void setArgs(List<Expression> args) {
         this.args = args;
     }
 
@@ -36,6 +58,7 @@ public class Call extends TrailerExpr {
     }
 
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        this.ntced = true;
         ScopeContext now = new ScopeContext(this, parent);
         String funcName;
         FuncSym funcSym;
@@ -59,6 +82,7 @@ public class Call extends TrailerExpr {
                         // TODO: change the hard-code style
                         TypeSym arrayTSym = arrayTypeSym.valueType;
                         String arrayTName = arrayTSym.toSHErrLocFmt();
+                        this.builtIn = true;
                         if (funcName.equals("pop")) {
                             // return T
                             assert args.size() == 0: "type error";
@@ -92,6 +116,7 @@ public class Call extends TrailerExpr {
                     return null;
                 }
             } else {
+                assert false;
                 return null;
             }
         } else {
@@ -99,19 +124,24 @@ public class Call extends TrailerExpr {
             funcName = ((Name) value).id;
             Sym s = env.getCurSym(funcName);
             if (s == null) {
+                assert false: "method not found: " + funcName;
                 return null;
             }
             if (!(s instanceof FuncSym)) {
                 if (s instanceof ContractSym || s instanceof BuiltinTypeSym) {
                     env.addCons(now.genCons(s.getName(), Relation.EQ, env, location));
+                    isCast = true;
                     return now;
                 }
-                // err: type mismatch
-                System.err.println("contract not found");
+                assert false: "contract not found: " + s.getName();
                 return null;
             }
             funcSym = ((FuncSym) s);
+            if (funcSym.isBuiltIn()) {
+                this.builtIn = true;
+            }
         }
+        this.funcSym = funcSym;
         // typecheck arguments
         for (int i = 0; i < args.size(); ++i) {
             Expression arg = args.get(i);
@@ -123,7 +153,7 @@ public class Call extends TrailerExpr {
         String rtnTypeName = funcSym.returnType.toSHErrLocFmt();
         env.addCons(now.genCons(rtnTypeName, Relation.EQ, env, location));
 
-        for (HashMap.Entry<ExceptionTypeSym, String> tl : funcSym.exceptions.entrySet()) {
+        for (Map.Entry<ExceptionTypeSym, String> tl : funcSym.exceptions.entrySet()) {
             if (!parent.isCheckedException(tl.getKey(), extern)) {
                 System.err.println(
                         "Unchecked exception: " + tl.getKey().getName() + " at " + location.toString());
@@ -141,7 +171,7 @@ public class Call extends TrailerExpr {
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         Map<String, String> dependentLabelMapping = new HashMap<>();
 
-        ArrayList<String> argValueLabelNames = new ArrayList<>();
+        List<String> argValueLabelNames = new ArrayList<>();
 
         PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
         ExpOutcome ao = null;
@@ -172,7 +202,6 @@ public class Call extends TrailerExpr {
                 //  the case: a.b(c) where a is a contract or an array, b is a function and c are the arguments
                 // att = a.b
 
-                logger.debug("call value: " + value.toSolCode());
                 externalCall = true;
                 Attribute att = (Attribute) value;
                 vo = att.value.genConsVisit(env, false);
@@ -253,6 +282,7 @@ public class Call extends TrailerExpr {
                 env.addSigReq(namespace, conType.getName());
                 ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
                 funcSym = env.getContract(conType.getName()).getFunc(funcName);
+                assert funcSym != null : "not found: " + conType.getName() + "." + funcName;
 
                 dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(), env.thisSym().toSHErrLocFmt());
 
@@ -285,7 +315,7 @@ public class Call extends TrailerExpr {
                     }
                     return new ExpOutcome(ifNameArgValue, psi);
                 } else {
-                    assert false;
+                    assert false: "method not found: " + funcName;
                     return null;
                 }
             }
@@ -394,6 +424,7 @@ public class Call extends TrailerExpr {
                 Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), beginContext.lambda)), env.hypothesis(),
                 location, env.curContractSym().getName(),
                 "Calling this function does not respect static reentrancy locks"));
+
         env.cons.add(new Constraint(
                 new Inequality(Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
                         Relation.EQ, endContext.lambda), env.hypothesis(), location,
@@ -414,25 +445,106 @@ public class Call extends TrailerExpr {
         return new ExpOutcome(ifNameFuncRtnValue, psi);
     }
 
-    public String toSolCode() {
-        logger.debug("toSOl: Call");
-        String funcName = value.toSolCode();
-//        if (Utils.isBuiltinFunc(funcName)) {
-//            return Utils.transBuiltinFunc(funcName, this);
-//        }
-        String argsCode = "";
-        boolean first = true;
-        for (Expression exp : args) {
-            if (!first) {
-                argsCode += ", ";
+    @Override
+    public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        List<compile.ast.Expression> argumentExps = new ArrayList<>();
+        for (Expression arg: args) {
+            argumentExps.add(arg.solidityCodeGen(result, code));
+        }
+        compile.ast.Call callExp;
+        String funcName;
+        // hash the name if not private method
+        if (builtIn || isCast) {
+            funcName = value instanceof Name ? ((Name) value).id : ((Attribute) value).attr.id;
+        } else {
+            assert funcSym != null;
+            if (funcSym.isPublic()) {
+                funcName = Utils.methodNameHash(funcSym.plainSignature());
             } else {
-                first = false;
+                funcName = funcSym.funcName;
             }
-            argsCode += exp.toSolCode();
         }
 
-        return SolCode.toFunctionCall(funcName, argsCode);
+        if (value instanceof Name) {
+            // internal call
+            callExp = new compile.ast.Call(funcName, argumentExps);
+        } else {
+            // external call
+            assert value instanceof Attribute;
+            compile.ast.Expression target = ((Attribute) value).value.solidityCodeGen(result, code);
+            // String funcName = ((Attribute) value).attr.id;
+            if (builtIn && funcName.equals("length")) {
+                return new Attr(target, funcName);
+            }
+            callExp = new ExternalCall(target, funcName, argumentExps);
+        }
+        assert ntced : "funcSym being null: " + callExp.toSolCode() + " " + builtIn;
+        assert !(funcName.equals("send") && !builtIn);
+        if (builtIn) {
+            return compile.Utils.translateBuiltInFunc(callExp);
+        } else if (isCast || funcSym.exceptions.size() == 0) {
+            return callExp;
+        } else {
+            // statVar, dataVar = call(...);
+            // if (statVar != 0) return statVar, dataVar
+            // else tempVar = parse(dataVar);
+            // replace call with tempVar
+            SingleVar statVar = new SingleVar(code.newTempVarName());
+            SingleVar dataVar = new SingleVar(code.newTempVarName());
+            SingleVar tempVar = new SingleVar(code.newTempVarName());
+            result.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_UINT, statVar.name()));
+            result.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_BYTES, dataVar.name()));
+            result.add(new VarDec(new PrimitiveType(funcSym.returnType.getName()), dataVar.name()));
+            result.add(new Assign(
+                    List.of(statVar, dataVar),
+                    callExp
+            ));
+
+            // map exceptionID
+            int i = 1;
+            for (Entry<ExceptionTypeSym, String> entry: funcSym.exceptions.entrySet()) {
+                IfStatement ifexp = new IfStatement(
+                        new BinaryExpression(compile.Utils.SOL_BOOL_EQUAL, statVar, new Literal(String.valueOf(i))),
+                        List.of(new Assign(statVar, new Literal(String.valueOf(code.getExceptionId(entry.getKey())))))
+                        );
+                result.add(ifexp);
+                ++i;
+            }
+
+            compile.ast.Expression condition = new BinaryExpression(compile.Utils.SOL_BOOL_NONEQUAL,
+                    statVar, new Literal(compile.Utils.RETURNCODE_NORMAL));
+            IfStatement test = new IfStatement(condition,
+                    List.of(new Return(List.of(statVar, dataVar))));
+            result.add(test);
+
+            result.add(new Assign(tempVar,
+                    code.decodeVars(
+                            funcSym.parameters.stream().map(para -> new PrimitiveType(para.typeSym.getName())).collect(
+                                    Collectors.toList()),
+                            dataVar)));
+            return tempVar;
+        }
     }
+
+//    public String toSolCode() {
+//        logger.debug("toSOl: Call");
+//        String funcName = value.toSolCode();
+////        if (Utils.isBuiltinFunc(funcName)) {
+////            return Utils.transBuiltinFunc(funcName, this);
+////        }
+//        String argsCode = "";
+//        boolean first = true;
+//        for (Expression exp : args) {
+//            if (!first) {
+//                argsCode += ", ";
+//            } else {
+//                first = false;
+//            }
+//            argsCode += exp.toSolCode();
+//        }
+//
+//        return CompileEnv.toFunctionCall(funcName, argsCode);
+//    }
 
     @Override
     public ArrayList<Node> children() {
@@ -490,5 +602,14 @@ public class Call extends TrailerExpr {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public java.util.Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Expression arg: args) {
+            result.putAll(arg.readMap(code));
+        }
+        return result;
     }
 }

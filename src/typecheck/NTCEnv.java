@@ -54,11 +54,15 @@ public class NTCEnv {
 
     public VarSym newVarSym(String varName, LabeledType labeledType, boolean isConst, boolean isFinal, boolean isBuiltIn,
             CodeLocation location, ScopeContext context) {
+        return newVarSym(varName, labeledType, isConst, isFinal, isBuiltIn, location, context, false);
+    }
+    public VarSym newVarSym(String varName, LabeledType labeledType, boolean isConst, boolean isFinal, boolean isBuiltIn,
+            CodeLocation location, ScopeContext context, boolean isGlobal) {
         TypeSym typeSym = toTypeSym(labeledType.type(), context);
         if (typeSym == null) {
             throw new RuntimeException("Type not found: " + labeledType.type().name());
         }
-        return new VarSym(varName, typeSym, null, location, context, isConst, isFinal, isBuiltIn);
+        return new VarSym(varName, typeSym, null, location, context, isConst, isFinal, isBuiltIn, isGlobal);
     }
 
     public TypeSym toTypeSym(ast.Type astType, ScopeContext defContext) {
@@ -165,11 +169,11 @@ public class NTCEnv {
         return getContract(iptContract) != null;
     }
 
-    public Sym newExceptionType(String exceptionName, Arguments arguments, ScopeContext parent) {
+    public ExceptionTypeSym newExceptionType(String exceptionName, Arguments arguments, ScopeContext parent) {
         Sym sym = curSymTab.lookup(exceptionName);
         if (sym != null) {
-            if (sym instanceof TypeSym) {
-                return (TypeSym) sym;
+            if (sym instanceof ExceptionTypeSym) {
+                return (ExceptionTypeSym) sym;
             } else {
                 return null;
             }
@@ -244,5 +248,9 @@ public class NTCEnv {
         assert sym != null : "not containing imported contract/interface: " + iptContract;
         System.err.println("importing contract/interface " + sym.getName());
         addSym(sym.getName(), sym);
+    }
+
+    public java.util.Map<String, ExceptionTypeSym> getExceptionTypeSymMap() {
+        return curSymTab.getExceptionMap();
     }
 }

@@ -1,6 +1,9 @@
-contract ERC20 {
+import "./IERC20.scif";
+
+contract ERC20 implements IERC20 {
     map(address, uint) balances;
     map(address owner, map(address, uint{owner}){owner}) allowances;
+    // TODO: generate constraints
 
     @public
     bool approve{sender}(final address allowed, uint amount) {
@@ -10,31 +13,24 @@ contract ERC20 {
     //
     //  dynamically check that (msg.sender join l_deputy) => from
     @public
-    bool transfer{from -> this; any}(final address{this} from, address to, uint amount) {
+    bool transfer{from -> this}(final address from, address to, uint amount) {
     // bool transfer{from -> this; 1}(final address from, address to, uint amount) {
-        //TODO: change to ([], a->b)
-        // endorseIf
-        endorse(from, to, amount, from -> this)
+        endorse([from, to, amount], from -> this)
         if (balances[from] >= amount) {
-            balances[from] = balances[from] - amount;
-            balances[to] = balances[to] + amount;
-            // to.alert(amount);
-
-            // balances[from] -= amount;
-            // balances[to] += amount;
+            balances[from] -= amount;
+            balances[to] += amount;
             return true;
         } else {
             return false;
         }
     }
 
-    // {BOT -> from}
     @public
-    bool{from} transferAllowed{sender -> from; this}(final address from, address to, uint amount) {
-        endorse(from, to, amount, sender -> from) if (allowances[from][sender] >= amount) {
+    bool{from} transferAllowed{sender -> from; any}(final address from, address to, uint amount) {
+        endorse([from, to, amount], sender -> from)
+        if (allowances[from][sender] >= amount) {
             if (transfer(from, to, amount)) {
-                allowances[from][sender] = allowances[from][sender] - amount;
-                //allowances[from][msg.sender] -= amount;
+                allowances[from][sender] -= amount;
                 return true;
             }
         }

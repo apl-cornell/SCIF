@@ -4,7 +4,7 @@ interface IERC20 {
     @public
     bool approve{sender}(final address allowed, uint amount);
     @public
-    bool transfer{from -> this}(final address from, address to, uint amount);
+    bool transfer{from -> this; any}(final address from, address to, uint amount);
     @public
-    bool{from} transferAllowed{sender -> from}(final address from, address to, uint amount);
+    bool{from} transferAllowed{sender -> from; any}(final address from, address to, uint amount);
 }

@@ -53,8 +53,6 @@ import java.util.HashMap;
         keywords.put("is",      Integer.valueOf(sym.IS));
         keywords.put("not",     Integer.valueOf(sym.NOT));
         keywords.put("or",      Integer.valueOf(sym.OR));
-        keywords.put("pass",    Integer.valueOf(sym.PASS));
-        keywords.put("raise",   Integer.valueOf(sym.RAISE));
         keywords.put("return",  Integer.valueOf(sym.RETURN));
         keywords.put("try",     Integer.valueOf(sym.TRY));
         keywords.put("atomic",     Integer.valueOf(sym.ATOMIC));
@@ -184,7 +182,9 @@ LineTerminator = \r|\n|\r\n
     "*"     { return op(sym.STAR); }
     "/"     { return op(sym.SLASH); }
     "|"     { return op(sym.VBAR); }
+    "||"     { return op(sym.OR); }
     "&"     { return op(sym.AMPER); }
+    "&&"     { return op(sym.AND); }
     "<"     { return op(sym.LESS); }
     ">"     { return op(sym.GREATER); }
     "="     { return op(sym.EQUAL); }

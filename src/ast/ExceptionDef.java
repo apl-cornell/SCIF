@@ -1,6 +1,12 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.CompileEnv.ScopeType;
+import compile.ast.PrimitiveType;
+import compile.ast.SolNode;
+import compile.ast.StructDef;
+import compile.ast.VarDec;
+import java.util.stream.Collectors;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -47,12 +53,16 @@ public class ExceptionDef extends TopLayerNode {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        return null;
+        ScopeContext now = new ScopeContext(this, parent);
+
+        // ExceptionTypeSym expSym = env.newExceptionType(exceptionName, arguments, parent);
+        // env.addSym(exceptionName, expSym);
+        return now;
     }
 
-    @Override
-    public void solidityCodeGen(SolCode code) {
-
+    public StructDef solidityCodeGen(CompileEnv code) {
+        return new StructDef(exceptionName, arguments.solidityCodeGen(code).stream().map(arg -> new VarDec(
+                (PrimitiveType) arg.type(), arg.name())).collect(Collectors.toList()));
     }
 
     @Override

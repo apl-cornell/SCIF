@@ -2,6 +2,7 @@ package ast;
 
 import static typecheck.Utils.BUILTIN_FILES;
 
+import compile.CompileEnv;
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -154,4 +155,6 @@ public abstract class SourceFile extends Node {
     public Set<String> importPaths() {
         return Collections.unmodifiableSet(iptContracts);
     }
+
+    public abstract compile.ast.SourceFile solidityCodeGen(CompileEnv code);
 }

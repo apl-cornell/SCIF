@@ -1,11 +1,21 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.Utils;
+import compile.ast.Assign;
+import compile.ast.Expression;
+import compile.ast.IfStatement;
+import compile.ast.PrimitiveType;
+import compile.ast.SingleVar;
+import compile.ast.VarDec;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import typecheck.*;
 
-public class ExceptHandler extends Statement {
+public class ExceptHandler extends Node {
 
     private LabeledType labeledType;
     private String name;
@@ -21,7 +31,6 @@ public class ExceptHandler extends Statement {
 
     /**
      * Create a handler that accept all other types of exceptions(try/catch) or failures(atomic/rescue)
-     * @param body
      */
     public ExceptHandler(List<Statement> body) {
         this.body = body;
@@ -53,9 +62,47 @@ public class ExceptHandler extends Statement {
         return now;
     }
 
-    @Override
-    public void solidityCodeGen(SolCode code) {
+    public IfStatement solidityCodeGen(CompileEnv code, Map<String, compile.ast.Type> writeMap, SingleVar dataVar) {
+        List<compile.ast.Statement> solBody = new ArrayList<>();
+        if (acceptall) {
+            for (Statement s: body) {
+                solBody.addAll(s.solidityCodeGen(code));
+            }
+            return code.testNonNormalPath(solBody);
+        }
 
+        // convert the expected exception type to id
+        // assign related exception data to the local variable
+        // create a local variable and assign data to it
+        ExceptionTypeSym exceptionTypeSym = code.findExceptionTypeSym(labeledType.type().name());
+
+        // remove pending exception state
+        List<Expression> targets = writeMap.entrySet().stream().map(entry -> new SingleVar(entry.getKey())).collect(
+                Collectors.toList());
+        if (exceptionTypeSym.parameters().size() > 0) {
+            // create local variable for exception info
+            // we have a local name: this.name for the variable
+            // define struct for all exceptions at the beginning
+            PrimitiveType varType = new PrimitiveType(labeledType.type().name());
+            String varName = name;
+            solBody.add(new VarDec(varType, name));
+            targets.add(new SingleVar(name));
+            code.addLocalVar(varName, varType);
+        }
+        if (targets.size() > 0) {
+            solBody.add(
+                    new Assign(
+                            targets,
+                            code.decodeVarsAndException(exceptionTypeSym, writeMap, dataVar)));
+        }
+
+
+        for (Statement s: body) {
+            solBody.addAll(s.solidityCodeGen(code));
+        }
+
+        IfStatement testException = code.testException(exceptionTypeSym, solBody);
+        return testException;
     }
 
     @Override
@@ -74,9 +121,23 @@ public class ExceptHandler extends Statement {
         return scopeContext.getSHErrLocName() + "." + "handlerLockLabelName" + location.toString();
     }
 
-    @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        return null;
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
+        int index = 0;
+        PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
+        for (Statement stmt : body) {
+            ++index;
+            so = stmt.genConsVisit(env, index == body.size() && tail_position);
+            PsiUnit normalUnit = so.getNormalPath();
+            if (normalUnit == null) {
+                break;
+            }
+            env.inContext = so.getNormalPath().c;
+            // env.prevContext.lambda = rightContext.lambda;
+        }
+        return so;
     }
 
     public Type type() {
@@ -87,5 +148,19 @@ public class ExceptHandler extends Statement {
         return name;
     }
 
+    protected Map<String,? extends compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, compile.ast.Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.readMap(code));
+        }
+        return result;
+    }
 
+    protected Map<String,? extends compile.ast.Type> writeMap(CompileEnv code) {
+        Map<String, compile.ast.Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.writeMap(code));
+        }
+        return result;
+    }
 }

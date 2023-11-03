@@ -6,6 +6,7 @@ import ast.Interface;
 import ast.PrimitiveIfLabel;
 import ast.SourceFile;
 import java.util.Collections;
+import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 
@@ -32,8 +33,8 @@ public class VisitEnv {
     private FuncSym curFuncSym;
     // public HashMap<String, ContractInfo> contractMap;
     //public HashMap<String, SigCons> sigConsMap;
-    public HashMap<String, String> sigReq = new HashMap<>();
-    public HashMap<String, SourceFile> programMap;
+    public Map<String, String> sigReq = new HashMap<>();
+    public Map<String, SourceFile> programMap;
     //public HashMap<ExceptionTypeSym, PsiUnit> psi;
 
 

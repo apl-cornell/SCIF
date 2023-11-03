@@ -12,6 +12,7 @@ public class TestParsing {
     @ParameterizedTest
     @ValueSource(strings = {
             "basic/EmptyContract",
+            "basic/EmptyContract2",
             "basic/DependentMap",
             "basic/StateVarDeclaration",
             "basic/ExceptionDefinition",
@@ -26,11 +27,20 @@ public class TestParsing {
             "regularTypechecking/FinalVarNotInitialized_W02",
             "ifcTypechecking/LocalTrust",
             "ifcTypechecking/Wallet_lock_exception",
-            "builtin_files/BaseContract",
-            "builtin_files/IBaseRuntime",
-            "builtin_files/ILockManager",
-            "builtin_files/ITrustManager",
+            "builtin_files/Contract",
+            "builtin_files/ContractImp",
+            "builtin_files/ManagedContract",
+            "builtin_files/ManagedContractImp",
+            "builtin_files/ExternallyManagedContract",
+            "builtin_files/ExternallyManagedContractImp",
+            "builtin_files/LockManager",
+            "builtin_files/TrustManager",
             "examples/ERC20",
+            "examples/IERC20",
+            "examples/IExchange",
+            "examples/Dexible",
+            "examples/Uniswap_W0",
+            "examples/KoET",
     })
     void testPositive(String contractName) {
         //if (!contractName.equals("basic/DependentMap")) return;

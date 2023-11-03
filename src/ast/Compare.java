@@ -1,7 +1,12 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
 import compile.Utils;
+import compile.ast.BinaryExpression;
+import compile.ast.Statement;
+import compile.ast.Type;
+import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -78,10 +83,15 @@ public class Compare extends Expression {
         return new ExpOutcome(ifNameRtn, ro.psi);
     }
 
-    public String toSolCode() {
-        return SolCode.toCompareOp(left.toSolCode(), Utils.toCompareOp(op), right.toSolCode());
-
+    @Override
+    public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        return new BinaryExpression(Utils.toCompareOp(op), left.solidityCodeGen(result, code), right.solidityCodeGen(result, code));
     }
+//
+//    public String toSolCode() {
+//        return CompileEnv.toCompareOp(left.toSolCode(), Utils.toCompareOp(op), right.toSolCode());
+//
+//    }
 
     @Override
     public boolean typeMatch(Expression expression) {
@@ -97,5 +107,11 @@ public class Compare extends Expression {
         rtn.add(left);
         rtn.add(right);
         return rtn;
+    }
+    @Override
+    public java.util.Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, Type> result = left.readMap(code);
+        result.putAll(right.readMap(code));
+        return result;
     }
 }

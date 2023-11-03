@@ -1,0 +1,18 @@
+import "./IERC20.scif";
+
+contract Uniswap {
+    IERC20 tX;
+    IERC20 tY;
+
+    @public
+    uint exchangeXForY(final address buyer, uint xSold) {
+        uint prod = tX.getBal(this) * tY.getBal(this);
+        uint yKept = prod / (tX.getBal(this) + endorse(xSold, sender -> this));
+        uint yBought = tY.getBal(this) - yKept;
+
+        assert tY.transfer(this, buyer, yBought);
+        assert tX.transferAllowed(buyer, this, xSold);
+        return yBought;
+    }
+}
+

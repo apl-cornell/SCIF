@@ -1,5 +1,11 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.ast.Statement;
+import compile.ast.Type;
+import compile.ast.UnaryOperation;
+import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -35,9 +41,8 @@ public class UnaryOp extends Expression {
     }
 
     @Override
-    public String toSolCode() {
-        String v = operand.toSolCode();
-        return compile.Utils.toUnaryOp(op) + v;
+    public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        return new UnaryOperation(compile.Utils.toUnaryOp(op), operand.solidityCodeGen(result, code));
     }
 
     @Override
@@ -52,5 +57,9 @@ public class UnaryOp extends Expression {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(operand);
         return rtn;
+    }
+    @Override
+    public java.util.Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        return operand.readMap(code);
     }
 }

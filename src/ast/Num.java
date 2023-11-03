@@ -1,5 +1,7 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.ast.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,9 +11,14 @@ public class Num<T extends Number> extends Literal {
         value = x;
     }
 
+//    @Override
+//    public String toSolCode() {
+//        return value.toString();
+//    }
+
     @Override
-    public String toSolCode() {
-        return value.toString();
+    public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        return new compile.ast.Literal(value.toString());
     }
 
     @Override

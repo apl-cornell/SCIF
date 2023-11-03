@@ -1,22 +1,16 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Literal;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.Context;
-import typecheck.ContractSym;
-import typecheck.ExceptionTypeSym;
-import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.PsiUnit;
 import typecheck.ScopeContext;
-import typecheck.Sym;
-import typecheck.TypeSym;
 import typecheck.Utils;
 import typecheck.VisitEnv;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Relation;
 
 public class Revert extends Statement {
 
@@ -35,8 +29,8 @@ public class Revert extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        return List.of(new compile.ast.Revert(new Literal(message)));
     }
 
     @Override

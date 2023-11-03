@@ -1,6 +1,13 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.CompileEnv.ScopeType;
+import compile.ast.Argument;
+import compile.ast.Constructor;
+import compile.ast.Function;
+import compile.ast.SingleVar;
+import compile.ast.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import typecheck.sherrlocUtils.Constraint;
@@ -63,13 +70,13 @@ public class FunctionDef extends FunctionSig {
                     "Label of this method's return value"));
         }
 
-        if (!isBuiltIn()) {
+        //if (!isBuiltIn()) {
             // TODO: add support for signatures
             for (Statement stmt : body) {
                 // logger.debug("stmt: " + stmt);
                 stmt.ntcGenCons(env, now);
             }
-        }
+        //}
         //env.setCurSymTab(env.curSymTab().getParent());
         env.exitNewScope();
         return now;
@@ -79,6 +86,7 @@ public class FunctionDef extends FunctionSig {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         if (isBuiltIn()) return null;
+        if (isNative) return null;
         env.incScopeLayer();
         addBuiltInVars(env.curSymTab, scopeContext);
 
@@ -179,7 +187,10 @@ public class FunctionDef extends FunctionSig {
     }*/
 
     @Override
-    public void solidityCodeGen(SolCode code) {
+    public Function solidityCodeGen(CompileEnv code) {
+        code.setCurrentMethod(this);
+        code.enterNewVarScope();
+        code.pushScope(ScopeType.METHOD);
         boolean pub = false;
         boolean payable = false;
         if (decoratorList != null) {
@@ -190,36 +201,58 @@ public class FunctionDef extends FunctionSig {
                 payable = true;
             }
         }
-        String rtnTypeCode = "";
-        if (rtn != null && !this.rtn.type().isVoid()) {
-            rtnTypeCode = SolCode.genInterfaceType(rtn.type());
-        }
 
         if (isConstructor) {
-            code.enterConstructorDef(args.toSolCode(), body);
-        } else {
-            code.enterFunctionDef(name, args.toSolCode(), rtnTypeCode, pub, payable);
-        }
-
-        /*
-            f{pc}(x_i{l_i}) from sender
-            assert sender => pc, l_i
-         */
-        if (!isConstructor) {
-            code.enterFuncCheck(funcLabels, args);
-        }
-        for (Statement stmt : body) {
-            if (stmt instanceof DynamicStatement) {
-                continue;
+            List<Argument> arguments = args.solidityCodeGen(code);
+            List<compile.ast.Statement> statements = new ArrayList<>();
+            for (Statement s: body) {
+                statements.addAll(s.solidityCodeGen(code));
             }
-            /*if (stmt instanceof Expression) {
-                ((Expression) stmt).SolCodeGenStmt(code);
-            }*/
+            code.exitVarScope();
+            code.popScope();
+            return new Constructor(arguments, statements);
+        } else {
+            String methodName = isPublic ? Utils.methodNameHash(this) : name;
+            List<compile.ast.Statement> statements = new ArrayList<>();
+            compile.Utils.addBuiltInVars(isPublic, statements, code);
+            List<Argument> arguments = args.solidityCodeGen(code);
+            Type returnType, originalReturnType = rtn.type().solidityCodeGen(code);
+            if (exceptionFree()) {
+                returnType = originalReturnType;
+            } else {
+                returnType = compile.Utils.UNIVERSAL_RETURN_TYPE;
+                for (LabeledType iftype: exceptionList) {
+                    code.getExceptionId(code.findExceptionTypeSym(iftype.type().name));
+                }
+            }
+                    // = Function.builtInVarDefs(exceptionHandlingFree(), originalReturnType);
+            /*
+                f{pc}(x_i{l_i}) from sender
+                assert sender => pc, l_i
+             */
+            if (pub && !isNative) {
+                statements.addAll(code.enterFuncCheck(funcLabels, args));
+            }
+            for (Statement s: body) {
+                statements.addAll(s.solidityCodeGen(code));
+            }
 
-            stmt.solidityCodeGen(code);
+            if (!exceptionFree()) {
+                statements.addAll(code.compileReturn(rtn.type().isVoid() ? null : new SingleVar(
+                        compile.Utils.RESULT_VAR_NAME)));
+            }
+            code.exitVarScope();
+            code.popScope();
+            return new Function(methodName, arguments, returnType, pub, payable, statements);
         }
+    }
 
-        code.leaveFunctionDef();
+    private boolean exceptionHandlingFree() {
+        if (!exceptionFree()) return false;
+        for (Statement s: body) {
+            if (!s.exceptionHandlingFree()) return false;
+        }
+        return true;
     }
 
     @Override

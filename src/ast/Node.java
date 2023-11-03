@@ -2,13 +2,12 @@ package ast;
 
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.SolNode;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import typecheck.*;
-
-import java.util.ArrayList;
 
 /**
  * An AST node
@@ -45,8 +44,6 @@ public abstract class Node {
      * take each statement as an expression, return the type (context) as result.
      */
     public abstract ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent);
-
-    public abstract void solidityCodeGen(SolCode code);
 
     /**
      * Return a list of AST nodes that are the current node's kids

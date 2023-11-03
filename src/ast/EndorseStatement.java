@@ -1,17 +1,19 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.Utils;
+import compile.ast.IfStatement;
+import compile.ast.Literal;
+import compile.ast.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import typecheck.Context;
-import typecheck.ExpOutcome;
+import java.util.Map;
+import javax.swing.plaf.nimbus.State;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.ScopeContext;
-import typecheck.Utils;
 import typecheck.VisitEnv;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 
 public class EndorseStatement extends Statement {
 
@@ -33,8 +35,12 @@ public class EndorseStatement extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        List<compile.ast.Statement> result = new ArrayList<>();
+        for (Statement s: body) {
+            result.addAll(s.solidityCodeGen(code));
+        }
+        return List.of(new IfStatement(new Literal(Utils.SOL_TRUE), result));
     }
 
     @Override
@@ -53,4 +59,30 @@ public class EndorseStatement extends Statement {
         return rtn;
     }
 
+    @Override
+    public boolean exceptionHandlingFree() {
+        for (Statement s: body) {
+            if (!s.exceptionHandlingFree()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    protected java.util.Map<String,? extends compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.readMap(code));
+        }
+        return result;
+    }
+
+    protected Map<String,? extends Type> writeMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.writeMap(code));
+        }
+        return result;
+    }
 }

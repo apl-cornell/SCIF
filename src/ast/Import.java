@@ -1,6 +1,7 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.SolNode;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.InterfaceSym;
@@ -29,10 +30,7 @@ public class Import extends TopLayerNode {
         return null;
     }
 
-    @Override
-    public void solidityCodeGen(SolCode code) {
 
-    }
     @Override
     public List<Node> children() {
         List<Node> rtn = new ArrayList<>();

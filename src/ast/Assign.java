@@ -1,7 +1,10 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -90,14 +93,18 @@ public class Assign extends Statement {
         return vo.psi;
     }
 
-    public void solidityCodeGen(SolCode code) {
-        code.addAssign(target.toSolCode(), value.toSolCode());
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        List<compile.ast.Statement> result = new ArrayList<>();
+        compile.ast.Expression targetExp = target.solidityCodeGen(result, code);
+        compile.ast.Expression valueExp = value.solidityCodeGen(result, code);
+        result.add(new compile.ast.Assign(targetExp, valueExp));
+        return result;
     }
 
-    @Override
-    public String toSolCode() {
-        return SolCode.genAssign(target.toSolCode(), value.toSolCode());
-    }
+//    @Override
+//    public String toSolCode() {
+//        return CompileEnv.genAssign(target.toSolCode(), value.toSolCode());
+//    }
 
     @Override
     public List<Node> children() {
@@ -105,5 +112,17 @@ public class Assign extends Statement {
         rtn.add(target);
         rtn.add(value);
         return rtn;
+    }
+
+    @Override
+    protected java.util.Map<String,? extends compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, Type> result = target.readMap(code);
+        result.putAll(value.readMap(code));
+        return result;
+    }
+
+    @Override
+    protected Map<String,? extends Type> writeMap(CompileEnv code) {
+        return target.writeMap(code);
     }
 }

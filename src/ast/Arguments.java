@@ -1,7 +1,10 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Argument;
+import compile.ast.SolNode;
 import java.util.List;
+import java.util.stream.Collectors;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -78,9 +81,8 @@ public class Arguments extends Node {
         return null;
     }
 
-    @Override
-    public void solidityCodeGen(SolCode code) {
-
+    public List<Argument> solidityCodeGen(CompileEnv code) {
+        return args.stream().map(arg -> arg.solidityCodeGen(code)).collect(Collectors.toList());
     }
 
     @Override
@@ -112,5 +114,9 @@ public class Arguments extends Node {
 
     public Iterable<Arg> args() {
         return args;
+    }
+
+    public boolean empty() {
+        return args.size() == 0;
     }
 }

@@ -1,6 +1,6 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
 import java.util.List;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
@@ -15,8 +15,8 @@ public class ErrorStmt extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        return null;
     }
 
     @Override

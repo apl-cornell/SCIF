@@ -1,0 +1,43 @@
+import "./Contract.scif";
+
+contract ContractImp implements Contract {
+    bool m_lock;
+
+    @public
+    @native
+    bool trusts(address a, address b) {
+        return a == b || b == address(this);
+    }
+
+    @private
+    @native
+    bool bypassLocks(address from) {
+        if (m_lock) {
+            return trusts(address(this), from);
+        } else {
+            return true;
+        }
+    }
+
+    @private
+    @native
+    bool acquireLock(address l) {
+        if (l == address(this)) {
+            m_lock = true;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @private
+    @native
+    bool releaseLock(address l) {
+        if (l == address(this)) {
+            m_lock = false;
+            return true;
+        } else {
+            return false;
+        }
+    }
+}

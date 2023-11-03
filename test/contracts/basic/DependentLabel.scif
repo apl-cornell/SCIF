@@ -3,7 +3,7 @@
     Describe a SCIF contract in which only {@code owner} is able to
     manipulate data within, e.g., Parity wallet.
 */
-contract DependantLabel {
+contract DependentLabel {
     final address owner;
     //address{this} owner;
     uint{owner} v1; // maintain owner's value

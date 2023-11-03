@@ -1,5 +1,8 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.ast.MapType;
+import compile.ast.PrimitiveType;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.MapTypeSym;
@@ -34,7 +37,7 @@ public class Map extends Type {
     }
 
     @Override
-    public boolean typeMatch(Expression annotation) {
+    public boolean typeMatch(Type annotation) {
         return annotation instanceof Map &&
                 super.typeMatch(annotation) &&
                 keyType.typeMatch(((Map) annotation).keyType) &&
@@ -60,5 +63,10 @@ public class Map extends Type {
     @Override
     public void setToDefault(IfLabel ifl) {
         valueType.setToDefault(ifl);
+    }
+
+    @Override
+    public compile.ast.Type solidityCodeGen(CompileEnv code) {
+        return new MapType(keyType.solidityCodeGen(code), valueType.solidityCodeGen(code));
     }
 }

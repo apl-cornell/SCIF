@@ -1,5 +1,11 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.ast.Statement;
+import compile.ast.Type;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
@@ -55,16 +61,16 @@ public class Endorse extends Expression {
         return new ExpOutcome(ifNameRtn, vo.psi);
     }
 
+    @Override
+    public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        return value.solidityCodeGen(result, code);
+    }
+
     private String fromNameSLC() {
         return scopeContext + ".endorse" + "." + "from" + from.location;
     }
     private String toNameSLC() {
         return scopeContext + ".endorse" + "." + "to" + from.location;
-    }
-
-    @Override
-    public String toSolCode() {
-        return value.toSolCode();
     }
 
     @Override
@@ -84,4 +90,8 @@ public class Endorse extends Expression {
         return rtn;
     }
 
+    @Override
+    public java.util.Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        return value.readMap(code);
+    }
 }

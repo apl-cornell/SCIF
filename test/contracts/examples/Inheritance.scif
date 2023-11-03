@@ -1,0 +1,24 @@
+contract A extends B@addrB { // would it be safe when addrB is a subtype of B
+    addrB => this; // should not make? user study
+}
+
+contract B {
+    principal trusted;
+    final address addrC = 0x...;
+    assume {
+        trusted => this;
+        trusted => addrC;
+    }
+
+    void steal{1 -> this}() {
+        send(sender, balance(this));
+    }
+
+    void withdraw{this}() {
+        send(sender, balance(this));
+    }
+
+    void withdraw2{trusted}() {
+        send(sender, balance(this));
+    }
+}

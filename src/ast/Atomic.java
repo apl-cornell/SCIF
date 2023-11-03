@@ -1,8 +1,22 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.CompileEnv.ScopeType;
+import compile.ast.Assign;
+import compile.ast.BinaryExpression;
+import compile.ast.Call;
+import compile.ast.Function;
+import compile.ast.IfStatement;
+import compile.ast.Literal;
+import compile.ast.LowLevelCall;
+import compile.ast.SingleVar;
+import compile.ast.Type;
+import compile.ast.VarDec;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import typecheck.Context;
 import typecheck.ExceptionTypeSym;
 import typecheck.NTCEnv;
@@ -40,12 +54,11 @@ public class Atomic extends Statement {
         // ScopeContext tryclause = new ScopeContext(this, now);
         ScopeContext tmp;
 
-        //TODO: inc scope layer
-        for (ExceptHandler h : handlers) {
-            ExceptionTypeSym t = env.getExceptionTypeSym(h.type());
-            assert t != null;
-            now.addException(t, false);
-        }
+//        for (ExceptHandler h : handlers) {
+//            ExceptionTypeSym t = env.getExceptionTypeSym(h.type());
+//            assert t != null: "exception type not found: " + h.type().name;
+//            now.addException(t, false);
+//        }
 
         for (Statement s : body) {
             assert !now.getSHErrLocName().startsWith("null");
@@ -60,8 +73,87 @@ public class Atomic extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        assert false;
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        // convert the internal code into a "public" (potentially "external" for optimization purpose) method
+        // unless the clause only contains one external call
+        // all modified local variables need to be returned and assigned to the corresponding variables if terminated normally
+
+
+
+        List<compile.ast.Statement> solBody = new ArrayList<>();
+
+        Map<String, Type> readMap, writeMap;
+        readMap = new HashMap<>();
+        writeMap = new HashMap<>();
+
+        // find out read and written local variables
+        for (Statement s : body) {
+            readMap.putAll(s.readMap(code));
+            writeMap.putAll(s.writeMap(code));
+            // solBody.addAll(s.solidityCodeGen(code));
+        }
+        readMap.putAll(writeMap);
+        code.enterNewVarScope();
+        Function newTempFunction = code.makeMethod(body, readMap, writeMap, ScopeType.ATOMIC);
+        code.exitVarScope();
+        code.addTemporaryFunction(newTempFunction);
+
+        // generate an internal call: stat, data = newTempFunction(...);
+        // UINT: stat
+        // BYTES: data
+        SingleVar succVar = new SingleVar(code.newTempVarName());
+        SingleVar dataVar = new SingleVar(code.newTempVarName());
+        SingleVar statVar = new SingleVar(code.newTempVarName());
+        solBody.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_BOOL, succVar.name()));
+        solBody.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_UINT, statVar.name()));
+        solBody.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_BYTES, dataVar.name()));
+        solBody.add(new Assign(
+                List.of(succVar, dataVar),
+                new LowLevelCall(newTempFunction, compile.Utils.THIS_ADDRESS,
+                        newTempFunction.funcName(), newTempFunction.argNames().stream().map(name -> new SingleVar(name)).collect(
+                        Collectors.toList()))
+        ));
+
+        List<compile.ast.Statement> ifNotRevertedBody = code.splitStatAndData(dataVar, statVar);
+        // if should return method arguments
+        IfStatement ifShouldReturn = new IfStatement(
+                new BinaryExpression(compile.Utils.SOL_BOOL_EQUAL, statVar, new Literal(compile.Utils.RETURNCODE_RETURN)),
+                code.genMethodReturn(dataVar)
+        );
+
+        IfStatement ifNormalEnd = new IfStatement(
+                new BinaryExpression(compile.Utils.SOL_BOOL_EQUAL, statVar, new Literal(compile.Utils.RETURNCODE_NORMAL)),
+                writeMap.isEmpty() ? new ArrayList<>() : List.of(new Assign(
+                        writeMap.entrySet().stream().map(entry -> new SingleVar(entry.getKey())).collect(
+                                Collectors.toList()),
+                        code.decodeVars(writeMap, dataVar)
+                )),
+                List.of(ifShouldReturn)
+        );
+        ifNotRevertedBody.add(ifNormalEnd);
+        IfStatement ifNotReverted = new IfStatement(
+                succVar,
+                ifNotRevertedBody,
+                List.of(new Assign(statVar, new Literal(compile.Utils.RETURNCODE_FAILURE)))
+        );
+        // solBody.add(ifNotReverted);
+        solBody.add(ifNotReverted);
+
+        IfStatement handlingBranches;
+        handlingBranches = null;
+
+        code.setCurrentStatVar(statVar);
+        // test if there are any matching exceptions
+        code.enterNewVarScope();
+        for (ExceptHandler handler : handlers) {
+            handlingBranches = handlingBranches == null ?
+                    handler.solidityCodeGen(code, writeMap, dataVar) :
+                    new IfStatement(handlingBranches, List.of(handler.solidityCodeGen(code, writeMap, dataVar)));
+        }
+        code.exitVarScope();
+
+        solBody.add(handlingBranches);
+        return solBody;
     }
 
     @Override
@@ -153,10 +245,39 @@ public class Atomic extends Statement {
     }
 
     @Override
-    public ArrayList<Node> children() {
-        ArrayList<Node> rtn = new ArrayList<>();
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
         rtn.addAll(body);
         rtn.addAll(handlers);
         return rtn;
+    }
+
+    @Override
+    public boolean exceptionHandlingFree() {
+        return false;
+    }
+
+    @Override
+    protected Map<String,? extends Type> readMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.readMap(code));
+        }
+        for (ExceptHandler s: handlers) {
+            result.putAll(s.readMap(code));
+        }
+        return result;
+    }
+
+    @Override
+    protected Map<String,? extends Type> writeMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Statement s: body) {
+            result.putAll(s.writeMap(code));
+        }
+        for (ExceptHandler s: handlers) {
+            result.putAll(s.writeMap(code));
+        }
+        return result;
     }
 }

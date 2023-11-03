@@ -1,4 +1,5 @@
 import "./IERC20.scif";
+import "./ITokenHolder.scif"
 
 contract ERC20 implements IERC20 {
     map(address, uint) balances;
@@ -13,20 +14,57 @@ contract ERC20 implements IERC20 {
     //
     //  dynamically check that (msg.sender join l_deputy) => from
     @public
-    bool transfer{from -> this}(final address from, address to, uint amount) {
+    bool transfer{from -> this; any}(final ITokenHolder from, final ITokenHolder to, uint amount) {
     // bool transfer{from -> this; 1}(final address from, address to, uint amount) {
+        result = false;
         endorse([from, to, amount], from -> this)
         if (balances[from] >= amount) {
             balances[from] -= amount;
             balances[to] += amount;
-            return true;
-        } else {
-            return false;
+            result = true;
+
+            assert from.confirmSent(to, amount); // {any}?
+            assert to.confirmReceived(from, amount);
         }
     }
 
+    //
+    //  dynamically check that (msg.sender join l_deputy) => from
     @public
-    bool{from} transferAllowed{sender -> from}(final address from, address to, uint amount) {
+    bool transfer{from -> this; any}(final ITokenHolder from, final ITokenHolder to, uint amount) {
+    // bool transfer{from -> this; 1}(final address from, address to, uint amount) {
+        result = false;
+        endorse([from, to, amount], from -> this)
+        if (balances[from] >= amount) {
+            balances[from] -= amount;
+            balances[to] += amount;
+            result = true;
+
+            // this => from => to
+            assert this => from && from => to;
+            assert from.confirmSent(to, amount); // {;this}
+            // pc: from
+            assert to.confirmReceived(from, amount); // {sender}:x {this}:v   any this sender
+        }
+            // return balances[from];
+//        } else {
+//            return false;
+//        }
+    }
+
+    @public
+    bool{from} transferAllowed{any -> from; any}(final ITokenHolder from, ITokenHolder to, uint amount) {
+        endorse([from, to, amount], any -> from)
+        if (allowances[from][sender] >= amount) {
+            if (transfer(from, to, amount)) {
+                allowances[from][sender] -= amount;
+                return true;
+            }
+        }
+        return false;
+    }
+    @public
+    bool{from} transferAllowed{sender -> from; any}(final ITokenHolder from, ITokenHolder to, uint amount) {
         endorse([from, to, amount], sender -> from)
         if (allowances[from][sender] >= amount) {
             if (transfer(from, to, amount)) {

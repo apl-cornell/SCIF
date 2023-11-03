@@ -3,6 +3,7 @@ package typecheck;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 
+import compile.ast.FunctionSig;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,8 +21,13 @@ public class FuncSym extends Sym {
 
     public Map<ExceptionTypeSym, String> exceptions;
     public CodeLocation location;
+    private boolean isPublic, isBuiltIn;
+    private String plainSignature;
 
     public FuncSym(String funcName,
+                   boolean isPublic,
+                   boolean isBuiltIn,
+                   String plainSignature,
                    Label external_pc,
                    Label internal_pc,
                    Label gamma,
@@ -34,6 +40,9 @@ public class FuncSym extends Sym {
         super(funcName, defContext);
         this.funcName = funcName;
         this.sender = sender;
+        this.isPublic = isPublic;
+        this.isBuiltIn = isBuiltIn;
+        this.plainSignature = plainSignature;
         // this.funcLabels = funcLabels;
         assert external_pc != null: funcName;
         this.external_pc = external_pc;
@@ -48,6 +57,9 @@ public class FuncSym extends Sym {
         this.location = location;
     }
     public FuncSym(String funcName,
+                boolean isPublic,
+                boolean isBuiltIn,
+                String plainSignature,
                 Label external_pc,
                 Label internal_pc,
                 Label gamma,
@@ -59,6 +71,9 @@ public class FuncSym extends Sym {
         super(funcName, defContext);
         // this.typeName = funcName;
         this.funcName = funcName;
+        this.isPublic = isPublic;
+        this.isBuiltIn = isBuiltIn;
+        this.plainSignature = plainSignature;
         this.sender = sender;
         // this.name = funcName;
         assert external_pc != null;
@@ -189,6 +204,18 @@ public class FuncSym extends Sym {
 
     public Label endPc() {
         return rtn;
+    }
+
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public String plainSignature() {
+        return plainSignature;
+    }
+
+    public boolean isBuiltIn() {
+        return isBuiltIn;
     }
 //    public String getLabelNameCallGamma(String namespace) {
 //        if (!Objects.equals(namespace, ""))

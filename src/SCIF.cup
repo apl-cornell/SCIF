@@ -71,7 +71,7 @@ terminal BREAK, CONTINUE;
 terminal ELSE;//, FROM;
 terminal JOIN, MEET;
 terminal IF, IMPORT, IN, IS, NOT;
-terminal OR, PASS, RAISE, RETURN;
+terminal OR, RETURN;
 terminal LPAR, RPAR, LSQB, RSQB, COLON, COMMA, SEMI;
 terminal PLUS, MINUS, STAR, SLASH, VBAR, AMPER;
 terminal LESS, GREATER, EQUAL, DOT, PERCENT, LBRACE, RBRACE;
@@ -115,7 +115,7 @@ nonterminal List<Statement> stmts;
 nonterminal Statement stmt;
 nonterminal Statement assign_stmt, augassign_stmt;
 nonterminal AnnAssign varDec, annassign;
-nonterminal Statement del_stmt, pass_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, raise_stmt, excborder_stmt;
+nonterminal Statement del_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, excborder_stmt;
 nonterminal String ipt_stmt;
 nonterminal String ipt_name;
 nonterminal String ipt_as_names;
@@ -773,8 +773,7 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     | augassign_stmt:a {: RESULT = a; :}
     | varDec:a {: RESULT = a; :}
     | del_stmt:a {: RESULT = a; :}
-    | pass_stmt:a {: RESULT = a; :}  
-    | flow_stmt:a {: RESULT = a; :}  
+    | flow_stmt:a {: RESULT = a; :}
     //| ipt_stmt:a {: RESULT = a; :}
     | assert_stmt:a {: RESULT = a; :}
     | guard_block:a {: RESULT = a; :}
@@ -903,7 +902,7 @@ exceptall_clause ::=
         RESULT.setLoc(new CodeLocation(pleft, pright, filename));
     :}
     |
-    RESCUE:p LPAR STAR RPAR suite:s {:
+    RESCUE:p STAR suite:s {:
         RESULT = new ExceptHandler(s);
         RESULT.setLoc(new CodeLocation(pleft, pright, filename));
     :};
@@ -994,29 +993,13 @@ annassign ::=
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 
-//# For normal and annotated assignments, additional restrictions enforced by the interpreter
-// del_stmt: 'del' exprlist
-// pass_stmt: 'pass'
-// flow_stmt: break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt
-// break_stmt: 'break'
-// continue_stmt: 'continue'
-// return_stmt: 'return' [testlist]
-// yield_stmt: yield_expr
-// raise_stmt: 'raise' [test ['from' test]]
-// import_stmt: import_name | import_from
-// import_name: 'import' dotted_as_names
 del_stmt ::= DELETE:x exprlist:a SEMI {:
             RESULT = new Delete(a);
             RESULT.setLoc(new CodeLocation(xleft, xright, filename));
         :};
-pass_stmt ::= PASS:a SEMI {:
-        RESULT = new Pass();
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :};
 flow_stmt ::= break_stmt:a {: RESULT = a;:}
         | continue_stmt:a {: RESULT = a;:}
-        | return_stmt:a {: RESULT = a;:}
-        | raise_stmt:a {: RESULT = a;:};
+        | return_stmt:a {: RESULT = a;:};
 break_stmt ::= BREAK:a SEMI {:
         RESULT = new Break();
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
@@ -1033,18 +1016,6 @@ return_stmt ::= RETURN:a SEMI {:
         RESULT = new Return(a);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
-raise_stmt ::= RAISE:a SEMI {:
-        RESULT = new Raise();
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}
-    | RAISE:x expr:a SEMI {:
-        RESULT = new Raise(a);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :};
-//    | RAISE:x expr:a FROM expr:b SEMI {:
-//        RESULT = new Raise(a, b);
-//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-//    :};
 assert_stmt ::= ASSERT:x expr:a COMMA expr:b SEMI {:
         RESULT = new Assert(a, b);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
@@ -1062,7 +1033,7 @@ call_stmt ::=
     :};
 
 guard_block ::=
-    GUARD:x LPAR ifLabel:l RPAR suite:body {:
+    GUARD:x LPAR primitiveIfLabel:l RPAR suite:body {:
         RESULT = new GuardBlock(l, body, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
@@ -1141,8 +1112,8 @@ inc_stmt ::=
     ;
 
 expr ::=
-    expr:a EQUALGREATER expr:b {:
-        RESULT = new FlowsToExp(a, b);
+    NAME:a EQUALGREATER NAME:b {:
+        RESULT = new FlowsToExp(new Name(a), new Name(b));
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     |

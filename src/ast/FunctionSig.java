@@ -1,7 +1,10 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
 import compile.Utils;
+import compile.ast.Argument;
+import compile.ast.SolNode;
+import compile.ast.Type;
 import java.util.Arrays;
 import java.util.List;
 import typecheck.*;
@@ -11,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FunctionSig extends TopLayerNode {
+
+    boolean isPublic;
 
     public String getName() {
         return name;
@@ -27,7 +32,7 @@ public class FunctionSig extends TopLayerNode {
     List<String> decoratorList;
     LabeledType rtn;
     List<LabeledType> exceptionList;
-    boolean isConstructor;
+    boolean isConstructor, isNative;
 
     final private boolean isBuiltin;
 
@@ -89,23 +94,27 @@ public class FunctionSig extends TopLayerNode {
 
     private List<String> setToDefault(List<String> decoratorList) {
         if (decoratorList == null) {
-            return new ArrayList<>(Arrays.asList(Utils.PRIVATE_DECORATOR));
+            return List.of(Utils.PRIVATE_DECORATOR);
         } else {
             boolean isPublic = false, isPrivate = false;
             for (String dec: decoratorList) {
                 if (dec.equals(Utils.PUBLIC_DECORATOR)) {
                     isPublic = true;
+                    this.isPublic = true;
                 }
                 if (dec.equals(Utils.PRIVATE_DECORATOR)) {
                     isPrivate = true;
+                }
+                if (dec.equals(Utils.NATIVE_DECORATOR)) {
+                    isNative = true;
                 }
             }
             if (!(isPrivate || isPublic)) {
                 decoratorList.add(Utils.PRIVATE_DECORATOR);
             } else if (isPrivate && isPublic) {
-                return null;
-                // TODO: throw new Exception("a method can not be both public and private");
+                assert false : "method " + name + " can not be both public and private";
             }
+
             return decoratorList;
         }
     }
@@ -133,6 +142,8 @@ public class FunctionSig extends TopLayerNode {
         this.rtn = funcSig.rtn;
         this.exceptionList = funcSig.exceptionList;
         this.isConstructor = funcSig.isConstructor;
+        this.isNative = funcSig.isNative;
+        this.isPublic = funcSig.isPublic;
         this.isBuiltin = false;
         this.location = funcSig.location;
         setDefault();
@@ -155,6 +166,9 @@ public class FunctionSig extends TopLayerNode {
         }
         contractSymTab.add(name,
                 new FuncSym(name,
+                        isPublic,
+                        isBuiltin,
+                        signature(),
                         env.newLabel(funcLabels.begin_pc),
                         env.newLabel(funcLabels.to_pc),
                         env.newLabel(funcLabels.gamma_label),
@@ -191,6 +205,9 @@ public class FunctionSig extends TopLayerNode {
         }
         realContractSymTab.add(name,
                 new FuncSym(name,
+                        isPublic,
+                        isBuiltin,
+                        signature(),
                         contractSym.newLabel(funcLabels.begin_pc),
                         contractSym.newLabel(funcLabels.to_pc),
                         contractSym.newLabel(funcLabels.gamma_label),
@@ -223,8 +240,8 @@ public class FunctionSig extends TopLayerNode {
         return null;
     }
 
-    @Override
-    public void solidityCodeGen(SolCode code) {
+    public compile.ast.FunctionSig solidityCodeGen(CompileEnv code) {
+        code.enterNewVarScope();
         boolean isPublic = false, isPayable = false;
         if (decoratorList != null) {
             if (decoratorList.contains(typecheck.Utils.PUBLIC_DECORATOR)) {
@@ -235,13 +252,21 @@ public class FunctionSig extends TopLayerNode {
             }
         }
 
-        String returnTypeCode = (rtn == null || rtn.type().isVoid()) ? "" :
-                SolCode.genInterfaceType(rtn.type());;
-
         if (isConstructor) {
-            code.addConstructorSig(args.toSolCode());
+            assert false;
+            code.exitVarScope();
+            return null;
         } else {
-            code.addFunctionSig(name, args.toSolCode(), returnTypeCode, isPublic, isPayable);
+            String methodName = isPublic ? typecheck.Utils.methodNameHash(this) : name;
+            List<Argument> arguments = args.solidityCodeGen(code);
+            Type returnType, originalReturnType = rtn.type().solidityCodeGen(code);
+            if (exceptionFree()) {
+                returnType = originalReturnType;
+            } else {
+                returnType = compile.Utils.UNIVERSAL_RETURN_TYPE;
+            }
+            code.exitVarScope();
+            return new compile.ast.FunctionSig(methodName, arguments, returnType, isPublic, isPayable);
         }
     }
 
@@ -341,29 +366,39 @@ public class FunctionSig extends TopLayerNode {
 
     public String signature() {
         StringBuilder sb = new StringBuilder();
+        String separator = "$";
         sb.append(name);
         for (String s: decoratorList) {
+            if (s.equals(Utils.NATIVE_DECORATOR)) continue;
             sb.append(s);
         }
-        sb.append("|");
+        sb.append(separator);
         sb.append(funcLabels.begin_pc);
         sb.append(funcLabels.to_pc);
         sb.append(funcLabels.gamma_label);
-        sb.append("|");
+        sb.append(separator);
 
         for (Arg arg: args.args()) {
-            sb.append(arg.isFinal);
+            sb.append(arg.isFinal ? "F" : "NF");
             sb.append(arg.annotation.type().name);
             sb.append(arg.annotation.label());
         }
-        sb.append("|");
+        sb.append(separator);
         for (LabeledType exp: exceptionList) {
             sb.append(exp.type().name);
             sb.append(exp.label());
         }
-        sb.append("|");
+        sb.append(separator);
         sb.append(rtn.type().name);
         sb.append(rtn.label());
         return sb.toString();
+    }
+
+    public boolean exceptionFree() {
+        return exceptionList.size() == 0;
+    }
+
+    public boolean returnVoid() {
+        return rtn.type().isVoid();
     }
 }

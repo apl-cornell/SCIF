@@ -1,6 +1,6 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.*;
@@ -19,14 +19,15 @@ public class DynamicStatement extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        assert false;
+        return null;
     }
-
-    public String toSolCode() {
-        logger.debug("toSOl: DynamicStatement");
-        return call.toSolCode();
-    }
+//
+//    public String toSolCode() {
+//        logger.debug("toSOl: DynamicStatement");
+//        return call.toSolCode();
+//    }
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {

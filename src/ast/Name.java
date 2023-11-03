@@ -1,7 +1,14 @@
 package ast;
 
+import compile.CompileEnv;
+import compile.ast.SingleVar;
+import compile.ast.Statement;
+import compile.ast.Type;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -58,6 +65,11 @@ public class Name extends Variable {
     }
 
     @Override
+    public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        return new SingleVar(id);
+    }
+
+    @Override
     public VarSym getVarInfo(NTCEnv env) {
         return ((VarSym) env.getCurSym(id));
     }
@@ -68,10 +80,9 @@ public class Name extends Variable {
     }
 
 
-    @Override
-    public String toSolCode() {
-        return id;
-    }
+//    public String toSolCode() {
+//        return id;
+//    }
 
     @Override
     public boolean typeMatch(Expression expression) {
@@ -81,5 +92,19 @@ public class Name extends Variable {
 
     public boolean typeMatch(Name value) {
         return id.equals(value.id);
+    }
+
+
+    public java.util.Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        Type varType = code.getLocalVarType(id);
+        if (varType != null) {
+            result.put(id, varType);
+        }
+        return result;
+    }
+
+    public Map<String,? extends Type> writeMap(CompileEnv code) {
+        return readMap(code);
     }
 }

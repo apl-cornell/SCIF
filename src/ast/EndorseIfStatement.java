@@ -1,8 +1,11 @@
 package ast;
 
-import compile.SolCode;
+import compile.CompileEnv;
+import compile.ast.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import typecheck.CodeLocation;
 import typecheck.Context;
 import typecheck.ExpOutcome;
@@ -41,8 +44,8 @@ public class EndorseIfStatement extends Statement {
     }
 
     @Override
-    public void solidityCodeGen(SolCode code) {
-        ifStatement.solidityCodeGen(code);
+    public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        return ifStatement.solidityCodeGen(code);
     }
 
     @Override
@@ -201,5 +204,20 @@ public class EndorseIfStatement extends Statement {
         for (Node child: children()) {
             child.passScopeContext(scopeContext);
         }
+    }
+
+    @Override
+    public boolean exceptionHandlingFree() {
+        return ifStatement.exceptionHandlingFree();
+    }
+
+    @Override
+    protected java.util.Map<String,? extends compile.ast.Type> readMap(CompileEnv code) {
+        return ifStatement.readMap(code);
+    }
+
+    @Override
+    protected Map<String,? extends Type> writeMap(CompileEnv code) {
+        return ifStatement.writeMap(code);
     }
 }

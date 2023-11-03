@@ -1,0 +1,35 @@
+contract PolyNetwork {
+    exception CallFailed;
+    @public
+    void executeCrossChainTx{user -> this}(
+            final address user,
+            final IUser{user} targetContract, bytes{user} args)
+            throws (CallFailed) {
+        /*
+            verify the tx
+            ...
+        */
+        endorse(targetContract, user -> this) {
+            atomic {
+                lock(targetContract) {
+                    targetContract.callback(user, fromAddr, fromChainId, args);
+                }
+            }
+            rescue (*) {
+                throw CallFailed;
+            }
+        }
+    }
+}
+
+interface IUser {
+    /**
+        a method that can be invoked by trusted parties, with additional arguments from user.
+    */
+    @public
+    void callback{this}(
+        final address{user} user,
+        address fromAddr, uint fromChainId,
+        bytes{user} args);
+}
+    void callback{this}(final address, uint, uint, bytes) in IUser2

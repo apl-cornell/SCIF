@@ -1,7 +1,11 @@
 package typecheck;
 
 import ast.*;
+import java.math.BigInteger;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,7 +43,7 @@ public class Utils {
     public static final String SHERRLOC_ERROR_INDICATOR = "wrong";
     public static final String TYPECHECK_PASS_MSG = "The program type-checks.";
     public static final String TYPECHECK_ERROR_MSG = "The program doesn't type-check.";
-    public static final String TYPECHECK_NORESULT_MSG = "No result from ShErrLoc.";
+    public static final String TYPECHECK_NORESULT_MSG = "No result from SHErrLoc.";
 
 
     public static final String ADDRESS_TYPE = "address";
@@ -67,12 +71,16 @@ public class Utils {
     public static final String LABEL_PAYVALUE = "value";
     public static final String VOID_TYPE = "void";
     public static final String BUILTIN_CONTRACT = "Builtin";
-    public static final String BASECONTRACTNAME = "BaseContract";
+    public static final String BASE_CONTRACT_IMP_NAME = "ContractImp";
     public static final List<String> BUILTIN_FILENAMES = Arrays.asList(
-            "builtin_files/BaseContract.scif",
-            "builtin_files/IBaseContract.scif",
-            "builtin_files/ILockManager.scif",
-            "builtin_files/ITrustManager.scif"
+            "builtin_files/Contract.scif",
+            "builtin_files/ContractImp.scif",
+            "builtin_files/ManagedContract.scif",
+            "builtin_files/ManagedContractImp.scif",
+            "builtin_files/ExternallyManagedContract.scif",
+            "builtin_files/ExternallyManagedContractImp.scif",
+            "builtin_files/LockManager.scif",
+            "builtin_files/TrustManager.scif"
     );
     public static final Iterable<? extends File> BUILTIN_FILES = generateBuiltInFiles();
 
@@ -626,6 +634,34 @@ public class Utils {
         LabeledType labeledTypeNode = new LabeledType(typeNode);
         labeledTypeNode.setLoc(CodeLocation.builtinCodeLocation());
         return labeledTypeNode;
+    }
+
+    public static String methodNameHash(FunctionSig functionSig) {
+        return methodNameHash(functionSig.signature());
+    }
+    public static String methodNameHash(String plainSignature) {
+        // SHA256
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] encodedhash = digest.digest(plainSignature.getBytes(StandardCharsets.UTF_8));
+
+            // Convert byte array into signum representation
+            BigInteger number = new BigInteger(1, encodedhash);
+
+            // Convert message digest into hex value
+            StringBuilder hexString = new StringBuilder(number.toString(16));
+
+            // Pad with leading zeros
+            while (hexString.length() < 64)
+            {
+                hexString.insert(0, '0');
+            }
+
+            return "_" + hexString.toString();
+            // return plainSignature;
+        } catch (NoSuchAlgorithmException exc) {
+            throw new RuntimeException();
+        }
     }
 }
 
