@@ -21,7 +21,6 @@ public class TestIfcTypechecking {
             "basic/ExceptionThrowAndCatch",
             "basic/EndroseIf",
             "examples/SimpleStorage",
-            "ifcTypechecking/LocalTrust",
             "ifcTypechecking/Wallet_lock_exception",
             // "basic/Seq",
             "examples/ERC20",

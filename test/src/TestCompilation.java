@@ -17,11 +17,10 @@ public class TestCompilation {
             "basic/EmptyContract",
             "basic/EmptyContract2",
             "basic/ExceptionThrowAndCatch",
-//            "basic/FinalVar",
-//            "basic/EndroseIf",
+            "basic/EndroseIf",
             "ifcTypechecking/Wallet_lock_exception",
-//            "examples/ERC20",
-//            "examples/SimpleStorage",
+            "examples/ERC20",
+            "examples/SimpleStorage",
     })
     void testPositive(String contractName) {
         File logDir = new File("./.scif");

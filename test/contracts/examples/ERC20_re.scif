@@ -7,7 +7,7 @@ contract ERC20 implements IERC20 {
     // TODO: generate constraints
 
     @public
-    bool approve{sender}(final address allowed, uint amount) {
+    void approve{sender}(final address allowed, uint amount) {
         allowances[sender][allowed] = amount;
     }
 

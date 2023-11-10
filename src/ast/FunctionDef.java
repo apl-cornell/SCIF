@@ -3,13 +3,17 @@ package ast;
 import compile.CompileEnv;
 import compile.CompileEnv.ScopeType;
 import compile.ast.Argument;
+import compile.ast.Assert;
+import compile.ast.Call;
 import compile.ast.Constructor;
 import compile.ast.Function;
+import compile.ast.Return;
 import compile.ast.SingleVar;
 import compile.ast.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -213,9 +217,16 @@ public class FunctionDef extends FunctionSig {
             code.popScope();
             return new Constructor(arguments, statements);
         } else {
+            // create two functions:
+            //  a private function which implements the real deal and
+            //  a public function whose name is hashed and call the private function
             String methodName = isPublic ? Utils.methodNameHash(name, this) : name;
             List<compile.ast.Statement> statements = new ArrayList<>();
+            List<compile.ast.Statement> wapperStatements = new ArrayList<>();
             compile.Utils.addBuiltInVars(isPublic, statements, code);
+            if (isPublic) {
+                compile.Utils.addBuiltInVars(isPublic, wapperStatements, code);
+            }
             List<Argument> arguments = args.solidityCodeGen(code);
             Type returnType, originalReturnType = rtn.type().solidityCodeGen(code);
             if (exceptionFree()) {
@@ -232,10 +243,12 @@ public class FunctionDef extends FunctionSig {
                 assert sender => pc, l_i
              */
             if (pub && !isNative) {
-                statements.addAll(code.enterFuncCheck(funcLabels, args));
+                wapperStatements.addAll(code.enterFuncCheck(funcLabels, args));
+//                statements.addAll(code.enterFuncCheck(funcLabels, args));
             }
             for (Statement s: body) {
-                statements.addAll(s.solidityCodeGen(code));
+                List<compile.ast.Statement> tmp = s.solidityCodeGen(code);
+                statements.addAll(tmp);
             }
 
             if (!exceptionFree()) {
@@ -244,7 +257,14 @@ public class FunctionDef extends FunctionSig {
             }
             code.exitVarScope();
             code.popScope();
-            return new Function(methodName, arguments, returnType, pub, payable, statements);
+            if (isPublic) {
+                code.addTemporaryFunction(new Function(name, arguments, returnType, false, false, statements));
+                wapperStatements.add(new Return(new Call(name, arguments.stream().map(arg -> new SingleVar(arg.name())).collect(
+                        Collectors.toList()))));
+                return new Function(methodName, arguments, returnType, pub, payable, wapperStatements);
+            } else {
+                return new Function(methodName, arguments, returnType, pub, payable, statements);
+            }
         }
     }
 
