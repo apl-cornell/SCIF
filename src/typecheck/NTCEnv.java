@@ -181,7 +181,10 @@ public class NTCEnv {
                 return null;
             }
         }
+
+        enterNewScope();
         ArrayList<VarSym> memberList = arguments.parseArgs(this, parent);
+        exitNewScope();
         return new ExceptionTypeSym(exceptionName, memberList, parent);
     }
 

@@ -203,7 +203,10 @@ public class InterfaceSym extends TypeSym {
         if (sym != null) {
             return sym;
         }
+
+        symTab = new SymTab(symTab);
         List<VarSym> memberList = arguments.parseArgs(this);
+        symTab = symTab.getParent();
         return new ExceptionTypeSym(exceptionName, memberList, defContext);
     }
 
