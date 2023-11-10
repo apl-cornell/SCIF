@@ -7,6 +7,7 @@ import compile.ast.Expression;
 import compile.ast.IfStatement;
 import compile.ast.PrimitiveType;
 import compile.ast.SingleVar;
+import compile.ast.StructType;
 import compile.ast.VarDec;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,10 +49,7 @@ public class ExceptHandler extends Node {
 
         if (!acceptall) {
             VarSym var = env.newVarSym(name, labeledType, true, true, true, location, now);
-            if (var == null) {
-                System.err.println("Exception type " + labeledType.type().name() + " not found");
-                throw new RuntimeException();
-            }
+            assert var != null : "Exception type " + labeledType.type().name() + " not found";
             env.addSym(name, var);
         }
 
@@ -83,7 +81,7 @@ public class ExceptHandler extends Node {
             // create local variable for exception info
             // we have a local name: this.name for the variable
             // define struct for all exceptions at the beginning
-            PrimitiveType varType = new PrimitiveType(labeledType.type().name());
+            StructType varType = new StructType(labeledType.type().name());
             String varName = name;
             solBody.add(new VarDec(varType, name));
             targets.add(new SingleVar(name));

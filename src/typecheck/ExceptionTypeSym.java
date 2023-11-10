@@ -41,4 +41,15 @@ public class ExceptionTypeSym extends TypeSym {
     public List<VarSym> parameters() {
         return parameters;
     }
+
+    public VarSym getMemberVarInfo(String prefix, String memberName) {
+        for (VarSym mb : parameters) {
+            if (mb.getName().equals(memberName)) {
+                VarSym rtn = new VarSym(mb);
+                rtn.setName(prefix + "." + rtn.getName());
+                return rtn;
+            }
+        }
+        return null;
+    }
 }

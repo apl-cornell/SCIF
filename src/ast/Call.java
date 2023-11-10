@@ -7,6 +7,7 @@ import compile.ast.BinaryExpression;
 import compile.ast.ExternalCall;
 import compile.ast.IfStatement;
 import compile.ast.Literal;
+import compile.ast.Pass;
 import compile.ast.PrimitiveType;
 import compile.ast.Return;
 import compile.ast.SingleVar;
@@ -491,24 +492,32 @@ public class Call extends TrailerExpr {
             // replace call with tempVar
             SingleVar statVar = new SingleVar(code.newTempVarName());
             SingleVar dataVar = new SingleVar(code.newTempVarName());
-            SingleVar tempVar = new SingleVar(code.newTempVarName());
             result.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_UINT, statVar.name()));
             result.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_BYTES, dataVar.name()));
-            result.add(new VarDec(new PrimitiveType(funcSym.returnType.getName()), dataVar.name()));
+            SingleVar tempVar = null;
+            if (!funcSym.returnType.isVoid()) {
+                tempVar = new SingleVar(code.newTempVarName());
+                result.add(new VarDec(new PrimitiveType(funcSym.returnType.getName()), tempVar.name()));
+            }
             result.add(new Assign(
                     List.of(statVar, dataVar),
                     callExp
             ));
 
             // map exceptionID
+            IfStatement mapExpIds = null;
             int i = 1;
             for (Entry<ExceptionTypeSym, String> entry: funcSym.exceptions.entrySet()) {
                 IfStatement ifexp = new IfStatement(
                         new BinaryExpression(compile.Utils.SOL_BOOL_EQUAL, statVar, new Literal(String.valueOf(i))),
-                        List.of(new Assign(statVar, new Literal(String.valueOf(code.getExceptionId(entry.getKey())))))
+                        List.of(new Assign(statVar, new Literal(String.valueOf(code.getExceptionId(entry.getKey()))))),
+                        mapExpIds == null ? null : List.of(mapExpIds)
                         );
-                result.add(ifexp);
+                mapExpIds = ifexp;
                 ++i;
+            }
+            if (mapExpIds != null) {
+                result.add(mapExpIds);
             }
 
             compile.ast.Expression condition = new BinaryExpression(compile.Utils.SOL_BOOL_NONEQUAL,
@@ -517,12 +526,18 @@ public class Call extends TrailerExpr {
                     List.of(new Return(List.of(statVar, dataVar))));
             result.add(test);
 
-            result.add(new Assign(tempVar,
-                    code.decodeVars(
-                            funcSym.parameters.stream().map(para -> new PrimitiveType(para.typeSym.getName())).collect(
-                                    Collectors.toList()),
-                            dataVar)));
-            return tempVar;
+            if (funcSym.returnType.isVoid()) {
+                return new Pass();
+            } else {
+                result.add(new Assign(tempVar,
+                        code.decodeVars(
+                                funcSym.parameters.stream()
+                                        .map(para -> new PrimitiveType(para.typeSym.getName()))
+                                        .collect(
+                                                Collectors.toList()),
+                                dataVar)));
+                return tempVar;
+            }
         }
     }
 

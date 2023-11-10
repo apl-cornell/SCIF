@@ -34,4 +34,10 @@ public class ExceptionManager {
     public void setExceptionFree() {
         exceptionFree = true;
     }
+
+    public void clear() {
+        counter = 0;
+        exceptionFree = true;
+        exceptionIDs.clear();
+    }
 }

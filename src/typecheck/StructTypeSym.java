@@ -1,13 +1,14 @@
 package typecheck;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class StructTypeSym extends TypeSym {
     // Struct type should be initialized in a way like: varName = new typeName(member0, member1, ..., )
-    ArrayList<VarSym> members;
+    List<VarSym> members;
     ScopeContext scopeContext;
 
-    public StructTypeSym(String typeName, ArrayList<VarSym> members, ScopeContext scopeContext) {
+    public StructTypeSym(String typeName, List<VarSym> members, ScopeContext scopeContext) {
         super(typeName, scopeContext);
         this.members = members;
         this.scopeContext = scopeContext;

@@ -38,8 +38,16 @@ public class Attribute extends TrailerExpr {
     public VarSym getVarInfo(NTCEnv env) {
         VarSym rtnVarSym;
         VarSym parentVarSym = value.getVarInfo(env);
-        StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;
-        rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
+        if (parentVarSym.typeSym instanceof StructTypeSym) {
+            StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;
+            rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
+        } else if (parentVarSym.typeSym instanceof ExceptionTypeSym) {
+            ExceptionTypeSym parentTypeInfo = (ExceptionTypeSym) parentVarSym.typeSym;
+            rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
+        } else {
+            assert false: "unknown types for attribute: " + value.toString();
+            return null;
+        }
         return rtnVarSym;
     }
 

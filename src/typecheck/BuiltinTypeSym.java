@@ -5,4 +5,9 @@ public class BuiltinTypeSym extends TypeSym {
         super(typeName, Utils.globalScopeContext());
         // this.name = typeName;
     }
+
+    @Override
+    public boolean isVoid() {
+        return getName().equals(Utils.BuiltinType2ID(BuiltInT.VOID));
+    }
 }

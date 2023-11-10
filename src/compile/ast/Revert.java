@@ -17,7 +17,7 @@ public class Revert implements Statement {
     @Override
     public List<String> toSolCode(int indentLevel) {
         List<String> result = new ArrayList<>();
-        addLine(result, "revert(" + (msg != null ? msg.toSolCode() : "") +")", indentLevel);
+        addLine(result, "revert(\"" + (msg != null ? msg.toSolCode() : "") +"\");", indentLevel);
         return result;
     }
 }

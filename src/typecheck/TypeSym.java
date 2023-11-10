@@ -9,4 +9,8 @@ public abstract class TypeSym extends Sym {
     public boolean isLValue() {
         return false;
     }
+
+    public boolean isVoid() {
+        return false;
+    }
 }

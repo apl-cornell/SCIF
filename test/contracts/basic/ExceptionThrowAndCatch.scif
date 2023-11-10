@@ -1,13 +1,13 @@
 contract ExceptionDefinition {
     exception X();
-    exception Y(uint aug1, uint aug2);
+    exception Y(uint x, uint y);
     exception Z();
 
     // CA.
     @public
-    void foo{sender -> this; any}() throws (Z, X{this}) {
+    void foo{sender -> this; any}(uint a, uint b) throws (Z, Y) {
         try {
-            bar(1, 2);
+            bar(a, b);
             //chigh.f(); // f throws (Y);
             //clow.g(); // g throws (X{this}); THROWS Z SECRETLY
             //clow2.g(); // throws (X{this});
@@ -16,16 +16,20 @@ contract ExceptionDefinition {
             //chigh.g(); // g throws (X{this});
             // Path set P: E->pc
         } catch (Y excY) {
-            throw X();
+            throw Y(excY.x, excY.y);
         } catch (X excX) {
-            // P[X]
+            throw Z();
         }
     }
 
     @public
-    void bar(uint a, uint b) throws (Y) {
-        if (a != b) {
+    void bar(uint a, uint b) throws (Y, X) {
+        if (a > b) {
             throw Y(a, b);
+        } else {
+            if (a < b) {
+                throw X();
+            }
         }
     }
 }

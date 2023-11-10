@@ -61,8 +61,11 @@ public class ExceptionDef extends TopLayerNode {
     }
 
     public StructDef solidityCodeGen(CompileEnv code) {
-        return new StructDef(exceptionName, arguments.solidityCodeGen(code).stream().map(arg -> new VarDec(
-                (PrimitiveType) arg.type(), arg.name())).collect(Collectors.toList()));
+        code.enterNewVarScope();
+        StructDef result = new StructDef(exceptionName, arguments.solidityCodeGen(code).stream().map(arg -> new VarDec(
+                arg.type(), arg.name())).collect(Collectors.toList()));
+        code.exitVarScope();
+        return result;
     }
 
     @Override

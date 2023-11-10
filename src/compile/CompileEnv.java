@@ -156,6 +156,10 @@ public class CompileEnv {
         return result;
     }
 
+    public void clearExceptionManager() {
+        exceptionManager.clear();
+    }
+
     public enum ScopeType {
         CONTRACT, METHOD, TRY, ATOMIC
     }
@@ -644,7 +648,7 @@ public class CompileEnv {
             names.add(name + "." + varSym.getName());
         }*/
             //
-            return new compile.ast.Literal(decodeCall(data.toSolCode(), exceptionTypeSym.getName()));
+            return new compile.ast.Literal(decodeCall(data.toSolCode(), "(" + exceptionTypeSym.getName() + ")"));
         } else {
             String varsString = "(" + writeMap.values().stream().map(
                 compile.ast.Type::solCode).collect(
@@ -659,7 +663,7 @@ public class CompileEnv {
             return new compile.ast.Literal("\"\"");
         }
         String exceptionString = exceptionTypeSym.getName() + "(" +
-                String.join(", ", args.stream().map(arg -> arg.toSolCode()).collect(Collectors.toList()));
+                String.join(", ", args.stream().map(arg -> arg.toSolCode()).collect(Collectors.toList())) + ")";
         return new compile.ast.Literal(encodeCall(exceptionString));
     }
     public compile.ast.Literal encodeVarsAndException(ExceptionTypeSym exceptionTypeSym, List<compile.ast.Expression> args) {

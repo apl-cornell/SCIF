@@ -13,10 +13,10 @@ public class TestCompilation {
 
     @ParameterizedTest
     @ValueSource(strings = {
-//            "basic/DependentMap",
+            "basic/DependentMap",
             "basic/EmptyContract",
             "basic/EmptyContract2",
-//            "basic/ExceptionThrowAndCatch",
+            "basic/ExceptionThrowAndCatch",
 //            "basic/FinalVar",
 //            "basic/EndroseIf",
             "ifcTypechecking/Wallet_lock_exception",

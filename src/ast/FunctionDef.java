@@ -191,6 +191,7 @@ public class FunctionDef extends FunctionSig {
         code.setCurrentMethod(this);
         code.enterNewVarScope();
         code.pushScope(ScopeType.METHOD);
+        code.clearExceptionManager();
         boolean pub = false;
         boolean payable = false;
         if (decoratorList != null) {
