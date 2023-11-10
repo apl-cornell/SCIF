@@ -19,25 +19,26 @@ cd SCIF
 
 ```console
 Usage: SCIF [-t | -p | -l | -c] [-hV] [-debug] [-lg=<m_outputFileNames>...]...
-            <m_inputFiles>...
+            [-o=<m_solFileNames>...]... <m_inputFiles>...
 A set of tools for a new smart contract language with information flow control,
 SCIF.
-      <m_inputFiles>...   The source code file(s).
-  -c, --compiler          Compile to Solidity (default)
+      <m_inputFiles>...     The source code file(s).
+  -c, --compiler            Compile to Solidity (default)
       -debug
-  -h, --help              Show this help message and exit.
-  -l, --lexer             Tokenize
+  -h, --help                Show this help message and exit.
+  -l, --lexer               Tokenize
       -lg=<m_outputFileNames>...
-                          The log file.
-  -p, --parser            Parse: ast json as log
-  -t, --typechecker       Information flow typecheck: constraints as log
-  -V, --version           Print version information and exit.
+                            The log file.
+  -o=<m_solFileNames>...    The output file.
+  -p, --parser              Parse: ast json as log
+  -t, --typechecker         Information flow typecheck: constraints as log
+  -V, --version             Print version information and exit.
 ```
 
-An example:
+Compile a Wallet example to `./tmp.sol`:
 
 ```console
-./scif -c SCIFex/Wallet.java
+./scif -c test/contracts/ifcTypechecking/Wallet_lock_exception.scif -o ./tmp.sol
 ```
 
 ## Documentation
