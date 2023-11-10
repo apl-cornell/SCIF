@@ -28,7 +28,7 @@ public class InheritGraph {
         return edges.keySet();
     }
 
-    public ArrayList<String> getTopologicalQueue() {
+    public List<String> getTopologicalQueue() {
         // return null if there is any circle
         Map<String, Integer> ind = new HashMap<>();
         for (String x : getAllNodes()) {
@@ -40,7 +40,7 @@ public class InheritGraph {
             }
         }
 
-        ArrayList<String> q = new ArrayList<>();
+        List<String> q = new ArrayList<>();
         for (String x : getAllNodes()) {
             if (ind.get(x) == 0)
                 q.add(x);

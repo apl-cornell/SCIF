@@ -32,7 +32,7 @@ public class FunctionSig extends TopLayerNode {
     List<String> decoratorList;
     LabeledType rtn;
     List<LabeledType> exceptionList;
-    boolean isConstructor, isNative;
+    private boolean isConstructor, isNative;
 
     final private boolean isBuiltin;
 
@@ -77,10 +77,13 @@ public class FunctionSig extends TopLayerNode {
         funcLabels.setToDefault(isConstructor, this.decoratorList, location);
         args.setToDefault(funcLabels.begin_pc);
         if (rtn != null && rtn.label() != null) {
+
             // pass
         } else {
             if (name.equals(Utils.CONSTRUCTOR_NAME)) {
-                // pass
+                // return void{any}
+                rtn = new LabeledType(new ast.Type(typecheck.Utils.VOID_TYPE), new PrimitiveIfLabel(new Name(
+                        typecheck.Utils.LABEL_BOTTOM)));
             } else {
                 assert rtn != null;
                 rtn = new LabeledType(rtn.type(),
@@ -203,6 +206,7 @@ public class FunctionSig extends TopLayerNode {
                     typecheck.Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(),
                             t.type().name()));
         }
+//        System.err.println("adding method: " + name);
         realContractSymTab.add(name,
                 new FuncSym(name,
                         isPublic,
@@ -400,5 +404,20 @@ public class FunctionSig extends TopLayerNode {
 
     public boolean returnVoid() {
         return rtn.type().isVoid();
+    }
+
+    public void changeName(String genSuperName) {
+        name = genSuperName;
+    }
+
+    public boolean isConstructor() {
+        return isConstructor;
+    }
+    public boolean isNative() {
+        return isNative;
+    }
+
+    public void makeNonConstructor() {
+        isConstructor = false;
     }
 }

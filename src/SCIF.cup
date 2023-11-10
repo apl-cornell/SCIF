@@ -270,7 +270,7 @@ contract ::=
         RBRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, "", c_extends, t_setting, v_decs, e_defs, f_defs);
+        RESULT = new Contract((String) name, "", c_extends, t_setting, v_decs, e_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name IMPLEMENTS NAME: supercontract
@@ -283,7 +283,7 @@ contract ::=
         RBRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, (String) supercontract, "", t_setting, v_decs, e_defs, f_defs);
+        RESULT = new Contract((String) name, (String) supercontract, "", t_setting, v_decs, e_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name IMPLEMENTS NAME: supercontract contract_extends: c_extends
@@ -296,7 +296,7 @@ contract ::=
         RBRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, v_decs, e_defs, f_defs);
+        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, v_decs, e_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | error:err {:

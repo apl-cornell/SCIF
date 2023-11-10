@@ -16,7 +16,7 @@ public class SolCompiler {
         // assuming the code typechecks, might need to deal with namespace when multi-contract
         logger.trace("compiling starts");
 
-        System.out.println("\nCompiled Solidity code:");
+//        System.out.println("\nCompiled Solidity code:");
 
             CompileEnv env = new CompileEnv();
             // System.err.println("Compiling " + root.getContractName() + ":");

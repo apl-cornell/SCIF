@@ -83,6 +83,9 @@ public class Utils {
             "builtin_files/TrustManager.scif"
     );
     public static final Iterable<? extends File> BUILTIN_FILES = generateBuiltInFiles();
+    public static final String CONSTRUCTOR_KEYWORD = "constructor";
+    public static final String SUPER_KEYWORD = "super";
+    private static final String SUPER_PREFIX = "$super";
 
     private static Iterable<? extends File> generateBuiltInFiles() {
         List<File> builtin_files = new ArrayList<>();
@@ -662,6 +665,14 @@ public class Utils {
         } catch (NoSuchAlgorithmException exc) {
             throw new RuntimeException();
         }
+    }
+
+    public static String genSuperName(String contractName) {
+        return SUPER_PREFIX + contractName;
+    }
+
+    public static boolean isSuperConstructor(String name) {
+        return name.startsWith(SUPER_PREFIX);
     }
 }
 

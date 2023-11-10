@@ -20,9 +20,9 @@ public class ContractFile implements SourceFile {
     public List<String> toSolCode(int indentLevel) {
         List<String> result = new ArrayList<>();
         addLine(result, Utils.version(Utils.DEFAULT_SOLITIDY_VERSION), indentLevel);
-//        for (Import imp: imports) {
-//            result.addAll(imp.toSolCode(indentLevel));
-//        }
+        for (Import imp: imports) {
+            result.addAll(imp.toSolCode(indentLevel));
+        }
         result.addAll(contract.toSolCode(indentLevel));
         return result;
     }

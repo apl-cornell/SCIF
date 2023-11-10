@@ -36,7 +36,7 @@ public class FunctionSig implements SolNode {
                                 ).collect(Collectors.toList())) +
                         ")",
                 indentLevel);
-        addLine(result, isExternal ? Utils.SOL_PUBLIC_DECORATOR : Utils.SOL_PRIVATE_DECORATOR, indentLevel + 1);
+        addLine(result, isExternal ? Utils.SOL_EXTERNAL_DECORATOR : Utils.SOL_PRIVATE_DECORATOR, indentLevel + 1);
         if (isExternal) {
             addLine(result, PAYABLE_DECORATOR, indentLevel + 1);
         }

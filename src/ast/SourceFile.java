@@ -138,7 +138,7 @@ public abstract class SourceFile extends Node {
         if (isBuiltIn()) return;
         for (File importFile: BUILTIN_FILES) {
             iptContracts.add(importFile.toString());
-            System.err.println(contractName + " imports " + importFile.toString());
+//            System.err.println(contractName + " imports " + importFile.toString());
         }
     }
 

@@ -43,4 +43,8 @@ public class CodeLocation {
     public String toString() {
         return String.format("L%dC%d", lineNo, columnNo) + fileId;
     }
+
+    public String errString() {
+        return "(" + lineNo + ", " + columnNo + ") in " + fileName;
+    }
 }

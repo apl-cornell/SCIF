@@ -17,7 +17,7 @@ public class Interface implements SolNode {
     @Override
     public List<String> toSolCode(int indentLevel) {
         List<String> result = new ArrayList<>();
-        addLine(result, "interface " + interfaceName + "{", indentLevel);
+        addLine(result, "interface " + interfaceName + " {", indentLevel);
         for (FunctionSig functionSig: functionSigs) {
             result.addAll(functionSig.toSolCode(indentLevel + 1));
         }

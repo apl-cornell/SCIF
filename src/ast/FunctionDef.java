@@ -44,8 +44,10 @@ public class FunctionDef extends FunctionSig {
         this.body = body;
     }
 
+
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+//        if (isSuperConstructor()) return null;
         //env.setCurSymTab(new SymTab(env.curSymTab()));
         env.enterNewScope();
         // add args to local sym;
@@ -74,8 +76,9 @@ public class FunctionDef extends FunctionSig {
                     "Label of this method's return value"));
         }
 
-        if (isConstructor) {
-//            env.setConstructorRecord();
+        if (isConstructor()) {
+            env.enterConstructor();
+//            System.err.println("containing statments: " + name + " " + body.size() + " from " + env.curContractSym().getName());
         }
         //if (!isBuiltIn()) {
             // TODO: add support for signatures
@@ -83,8 +86,9 @@ public class FunctionDef extends FunctionSig {
                 // logger.debug("stmt: " + stmt);
                 stmt.ntcGenCons(env, now);
             }
-        if (isConstructor) {
-//            assert env.superCalled() : "constructor of super contract is not called in the constructor of " + env.currentSourceFileFullName();
+        if (isConstructor()) {
+            assert env.superCalled() : "constructor of super contract is not called in the constructor of " + env.currentSourceFileFullName();
+            env.leaveConstructor();
         }
         //}
         //env.setCurSymTab(env.curSymTab().getParent());
@@ -95,8 +99,7 @@ public class FunctionDef extends FunctionSig {
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        if (isBuiltIn()) return null;
-        if (isNative) return null;
+        if (isBuiltIn() || isNative() || isSuperConstructor()) return null;
         env.incScopeLayer();
         addBuiltInVars(env.curSymTab, scopeContext);
 
@@ -185,6 +188,10 @@ public class FunctionDef extends FunctionSig {
 
         return null;
     }
+
+    private boolean isSuperConstructor() {
+        return Utils.isSuperConstructor(name);
+    }
     /*public void findPrincipal(HashSet<String> principalSet) {
         if (sig.name instanceof LabeledType) {
             ((LabeledType) sig.name).ifl.findPrincipal(principalSet);
@@ -213,7 +220,7 @@ public class FunctionDef extends FunctionSig {
             }
         }
 
-        if (isConstructor) {
+        if (isConstructor()) {
             List<Argument> arguments = args.solidityCodeGen(code);
             List<compile.ast.Statement> statements = new ArrayList<>();
             for (Statement s: body) {
@@ -248,7 +255,7 @@ public class FunctionDef extends FunctionSig {
                 f{pc}(x_i{l_i}) from sender
                 assert sender => pc, l_i
              */
-            if (pub && !isNative) {
+            if (pub && !isNative()) {
                 wapperStatements.addAll(code.enterFuncCheck(funcLabels, args));
 //                statements.addAll(code.enterFuncCheck(funcLabels, args));
             }
@@ -287,6 +294,14 @@ public class FunctionDef extends FunctionSig {
         List<Node> rtn = super.children();
         rtn.addAll(body);
         return rtn;
+    }
+
+    public void renameSuperCall(String extendsContractName) {
+        for (Statement s: body) {
+            if (s instanceof ast.CallStatement callStatement) {
+                callStatement.call.checkAndRenameSuper(extendsContractName);
+            }
+        }
     }
 //
 //    @Override

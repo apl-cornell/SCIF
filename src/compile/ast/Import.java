@@ -12,6 +12,6 @@ public class Import implements SolNode {
 
     @Override
     public List<String> toSolCode(int indentLevel) {
-        return List.of(Utils.addIndent("import " + filename + ";", indentLevel));
+        return List.of(Utils.addIndent("import \"" + filename + "\";", indentLevel));
     }
 }

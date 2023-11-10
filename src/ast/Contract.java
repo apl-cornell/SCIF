@@ -21,27 +21,27 @@ public class Contract extends TopLayerNode {
     TrustSetting trustSetting;
     List<StateVariableDeclaration> varDeclarations;
     List<ExceptionDef> exceptionDefs;
-    List<FunctionDef> methodDeclarations;
+    private List<FunctionDef> methodDeclarations;
 
     /*
         fields that are supposed to complete after typechecking
      */
     Map<String, ExceptionTypeSym> exceptionTypeSymMap;
-
-    public Contract(String contractName, TrustSetting trustSetting,
-            List<StateVariableDeclaration> varDeclarations,
-            List<ExceptionDef> exceptionDefs,
-            List<FunctionDef> methodDeclarations) {
-        this.contractName = contractName;
-        this.trustSetting = trustSetting;
-        this.trustSetting.labelTable.put("this", "address(this)");
-        this.varDeclarations = varDeclarations;
-        this.exceptionDefs = exceptionDefs;
-        this.methodDeclarations = methodDeclarations;
-
-        setDefault();
-//        extendsContract = true;
-    }
+//
+//    public Contract(String contractName, TrustSetting trustSetting,
+//            List<StateVariableDeclaration> varDeclarations,
+//            List<ExceptionDef> exceptionDefs,
+//            List<FunctionDef> methodDeclarations) {
+//        this.contractName = contractName;
+//        this.trustSetting = trustSetting;
+//        this.trustSetting.labelTable.put("this", "address(this)");
+//        this.varDeclarations = varDeclarations;
+//        this.exceptionDefs = exceptionDefs;
+//        this.methodDeclarations = methodDeclarations;
+//
+//        setDefault();
+////        extendsContract = true;
+//    }
 
     public Contract(String contractName,
             String implementsContractName, String extendsContractName,
@@ -58,11 +58,34 @@ public class Contract extends TopLayerNode {
         this.exceptionDefs = exceptionDefs;
         this.methodDeclarations = methodDeclarations;
         setDefault();
+//        if (contractName.equals(Utils.BASE_CONTRACT_IMP_NAME)) {
+//            System.err.println("debug: show methods in " + contractName);
+//            for (FunctionDef functionDef : methodDeclarations) {
+//                System.err.println(functionDef.name);
+//            }
+//        }
     }
 
     private void setDefault() {
         if (extendsContractName.isEmpty() && !contractName.equals(Utils.BASE_CONTRACT_IMP_NAME)) {
             extendsContractName = Utils.BASE_CONTRACT_IMP_NAME;
+        }
+        if (!contractName.equals(Utils.BASE_CONTRACT_IMP_NAME)) {
+            // add default constructor
+            boolean containsConstructor = false;
+            for (FunctionDef functionDef : methodDeclarations) {
+                if (functionDef.isConstructor()) {
+                    assert !containsConstructor: "multiple constructor is not allowed in " + contractName;
+                    containsConstructor = true;
+                }
+            }
+            if (!containsConstructor) {
+                FunctionDef constructorDef = new FunctionDef(Utils.CONSTRUCTOR_KEYWORD, new FuncLabels(), new Arguments(),
+                        List.of(new CallStatement(new Call(new Name(Utils.SUPER_KEYWORD), new ArrayList<>()))),
+                        new ArrayList<>(), null, true, location);
+//                System.err.println("Adding default constructor for " + contractName + " " + constructorDef.body.size());
+                methodDeclarations.add(0, constructorDef);
+            }
         }
     }
 //
@@ -223,7 +246,7 @@ public class Contract extends TopLayerNode {
 
         methods.addAll(code.tempFunctions());
         code.clearTempFunctions();
-        return new compile.ast.Contract(contractName, stateVarDecs, excDefs, methods);
+        return new compile.ast.Contract(contractName, implementsContractName, stateVarDecs, excDefs, methods);
     }
 
     @Override
@@ -275,6 +298,7 @@ public class Contract extends TopLayerNode {
         }
 
         if (!extendsContractName.isEmpty()) {
+//            System.err.println("pasting code from " + extendsContractName + " to " + contractName);
             // check no functions with the same name
             // add other functions from superContract
             // trust_list is also inherited
@@ -362,8 +386,19 @@ public class Contract extends TopLayerNode {
                 builtInIndex += 1;
             }
             for (FunctionDef f : superContract.methodDeclarations) {
+//                System.err.println("pasting " + f.name + " " + f.isConstructor());
                 if (f.isBuiltIn())
                     continue;
+                if (f.isConstructor()) {
+                    // rename
+                    FunctionDef newF = new FunctionDef(f, f.body);
+                    newF.changeName(Utils.genSuperName(contractName));
+                    newF.makeNonConstructor();
+                    newF.renameSuperCall(extendsContractName);
+                    newFuncDefs.add(newF);
+//                    System.err.println("renaming super constructor to " + Utils.genSuperName(contractName));
+                    continue;
+                }
                 boolean overridden = false;
                 if (funcNames.containsKey(f.name)) {
                     assert funcNames.get(f.name).typeMatch(f);

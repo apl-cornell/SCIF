@@ -123,9 +123,21 @@ public class Call extends TrailerExpr {
         } else {
             // a(b)
             funcName = ((Name) value).id;
-            Sym s = env.getCurSym(funcName);
+            Sym s;
+            if (funcName.equals(Utils.SUPER_KEYWORD)) {
+                assert !env.superCalled() : "should nto call super() twice in the constructor: " + location.toString();
+                assert env.inConstructor() : "should not call super() outside the constructor: " + location.toString();
+                String newFuncName = Utils.genSuperName(env.curContractSym().getName());
+                s = env.getCurSym(newFuncName);
+                assert s != null : newFuncName;
+                // TODO: think twice
+                 ((Name) value).id = newFuncName;
+                env.callSuper();
+            } else {
+                s = env.getCurSym(funcName);
+            }
             if (s == null) {
-                assert false: "method not found: " + funcName;
+                assert false: "method not found: " + funcName + " at " + location.errString();
                 return null;
             }
             if (!(s instanceof FuncSym)) {
@@ -142,6 +154,7 @@ public class Call extends TrailerExpr {
                 this.builtIn = true;
             }
         }
+        assert !env.inConstructor() || env.superCalled() : "should not call methods before called super in constructor: " + funcName + " at " + location.toString();
         this.funcSym = funcSym;
         // typecheck arguments
         for (int i = 0; i < args.size(); ++i) {
@@ -297,6 +310,9 @@ public class Call extends TrailerExpr {
         } else {
             //a(b)
             funcName = ((Name) value).id;
+//            if (funcName.equals(Utils.SUPER_KEYWORD)) {
+//                funcName = Utils.genSuperName(env.curContractSym().getName());
+//            }
             ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
             if (!env.containsFunc(funcName)) {
                 if (env.containsContract(funcName) || Utils.isPrimitiveType(funcName)) { //type cast
@@ -316,7 +332,7 @@ public class Call extends TrailerExpr {
                     }
                     return new ExpOutcome(ifNameArgValue, psi);
                 } else {
-                    assert false: "method not found: " + funcName;
+                    assert false: "method not found: " + funcName + " at " + location.errString();
                     return null;
                 }
             }
@@ -627,5 +643,13 @@ public class Call extends TrailerExpr {
             result.putAll(arg.readMap(code));
         }
         return result;
+    }
+
+    public void checkAndRenameSuper(String extendsContractName) {
+        if (value instanceof Name name) {
+            if (name.id.equals(Utils.SUPER_KEYWORD)) {
+                name.id = Utils.genSuperName(extendsContractName);
+            }
+        }
     }
 }

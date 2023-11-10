@@ -49,6 +49,7 @@ public class Utils {
     public static final String SOL_PUBLIC_DECORATOR = "public";
     public static final String SOL_PRIVATE_DECORATOR = "internal";
     public static final String RETURNCODE_FAILURE = "9999";
+    public static final String SOL_EXTERNAL_DECORATOR = "external";
 
     public static String toBinOp(BinaryOperator op) {
         if (op == BinaryOperator.Add)

@@ -81,7 +81,7 @@ public class SCIF implements Callable<Integer> {
         for (File file : m_inputFiles) {
             files.add(file);
         }
-        System.out.println("Regular Type Checking:");
+//        System.out.println("Regular Type Checking:");
         List<SourceFile> roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
         boolean passNTC = true;
         //if (!Utils.emptyFile(outputFileName))
@@ -105,7 +105,7 @@ public class SCIF implements Callable<Integer> {
             IFCConsFiles.add(IFCConsFile);
         }
 
-        System.out.println("\nInformation Flow Type Checking:");
+//        System.out.println("\nInformation Flow Type Checking:");
         boolean passIFC = TypeChecker.ifcTypecheck(roots, IFCConsFiles, m_debug);
         // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
         // logger.debug("running SHErrLoc...");

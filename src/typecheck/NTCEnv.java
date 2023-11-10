@@ -19,6 +19,9 @@ public class NTCEnv {
     private String currentSourceFileFullName;
     private java.util.Map<String, SourceFile> programMap; // full filename -> SourceFile
 
+    // info about constructor
+    boolean inConstructor, calledSuper;
+
     public NTCEnv(ContractSym contractSym) {
         contractSymMap = new HashMap<>();
         cons = new ArrayList<>();
@@ -252,5 +255,28 @@ public class NTCEnv {
 
     public java.util.Map<String, ExceptionTypeSym> getExceptionTypeSymMap() {
         return curSymTab.getExceptionMap();
+    }
+
+    public void enterConstructor() {
+//        System.err.println("entering the constructor");
+        inConstructor = true;
+        calledSuper = false;
+    }
+
+    public void leaveConstructor() {
+//        System.err.println("leaving the constructor");
+        inConstructor = false;
+    }
+
+    public boolean superCalled() {
+        return calledSuper;
+    }
+
+    public void callSuper() {
+        calledSuper = true;
+    }
+
+    public boolean inConstructor() {
+        return inConstructor;
     }
 }
