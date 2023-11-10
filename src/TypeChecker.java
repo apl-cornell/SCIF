@@ -49,6 +49,9 @@ public class TypeChecker {
         for (File builtinFile: Utils.BUILTIN_FILES) {
             Symbol result = Parser.parse(builtinFile, null);//p.parse();
             SourceFile root = ((SourceFile) result.value).makeBuiltIn();
+            if (root instanceof ContractFile) {
+                ((ContractFile) root).getContract().clearExtends();
+            }
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(builtinFile.getAbsolutePath()),
                     StandardCharsets.UTF_8);

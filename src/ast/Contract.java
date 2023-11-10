@@ -15,8 +15,9 @@ import java.util.Map;
 public class Contract extends TopLayerNode {
 
     String contractName;
-    String superContractName = "";
-    final boolean extendsSuperContract;
+    String implementsContractName = "";
+    String extendsContractName = "";
+//    final boolean extendsContract;
     TrustSetting trustSetting;
     List<StateVariableDeclaration> varDeclarations;
     List<ExceptionDef> exceptionDefs;
@@ -39,18 +40,18 @@ public class Contract extends TopLayerNode {
         this.methodDeclarations = methodDeclarations;
 
         setDefault();
-        extendsSuperContract = true;
+//        extendsContract = true;
     }
 
     public Contract(String contractName,
-            String superContractName, boolean extendOrImplement,
+            String implementsContractName, String extendsContractName,
             TrustSetting trustSetting,
             List<StateVariableDeclaration> varDeclarations,
             List<ExceptionDef> exceptionDefs,
             List<FunctionDef> methodDeclarations) {
         this.contractName = contractName;
-        this.superContractName = superContractName;
-        this.extendsSuperContract = extendOrImplement;
+        this.implementsContractName = implementsContractName;
+        this.extendsContractName = extendsContractName;
         this.trustSetting = trustSetting;
         this.trustSetting.labelTable.put("this", "address(this)");
         this.varDeclarations = varDeclarations;
@@ -60,8 +61,8 @@ public class Contract extends TopLayerNode {
     }
 
     private void setDefault() {
-        if (superContractName.isEmpty() && !contractName.equals(Utils.BASE_CONTRACT_IMP_NAME)) {
-            superContractName = Utils.BASE_CONTRACT_IMP_NAME;
+        if (extendsContractName.isEmpty() && !contractName.equals(Utils.BASE_CONTRACT_IMP_NAME)) {
+            extendsContractName = Utils.BASE_CONTRACT_IMP_NAME;
         }
     }
 //
@@ -243,132 +244,146 @@ public class Contract extends TopLayerNode {
         return rtn;
     }
 
-    public void codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
-        if (superContractName.equals("")) {
-            return;
+    void checkInterfaceSignature(String implementsContractName, Map<String, Interface> interfaceMap) {
+        Interface itrface = interfaceMap.get(implementsContractName);
+        assert itrface != null : "interface contract not found: " + implementsContractName + " in " + contractName;
+        // check that all methods are implemented
+
+        Map<String, FunctionSig> funcMap = new HashMap<>();
+        for (FunctionDef f : methodDeclarations) {
+            funcMap.put(f.name, f);
+        }
+        for (FunctionSig f : itrface.funcSigs) {
+            String name = f.name;
+            if (funcMap.containsKey(name)) {
+                if (!f.typeMatch(funcMap.get(name))) {
+                    assert false :
+                            contractName + ": implemented method carries unmatched types: "
+                                    + f.signature() + " $ " + funcMap.get(name).signature();
+                }
+            } else {
+                assert false : name + " is not implemented in " + contractName;
+            }
         }
 
-        // check no functions with the same name
-        // add other functions from superContract
-        // trust_list is also inherited
-        Contract superContract = contractMap.get(superContractName);
-        if (superContract == null) {
-            Interface itrface = interfaceMap.get(superContractName);
-            if (itrface == null) {
-                assert false: "super contract not found: " + superContractName;
-                return;
-            }
-            // check that all methods are implemented
+    }
 
-            Map<String, FunctionSig> funcMap = new HashMap<>();
-            for (FunctionDef f: methodDeclarations) {
-                funcMap.put(f.name, f);
+    public void codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
+        if (!implementsContractName.isEmpty()) {
+            // check against the super interface
+            checkInterfaceSignature(implementsContractName, interfaceMap);
+        }
+
+        if (!extendsContractName.isEmpty()) {
+            // check no functions with the same name
+            // add other functions from superContract
+            // trust_list is also inherited
+            Contract superContract = contractMap.get(extendsContractName);
+            assert superContract != null : "super contrasct not found: " + extendsContractName + " in " + contractName;
+
+            // inherit from superContract
+
+            // trust_list
+            List<TrustConstraint> newTrustCons = new ArrayList<>();
+            newTrustCons.addAll(superContract.trustSetting.trust_list);
+            newTrustCons.addAll(trustSetting.trust_list);
+            trustSetting.trust_list = newTrustCons;
+
+            // Statement
+            Map<String, StateVariableDeclaration> varNames = new HashMap<>();
+            Map<String, ExceptionDef> expDefs = new HashMap<>();
+            Map<String, FunctionSig> funcNames = new HashMap<>();
+            Set<String> nameSet = new HashSet<>();
+
+            for (StateVariableDeclaration a : varDeclarations) {
+                Name x = a.name();
+                assert !nameSet.contains(x.id) : "duplicate variable: " + x.id;
+                varNames.put(x.id, a);
+                nameSet.add(x.id);
             }
-            for (FunctionSig f: itrface.funcSigs) {
-                String name = f.name;
-                if (funcMap.containsKey(name)) {
-                    if (!f.typeMatch(funcMap.get(name))) {
-                        assert false: contractName + ": implemented method carries unmatched types: " + f.signature() + " $ " + funcMap.get(name).signature();
-                    }
-                } else {
-                    assert false: name + " is not implemented in " + contractName;
+
+            for (ExceptionDef exp : exceptionDefs) {
+                assert !nameSet.contains(exp.exceptionName) :
+                        "duplicate exception: " + exp.exceptionName;
+                nameSet.add(exp.exceptionName);
+                expDefs.put(exp.exceptionName, exp);
+            }
+
+            for (FunctionDef f : methodDeclarations) {
+                assert !nameSet.contains(f.name) : "duplicate method: " + f.name;
+                nameSet.add(f.name);
+                funcNames.put(f.name, f);
+            }
+
+            List<StateVariableDeclaration> newStateVarDecs = new ArrayList<>();
+            List<ExceptionDef> newExpDefs = new ArrayList<>();
+            List<FunctionDef> newFuncDefs = new ArrayList<>();
+
+            int builtInIndex = 0;
+            for (StateVariableDeclaration a : varDeclarations) {
+                if (a.isBuiltIn())
+                    newStateVarDecs.add(a);
+                else
+                    break;
+                builtInIndex += 1;
+            }
+            for (StateVariableDeclaration a : superContract.varDeclarations) {
+                if (a.isBuiltIn())
+                    continue;
+                Name x = a.name();
+                assert !nameSet.contains(x.id) : x.id;
+
+                newStateVarDecs.add(a);
+            }
+            newStateVarDecs.addAll(varDeclarations.subList(builtInIndex, varDeclarations.size()));
+
+            builtInIndex = 0;
+            for (ExceptionDef a : exceptionDefs) {
+                if (a.isBuiltIn())
+                    newExpDefs.add(a);
+                else
+                    break;
+                builtInIndex += 1;
+            }
+            for (ExceptionDef exp : superContract.exceptionDefs) {
+                if (exp.isBuiltIn())
+                    continue;
+                assert !nameSet.contains(exp.exceptionName) : exp.exceptionName;
+                newExpDefs.add(exp);
+            }
+            newExpDefs.addAll(exceptionDefs.subList(builtInIndex, exceptionDefs.size()));
+
+            builtInIndex = 0;
+            for (FunctionDef a : methodDeclarations) {
+                if (a.isBuiltIn())
+                    newFuncDefs.add(a);
+                else
+                    break;
+                builtInIndex += 1;
+            }
+            for (FunctionDef f : superContract.methodDeclarations) {
+                if (f.isBuiltIn())
+                    continue;
+                boolean overridden = false;
+                if (funcNames.containsKey(f.name)) {
+                    assert funcNames.get(f.name).typeMatch(f);
+                    overridden = true;
+                } else if (varNames.containsKey(f.name)) {
+                    // TODO: var overridden by func
+                    assert false;
+                } else
+                    assert !expDefs.containsKey(f.name);
+
+                if (!overridden) {
+                    newFuncDefs.add(f);
                 }
             }
-            return;
+            newFuncDefs.addAll(methodDeclarations.subList(builtInIndex, methodDeclarations.size()));
+
+            varDeclarations = newStateVarDecs;
+            exceptionDefs = newExpDefs;
+            methodDeclarations = newFuncDefs;
         }
-
-        // inherit from superContract
-
-        // trust_list
-        List<TrustConstraint> newTrustCons = new ArrayList<>();
-        newTrustCons.addAll(superContract.trustSetting.trust_list);
-        newTrustCons.addAll(trustSetting.trust_list);
-        trustSetting.trust_list = newTrustCons;
-
-        // Statement
-        Map<String, StateVariableDeclaration> varNames = new HashMap<>();
-        Map<String, ExceptionDef> expDefs = new HashMap<>();
-        Map<String, FunctionSig> funcNames = new HashMap<>();
-        Set<String> nameSet = new HashSet<>();
-
-        for (StateVariableDeclaration a : varDeclarations) {
-            Name x = a.name();
-            assert !nameSet.contains(x.id): "duplicate variable: " + x.id;
-            varNames.put(x.id, a);
-            nameSet.add(x.id);
-        }
-
-        for (ExceptionDef exp: exceptionDefs) {
-            assert !nameSet.contains(exp.exceptionName): "duplicate exception: " + exp.exceptionName;
-            nameSet.add(exp.exceptionName);
-            expDefs.put(exp.exceptionName, exp);
-        }
-
-        for (FunctionDef f : methodDeclarations) {
-            assert !nameSet.contains(f.name) : "duplicate method: " + f.name;
-            nameSet.add(f.name);
-            funcNames.put(f.name, f);
-        }
-
-        List<StateVariableDeclaration> newStateVarDecs = new ArrayList<>();
-        List<ExceptionDef> newExpDefs = new ArrayList<>();
-        List<FunctionDef> newFuncDefs = new ArrayList<>();
-
-        int builtInIndex = 0;
-        for (StateVariableDeclaration a : varDeclarations) {
-            if (a.isBuiltIn()) newStateVarDecs.add(a);
-            else break;
-            builtInIndex += 1;
-        }
-        for (StateVariableDeclaration a : superContract.varDeclarations) {
-            if (a.isBuiltIn()) continue;
-            Name x = a.name();
-            assert !nameSet.contains(x.id): x.id;
-
-            newStateVarDecs.add(a);
-        }
-        newStateVarDecs.addAll(varDeclarations.subList(builtInIndex, varDeclarations.size()));
-
-        builtInIndex = 0;
-        for (ExceptionDef a : exceptionDefs) {
-            if (a.isBuiltIn()) newExpDefs.add(a);
-            else break;
-            builtInIndex += 1;
-        }
-        for (ExceptionDef exp: superContract.exceptionDefs) {
-            if (exp.isBuiltIn()) continue;
-            assert !nameSet.contains(exp.exceptionName): exp.exceptionName;
-            newExpDefs.add(exp);
-        }
-        newExpDefs.addAll(exceptionDefs.subList(builtInIndex, exceptionDefs.size()));
-
-        builtInIndex = 0;
-        for (FunctionDef a : methodDeclarations) {
-            if (a.isBuiltIn()) newFuncDefs.add(a);
-            else break;
-            builtInIndex += 1;
-        }
-        for (FunctionDef f : superContract.methodDeclarations) {
-            if (f.isBuiltIn()) continue;
-            boolean overridden = false;
-            if (funcNames.containsKey(f.name)) {
-                assert funcNames.get(f.name).typeMatch(f);
-                overridden = true;
-            } else if (varNames.containsKey(f.name)) {
-                // TODO: var overridden by func
-                assert false;
-            } else
-                assert !expDefs.containsKey(f.name);
-
-            if (!overridden) {
-                newFuncDefs.add(f);
-            }
-        }
-        newFuncDefs.addAll(methodDeclarations.subList(builtInIndex, methodDeclarations.size()));
-
-        varDeclarations = newStateVarDecs;
-        exceptionDefs = newExpDefs;
-        methodDeclarations = newFuncDefs;
     }
 
     public String toString() {
@@ -538,6 +553,9 @@ public class Contract extends TopLayerNode {
     private void addBuiltInTrustSettings() {
         trustSetting.addBuiltIns();
     }
-    
-    
+
+
+    public void clearExtends() {
+        extendsContractName = "";
+    }
 }

@@ -74,12 +74,18 @@ public class FunctionDef extends FunctionSig {
                     "Label of this method's return value"));
         }
 
+        if (isConstructor) {
+//            env.setConstructorRecord();
+        }
         //if (!isBuiltIn()) {
             // TODO: add support for signatures
             for (Statement stmt : body) {
                 // logger.debug("stmt: " + stmt);
                 stmt.ntcGenCons(env, now);
             }
+        if (isConstructor) {
+//            assert env.superCalled() : "constructor of super contract is not called in the constructor of " + env.currentSourceFileFullName();
+        }
         //}
         //env.setCurSymTab(env.curSymTab().getParent());
         env.exitNewScope();

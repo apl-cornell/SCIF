@@ -11,6 +11,7 @@ contract ExternallyManagedContractImp implements ExternallyManagedContract {
         owner = sender;
         m_trustManager = _trustManager;
         m_lockManager = _lockManager;
+        super();
         addTrust(m_trustManager);
         addTrust(m_lockManager);
         addTrust(owner);

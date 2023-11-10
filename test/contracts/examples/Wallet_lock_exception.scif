@@ -1,4 +1,4 @@
-contract Wallet [this] extends BaseContract {
+contract Wallet extends BaseContract {
     map(address, uint) balances;
     exception balanceNotEnough();
     exception transferFailure();
