@@ -636,10 +636,10 @@ public class Utils {
         return labeledTypeNode;
     }
 
-    public static String methodNameHash(FunctionSig functionSig) {
-        return methodNameHash(functionSig.signature());
+    public static String methodNameHash(String funName, FunctionSig functionSig) {
+        return methodNameHash(funName, functionSig.signature());
     }
-    public static String methodNameHash(String plainSignature) {
+    public static String methodNameHash(String funName, String plainSignature) {
         // SHA256
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -657,7 +657,7 @@ public class Utils {
                 hexString.insert(0, '0');
             }
 
-            return "_" + hexString.toString();
+            return funName + "_" + hexString.toString();
             // return plainSignature;
         } catch (NoSuchAlgorithmException exc) {
             throw new RuntimeException();

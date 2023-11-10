@@ -1,5 +1,7 @@
 package compile.ast;
 
+import typecheck.Utils;
+
 public class PrimitiveType implements Type {
     public String name() {
         return name;
@@ -11,11 +13,17 @@ public class PrimitiveType implements Type {
 
     @Override
     public String solCode() {
+        if (name.equals("uint")) {
+            return "uint256";
+        }
         return name;
     }
 
     @Override
     public String solCode(boolean isLocal) {
-        return name.equals("bytes") ? name + " memory" : name;
+         if (name.equals("bytes") && isLocal) {
+             return name + " memory";
+         }
+         return solCode();
     }
 }

@@ -23,7 +23,7 @@ public class SolCompiler {
             SolNode node = root.solidityCodeGen(env);
 
             Utils.writeToFile(node, outputFile);
-            Utils.printCode(node);
+            // Utils.printCode(node);
 
         logger.trace("compiling finished");
     }

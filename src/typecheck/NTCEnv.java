@@ -246,7 +246,7 @@ public class NTCEnv {
     public void importContract(String iptContract) {
         InterfaceSym sym = contractSymMap.get(iptContract);
         assert sym != null : "not containing imported contract/interface: " + iptContract;
-        System.err.println("importing contract/interface " + sym.getName());
+        // System.err.println("importing contract/interface " + sym.getName());
         addSym(sym.getName(), sym);
     }
 

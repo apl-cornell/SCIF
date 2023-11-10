@@ -212,7 +212,7 @@ public class FunctionDef extends FunctionSig {
             code.popScope();
             return new Constructor(arguments, statements);
         } else {
-            String methodName = isPublic ? Utils.methodNameHash(this) : name;
+            String methodName = isPublic ? Utils.methodNameHash(name, this) : name;
             List<compile.ast.Statement> statements = new ArrayList<>();
             compile.Utils.addBuiltInVars(isPublic, statements, code);
             List<Argument> arguments = args.solidityCodeGen(code);

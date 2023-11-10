@@ -104,7 +104,7 @@ public class InterfaceFile extends SourceFile {
             Path path = Paths.get(contract);
             if (!path.isAbsolute()) {
                 path = sourceFilePath.getParent().resolve(path).normalize().toAbsolutePath();
-                System.err.println(contract + " -> " + path + " from " + sourceFilePath);
+                // System.err.println(contract + " -> " + path + " from " + sourceFilePath);
             }
             resolvedIptContracts.add(path.toString());
             graph.addEdge(path.toString(), getSourceFilePath());

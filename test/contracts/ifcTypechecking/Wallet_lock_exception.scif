@@ -3,6 +3,14 @@ contract Wallet {
     exception balanceNotEnough();
     exception transferFailure();
 
+//
+//    constructor(...) {
+//        // assignments of all new fields
+//        // ... local operations without `this`
+//        super(...); // any one of the supers can do
+//        // ...
+//    }
+
     @public
     void withdraw(uint _amount) throws (balanceNotEnough, transferFailure) {
         uint amount = endorse(_amount, any -> this);

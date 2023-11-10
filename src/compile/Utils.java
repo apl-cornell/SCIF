@@ -41,7 +41,7 @@ public class Utils {
     public static final PrimitiveType PRIMITIVE_TYPE_BOOL = new PrimitiveType("bool");
     public static final SingleVar THIS_ADDRESS = new SingleVar("address(this)");
     public static final String SOL_TRUE = "true";
-    public static final String TRUSTS_CALL = "_8b3a51b86322ec220cbe1370899851e2ebf340bed94b21dbf31ed0cdf7e0616c"; // "trusts";
+    public static final String TRUSTS_CALL = "trusts_8b3a51b86322ec220cbe1370899851e2ebf340bed94b21dbf31ed0cdf7e0616c"; // "trusts";
     public static final String LOCK_CALL = "acquireLock";
     public static final String UNLOCK_CALL = "releaseLock";
     public static final String NATIVE_DECORATOR = "native";

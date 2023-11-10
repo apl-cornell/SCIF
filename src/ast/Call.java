@@ -459,7 +459,7 @@ public class Call extends TrailerExpr {
         } else {
             assert funcSym != null;
             if (funcSym.isPublic()) {
-                funcName = Utils.methodNameHash(funcSym.plainSignature());
+                funcName = Utils.methodNameHash(funcSym.funcName, funcSym.plainSignature());
             } else {
                 funcName = funcSym.funcName;
             }

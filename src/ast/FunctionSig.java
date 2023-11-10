@@ -257,7 +257,7 @@ public class FunctionSig extends TopLayerNode {
             code.exitVarScope();
             return null;
         } else {
-            String methodName = isPublic ? typecheck.Utils.methodNameHash(this) : name;
+            String methodName = isPublic ? typecheck.Utils.methodNameHash(name, this) : name;
             List<Argument> arguments = args.solidityCodeGen(code);
             Type returnType, originalReturnType = rtn.type().solidityCodeGen(code);
             if (exceptionFree()) {

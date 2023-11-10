@@ -174,7 +174,7 @@ public class Contract extends TopLayerNode {
         }
 
         for (FunctionDef fDef : methodDeclarations) {
-            System.err.println("Typechecking " + fDef.name + "@" + contractName + ": " + fDef.isNative);
+            // System.err.println("Typechecking " + fDef.name + "@" + contractName + ": " + fDef.isNative);
             fDef.genConsVisit(env, tail_position);
         }
     }

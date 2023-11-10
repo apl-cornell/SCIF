@@ -87,7 +87,7 @@ public class TypeChecker {
         for (SourceFile root : roots) {
 //            fileMap.put(root.getSourceFilePath(), root);
             // assert root.ntcAddImportEdges(graph);
-            System.err.println("sourcefile: " + root.getSourceFilePath());
+//            System.err.println("sourcefile: " + root.getSourceFilePath());
             if (root instanceof ContractFile) {
                 contractMap.put(root.getSourceFilePath(), ((ContractFile) root).getContract());
             } else if (root instanceof InterfaceFile) {
@@ -131,7 +131,7 @@ public class TypeChecker {
             ntcEnv.addSourceFile(root.getSourceFilePath(), root);
 
             root.passScopeContext(null);
-            System.err.println("Global checking " + root.getContractName());
+            // System.err.println("Global checking " + root.getContractName());
             assert root.ntcGlobalInfo(ntcEnv, null): root.getContractName();
         }
 
@@ -414,7 +414,7 @@ public class TypeChecker {
         sherrloc.diagnostic.DiagnosticConstraintResult result = Utils.runSherrloc(outputFileName);
         logger.debug("runSLC: " + result);
         if (result.success()) {
-            System.out.println(Utils.TYPECHECK_PASS_MSG);
+            // System.out.println(Utils.TYPECHECK_PASS_MSG);
         } else {
             System.out.println(Utils.TYPECHECK_ERROR_MSG);
             double best = Double.MAX_VALUE;
