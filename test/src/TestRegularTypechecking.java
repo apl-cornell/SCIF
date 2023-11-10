@@ -25,6 +25,7 @@ public class TestRegularTypechecking {
             "ifcTypechecking/WEx1",
             "ifcTypechecking/Wallet_lock_exception",
             "examples/ERC20",
+//            "examples/DeployToken",
     })
     void testPositive(String contractName) {
         File logDir = new File("./.scif");
@@ -53,6 +54,10 @@ public class TestRegularTypechecking {
             // "regularTypechecking/LocalTrust_W01",
             "regularTypechecking/FinalVarNotInitialized_W01",
             "regularTypechecking/FinalVarNotInitialized_W02",
+            "regularTypechecking/Constructor1",
+            "regularTypechecking/Constructor2",
+            "regularTypechecking/Constructor3",
+//            "regularTypechecking/Constructor4",
     })
     void testNegative(String contractName) {
         File logDir = new File("./.scif");
@@ -63,11 +68,17 @@ public class TestRegularTypechecking {
         File NTCConsFile = new File(logDir, "ntc.cons");
         ArrayList<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
+        List<SourceFile> roots = null;
         try {
-            List<SourceFile> roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
-            assertNull(roots);
+            roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
         } catch (Exception exp) {
             exp.printStackTrace();
+        } catch (AssertionError err) {
+            err.printStackTrace();
         }
+        if (roots != null) {
+            assert false;
+        }
+        assertNull(roots);
     }
 }

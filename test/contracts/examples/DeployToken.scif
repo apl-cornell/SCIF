@@ -1,0 +1,11 @@
+import "../basic/EmptyContract2.scif";
+
+contract DeployToken {
+    EmptyContract2 token;
+
+    @public
+    bool deploy() {
+        token = new EmptyContract2();
+        return token.trusts(address(token), address(this));
+    }
+}

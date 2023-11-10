@@ -155,6 +155,7 @@ public class Call extends TrailerExpr {
             }
         }
         assert !env.inConstructor() || env.superCalled() : "should not call methods before called super in constructor: " + funcName + " at " + location.toString();
+        assert args.size() == funcSym.parameters.size() : "number of values provided does not match the number of arguments of the called method: " + funcName + " at " + location.toString();
         this.funcSym = funcSym;
         // typecheck arguments
         for (int i = 0; i < args.size(); ++i) {

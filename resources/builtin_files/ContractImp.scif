@@ -3,6 +3,8 @@ import "./Contract.scif";
 contract ContractImp implements Contract {
     bool m_lock;
 
+    constructor() {}
+
     @public
     @native
     bool trusts(address a, address b) {

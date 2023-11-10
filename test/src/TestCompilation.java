@@ -21,6 +21,7 @@ public class TestCompilation {
             "ifcTypechecking/Wallet_lock_exception",
             "examples/ERC20",
             "examples/SimpleStorage",
+            "examples/DeployToken",
     })
     void testPositive(String contractName) {
         File logDir = new File("./.scif");

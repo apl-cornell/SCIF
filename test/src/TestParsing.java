@@ -25,6 +25,10 @@ public class TestParsing {
             "regularTypechecking/LocalTrust_W01",
             "regularTypechecking/FinalVarNotInitialized_W01",
             "regularTypechecking/FinalVarNotInitialized_W02",
+            "regularTypechecking/Constructor1",
+            "regularTypechecking/Constructor2",
+            "regularTypechecking/Constructor3",
+            "regularTypechecking/Constructor4",
             "ifcTypechecking/LocalTrust",
             "ifcTypechecking/Wallet_lock_exception",
             "builtin_files/Contract",
@@ -41,6 +45,7 @@ public class TestParsing {
             "examples/Dexible",
             "examples/Uniswap_W0",
             "examples/KoET",
+//            "examples/DeployToken",
     })
     void testPositive(String contractName) {
         //if (!contractName.equals("basic/DependentMap")) return;

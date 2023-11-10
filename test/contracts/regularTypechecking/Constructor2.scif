@@ -1,0 +1,10 @@
+contract Constructor {
+    constructor() {
+        foo();
+        super();
+    }
+
+    @public
+    void foo() {
+    }
+}
