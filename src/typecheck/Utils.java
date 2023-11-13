@@ -13,6 +13,8 @@ import sherrloc.constraint.ast.Constructor;
 import sherrloc.constraint.ast.Hypothesis;
 import sherrloc.diagnostic.DiagnosticOptions;
 import sherrloc.diagnostic.ErrorDiagnosis;
+import sherrloc.diagnostic.explanation.Entity;
+import sherrloc.diagnostic.explanation.Explanation;
 import sherrloc.graph.Variance;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
@@ -673,6 +675,66 @@ public class Utils {
 
     public static boolean isSuperConstructor(String name) {
         return name.startsWith(SUPER_PREFIX);
+    }
+
+    public static List<String> SLCEntitiesToStrings(Map<String, SourceFile> programMap, Explanation exp, boolean debug) {
+        if (debug) {
+            System.err.println("#" + exp.getWeight());
+        }
+
+        Set<Entity> entities = exp.getEntities();
+        List<String> result = new ArrayList<>();
+        int index = 0;
+
+        for (Entity entity: entities) {
+            ++index;
+            StringBuffer locBuffer = new StringBuffer();
+            StringBuffer expBuffer = new StringBuffer();
+            entity.toConsoleWithExp(locBuffer, expBuffer);
+
+            System.err.println(locBuffer.toString());
+            System.err.println(expBuffer.toString());
+            int infoEndIndex = locBuffer.indexOf("\"", 1);
+            String infoString = locBuffer.substring(0, infoEndIndex);
+            int rowNoEndIndex = locBuffer.indexOf(",", infoEndIndex);
+            int colNoEndIndex = locBuffer.indexOf("-", rowNoEndIndex);
+            String srow = locBuffer.substring(infoEndIndex + 2, rowNoEndIndex);
+            String scol = locBuffer.substring(rowNoEndIndex + 1, colNoEndIndex);
+            int row = Integer.parseInt(srow), col = Integer.parseInt(scol);
+
+            int fileLoc = locBuffer.indexOf("@");
+            String contractName = locBuffer.substring(fileLoc + 1, infoEndIndex);
+            StringBuilder explanation = new StringBuilder(locBuffer.substring(1, fileLoc));
+            // if (DEBUG) System.out.println("position of #:" + p + " " + contractName);
+            SourceFile program = null; //= programMap.get(contractName);
+            for (SourceFile sourceFile: programMap.values()) {
+                if (sourceFile.getSourceFilePath().equals(contractName)) {
+                    program = sourceFile;
+                    break;
+                }
+            }
+            assert program != null : contractName;
+
+
+            if (row == 0 || col == 0) {
+                // Built-in or default
+                result.add(program.getSourceFilePath() + "\n" + explanation + ".\n");
+            }
+            StringBuilder rtn =
+                    new StringBuilder(index + ":" +
+                            program.getSourceFilePath() + "(" + row + "," + scol + "): " + "\n"
+                                    + explanation + ".\n");
+            rtn.append(program.getSourceCodeLine(row - 1)).append("\n");
+            for (int i = 1; i < col; ++i) {
+                rtn.append(" ");
+            }
+            rtn.append("^");
+
+//            String expString = expBuffer.toString() + (locBuffer.isEmpty() ? "" : ":[" + locBuffer.toString() + "]");
+            result.add(rtn.toString());
+        }
+
+        return result;
     }
 }
 

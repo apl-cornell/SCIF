@@ -428,6 +428,7 @@ public class TypeChecker {
             }
             int idx = 1;
             for (int i = 0; i < result.getSuggestions().size(); ++i) {
+                if (i > 0) continue; // only output the first suggestion
                 double weight = result.getSuggestions().get(i).getWeight();
                 if (best > weight) {
                     best = weight;
@@ -436,11 +437,11 @@ public class TypeChecker {
                     seced = true;
                     System.out.println("Some other possible places:");
                 }
-                String s = Utils.SLCSuggestionToString(programMap, result.getSuggestions().get(i),
+                List<String> s = Utils.SLCEntitiesToStrings(programMap, result.getSuggestions().get(i),
                         DEBUG);
                 if (s != null) {
-                    System.out.println(idx + ":");
-                    System.out.println(s);
+//                    System.out.println(idx + ":");
+                    System.out.println(String.join("\n", s));
                     idx += 1;
                 }
             }

@@ -86,7 +86,7 @@ public class Throw extends Statement {
 
         if (!parent.isCheckedException(exceptionSym, false)) {
             System.err.println("Unchecked exception " + exceptionSym.getName() + " at " + "location: "
-                    + location.toString());
+                    + location.errString());
             throw new RuntimeException();
         }
         return now;
