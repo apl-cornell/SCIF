@@ -91,6 +91,7 @@ terminal ERROR, CONSTRUCTOR;//, PERCENTEQUAL;
 terminal ASSUME;
 terminal REVERT;
 terminal WHILE, FOR;
+terminal NEW;
 
 nonterminal SourceFile sourceCode;
 nonterminal Interface interface;
@@ -1039,7 +1040,7 @@ assert_stmt ::= ASSERT:x expr:a COMMA expr:b SEMI {:
     :};
 
 call_stmt ::=
-    call_expr:c {:
+    call_expr:c SEMI {:
         CallStatement s = new CallStatement(c);
         RESULT = s;
         RESULT.setLoc(new CodeLocation(cleft, cright, filename));
@@ -1125,6 +1126,11 @@ inc_stmt ::=
     ;
 
 expr ::=
+    NEW:n call_expr:constructor_call {:
+        RESULT = new New(constructor_call);
+        RESULT.setLoc(new CodeLocation(nleft, nright, filename));
+    :}
+    |
     NAME:a EQUALGREATER NAME:b {:
         RESULT = new FlowsToExp(new Name(a), new Name(b));
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
@@ -1181,24 +1187,24 @@ assignable ::=
         RESULT = a;
     :};
 
-call_expr ::= trailer_expr:e LPAR RPAR SEMI {:
+call_expr ::= trailer_expr:e LPAR RPAR {:
         Call c = new Call();
         c.setValue(e);
         RESULT = c;
         RESULT.setLoc(new CodeLocation(eleft, eright, filename));
     :}
-    | trailer_expr:e LPAR arglist:c RPAR SEMI {:
+    | trailer_expr:e LPAR arglist:c RPAR {:
              c.setValue(e);
              RESULT = c;
              RESULT.setLoc(new CodeLocation(eleft, eright, filename));
     :}
-    | atom:a LPAR RPAR SEMI {:
+    | atom:a LPAR RPAR {:
         Call c = new Call();
         c.setValue(a);
         RESULT = c;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
-    | atom:a LPAR arglist:c RPAR SEMI {:
+    | atom:a LPAR arglist:c RPAR {:
         c.setValue(a);
         RESULT = c;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));

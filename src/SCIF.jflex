@@ -69,7 +69,7 @@ import java.util.HashMap;
         //keywords.put("super", Integer.valueOf(sym.SUPER));
         // keywords.put("lock", Integer.valueOf(sym.LOCK));
         keywords.put("else", Integer.valueOf(sym.ELSE));
-        //keywords.put("new", Integer.valueOf(sym.NEW));
+        keywords.put("new", Integer.valueOf(sym.NEW));
         keywords.put("final", Integer.valueOf(sym.FINAL));
         keywords.put("static", Integer.valueOf(sym.STATIC));
         keywords.put("throws", Integer.valueOf(sym.THROWS));

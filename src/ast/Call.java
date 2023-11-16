@@ -580,8 +580,8 @@ public class Call extends TrailerExpr {
 //    }
 
     @Override
-    public ArrayList<Node> children() {
-        ArrayList<Node> rtn = new ArrayList<>();
+    public List<Node> children() {
+        List<Node> rtn = new ArrayList<>();
         rtn.add(value);
         rtn.addAll(args);
         return rtn;
