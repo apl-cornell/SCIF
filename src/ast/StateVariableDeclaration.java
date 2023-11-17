@@ -252,4 +252,20 @@ public class StateVariableDeclaration extends TopLayerNode {
 
      */
 
+
+    public VarDec solidityCodeGenStruct(CompileEnv code) {
+        assert value == null;
+        Type varType = type.type().solidityCodeGen(code);
+        String varName = name.id;
+        return new VarDec(false, varType, varName);
+    }
+
+    public VarSym toVarInfo(InterfaceSym interfaceSym) {
+        IfLabel ifl = null;
+        if (type != null) {
+            ifl = type.label();
+        }
+        return interfaceSym.newVarSym(((Name) name).id, type, isStatic, isFinal, isBuiltin, location,
+                scopeContext);
+    }
 }

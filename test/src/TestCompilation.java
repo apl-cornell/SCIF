@@ -13,6 +13,10 @@ public class TestCompilation {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "basic/StructEx04",
+            "basic/StructEx03",
+            "basic/StructEx02",
+            "basic/StructEx01",
             "basic/DependentMap",
             "basic/EmptyContract",
             "basic/EmptyContract2",

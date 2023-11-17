@@ -1,6 +1,6 @@
 package compile.ast;
 
-import typecheck.Utils;
+import compile.Utils;
 
 public class PrimitiveType implements Type {
     public String name() {
@@ -21,9 +21,16 @@ public class PrimitiveType implements Type {
 
     @Override
     public String solCode(boolean isLocal) {
-         if (name.equals("bytes") && isLocal) {
-             return name + " memory";
+         if (isLocal && !isPrimitive()) {
+             return solCode() + " memory";
          }
          return solCode();
+    }
+
+    private boolean isPrimitive() {
+        return name.equals(Utils.PRIMITIVE_TYPE_UINT_NAME) ||
+                name.equals(Utils.PRIMITIVE_TYPE_BOOL_NAME) ||
+                name.equals(Utils.PRIMITIVE_TYPE_VOID_NAME) ||
+                name.equals(Utils.PRIMITIVE_TYPE_ADDRESS_NAME);
     }
 }

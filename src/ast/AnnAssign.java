@@ -261,5 +261,4 @@ public class AnnAssign extends Statement {
     protected java.util.Map<String,? extends compile.ast.Type> readMap(CompileEnv code) {
         return value == null ? new HashMap<>() : value.readMap(code);
     }
-
 }

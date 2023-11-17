@@ -282,4 +282,23 @@ public class NTCEnv {
     public boolean inConstructor() {
         return inConstructor;
     }
+
+    public StructTypeSym toStructType(String structName, List<StateVariableDeclaration> members) {
+        Sym sym = getCurSym(structName);
+        if (sym != null) {
+            assert sym instanceof StructTypeSym: "Existing name: " + structName;
+            return (StructTypeSym) sym;
+        }
+
+        List<VarSym> memberList = new ArrayList<>();
+        for (StateVariableDeclaration member : members) {
+            VarSym tmp = member.toVarInfo(curContractSym);
+            memberList.add(tmp);
+        }
+        return new StructTypeSym(structName, memberList, curContractSym.astNode.getScopeContext());
+    }
+
+    public void addType(String structName, StructTypeSym toStructType) {
+        addSym(structName, toStructType);
+    }
 }

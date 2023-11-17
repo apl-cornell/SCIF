@@ -2,6 +2,8 @@ package ast;
 
 import compile.CompileEnv;
 import compile.ast.SolNode;
+import java.util.List;
+import java.util.stream.Collectors;
 import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
@@ -11,9 +13,10 @@ import java.util.ArrayList;
 public class StructDef extends TopLayerNode {
 
     String structName;
-    ArrayList<AnnAssign> members;
+    List<StateVariableDeclaration> members;
+    boolean isBuiltIn = false;
 
-    public StructDef(String structName, ArrayList<AnnAssign> members) {
+    public StructDef(String structName, List<StateVariableDeclaration> members) {
         this.members = members;
         this.structName = structName;
     }
@@ -30,17 +33,19 @@ public class StructDef extends TopLayerNode {
 
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
-        return false;
+        assert members.size() > 0: "struct should have at least one member: " + structName + " at " + location.errString();
+        env.addType(structName, env.toStructType(structName, members));
+        return true;
     }
 
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        assert false;
+//        assert false;
         return null;
     }
 
-    public SolNode solidityCodeGen(CompileEnv code) {
-        assert false;
-        return null;
+    public compile.ast.StructDef solidityCodeGen(CompileEnv code) {
+        return new compile.ast.StructDef(structName, members.stream().map(m -> m.solidityCodeGenStruct(code)).collect(
+                Collectors.toList()));
     }
 
     @Override
@@ -50,4 +55,7 @@ public class StructDef extends TopLayerNode {
         return rtn;
     }
 
+    public boolean isBuiltIn() {
+        return isBuiltIn;
+    }
 }

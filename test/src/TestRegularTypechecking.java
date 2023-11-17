@@ -16,6 +16,7 @@ public class TestRegularTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "basic/StructEx01",
             "basic/DependentMap",
             "basic/EmptyContract",
             "basic/EmptyContract2",
@@ -50,6 +51,7 @@ public class TestRegularTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "basic/StructEx_W01",
             "regularTypechecking/ExceptionThrowAndCatch_W01",
             "regularTypechecking/ExceptionThrowAndCatch_W02",
             "regularTypechecking/ExceptionThrowAndCatch_W03",

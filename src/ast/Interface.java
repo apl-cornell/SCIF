@@ -20,6 +20,7 @@ public class Interface extends TopLayerNode {
     String contractName;
     String superContractName;
     TrustSetting trustSetting;
+    List<StructDef> structDefs;
     List<StateVariableDeclaration> varDeclarations;
 
     List<ExceptionDef> exceptionDefs;
@@ -27,10 +28,12 @@ public class Interface extends TopLayerNode {
 
     public Interface(String contractName,
             String superContractName,
+            List<StructDef> structDefs,
             List<ExceptionDef> exceptionDefs,
             List<FunctionSig> funcSigs) {
         this.contractName = contractName;
         this.superContractName = superContractName;
+        this.structDefs = structDefs;
         this.exceptionDefs = exceptionDefs;
         this.funcSigs = funcSigs;
 
@@ -52,6 +55,12 @@ public class Interface extends TopLayerNode {
         env.addSym(contractName, interfaceSym);
         env.setCurContractSym(interfaceSym);
         // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
+
+        for (StructDef def: structDefs) {
+            if (!def.ntcGlobalInfo(env, now)) {
+                return false;
+            }
+        }
 
         for (StateVariableDeclaration varDef: varDeclarations) {
             if (!varDef.ntcGlobalInfo(env, now)) {
@@ -79,6 +88,10 @@ public class Interface extends TopLayerNode {
     public void globalInfoVisit(InterfaceSym contractSym) {
         // contractSym.addContract(contractName, contractSym);
         Utils.addBuiltInTypes(contractSym.symTab);
+
+        for (StructDef def: structDefs) {
+            def.globalInfoVisit(contractSym);
+        }
 
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.globalInfoVisit(contractSym);
@@ -120,6 +133,16 @@ public class Interface extends TopLayerNode {
     }
 
     public compile.ast.Interface solidityCodeGen(CompileEnv code) {
+        List<compile.ast.StructDef> structAndExcDefs = new ArrayList<>();
+        for (StructDef structDef: structDefs) {
+            structAndExcDefs.add(structDef.solidityCodeGen(code));
+        }
+
+        for (ExceptionDef exceptionDef: exceptionDefs) {
+            if (!exceptionDef.arguments.empty()) {
+                structAndExcDefs.add(exceptionDef.solidityCodeGen(code));
+            }
+        }
 
         List<compile.ast.FunctionSig> functionSigs = new ArrayList<>();
         for (FunctionSig functionSig: funcSigs)
@@ -127,12 +150,14 @@ public class Interface extends TopLayerNode {
                 functionSigs.add(functionSig.solidityCodeGen(code));
             }
 
-        return new compile.ast.Interface(contractName, functionSigs);
+        return new compile.ast.Interface(contractName, structAndExcDefs, functionSigs);
     }
 
     @Override
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
+        rtn.addAll(structDefs);
+        rtn.addAll(exceptionDefs);
         rtn.addAll(funcSigs);
         return rtn;
     }
@@ -161,6 +186,9 @@ public class Interface extends TopLayerNode {
 
         // check that there are no duplicates
         Set<String> nameSet = new HashSet<>();
+        for (StructDef structDef: structDefs) {
+            nameSet.add(structDef.structName);
+        }
         for (ExceptionDef exp: exceptionDefs) {
             nameSet.add(exp.exceptionName);
         }
@@ -168,6 +196,12 @@ public class Interface extends TopLayerNode {
             nameSet.add(f.name);
         }
 
+        for (StructDef structDef: superContract.structDefs) {
+            if (structDef.isBuiltIn()) continue;
+            if (nameSet.contains(structDef.structName)) {
+                assert false: structDef.structName;
+            }
+        }
         for (ExceptionDef exp: superContract.exceptionDefs) {
             if (exp.isBuiltIn()) continue;
             if (nameSet.contains(exp.exceptionName)) {
@@ -182,17 +216,29 @@ public class Interface extends TopLayerNode {
         }
 
         // paste exceptions and methods
+        List<StructDef> newStrDefs = new ArrayList<>();
         List<ExceptionDef> newExpDefs = new ArrayList<>();
         List<FunctionSig> newFuncSigs = new ArrayList<>();
 
+        newStrDefs.addAll(superContract.structDefs);
+        newStrDefs.addAll(structDefs);
+        for (StructDef structDef: structDefs) {
+            if (structDef.isBuiltIn()) continue;
+            newStrDefs.add(structDef);
+        }
         newExpDefs.addAll(superContract.exceptionDefs);
-        newExpDefs.addAll(exceptionDefs);
+//        newExpDefs.addAll(exceptionDefs);
+        for (ExceptionDef exceptionDef: exceptionDefs) {
+            if (exceptionDef.isBuiltIn()) continue;
+            newExpDefs.add(exceptionDef);
+        }
         newFuncSigs.addAll(superContract.funcSigs);
         for (FunctionSig functionSig: funcSigs) {
             if (functionSig.isBuiltIn()) continue;
             newFuncSigs.add(functionSig);
         }
 
+        structDefs = newStrDefs;
         exceptionDefs = newExpDefs;
         funcSigs = newFuncSigs;
     }

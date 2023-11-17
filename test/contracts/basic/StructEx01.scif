@@ -1,0 +1,12 @@
+contract StructEx {
+    struct s0 {
+        uint x;
+        uint y;
+    }
+
+    s0 a;
+
+    @public void init() {
+        a = new s0(0, 1);
+    }
+}

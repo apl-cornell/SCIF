@@ -19,6 +19,7 @@ public class Contract extends TopLayerNode {
     String extendsContractName = "";
 //    final boolean extendsContract;
     TrustSetting trustSetting;
+    List<StructDef> structDefs;
     List<StateVariableDeclaration> varDeclarations;
     List<ExceptionDef> exceptionDefs;
     private List<FunctionDef> methodDeclarations;
@@ -46,6 +47,7 @@ public class Contract extends TopLayerNode {
     public Contract(String contractName,
             String implementsContractName, String extendsContractName,
             TrustSetting trustSetting,
+            List<StructDef> structDefs,
             List<StateVariableDeclaration> varDeclarations,
             List<ExceptionDef> exceptionDefs,
             List<FunctionDef> methodDeclarations) {
@@ -54,6 +56,7 @@ public class Contract extends TopLayerNode {
         this.extendsContractName = extendsContractName;
         this.trustSetting = trustSetting;
         this.trustSetting.labelTable.put("this", "address(this)");
+        this.structDefs = structDefs;
         this.varDeclarations = varDeclarations;
         this.exceptionDefs = exceptionDefs;
         this.methodDeclarations = methodDeclarations;
@@ -109,6 +112,12 @@ public class Contract extends TopLayerNode {
         env.setCurContractSym(contractSym);
         // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
 
+        for (StructDef def: structDefs) {
+            if (!def.ntcGlobalInfo(env, now)) {
+                return false;
+            }
+        }
+
         for (StateVariableDeclaration dec : varDeclarations) {
             if (!dec.ntcGlobalInfo(env, now)) {
                 return false;
@@ -136,6 +145,9 @@ public class Contract extends TopLayerNode {
         ScopeContext now = new ScopeContext(this, parent);
         env.setCurContractSym(env.getContract(contractName));
 
+        for (StructDef def: structDefs) {
+            def.ntcGenCons(env, now);
+        }
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.ntcGenCons(env, now);
         }
@@ -169,6 +181,9 @@ public class Contract extends TopLayerNode {
 
         // Utils.addBuiltInSymsIfc(contractSym);
 
+        for (StructDef def: structDefs) {
+            def.globalInfoVisit(contractSym);
+        }
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.globalInfoVisit(contractSym);
         }
@@ -226,8 +241,12 @@ public class Contract extends TopLayerNode {
 
         code.setExceptionMap(exceptionTypeSymMap);
         List<VarDec> stateVarDecs = new ArrayList<>();
-        List<compile.ast.StructDef> excDefs = new ArrayList<>();
+        List<compile.ast.StructDef> structAndExcDefs = new ArrayList<>();
         List<Function> methods = new ArrayList<>();
+        for (StructDef structDef: structDefs) {
+            structAndExcDefs.add(structDef.solidityCodeGen(code));
+        }
+
         for (StateVariableDeclaration dec : varDeclarations)
             if (!dec.isBuiltIn()) {
                 stateVarDecs.add(dec.solidityCodeGen(code));
@@ -235,7 +254,7 @@ public class Contract extends TopLayerNode {
 
         for (ExceptionDef exceptionDef: exceptionDefs) {
             if (!exceptionDef.arguments.empty()) {
-                excDefs.add(exceptionDef.solidityCodeGen(code));
+                structAndExcDefs.add(exceptionDef.solidityCodeGen(code));
             }
         }
 
@@ -246,7 +265,7 @@ public class Contract extends TopLayerNode {
 
         methods.addAll(code.tempFunctions());
         code.clearTempFunctions();
-        return new compile.ast.Contract(contractName, implementsContractName, stateVarDecs, excDefs, methods);
+        return new compile.ast.Contract(contractName, implementsContractName, stateVarDecs, structAndExcDefs, methods);
     }
 
     @Override
@@ -261,6 +280,7 @@ public class Contract extends TopLayerNode {
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.addAll(trustSetting.trust_list);
+        rtn.addAll(structDefs);
         rtn.addAll(varDeclarations);
         rtn.addAll(exceptionDefs);
         rtn.addAll(methodDeclarations);
@@ -271,6 +291,30 @@ public class Contract extends TopLayerNode {
         Interface itrface = interfaceMap.get(implementsContractName);
         assert itrface != null : "interface contract not found: " + implementsContractName + " in " + contractName;
         // check that all methods are implemented
+        // check that there are no duplicates
+        Set<String> nameSet = new HashSet<>();
+        for (StructDef structDef: structDefs) {
+            nameSet.add(structDef.structName);
+        }
+        for (ExceptionDef exp: exceptionDefs) {
+            nameSet.add(exp.exceptionName);
+        }
+        for (FunctionSig f: methodDeclarations) {
+            nameSet.add(f.name);
+        }
+
+        for (StructDef structDef: itrface.structDefs) {
+            if (structDef.isBuiltIn()) continue;
+            if (nameSet.contains(structDef.structName)) {
+                assert false: structDef.structName;
+            }
+        }
+        for (ExceptionDef exp: itrface.exceptionDefs) {
+            if (exp.isBuiltIn()) continue;
+            if (nameSet.contains(exp.exceptionName)) {
+                assert false: exp.exceptionName;
+            }
+        }
 
         Map<String, FunctionSig> funcMap = new HashMap<>();
         for (FunctionDef f : methodDeclarations) {
@@ -315,9 +359,15 @@ public class Contract extends TopLayerNode {
 
             // Statement
             Map<String, StateVariableDeclaration> varNames = new HashMap<>();
+//            Map<String, StructDef> strDefs = new HashMap<>();
             Map<String, ExceptionDef> expDefs = new HashMap<>();
             Map<String, FunctionSig> funcNames = new HashMap<>();
             Set<String> nameSet = new HashSet<>();
+            for (StructDef structDef: structDefs) {
+                assert !nameSet.contains(structDef.structName) : "duplicate name: " + structDef.structName;
+//                strDefs.put(structDef.structName, structDef);
+                nameSet.add(structDef.structName);
+            }
 
             for (StateVariableDeclaration a : varDeclarations) {
                 Name x = a.name();
@@ -340,10 +390,28 @@ public class Contract extends TopLayerNode {
             }
 
             List<StateVariableDeclaration> newStateVarDecs = new ArrayList<>();
+            List<StructDef> newStructDefs = new ArrayList<>();
             List<ExceptionDef> newExpDefs = new ArrayList<>();
             List<FunctionDef> newFuncDefs = new ArrayList<>();
 
             int builtInIndex = 0;
+            for (StructDef a: structDefs) {
+                if (a.isBuiltIn()) {
+                    newStructDefs.add(a);
+                } else
+                    break;
+                builtInIndex += 1;
+            }
+            for (StructDef a: superContract.structDefs) {
+                if (a.isBuiltIn()) {
+                    continue;
+                }
+                assert (!nameSet.contains(a.structName)) : a.structName;
+                newStructDefs.add(a);
+            }
+            newStructDefs.addAll(structDefs.subList(builtInIndex, structDefs.size()));
+
+
             for (StateVariableDeclaration a : varDeclarations) {
                 if (a.isBuiltIn())
                     newStateVarDecs.add(a);
@@ -415,6 +483,7 @@ public class Contract extends TopLayerNode {
             }
             newFuncDefs.addAll(methodDeclarations.subList(builtInIndex, methodDeclarations.size()));
 
+            structDefs = newStructDefs;
             varDeclarations = newStateVarDecs;
             exceptionDefs = newExpDefs;
             methodDeclarations = newFuncDefs;

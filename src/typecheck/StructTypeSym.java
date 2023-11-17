@@ -33,4 +33,15 @@ public class StructTypeSym extends TypeSym {
         }
         return null;
     }
+
+    public VarSym getMemberVarInfo(String prefix, int index) {
+        VarSym mb = members.get(index);
+        VarSym rtn = new VarSym(mb);
+        rtn.setName(prefix + "." + rtn.getName());
+        return rtn;
+    }
+
+    public int merberSize() {
+        return members.size();
+    }
 }

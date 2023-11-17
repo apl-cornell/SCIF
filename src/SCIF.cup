@@ -91,7 +91,7 @@ terminal ERROR, CONSTRUCTOR;//, PERCENTEQUAL;
 terminal ASSUME;
 terminal REVERT;
 terminal WHILE, FOR;
-terminal NEW;
+terminal NEW, STRUCT;
 
 nonterminal SourceFile sourceCode;
 nonterminal Interface interface;
@@ -102,6 +102,8 @@ nonterminal Contract contract;
 nonterminal String contract_extends;
 // nonterminal ArrayList<Statement> file_input;
 nonterminal List<StateVariableDeclaration> state_var_decs;
+nonterminal List<StateVariableDeclaration> plain_var_decs;
+nonterminal StateVariableDeclaration plain_var_dec;
 nonterminal StateVariableDeclaration state_var_dec;
 nonterminal List<ExceptionDef> exp_defs;
 nonterminal List<FunctionDef> func_defs;
@@ -161,7 +163,8 @@ nonterminal Endorse endorseExpression;
 nonterminal ast.DepMap depMap;
 nonterminal List<FunctionSig> funcSigs;
 nonterminal FunctionSig funcSig, r_funcSig;
-//nonterminal StructDef structDef;
+nonterminal List<StructDef> structDefs;
+nonterminal StructDef structDef;
 nonterminal FuncLabels tFuncLabels;
 nonterminal IfLabel ifLabelOrNull;
 nonterminal GuardBlock guard_block;
@@ -264,6 +267,7 @@ contract ::=
     CONTRACT NAME: name contract_extends: c_extends
         LBRACE
             trust_setting: t_setting
+            structDefs: s_decs
             state_var_decs: v_decs
             exp_defs: e_defs
             constructors: constructors
@@ -271,12 +275,13 @@ contract ::=
         RBRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, "", c_extends, t_setting, v_decs, e_defs, constructors);
+        RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, e_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name IMPLEMENTS NAME: supercontract
         LBRACE
             trust_setting: t_setting
+            structDefs: s_decs
             state_var_decs: v_decs
             exp_defs: e_defs
             constructors: constructors
@@ -284,12 +289,13 @@ contract ::=
         RBRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, (String) supercontract, "", t_setting, v_decs, e_defs, constructors);
+        RESULT = new Contract((String) name, (String) supercontract, "", t_setting, s_decs, v_decs, e_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name IMPLEMENTS NAME: supercontract contract_extends: c_extends
         LBRACE
             trust_setting: t_setting
+            structDefs: s_decs
             state_var_decs: v_decs
             exp_defs: e_defs
             constructors: constructors
@@ -297,7 +303,7 @@ contract ::=
         RBRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, v_decs, e_defs, constructors);
+        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, e_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | error:err {:
@@ -388,15 +394,15 @@ state_var_decs ::=
     :};
 
 state_var_dec ::=
-    modifiers:m maybeLabeledType:t NAME:a EQUAL expr:b SEMI {:
-        Name name = new Name((String)a);
-        name.setLoc(new CodeLocation(aleft, aright, filename));
-        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, b, false, m.contains(sym.FINAL));
-        RESULT = rnt;
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-
-    :}
-    | modifiers:m maybeLabeledType:t NAME:a SEMI {:
+//    modifiers:m maybeLabeledType:t NAME:a EQUAL expr:b SEMI {:
+//        Name name = new Name((String)a);
+//        name.setLoc(new CodeLocation(aleft, aright, filename));
+//        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, b, false, m.contains(sym.FINAL));
+//        RESULT = rnt;
+//        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+//
+//    :}
+    modifiers:m maybeLabeledType:t NAME:a SEMI {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
         StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, m.contains(sym.FINAL));
@@ -423,6 +429,55 @@ exp_defs ::=
     | {:
         List<ExceptionDef> list = new ArrayList<>();
         RESULT = list;
+    :};
+
+
+structDefs ::=
+    structDefs:list structDef:sDef {:
+        list.add(sDef);
+        RESULT = list;
+    :}
+    | {:
+        List<StructDef> list = new ArrayList<>();
+        RESULT = list;
+    :}
+;
+
+structDef ::=
+    STRUCT:s NAME:n LBRACE plain_var_decs:decs RBRACE {:
+        // n.setLoc(new CodeLocation(nleft, nright, filename));
+        StructDef def = new StructDef((String) n, decs);
+        def.setLoc(new CodeLocation(sleft, sright, filename));
+        RESULT = def;
+    :}
+;
+
+plain_var_decs ::=
+    plain_var_decs:list plain_var_dec:v {:
+        List<StateVariableDeclaration> l = list;
+        l.add(v);
+        RESULT = l;
+    :}
+    | {:
+        List<StateVariableDeclaration> l = new ArrayList<>();
+        RESULT = l;
+    :};
+
+plain_var_dec ::=
+//    modifiers:m maybeLabeledType:t NAME:a EQUAL expr:b SEMI {:
+//        Name name = new Name((String)a);
+//        name.setLoc(new CodeLocation(aleft, aright, filename));
+//        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, b, false, m.contains(sym.FINAL));
+//        RESULT = rnt;
+//        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+//
+//    :}
+    type:t NAME:a SEMI {:
+        Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright, filename));
+        StateVariableDeclaration rnt = new StateVariableDeclaration(name, new LabeledType(t, null), null, false, false);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 
 constructors ::=
@@ -492,12 +547,14 @@ ifLabelOrNull ::= ifLabel:x {:
 interface ::=
     INTERFACE:i NAME:name contract_extends: c_extends
         LBRACE
+            structDefs: s_defs
             exp_defs: e_defs
             funcSigs:a
         RBRACE {:
-            RESULT = new Interface((String)name, c_extends, e_defs, a);
+            RESULT = new Interface((String)name, c_extends, s_defs, e_defs, a);
             RESULT.setLoc(new CodeLocation(ileft, iright, filename));
     :};
+
 
 funcSigs ::=
     funcSig:a {:

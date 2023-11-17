@@ -62,7 +62,7 @@ import java.util.HashMap;
         keywords.put("map", Integer.valueOf(sym.MAP));
         keywords.put("contract", Integer.valueOf(sym.CONTRACT));
         keywords.put("interface", Integer.valueOf(sym.INTERFACE));
-        // keywords.put("struct", Integer.valueOf(sym.STRUCT));
+        keywords.put("struct", Integer.valueOf(sym.STRUCT));
         keywords.put("lock", Integer.valueOf(sym.GUARD));
         keywords.put("extends", Integer.valueOf(sym.EXTENDS));
         keywords.put("implements", Integer.valueOf(sym.IMPLEMENTS));

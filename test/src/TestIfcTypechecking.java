@@ -15,6 +15,7 @@ public class TestIfcTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "basic/StructEx01",
             "applications/ERC20_depmap",
             "ifcTypechecking/Wallet_lock_exception",
             "applications/ERC20_nodepmap",

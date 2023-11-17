@@ -12,6 +12,7 @@ import ast.LabeledType;
 import ast.Map;
 import ast.Node;
 import ast.PrimitiveIfLabel;
+import ast.StateVariableDeclaration;
 import ast.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -235,7 +236,7 @@ public class InterfaceSym extends TypeSym {
         symTab.add(typename, typeSym);
     }
 
-    public TypeSym toStructType(String typeName, ArrayList<AnnAssign> members) {
+    public TypeSym toStructType(String typeName, List<StateVariableDeclaration> members) {
         Sym sym = symTab.lookup(typeName);
         if (sym != null) {
             if (sym instanceof TypeSym) {
@@ -244,8 +245,8 @@ public class InterfaceSym extends TypeSym {
                 return null;
             }
         }
-        ArrayList<VarSym> memberList = new ArrayList<>();
-        for (AnnAssign member : members) {
+        List<VarSym> memberList = new ArrayList<>();
+        for (StateVariableDeclaration member : members) {
             VarSym tmp = member.toVarInfo(this);
             memberList.add(tmp);
         }

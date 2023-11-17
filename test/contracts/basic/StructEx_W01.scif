@@ -1,0 +1,12 @@
+contract StructEx {
+    struct s0 {
+        uint x;
+        uint y;
+    }
+
+    s0 a;
+
+    @public void init(uint b) {
+        a = endorse(b, sender->this);
+    }
+}

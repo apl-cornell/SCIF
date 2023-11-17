@@ -30,15 +30,18 @@ public class Utils {
     public static final String EXCEPTION_RECORDER_NAME = "lastThrownException";
     public static final String EXCEPTION_RECORDER_DATA_NAME = "lastThrownExceptionData";
 
-    public static final PrimitiveType PRIMITIVE_TYPE_UINT = new PrimitiveType("uint");
-    public static final PrimitiveType PRIMITIVE_TYPE_BYTES = new PrimitiveType("bytes");
+    public static final PrimitiveType PRIMITIVE_TYPE_UINT = new PrimitiveType(Utils.PRIMITIVE_TYPE_UINT_NAME);
+    public static final PrimitiveType PRIMITIVE_TYPE_BYTES = new PrimitiveType(Utils.PRIMITIVE_TYPE_BYTES_NAME);
+    public static final PrimitiveType PRIMITIVE_TYPE_BOOL = new PrimitiveType(Utils.PRIMITIVE_TYPE_BOOL_NAME);
+    public static final String PRIMITIVE_TYPE_UINT_NAME = "uint";
+    public static final String PRIMITIVE_TYPE_BYTES_NAME = "bytes";
+    public static final String PRIMITIVE_TYPE_BOOL_NAME = "bool";
     public static final TupleType UNIVERSAL_RETURN_TYPE = new TupleType(List.of(PRIMITIVE_TYPE_UINT, PRIMITIVE_TYPE_BYTES));
     public static final String RESULT_VAR_NAME = "result";
     public static final String SOL_BOOL_EQUAL = "==";
     public static final String RETURNCODE_RETURN = "10000";
     public static final String RETURNCODE_NORMAL = "0";
     public static final String SOL_BOOL_NONEQUAL = "!=";
-    public static final PrimitiveType PRIMITIVE_TYPE_BOOL = new PrimitiveType("bool");
     public static final SingleVar THIS_ADDRESS = new SingleVar("address(this)");
     public static final String SOL_TRUE = "true";
     public static final String TRUSTS_CALL = "trusts";
@@ -50,6 +53,8 @@ public class Utils {
     public static final String SOL_PRIVATE_DECORATOR = "internal";
     public static final String RETURNCODE_FAILURE = "9999";
     public static final String SOL_EXTERNAL_DECORATOR = "external";
+    public static final String PRIMITIVE_TYPE_VOID_NAME = "void";
+    public static final String PRIMITIVE_TYPE_ADDRESS_NAME = "address";
 
     public static String toBinOp(BinaryOperator op) {
         if (op == BinaryOperator.Add)

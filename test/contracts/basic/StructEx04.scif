@@ -1,0 +1,18 @@
+contract StructEx {
+    struct s0 {
+        uint x;
+        uint y;
+    }
+
+    struct s1 {
+        s0 x;
+        uint y;
+    }
+
+    s1 a;
+
+    @public uint init() {
+        a = new s1(new s0(1, 2), 3);
+        return a.y;
+    }
+}

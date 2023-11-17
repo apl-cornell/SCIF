@@ -1,8 +1,8 @@
 contract FinalVar {
-    final uint a = 0;
+    uint a;
 
     @public
     void foo() {
-        final uint a = 0;
+        final uint b = 0;
     }
 }
