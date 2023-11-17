@@ -40,6 +40,10 @@ public abstract class Node {
         return scopeContext + "." + this.getClass().getSimpleName() + "" + location;
     }
 
+    public String nextPcSHL() {
+        return Utils.getLabelNamePc(toSHErrLocFmt()) + ".next";
+    }
+
     /**
      * take each statement as an expression, return the type (context) as result.
      */
@@ -79,5 +83,9 @@ public abstract class Node {
 
     public ScopeContext getScopeContext() {
         return scopeContext;
+    }
+
+    public CodeLocation location() {
+        return location;
     }
 }

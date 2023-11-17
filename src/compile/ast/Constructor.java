@@ -18,7 +18,7 @@ public class Constructor extends Function {
     public List<String> toSolCode(int indentLevel) {
         List<String> result = new ArrayList<>();
         addLine(result, "constructor(" +
-                Utils.argsListSol(args)
+                Utils.argsListSol(args, true)
                 + ") {",indentLevel);
         for (Statement s: body) {
             result.addAll(s.toSolCode(indentLevel + 1));

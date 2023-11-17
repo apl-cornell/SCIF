@@ -15,10 +15,16 @@ public class PsiUnit {
     }
 
     public PsiUnit(Context endContext) {
+        assert endContext != null;
         this.c = endContext;
     }
     public PsiUnit(Context endContext, boolean catchable) {
+        assert endContext != null;
         this.c = endContext;
         this.catchable = catchable;
+    }
+
+    public Context c() {
+        return c;
     }
 }

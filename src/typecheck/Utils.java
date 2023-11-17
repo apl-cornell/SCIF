@@ -61,7 +61,7 @@ public class Utils {
     public static final String PATH_TO_BASECONTRACTCENTRALIZED = "BaseContractCentralized";
 
     public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Static reentrancy locks should be maintained except during the last operation";
-    public static final String ERROR_MESSAGE_LOCK_IN_LAST_OPERATION = "The operation at tail position should respect the final reentrancy lock label";
+//    public static final String ERROR_MESSAGE_LOCK_IN_LAST_OPERATION = "The operation at tail position should respect the final reentrancy lock label";
 
     public static final String DEBUG_UNKNOWN_CONTRACT_NAME = "UNKNOWN";
     public static final String ANONYMOUS_VARIABLE_NAME = "ANONYMOUS";
@@ -724,7 +724,7 @@ public class Utils {
                 result.add(program.getSourceFilePath() + "\n" + explanation + ".\n");
             }
             StringBuilder rtn =
-                    new StringBuilder(index + ":" +
+                    new StringBuilder(
                             program.getSourceFilePath() + "(" + row + "," + scol + "): " + "\n"
                                     + explanation + ".\n");
             rtn.append(program.getSourceCodeLine(row - 1)).append("\n");
@@ -758,6 +758,52 @@ public class Utils {
         int lastDotPos = path.lastIndexOf('.');
         if (lastSlashPos != -1) path = path.substring(0, lastDotPos);
         return path;
+    }
+
+    public static void genSequenceConstraints(VisitEnv env, String prevLambda, String lastPc, String lastLambda, String newPc, CodeLocation location) {
+        env.cons.add(new Constraint(new Inequality(lastPc, newPc), env.hypothesis(), location, env.curContractSym().getName(),
+                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        env.cons.add(new Constraint(new Inequality(lastLambda, joinLabels(prevLambda, newPc)), env.hypothesis(), location, env.curContractSym().getName(),
+                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+    }
+
+    public static Context genNewContextAndConstraints(VisitEnv env, boolean tail_position, Context c, String prevLambda, String newPc, CodeLocation location) {
+        if (tail_position) return c;
+        assert c != null: location.errString();
+        genSequenceConstraints(env, prevLambda, c.pc, c.lambda, newPc, location);
+        return new Context(newPc, c.lambda);
+    }
+
+    public static void genConsStatmentsWithException(List<Statement> body, VisitEnv env, PathOutcome so, PathOutcome psi, boolean tail_positon) {
+        int index = 0;
+        for (Statement s : body) {
+            ++index;
+            String prevLambda = env.inContext.lambda;
+            boolean isTail = index == body.size() && tail_positon;
+            so = s.genConsVisit(env, isTail);
+            psi.joinExe(so);
+            // env.inContext = new Context(so.getNormalPath().c.pc, beginContext.lambda);
+            env.inContext = Utils.genNewContextAndConstraints(env, isTail, so.getNormalPath().c, prevLambda, s.nextPcSHL(), s.location());
+//                    new Context(so.getNormalPath().c);
+
+        }
+    }
+    public static void genConsStatments(List<Statement> body, VisitEnv env, PathOutcome so, boolean tail_positon) {
+        int index = 0;
+        for (Statement s : body) {
+            ++index;
+            String prevLambda = env.inContext.lambda;
+            boolean isTail = index == body.size() && tail_positon;
+            so = s.genConsVisit(env, isTail);
+            PsiUnit normalUnit = so.getNormalPath();
+            if (normalUnit == null) {
+                break;
+            }
+            // env.inContext = new Context(so.getNormalPath().c.pc, beginContext.lambda);
+            env.inContext = Utils.genNewContextAndConstraints(env, isTail, so.getNormalPath().c, prevLambda, s.nextPcSHL(), s.location());
+//                    new Context(so.getNormalPath().c);
+
+        }
     }
 }
 

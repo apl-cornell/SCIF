@@ -195,9 +195,11 @@ public class Call extends TrailerExpr {
             ao = arg.genConsVisit(env, false);
             psi.joinExe(ao.psi);
             argValueLabelNames.add(ao.valueLabelName);
-            env.inContext = new Context(
-                    Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
-                    beginContext.lambda);
+
+            env.inContext = typecheck.Utils.genNewContextAndConstraints(env, false, ao.psi.getNormalPath().c, beginContext.lambda, arg.nextPcSHL(), arg.location);
+//            env.inContext = new Context(
+//                    Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
+//                    beginContext.lambda);
         }
 
         String funcName;
@@ -339,7 +341,8 @@ public class Call extends TrailerExpr {
             }
             funcSym = env.getFunc(funcName);
 
-            dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(), env.sender().toSHErrLocFmt());
+//            dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(), env.sender().toSHErrLocFmt());
+            dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(), env.inContext.pc);
 
             ifFuncCallPcBefore = funcSym.externalPc();
             ifFuncCallPcAfter = funcSym.internalPc();

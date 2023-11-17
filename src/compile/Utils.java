@@ -159,9 +159,9 @@ public class Utils {
                 Collectors.joining(", "));
     }
 
-    public static String argsListSol(List<Argument> arguments) {
+    public static String argsListSol(List<Argument> arguments, boolean isLocal) {
         // T1 name1, T2 name2, ...
-        return arguments.stream().map(a -> a.type().solCode() + ", " + a.name()).collect(
+        return arguments.stream().map(a -> a.type().solCode(isLocal) + " " + a.name()).collect(
                 Collectors.joining(", "));
     }
 

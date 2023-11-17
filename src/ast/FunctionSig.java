@@ -3,9 +3,7 @@ package ast;
 import compile.CompileEnv;
 import compile.Utils;
 import compile.ast.Argument;
-import compile.ast.SolNode;
 import compile.ast.Type;
-import java.util.Arrays;
 import java.util.List;
 import typecheck.*;
 

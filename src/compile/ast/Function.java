@@ -36,7 +36,7 @@ public class Function extends FunctionSig {
                         name + "(" +
                         String.join(", ",
                                 args.stream().map(
-                                        arg -> arg.type.solCode() + " " + arg.name
+                                        arg -> arg.type.solCode(true) + " " + arg.name
                                 ).collect(Collectors.toList())) +
                         ")",
                 indentLevel);

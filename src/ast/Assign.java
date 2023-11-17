@@ -55,7 +55,8 @@ public class Assign extends Statement {
                     "Lock should be maintained before execution of this operation"));*/
             to = target.genConsVisit(env, false);
             ifNameTgt = to.valueLabelName;
-            env.inContext = new Context(to.psi.getNormalPath().c.lambda, beginContext.lambda);
+//            env.inContext = new Context(to.psi.getNormalPath().c.lambda, beginContext.lambda);
+            env.inContext = Utils.genNewContextAndConstraints(env, false, to.psi.getNormalPath().c, beginContext.lambda, target.nextPcSHL(), location);
             // prevContext = tmp;
             // rtnLockName = tmp.lambda;
         } else {

@@ -159,13 +159,14 @@ public class Try extends Statement {
         PathOutcome input = new PathOutcome();
         env.incScopeLayer();
         PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        for (Statement s : body) {
-            so = s.genConsVisit(env, false);
-            psi.joinExe(so);
-            // env.inContext = new Context(so.getNormalPath().c.pc, beginContext.lambda);
-            env.inContext = new Context(so.getNormalPath().c);
-
-        }
+        Utils.genConsStatmentsWithException(body, env, so, psi, false);
+//        for (Statement s : body) {
+//            so = s.genConsVisit(env, false);
+//            psi.joinExe(so);
+//            // env.inContext = new Context(so.getNormalPath().c.pc, beginContext.lambda);
+//            env.inContext = new Context(so.getNormalPath().c);
+//
+//        }
         env.decScopeLayer();
         for (ExceptHandler h : handlers) {
             ExceptionTypeSym expSym = env.getExp(h.name());
@@ -193,7 +194,8 @@ public class Try extends Statement {
             ExceptionTypeSym expSym = env.getExp(h.name());
             PsiUnit expUnit = input.psi.get(expSym);
             if (expUnit != null) {
-                env.inContext = new Context(expUnit.c.pc, beginContext.lambda);
+                env.inContext = Utils.genNewContextAndConstraints(env, false, expUnit.c, beginContext.lambda, h.nextPcSHL(), h.location);
+//                env.inContext = new Context(expUnit.c.pc, beginContext.lambda);
                 PathOutcome ho = h.genConsVisit(env, tail_position);
                 psi.join(ho);
             }

@@ -1,7 +1,6 @@
 package ast;
 
 import compile.CompileEnv;
-import compile.Utils;
 import compile.ast.Assign;
 import compile.ast.Expression;
 import compile.ast.IfStatement;
@@ -125,16 +124,17 @@ public class ExceptHandler extends Node {
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         int index = 0;
         PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        for (Statement stmt : body) {
-            ++index;
-            so = stmt.genConsVisit(env, index == body.size() && tail_position);
-            PsiUnit normalUnit = so.getNormalPath();
-            if (normalUnit == null) {
-                break;
-            }
-            env.inContext = so.getNormalPath().c;
-            // env.prevContext.lambda = rightContext.lambda;
-        }
+        Utils.genConsStatments(body, env, so, tail_position);
+//        for (Statement stmt : body) {
+//            ++index;
+//            so = stmt.genConsVisit(env, index == body.size() && tail_position);
+//            PsiUnit normalUnit = so.getNormalPath();
+//            if (normalUnit == null) {
+//                break;
+//            }
+//            env.inContext = so.getNormalPath().c;
+//            // env.prevContext.lambda = rightContext.lambda;
+//        }
         return so;
     }
 

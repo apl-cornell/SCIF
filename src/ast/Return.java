@@ -77,7 +77,7 @@ public class Return extends Statement {
                         ifRtnLockName), env.hypothesis(), location, env.curContractSym().getName(),
                 "Reentrancy locks must be respected to return"));
         PsiUnit pathn = vo.psi.getNormalPath();
-        vo.psi.setNormalPath(null);
+        vo.psi.removeNormalPath();
         vo.psi.setReturnPath(pathn.c);
 
         return vo.psi;

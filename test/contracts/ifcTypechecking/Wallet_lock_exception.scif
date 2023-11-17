@@ -21,7 +21,7 @@ contract Wallet {
                 } rescue * {
                     throw transferFailure();
                 }
-                balances[sender] = balances[sender] - amount;
+                balances[sender] -= - amount;
             }
         } else {
             throw balanceNotEnough();

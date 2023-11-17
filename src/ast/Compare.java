@@ -53,7 +53,8 @@ public class Compare extends Expression {
         ExpOutcome lo = left.genConsVisit(env, false);
         String ifNameLeft = lo.valueLabelName;
 
-        env.inContext = new Context(lo.psi.getNormalPath().c.pc, beginContext.lambda);
+        env.inContext = typecheck.Utils.genNewContextAndConstraints(env, false, lo.psi.getNormalPath().c, beginContext.lambda, left.nextPcSHL(), left.location);
+//        env.inContext = new Context(lo.psi.getNormalPath().c.pc, beginContext.lambda);
         ExpOutcome ro = right.genConsVisit(env, false);
         String ifNameRight = ro.valueLabelName;
 

@@ -71,6 +71,8 @@ public class If extends Statement {
         //Context condContext = to.psi
         rtnValueLabel = to.valueLabelName;
         String IfNameTest = to.valueLabelName;
+        String IfTestNormalPc = to.psi.getNormalPath().c.pc;
+        String IfTestNormalLambda = to.psi.getNormalPath().c.lambda;
         String IfNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         // env.ctxt += ".If" + location.toString();
         String IfNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
@@ -103,10 +105,11 @@ public class If extends Statement {
                         env.curContractSym().getName(),
                         "Integrity of this condition doesn't flow to the control flow in this if branch"));
 
-        /*if (body.size() > 0 || orelse.size() > 0) {
-            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.GEQ, curContext.lambda), env.hypothesis, test.location, env.curContractSym.name,
-                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-        }*/
+        if (body.size() > 0 || orelse.size() > 0) {
+            Utils.genSequenceConstraints(env, beginContext.lambda, IfTestNormalPc, IfTestNormalLambda, IfNamePcAfter, test.location);
+//            env.cons.add(new Constraint(new Inequality(IfTestNormalPc, IfNamePcAfter), env.hypothesis(), test.location, env.curContractSym().getName(),
+//                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        }
         env.incScopeLayer();
 
         // Context leftContext = new Context(curContext), rightContext = new Context(curContext);
@@ -116,6 +119,7 @@ public class If extends Statement {
         int index = 0;
         for (Statement stmt : body) {
             ++index;
+            String prevLambda = env.inContext.lambda;
             ifo = stmt.genConsVisit(env, index == body.size() && tail_position);
             // env.prevContext = tmp;
             // prev2 = leftContext;
@@ -124,7 +128,7 @@ public class If extends Statement {
             if (normalUnit == null) {
                 break;
             }
-            env.inContext = normalUnit.c;
+            env.inContext = Utils.genNewContextAndConstraints(env, index + 1 == body.size() && tail_position, normalUnit.c, prevLambda, stmt.nextPcSHL(), stmt.location);
             loc = stmt.location;
             // leftContext = new Context(tmp);
         }
@@ -143,12 +147,13 @@ public class If extends Statement {
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
         for (Statement stmt : orelse) {
             ++index;
+            String prevLambda = env.inContext.lambda;
             elseo = stmt.genConsVisit(env, index == orelse.size() && tail_position);
             PsiUnit normalUnit = elseo.getNormalPath();
             if (normalUnit == null) {
                 break;
             }
-            env.inContext = elseo.getNormalPath().c;
+            env.inContext = Utils.genNewContextAndConstraints(env, index + 1 == body.size() && tail_position, normalUnit.c, prevLambda, stmt.nextPcSHL(), stmt.location);
             // env.prevContext.lambda = rightContext.lambda;
         }
         env.decScopeLayer();

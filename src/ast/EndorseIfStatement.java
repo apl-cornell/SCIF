@@ -98,10 +98,11 @@ public class EndorseIfStatement extends Statement {
 
          */
 
-        /*if (body.size() > 0 || orelse.size() > 0) {
-            env.cons.add(new Constraint(new Inequality(prevLockLabel, Relation.GEQ, curContext.lambda), env.hypothesis, test.location, env.curContractSym.name,
-                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-        }*/
+        String IfTestNormalPc = toOutCome.psi.getNormalPath().c.pc;
+        String IfTestNormalLambda = toOutCome.psi.getNormalPath().c.lambda;
+        if (ifStatement.body.size() > 0 || ifStatement.orelse.size() > 0) {
+            Utils.genSequenceConstraints(env, beginContext.lambda, IfTestNormalPc, IfTestNormalLambda, IfNamePcAfter, ifStatement.test.location);
+        }
         env.incScopeLayer();
 
         // test if all vars to be endorsed flows to from-label
@@ -129,21 +130,23 @@ public class EndorseIfStatement extends Statement {
         CodeLocation loc = null;
         PathOutcome ifo = toOutCome.psi;
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        int index = 0;
-        for (Statement stmt : ifStatement.body) {
-            ++index;
-            ifo = stmt.genConsVisit(env, index == ifStatement.body.size() && tail_position);
-            // env.prevContext = tmp;
-            // prev2 = leftContext;
-            //env.context = context;
-            PsiUnit normalUnit = ifo.getNormalPath();
-            if (normalUnit == null) {
-                break;
-            }
-            env.inContext = normalUnit.c;
-            loc = stmt.location;
-            // leftContext = new Context(tmp);
-        }
+        Utils.genConsStatments(ifStatement.body, env, ifo, tail_position);
+
+//        int index = 0;
+//        for (Statement stmt : ifStatement.body) {
+//            ++index;
+//            ifo = stmt.genConsVisit(env, index == ifStatement.body.size() && tail_position);
+//            // env.prevContext = tmp;
+//            // prev2 = leftContext;
+//            //env.context = context;
+//            PsiUnit normalUnit = ifo.getNormalPath();
+//            if (normalUnit == null) {
+//                break;
+//            }
+//            env.inContext = normalUnit.c;
+//            loc = stmt.location;
+//            // leftContext = new Context(tmp);
+//        }
         env.decScopeLayer();
 
         if (createdHypo) {
@@ -154,19 +157,20 @@ public class EndorseIfStatement extends Statement {
         //System.err.println("finished if branch");
         // env.prevContext.lambda = curContext.lambda;
         env.incScopeLayer();
-        index = 0;
+//        index = 0;
         PathOutcome elseo = toOutCome.psi;
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        for (Statement stmt : ifStatement.orelse) {
-            ++index;
-            elseo = stmt.genConsVisit(env, index == ifStatement.orelse.size() && tail_position);
-            PsiUnit normalUnit = elseo.getNormalPath();
-            if (normalUnit == null) {
-                break;
-            }
-            env.inContext = elseo.getNormalPath().c;
-            // env.prevContext.lambda = rightContext.lambda;
-        }
+        Utils.genConsStatments(ifStatement.orelse, env, elseo, tail_position);
+//        for (Statement stmt : ifStatement.orelse) {
+//            ++index;
+//            elseo = stmt.genConsVisit(env, index == ifStatement.orelse.size() && tail_position);
+//            PsiUnit normalUnit = elseo.getNormalPath();
+//            if (normalUnit == null) {
+//                break;
+//            }
+//            env.inContext = elseo.getNormalPath().c;
+//            // env.prevContext.lambda = rightContext.lambda;
+//        }
         env.decScopeLayer();
 
         ifo.join(elseo);

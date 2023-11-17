@@ -15,6 +15,7 @@ public class TestIfcTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "ifcTypechecking/Wallet_lock_exception",
             "applications/ERC20_nodepmap",
             "basic/DependentMap",
             "basic/EmptyContract",
@@ -22,7 +23,6 @@ public class TestIfcTypechecking {
             "basic/ExceptionThrowAndCatch",
             "basic/EndroseIf",
             "examples/SimpleStorage",
-            "ifcTypechecking/Wallet_lock_exception",
             // "basic/Seq",
             "examples/ERC20",
             "examples/DeployToken",

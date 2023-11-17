@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Set;
 
 public class PathOutcome {
-    public HashMap<ExceptionTypeSym, PsiUnit> psi;
+    public Map<ExceptionTypeSym, PsiUnit> psi;
 
     public PathOutcome() {
         psi = new HashMap<>();
     }
 
-    public PathOutcome(HashMap<ExceptionTypeSym, PsiUnit> psi) {
+    public PathOutcome(Map<ExceptionTypeSym, PsiUnit> psi) {
         this.psi = psi;
     }
 
@@ -32,6 +32,7 @@ public class PathOutcome {
     }
 
     public void set(ExceptionTypeSym key, PsiUnit value) {
+        assert value != null;
         psi.put(key, value);
     }
     public void remove(ExceptionTypeSym expSym) {
@@ -40,6 +41,7 @@ public class PathOutcome {
     }
 
     public void setNormalPath(Context endContext) {
+        assert endContext != null;
         set(Utils.getNormalPathException(), endContext);
     }
 
@@ -64,10 +66,15 @@ public class PathOutcome {
     }
 
     public void setReturnPath(Context inContext) {
+        assert inContext != null;
         set(Utils.getReturnPathException(), inContext);
     }
 
     public boolean existsNormalPath() {
-        return getNormalPath().c != null;
+        return getNormalPath() != null;
+    }
+
+    public void removeNormalPath() {
+        remove(Utils.getNormalPathException());
     }
 }

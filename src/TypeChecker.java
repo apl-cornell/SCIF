@@ -426,7 +426,8 @@ public class TypeChecker {
             if (DEBUG) {
                 System.out.println("No of places: " + result.getSuggestions().size());
             }
-            int idx = 1;
+            int idx = 0;
+            Set<String> expSet = new HashSet<>();
             for (int i = 0; i < result.getSuggestions().size(); ++i) {
                 if (i > 0) continue; // only output the first suggestion
                 double weight = result.getSuggestions().get(i).getWeight();
@@ -440,9 +441,14 @@ public class TypeChecker {
                 List<String> s = Utils.SLCEntitiesToStrings(programMap, result.getSuggestions().get(i),
                         DEBUG);
                 if (s != null) {
+                    for (String exp: s) {
+                        if (!expSet.contains(exp)) {
+                            expSet.add(exp);
+                            idx += 1;
+                            System.out.println(idx + ":" + exp + "\n");
+                        }
+                    }
 //                    System.out.println(idx + ":");
-                    System.out.println(String.join("\n", s));
-                    idx += 1;
                 }
             }
             return false;

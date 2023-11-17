@@ -3,13 +3,13 @@ package ast;
 import compile.CompileEnv;
 import compile.CompileEnv.ScopeType;
 import compile.ast.Argument;
-import compile.ast.Assert;
 import compile.ast.Call;
 import compile.ast.Constructor;
 import compile.ast.Function;
 import compile.ast.Return;
 import compile.ast.SingleVar;
 import compile.ast.Type;
+import compile.ast.VarDec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -99,7 +99,7 @@ public class FunctionDef extends FunctionSig {
 
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_info) {
         if (isBuiltIn() || isNative() || isSuperConstructor()) return null;
         env.incScopeLayer();
         addBuiltInVars(env.curSymTab, scopeContext);
@@ -160,29 +160,23 @@ public class FunctionDef extends FunctionSig {
         // Context prev = new Context(env.prevContext);//, prev2 = null;
         CodeLocation loc = null;
         PathOutcome CO = null;
+        env.inContext = funcBeginContext;
+//        Utils.genConsStatments(body, env, CO, true);
         int index = 0;
         for (Statement stmt : body) {
-            if (index == 0) {
-                env.inContext = funcBeginContext;
-            }
             // Context CO = new Context(Utils.getLabelNamePc(stmt.location), Utils.getLabelNameLock(stmt.location));
             // env.outContext = CO;
             ++index;
-            if (stmt instanceof DynamicStatement) {
-                //TODO: ifc check for dynamic statement
-                continue;
-            }
-            CO = stmt.genConsVisit(env, index == body.size() && tail_position);
+            CO = stmt.genConsVisit(env, index == body.size() && tail_info);
             //Context CO = env.outContext;
             if (CO.existsNormalPath()) {
-                env.inContext = new Context(CO.getNormalPath().c);
+                env.inContext = new Context(CO.getNormalPath().c());
             } else {
                 break;
             }
         }
         if (body.size() > 0 && CO.existsNormalPath()) {
-            assert CO != null;
-            Utils.contextFlow(env, CO.getNormalPath().c, funcEndContext.c,
+            Utils.contextFlow(env, CO.getNormalPath().c(), funcEndContext.c(),
                     body.get(body.size() - 1).location);
         }
 
@@ -247,6 +241,9 @@ public class FunctionDef extends FunctionSig {
             if (exceptionFree()) {
                 returnType = originalReturnType;
             } else {
+                if (!returnVoid()) {
+                    statements.add(new VarDec(originalReturnType, compile.Utils.RESULT_VAR_NAME));
+                }
                 returnType = compile.Utils.UNIVERSAL_RETURN_TYPE;
                 for (LabeledType iftype: exceptionList) {
                     code.getExceptionId(code.findExceptionTypeSym(iftype.type().name));

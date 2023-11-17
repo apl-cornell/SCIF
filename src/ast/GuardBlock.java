@@ -70,20 +70,22 @@ public class GuardBlock extends Statement {
         //Context lastContext = new Context(curContext);//, prev2 = null;
         env.incScopeLayer();
         PathOutcome so = null;
-        int index = 0;
-        for (Statement stmt : body) {
-            ++index;
-            /*if (prev2 != null) {
-                env.cons.add(new Constraint(new Inequality(lastContext.lambda, Relation.LEQ, prev2.lambda), env.hypothesis, location, env.curContractSym.name,
-                        Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-            }*/
-            env.inContext = psi.getNormalPath().c;
-            so = stmt.genConsVisit(env, index == body.size() && tail_position);
-            psi.joinExe(so);
-            // env.prevContext = tmp;
-            // prev2 = lastContext;
-            // lastContext = tmp;
-        }
+        env.inContext = psi.getNormalPath().c();
+        Utils.genConsStatmentsWithException(body, env, so, psi, tail_position);
+//        int index = 0;
+//        for (Statement stmt : body) {
+//            ++index;
+//            /*if (prev2 != null) {
+//                env.cons.add(new Constraint(new Inequality(lastContext.lambda, Relation.LEQ, prev2.lambda), env.hypothesis, location, env.curContractSym.name,
+//                        Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+//            }*/
+//            env.inContext = psi.getNormalPath().c;
+//            so = stmt.genConsVisit(env, index == body.size() && tail_position);
+//            psi.joinExe(so);
+//            // env.prevContext = tmp;
+//            // prev2 = lastContext;
+//            // lastContext = tmp;
+//        }
         env.decScopeLayer();
 
         PathOutcome psiOutcome = new PathOutcome();

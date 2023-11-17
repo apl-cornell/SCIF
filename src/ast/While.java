@@ -65,15 +65,16 @@ public class While extends Statement {
         env.inContext = new Context(ifNamePcAfter, beginContext.lambda);
         CodeLocation loc = null;
         PathOutcome ifo = to.psi;
-        for (Statement stmt : body) {
-            ifo = stmt.genConsVisit(env, false);
-
-            PsiUnit normalUnit = ifo.getNormalPath();
-            if (normalUnit == null) break;
-
-            env.inContext = normalUnit.c;
-            loc = stmt.location;
-        }
+        Utils.genConsStatments(body, env, ifo, false);
+//        for (Statement stmt : body) {
+//            ifo = stmt.genConsVisit(env, false);
+//
+//            PsiUnit normalUnit = ifo.getNormalPath();
+//            if (normalUnit == null) break;
+//
+//            env.inContext = normalUnit.c;
+//            loc = stmt.location;
+//        }
 
         env.decScopeLayer();
 
