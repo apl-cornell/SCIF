@@ -83,9 +83,12 @@ public class FuncLabels extends Node {
     public void setToDefault(boolean isConstructor, List<String> decoratorList, CodeLocation funcLocation) {
         //TODO: set end_pc
         IfLabel thisLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_THIS));
+        IfLabel senderLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER));
+        senderLbl.setLoc(funcLocation);
         thisLbl.setLoc(funcLocation);
         if (isConstructor) {
-            begin_pc = to_pc = gamma_label = end_pc = thisLbl;
+            begin_pc = gamma_label = end_pc = senderLbl;
+            to_pc = thisLbl;
             location = funcLocation;
         } else {
             if (gamma_label != null) {
@@ -106,8 +109,6 @@ public class FuncLabels extends Node {
                         }
                     }
                     if (isPublic) {
-                        IfLabel senderLbl = new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER));
-                        senderLbl.setLoc(funcLocation);
                         begin_pc = senderLbl;//new PrimitiveIfLabel(new Name(Utils.LABEL_SENDER));
                         to_pc = thisLbl;
                         gamma_label = thisLbl;

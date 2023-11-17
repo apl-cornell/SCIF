@@ -117,12 +117,18 @@ public class VisitEnv {
         return getContract(funcName) != null;
     }
 
+//    public static int counter = 0;
     public void incScopeLayer() {
+//        counter++;
         curSymTab = new SymTab(curSymTab);
+        hypothesis.enterScope();
     }
 
     public void decScopeLayer() {
+//        counter--;
+//        assert counter >= 0;
         curSymTab = curSymTab.getParent();
+        hypothesis.exitScope();
     }
 
     public boolean containsVar(String id) {

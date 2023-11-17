@@ -45,7 +45,7 @@ public class TestParsing {
             "examples/Dexible",
             "examples/Uniswap_W0",
             "examples/KoET",
-//            "examples/DeployToken",
+            "examples/DeployToken",
             "applications/ERC20",
     })
     void testPositive(String contractName) {

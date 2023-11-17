@@ -35,6 +35,7 @@ public class FunctionSig extends TopLayerNode {
     private boolean isConstructor, isNative;
 
     final private boolean isBuiltin;
+    FuncSym funcSym;
 
     /**
      * @param name          local name of this method
@@ -83,7 +84,7 @@ public class FunctionSig extends TopLayerNode {
             if (name.equals(Utils.CONSTRUCTOR_NAME)) {
                 // return void{any}
                 rtn = new LabeledType(new ast.Type(typecheck.Utils.VOID_TYPE), new PrimitiveIfLabel(new Name(
-                        typecheck.Utils.LABEL_BOTTOM)));
+                        typecheck.Utils.LABEL_SENDER)));
             } else {
                 assert rtn != null;
                 rtn = new LabeledType(rtn.type(),
@@ -167,18 +168,21 @@ public class FunctionSig extends TopLayerNode {
             assert t1 != null: t.type().name;
             exceptions.put(t1, null);
         }
-        contractSymTab.add(name,
-                new FuncSym(name,
-                        isPublic,
-                        isBuiltin,
-                        signature(),
-                        env.newLabel(funcLabels.begin_pc),
-                        env.newLabel(funcLabels.to_pc),
-                        env.newLabel(funcLabels.gamma_label),
-                        argsInfo, env.toTypeSym(rtn.type(), now),
-                        env.newLabel(rtn.label()),
-                        exceptions,
-                        parent, sender, location));
+        funcSym = new FuncSym(name,
+                isPublic,
+                isBuiltin,
+                signature(),
+                env.newLabel(funcLabels.begin_pc),
+                env.newLabel(funcLabels.to_pc),
+                env.newLabel(funcLabels.gamma_label),
+                argsInfo, env.toTypeSym(rtn.type(), now),
+                env.newLabel(rtn.label()),
+                exceptions,
+                parent, sender, location);
+        if (!returnVoid()) {
+            addBuiltInResult(env.curSymTab(), now);
+        }
+        contractSymTab.add(name, funcSym);
         env.exitNewScope();
         return true;
 
@@ -206,8 +210,8 @@ public class FunctionSig extends TopLayerNode {
                     typecheck.Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(),
                             t.type().name()));
         }
-//        System.err.println("adding method: " + name);
-        realContractSymTab.add(name,
+//      System.err.println("adding method: " + name);
+        funcSym =
                 new FuncSym(name,
                         isPublic,
                         isBuiltin,
@@ -216,7 +220,11 @@ public class FunctionSig extends TopLayerNode {
                         contractSym.newLabel(funcLabels.to_pc),
                         contractSym.newLabel(funcLabels.gamma_label),
                         argsInfo, contractSym.toTypeSym(rtn.type(), scopeContext), ifl, exceptions,
-                        contractSym.defContext(), sender, location));
+                        contractSym.defContext(), sender, location);
+        if (!returnVoid()) {
+            addBuiltInResult(contractSym.symTab, scopeContext);
+        }
+        realContractSymTab.add(name, funcSym);
         contractSym.symTab = contractSym.symTab.getParent();
     }
 
@@ -358,6 +366,22 @@ public class FunctionSig extends TopLayerNode {
                         now,
                         true,
                         true,
+                        true
+                ));
+        // final uint{sender} value;
+    }
+
+    protected void addBuiltInResult(SymTab curSymTab, ScopeContext now) {
+        assert !returnVoid();
+        curSymTab.add(typecheck.Utils.RESULT_VARNAME,
+                new VarSym(
+                        typecheck.Utils.RESULT_VARNAME,
+                        funcSym.returnType,
+                        funcSym.rtn,
+                        typecheck.Utils.BUILTIN_LOCATION,
+                        now,
+                        false,
+                        false,
                         true
                 ));
 

@@ -98,11 +98,14 @@ public class Constraint {
         weight = WEIGHT2;
     }
 
-    public String toSherrlocFmt(boolean withPosition) {
+    public String toSherrlocFmt(boolean withHypoAndPosition) {
         if (inequality == null) {
             return "";
         }
-        return inequality.toSherrlocFmt() + " " + hypothesis.toSherrlocFmt()  + ";"
-                + (withPosition && position != null ? position.toSherrlocFmt(explanation, weight) : "");
+        if (withHypoAndPosition && position != null) {
+            return inequality.toSherrlocFmt() + " " + hypothesis.toSherrlocFmt()  + ";" + position.toSherrlocFmt(explanation, weight);
+        } else {
+            return inequality.toSherrlocFmt() + ";";
+        }
     }
 }

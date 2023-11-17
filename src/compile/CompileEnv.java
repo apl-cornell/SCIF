@@ -214,16 +214,20 @@ public class CompileEnv {
         if (l.equals(r)) {
             return new compile.ast.Literal("true");
             // return "true";
-        } else {
-            List<compile.ast.Expression> argValues = new ArrayList<>();
-            argValues.add(new SingleVar(labelTable.containsKey(l) ? labelTable.get(l) : l));
-            argValues.add(new SingleVar(labelTable.containsKey(r) ? labelTable.get(r) : r));
-            return new compile.ast.Call(compile.Utils.TRUSTS_CALL, argValues);
+        }
+        if (r.equals(Utils.LABEL_BOTTOM)) {
+            return new compile.ast.Literal("false");
+        }
+
+        List<compile.ast.Expression> argValues = new ArrayList<>();
+        argValues.add(new SingleVar(labelTable.containsKey(l) ? labelTable.get(l) : l));
+        argValues.add(new SingleVar(labelTable.containsKey(r) ? labelTable.get(r) : r));
+        return new compile.ast.Call(compile.Utils.TRUSTS_CALL, argValues);
 //            return new compile.ast.ExternalCall(new compile.ast.Call("getTrustManager"),
 //                        "trusts", argValues
 //                        );
             // return "().trusts(" + l + ", " + r + ")";
-        }
+
     }
     compile.ast.Call ifUnlocked(String l) {
         return new compile.ast.Call(compile.Utils.BYPASSLOCK_CALL, List.of(new SingleVar(labelTable.containsKey(l) ? labelTable.get(l) : l)));

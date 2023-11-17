@@ -25,7 +25,7 @@ public class TestRegularTypechecking {
             "ifcTypechecking/WEx1",
             "ifcTypechecking/Wallet_lock_exception",
             "examples/ERC20",
-//            "examples/DeployToken",
+            "examples/DeployToken",
             "applications/ERC20",
     })
     void testPositive(String contractName) {

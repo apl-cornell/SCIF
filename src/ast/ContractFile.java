@@ -16,6 +16,7 @@ import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.ScopeContext;
+import typecheck.Utils;
 import typecheck.VisitEnv;
 
 public class ContractFile extends SourceFile {
@@ -141,7 +142,8 @@ public class ContractFile extends SourceFile {
         List<Import> imports = new ArrayList<>();
 
         for (String contractName : iptContracts) {
-            if (!contract.contractName.equals(contractName)) {
+            if (!contract.contractName.equals(contractName) &&
+                !Utils.isBuiltInContractName(contractName)) {
                 imports.add(new Import(contractName));
             }
         }

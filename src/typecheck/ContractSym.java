@@ -27,4 +27,10 @@ public class ContractSym extends InterfaceSym {
     public Contract getContractNode() {
         return (Contract) astNode;
     }
+
+    public FuncSym getConstructorSym() {
+        Sym s = symTab.lookup(Utils.CONSTRUCTOR_KEYWORD);
+        assert s instanceof FuncSym;
+        return (FuncSym) s;
+    }
 }

@@ -2,22 +2,25 @@ package typecheck.sherrlocUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 public class Hypothesis {
-    List<Inequality> inequalities;
+    Stack<Inequality> inequalities;
+    Stack<Integer> scopePos;
     public Hypothesis() {
-        this.inequalities = new ArrayList<>();
+        this.inequalities = new Stack<>();
+        this.scopePos = new Stack<>();
     }
-    public Hypothesis(Inequality inequality) {
-        this.inequalities = new ArrayList<>();
-        this.inequalities.add(inequality);
-    }
-    public Hypothesis(ArrayList<Inequality> inequalities) {
-        this.inequalities = inequalities;
-    }
+//    public Hypothesis(Inequality inequality) {
+//        this.inequalities = new ArrayList<>();
+//        this.inequalities.add(inequality);
+//    }
+//    public Hypothesis(ArrayList<Inequality> inequalities) {
+//        this.inequalities = inequalities;
+//    }
 
     public Hypothesis(Hypothesis hypothesis) {
-        inequalities = new ArrayList<>();
+        inequalities = new Stack<>();
         inequalities.addAll(hypothesis.inequalities);
     }
 
@@ -38,7 +41,22 @@ public class Hypothesis {
         inequalities.add(inequality);
     }
 
-    public void remove() {
-        inequalities.remove(inequalities.size() - 1);
+    public void pop() {
+        inequalities.pop();
+    }
+
+    public void enterScope() {
+        scopePos.push(inequalities.size());
+    }
+
+    public void exitScope() {
+        while (inequalities.size() > scopePos.peek()) {
+            inequalities.pop();
+        }
+        scopePos.pop();
+    }
+
+    public boolean empty() {
+        return inequalities.isEmpty();
     }
 }

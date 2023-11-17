@@ -10,6 +10,9 @@ import java.util.Map;
 import typecheck.*;
 
 import java.util.ArrayList;
+import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Relation;
 
 public class Assert extends Statement {
 
@@ -25,13 +28,31 @@ public class Assert extends Statement {
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         //TODO: exceptions
-        test.genConsVisit(env, tail_position);
-        return null;
+        if (test instanceof FlowsToExp flowsToExp) {
+            Name left = (Name) flowsToExp.lhs, right = (Name) flowsToExp.rhs;
+            if (env.containsVar(left.id) && env.containsVar(right.id)) {
+
+                VarSym l = env.getVar(left.id), r = env.getVar(right.id);
+                logger.debug(l.toString());
+                logger.debug(r.toString());
+                Inequality hypo = new Inequality(l.toSHErrLocFmt(), Relation.LEQ,
+                        r.toSHErrLocFmt());
+
+                env.hypothesis().add(hypo);
+            }
+
+        }
+        return test.genConsVisit(env, tail_position).psi;
     }
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        return null;
+        ScopeContext now = scopeContext;
+        ScopeContext rtn = null;
+        rtn = test.ntcGenCons(env, now);
+        Constraint testCon = rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
+        env.addCons(testCon);
+        return now;
     }
 
     @Override

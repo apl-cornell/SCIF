@@ -87,6 +87,7 @@ public class Utils {
     public static final Iterable<? extends File> BUILTIN_FILES = generateBuiltInFiles();
     public static final String CONSTRUCTOR_KEYWORD = "constructor";
     public static final String SUPER_KEYWORD = "super";
+    public static final String RESULT_VARNAME = "result";
     private static final String SUPER_PREFIX = "$super";
 
     private static Iterable<? extends File> generateBuiltInFiles() {
@@ -735,6 +736,26 @@ public class Utils {
         }
 
         return result;
+    }
+
+    public static boolean isBuiltInContractName(String contractName) {
+        contractName = resolveNameFromPath(contractName);
+        for (String builtInContractPath: BUILTIN_FILENAMES) {
+            String builtInCOntractName = resolveNameFromPath(builtInContractPath);
+//            System.err.println(builtInContractPath);
+            if (builtInCOntractName.equals(contractName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static String resolveNameFromPath(String path) {
+        int lastSlashPos = path.lastIndexOf('/');
+        if (lastSlashPos != -1) path = path.substring(lastSlashPos + 1);
+        int lastDotPos = path.lastIndexOf('.');
+        if (lastSlashPos != -1) path = path.substring(0, lastDotPos);
+        return path;
     }
 }
 

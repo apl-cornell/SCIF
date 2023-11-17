@@ -131,7 +131,7 @@ public class If extends Statement {
         env.decScopeLayer();
 
         if (createdHypo) {
-            env.hypothesis().remove();
+            env.hypothesis().pop();
         }
 
         logger.debug("finished if branch");

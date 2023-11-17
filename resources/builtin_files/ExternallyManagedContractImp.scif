@@ -9,8 +9,8 @@ contract ExternallyManagedContractImp implements ExternallyManagedContract {
 
     constructor(TrustManager _trustManager, LockManager _lockManager) {
         owner = sender;
-        m_trustManager = _trustManager;
-        m_lockManager = _lockManager;
+        m_trustManager = endorse(_trustManager, sender->this);
+        m_lockManager = endorse(_lockManager, sender->this);
         addTrust(address(m_trustManager));
         addTrust(address(m_lockManager));
         addTrust(owner);
