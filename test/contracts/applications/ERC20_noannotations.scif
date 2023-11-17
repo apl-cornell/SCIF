@@ -4,7 +4,6 @@ contract ERC20 {
     uint _totalSupply;
     bytes _name;
     bytes _symbol;
-    uint UINT_MAX;
 
     exception ERC20InvalidSender(address addr);
     exception ERC20InvalidReceiver(address addr);
@@ -40,8 +39,7 @@ contract ERC20 {
     }
 
     @public bool transfer(address to, uint val) throws (ERC20InvalidSender, ERC20InvalidReceiver, ERC20InsufficientBalance) {
-        address owner = sender;
-        _transfer(owner, to, val);
+        _transfer(sender, to, val);
         return true;
     }
 
@@ -50,8 +48,7 @@ contract ERC20 {
     }
 
     @public bool transferFrom(address from, address to, uint val) throws (ERC20InsufficientAllowance, ERC20InvalidSender, ERC20InvalidReceiver, ERC20InsufficientBalance, ERC20InvalidSpender, ERC20InvalidApprover) {
-        address spender = sender;
-        _spendAllowance(from, spender, val);
+        _spendAllowance(from, sender, val);
         _transfer(from, to, val);
         return true;
     }

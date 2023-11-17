@@ -461,6 +461,11 @@ tFuncLabels ::=
         RESULT = new FuncLabels(a, b, c, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
+    | LBRACE:x ifLabelOrNull:a SEMI ifLabelOrNull:c RBRACE {:
+        logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
+        RESULT = new FuncLabels(a, a, c, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
     | LBRACE:x ifLabelOrNull:a RARROW ifLabelOrNull:b RBRACE {:
         logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
         RESULT = new FuncLabels(a, b, b, null);

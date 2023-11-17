@@ -577,10 +577,21 @@ public class Contract extends TopLayerNode {
         );
         botDec.name().setLoc(CodeLocation.builtinCodeLocation(2, 0));
         botDec.setLoc(CodeLocation.builtinCodeLocation(2, 0));
+        StateVariableDeclaration uintmaxDec = new StateVariableDeclaration(
+                new Name(Utils.UINTMAX),
+                new LabeledType(Utils.UINT_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP)), CodeLocation.builtinCodeLocation(3, 1)),
+                null,
+                true,
+                true,
+                true
+        );
+        uintmaxDec.name().setLoc(CodeLocation.builtinCodeLocation(3, 0));
+        uintmaxDec.setLoc(CodeLocation.builtinCodeLocation(3, 0));
         List<StateVariableDeclaration> newDecs = new ArrayList<>();
         newDecs.add(topDec);
         newDecs.add(botDec);
         newDecs.add(thisDec);
+        newDecs.add(uintmaxDec);
         newDecs.addAll(varDeclarations);
         varDeclarations = newDecs;
     }

@@ -1,0 +1,114 @@
+contract ERC20 {
+    map(address, uint) _balances;
+    map(address, map(address, uint)) _allowances;
+    uint _totalSupply;
+    bytes _name;
+    bytes _symbol;
+
+    exception ERC20InvalidSender(address addr);
+    exception ERC20InvalidReceiver(address addr);
+    exception ERC20InvalidApprover(address addr);
+    exception ERC20InvalidSpender(address addr);
+    exception ERC20InsufficientBalance(address owner, uint cur, uint needed);
+    exception ERC20InsufficientAllowance(address owner, uint cur, uint needed);
+
+    constructor(bytes name_, bytes symbol_) {
+        _name = endorse(name_, sender->this);
+        _symbol = endorse(symbol_, sender->this);
+        super();
+    }
+
+    @public bytes name() {
+        return _name;
+    }
+
+    @public bytes symbol() {
+        return _symbol;
+    }
+
+    @public uint decimals() {
+        return 18;
+    }
+
+    @public uint totalSupply() {
+        return _totalSupply;
+    }
+
+    @public uint balanceOf(address account) {
+        return _balances[account];
+    }
+
+    @public bool transfer(address to, uint val) throws (ERC20InvalidSender, ERC20InvalidReceiver, ERC20InsufficientBalance) {
+        _transfer(sender, endorse(to, sender->this), endorse(val, sender->this));
+        return true;
+    }
+
+    @public uint allowance(address owner, address spender) {
+        return endorse(_allowances[owner][spender], sender->this);
+    }
+
+    @public bool transferFrom(address from, address to, uint val) throws (ERC20InsufficientAllowance, ERC20InvalidSender, ERC20InvalidReceiver, ERC20InsufficientBalance, ERC20InvalidSpender, ERC20InvalidApprover) {
+        address _from = endorse(from, sender->this);
+        address _to = endorse(to, sender->this);
+        uint _val = endorse(val, sender->this);
+        _spendAllowance(_from, sender, _val);
+        _transfer(_from, _to, _val);
+        return true;
+    }
+
+
+    void _transfer(address from, address to, uint val) throws (ERC20InvalidSender, ERC20InvalidReceiver, ERC20InsufficientBalance) {
+        if (from == address(0)) {
+            throw ERC20InvalidSender(address(0));
+        }
+        if (to == address(0)) {
+            throw ERC20InvalidReceiver(address(0));
+        }
+        _update(from, to, val);
+    }
+
+    void _update(address from, address to, uint val) throws (ERC20InsufficientBalance) {
+        if (from == address(0)) {
+            _totalSupply += val;
+        } else {
+            uint fromBalance = _balances[from];
+            if (fromBalance < val) {
+                throw ERC20InsufficientBalance(from, fromBalance, val);
+            }
+            _balances[from] = fromBalance - val;
+        }
+
+        if (to == address(0)) {
+            _totalSupply -= val;
+        } else {
+            _balances[to] -= val;
+        }
+    }
+
+    void _burn(address account, uint val) throws (ERC20InvalidSender, ERC20InsufficientBalance) {
+        if (account == address(0)) {
+            throw ERC20InvalidSender(address(0));
+        }
+        _update(account, address(0), val);
+    }
+
+    void _approve(address owner, address spender, uint val) throws (ERC20InvalidSpender, ERC20InvalidApprover) {
+        if (owner == address(0)) {
+            throw ERC20InvalidApprover(address(0));
+        }
+        if (spender == address(0)) {
+            throw ERC20InvalidSpender(address(0));
+        }
+        _allowances[owner][spender] = val;
+    }
+
+    void _spendAllowance(address owner, address spender, uint val) throws (ERC20InsufficientAllowance, ERC20InvalidApprover, ERC20InvalidSpender) {
+        uint currentAllowance = allowance(owner, spender);
+        if (currentAllowance != UINT_MAX) {
+            if (currentAllowance < val) {
+                throw ERC20InsufficientAllowance(spender, currentAllowance, val);
+            }
+            _approve(owner, spender, currentAllowance - val);
+        }
+    }
+}

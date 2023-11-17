@@ -1,6 +1,7 @@
 package compile.ast;
 
 import java.util.List;
+import typecheck.Utils;
 
 public class SingleVar extends Expression {
     String name;
@@ -14,6 +15,13 @@ public class SingleVar extends Expression {
 
     @Override
     public String toSolCode() {
+        return translateBuiltInVars(name());
+    }
+
+    private String translateBuiltInVars(String name) {
+        if (name.equals(Utils.UINTMAX)) {
+            return "type(uint256).max";
+        }
         return name;
     }
 }

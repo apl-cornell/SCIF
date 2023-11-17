@@ -6,6 +6,6 @@ contract DeployToken {
     @public
     bool{any} deploy{any->this;any}() {
         token = new EmptyContract2();
-        result = token.trusts(address(token), address(this));
+        return token.trusts(address(token), address(this));
     }
 }

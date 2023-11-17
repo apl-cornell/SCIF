@@ -26,7 +26,8 @@ public class TestRegularTypechecking {
             "ifcTypechecking/Wallet_lock_exception",
             "examples/ERC20",
             "examples/DeployToken",
-            "applications/ERC20",
+            "applications/ERC20_noannotations",
+            "applications/ERC20_nodepmap",
     })
     void testPositive(String contractName) {
         File logDir = new File("./.scif");

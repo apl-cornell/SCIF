@@ -88,6 +88,8 @@ public class Utils {
     public static final String CONSTRUCTOR_KEYWORD = "constructor";
     public static final String SUPER_KEYWORD = "super";
     public static final String RESULT_VARNAME = "result";
+    public static final String UINTMAX = "UINT_MAX";
+    public static final String UINT_TYPE = "uint";
     private static final String SUPER_PREFIX = "$super";
 
     private static Iterable<? extends File> generateBuiltInFiles() {

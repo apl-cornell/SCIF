@@ -46,7 +46,8 @@ public class TestParsing {
             "examples/Uniswap_W0",
             "examples/KoET",
             "examples/DeployToken",
-            "applications/ERC20",
+            "applications/ERC20_noannotations",
+            "applications/ERC20_nodepmap",
     })
     void testPositive(String contractName) {
         //if (!contractName.equals("basic/DependentMap")) return;

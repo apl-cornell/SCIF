@@ -15,6 +15,7 @@ public class TestIfcTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "applications/ERC20_nodepmap",
             "basic/DependentMap",
             "basic/EmptyContract",
             "basic/EmptyContract2",
@@ -25,7 +26,6 @@ public class TestIfcTypechecking {
             // "basic/Seq",
             "examples/ERC20",
             "examples/DeployToken",
-//            "applications/ERC20",
     })
     void testPositive(String contractName) {
         File logDir = new File("./.scif");
@@ -73,6 +73,7 @@ public class TestIfcTypechecking {
             "ifcTypechecking/Wallet_lock_exception_W01",
             "ifcTypechecking/Wallet_lock_exception_W02",
             "ifcTypechecking/DependentMap_W01",
+            "applications/ERC20_noannotations",
             // "examples/ERC20",
     })
     void testNegative(String contractName) {
