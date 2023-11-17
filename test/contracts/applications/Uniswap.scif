@@ -1,3 +1,278 @@
 contract Uniswap {
+    bytes name;
+    bytes symbol;
+    uint decimals;
+    uint totalSupply;
+    map(address, uint) balances;
+    map(address, map(address, uint)) allowances;
+    ERC20 token;
+
+    @public constructor(address token_addr) {
+        assert (token == address(0) && token_addr != address(0));
+        token = ERC20(token_addr);
+        name = bytes(0x556e697377617020563100000000000000000000000000000000000000000000);
+        symbol = bytes(0x554e492d56310000000000000000000000000000000000000000000000000000);
+        decimals = 18;
+    }
+
+    @public uint addLiquidity(uint min_liquidity, uint max_tokens, uint deadline) {
+        assert (deadline > now && max_tokens > 0 && value > 0);
+        uint total_liquidity = totalSupply;
+        if (total_liquidity > 0) {
+            assert (min_liquidity > 0);
+            uint eth_reserve = balance(address(this)) - value;
+            uint token_reserve = token.balanceOf(address(this));
+            uint token_amount = value * token_reserve / eth_reserve + 1;
+            uint liquidity_minted = value * total_liquidity / eth_reserve;
+            assert (max_tokens >= token_amount && liquidity_minted >= min_liquidity);
+            balances[sender] += liquidity_minted;
+            totalSupply = total_liquidity + liquidity_minted;
+            assert (token.transferFrom(sender, address(this), token_amount));
+            return liquidity_minted;
+        }
+        else {
+            assert (self.token != address(0) and value >= 1000000000);
+            // assert self.factory.getExchange(self.token) == self
+            uint token_amount = max_tokens;
+            uint initial_liquidity = balance(address(this));
+            totalSupply = initial_liquidity;
+            balances[sender] = initial_liquidity;
+            assert (token.transferFrom(sender, address(this), token_amount));
+            return initial_liquidity;
+        }
+    }
+
+    @public void removeLiquidity(uint amount, uint min_eth, uint min_tokens, uint deadline) {
+        assert ((amount > 0 && deadline > now) and (min_eth > 0 and min_tokens > 0));
+        uint total_liquidity = totalSupply;
+        assert (total_liquidity > 0);
+        uint token_reserve = token.balanceOf(address(this));
+        uint eth_amount = amount * balance(address(this)) / total_liquidity;
+        uint token_amount = amount * token_reserve / total_liquidity;
+        assert (eth_amount >= min_eth && token_amount >= min_tokens);
+        balances[sender] -= amount;
+        totalSupply = total_liquidity - amount;
+        send(sender, eth_amount);
+        assert (token.transfer(sender, token_amount));
+//        return eth_amount, token_amount
+    }
+
+    uint getInputPrice(uint input_amount, uint input_reserve, uint output_reserve) {
+        assert (input_reserve > 0 && output_reserve > 0);
+        uint input_amount_with_fee = input_amount * 997;
+        uint numerator = input_amount_with_fee * output_reserve;
+        uint denominator = (input_reserve * 1000) + input_amount_with_fee;
+        return numerator / denominator;
+    }
+
+    uint getOutputPrice(uint output_amount, uint input_reserve, uint output_reserve) {
+        assert (input_reserve > 0 && output_reserve > 0);
+        uint numerator = input_reserve * output_amount * 1000;
+        uint denominator = (output_reserve - output_amount) * 997;
+        return numerator / denominator + 1;
+    }
+
+    uint ethToTokenInput(uint eth_sold, uint min_tokens, uint timestamp, address buyer, address recipient) {
+        assert (deadline >= now && (eth_sold > 0 && min_tokens > 0));
+        uint token_reserve = token.balanceOf(address(this));
+        uint tokens_bought = getInputPrice(eth_sold, self.balance - eth_sold, token_reserve);
+        assert (tokens_bought >= min_tokens);
+        assert (token.transfer(recipient, tokens_bought));
+        return tokens_bought;
+    }
+
+    @public uint ethToTokenSwapInput(uint min_tokens, uint deadline) {
+        return ethToTokenInput(value, min_tokens, deadline, sender, sender);
+    }
+
+    @public ethToTokenTransferInput(uint min_tokens, uint deadline, address recipient) {
+        assert (recipient != address(this) and recipient != address(0));
+        return ethToTokenInput(value, min_tokens, deadline, sender, recipient);
+    }
+
+    uint ethToTokenOutput(uint tokens_bought, uint max_eth, uint deadline, address buyer, address recipient) {
+        assert (deadline >= now && (tokens_bought > 0 && max_eth > 0));
+        uint token_reserve = token.balanceOf(address(this));
+        uint eth_sold = getOutputPrice(tokens_bought, balance(address(this)) - max_eth, token_reserve);
+        uint eth_refund = max_eth - eth_sold;
+        if (eth_refund > 0) {
+            send(buyer, eth_refund);
+        }
+        assert (token.transfer(recipient, tokens_bought));
+        return eth_sold;
+    }
+
+    @public uint ethToTokenSwapOutput(uint tokens_bought, uint deadline) {
+        return ethToTokenOutput(tokens_bought, value, deadline, sender, sender);
+    }
+
+    @public uint ethToTokenTransferOutput(uint tokens_bought, uint deadline, address recipient) {
+        assert (recipient != address(this) && recipient != address(0));
+        return ethToTokenOutput(tokens_bought, value, deadline, sender, recipient);
+    }
+
+    uint tokenToEthInput(uint tokens_sold, uint min_eth, uint deadline, address buyer, address recipient) {
+        assert (deadline >= now && (tokens_sold > 0 && min_eth > 0));
+        uint token_reserve = token.balanceOf(address(this));
+        uint eth_bought = getInputPrice(tokens_sold, token_reserve, balance(address(this)));
+        uint wei_bought = eth_bought;
+        assert (wei_bought >= min_eth);
+        send(recipient, wei_bought);
+        assert (token.transferFrom(buyer, self, tokens_sold));
+        return wei_bought;
+    }
+
+    @public uint tokenToEthSwapInput(uint tokens_sold, uint min_eth, uint deadline) {
+        return tokenToEthInput(tokens_sold, min_eth, deadline, sender, sender);
+    }
+
+    @public uint tokenToEthTransferInput(uint tokens_sold, uint min_eth, uint deadline, address recipient) {
+        assert (recipient != address(this) and recipient != address(0));
+        return tokenToEthInput(tokens_sold, min_eth, deadline, sender, recipient);
+    }
+
+    uint tokenToEthOutput(uint eth_bought, uint max_tokens, uint deadline, address buyer, address recipient) {
+        assert (deadline >= now && eth_bought > 0);
+        uint token_reserve = token.balanceOf(address(this));
+        uint tokens_sold = getOutputPrice(eth_bought, token_reserve, balance(address(this)));
+        assert (max_tokens >= tokens_sold);
+        send(recipient, eth_bought);
+        assert token.transferFrom(buyer, address(this), tokens_sold);
+        return tokens_sold;
+    }
+
+    @public uint tokenToEthSwapOutput(uint eth_bought, uint max_tokens, uint deadline) {
+        return tokenToEthOutput(eth_bought, max_tokens, deadline, sender, sender);
+    }
+
+    @public uint tokenToEthTransferOutput(uint eth_bought, uint max_tokens, uint deadline, address recipient) {
+        assert (recipient != address(this) && recipient != address(0));
+        return tokenToEthOutput(eth_bought, max_tokens, deadline, sender, recipient);
+    }
+
+    uint tokenToTokenInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address buyer, address recipient, address exchange_addr) {
+        assert ((deadline >= now && tokens_sold > 0) && (min_tokens_bought > 0 && min_eth_bought > 0));
+        assert (exchange_addr != address(this) && exchange_addr != address(0));
+        uint token_reserve = token.balanceOf(address(this));
+        uint eth_bought = getInputPrice(tokens_sold, token_reserve, balance(address(this)));
+        uint wei_bought = eth_bought;
+        assert (wei_bought >= min_eth_bought);
+        assert (token.transferFrom(buyer, address(this), tokens_sold));
+        uint tokens_bought = Exchange(exchange_addr).ethToTokenTransferInput(min_tokens_bought, deadline, recipient, wei_bought);
+        return tokens_bought;
+    }
+
+    @public uint tokenToTokenSwapInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address token_addr) {
+//        exchange_addr: address = self.factory.getExchange(token_addr)
+        return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, sender, exchange_addr);
+    }
+
+    @public uint tokenToTokenTransferInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address token_addr, address token_addr) {
+//    exchange_addr: address = self.factory.getExchange(token_addr)
+        return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, recipient, exchange_addr);
+    }
+
+    uint tokenToTokenOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address buyer, address recipient, address exchange_addr) {
+        assert (deadline >= now && (tokens_bought > 0 && max_eth_sold > 0));
+        assert (exchange_addr != address(this) && exchange_addr != address(0));
+        uint eth_bought = Exchange(exchange_addr).getEthToTokenOutputPrice(tokens_bought);
+        uint token_reserve = token.balanceOf(address(this));
+        uint tokens_sold = getOutputPrice(eth_bought, token_reserve, balance(address(this));
+        assert (max_tokens_sold >= tokens_sold && max_eth_sold >= eth_bought);
+        assert (token.transferFrom(buyer, address(this), tokens_sold));
+        uint eth_sold = Exchange(exchange_addr).ethToTokenTransferOutput(tokens_bought, deadline, recipient, eth_bought);
+        return tokens_sold;
+    }
+
+    @public uint tokenToTokenSwapOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address token_addr) {
+//        exchange_addr: address = self.factory.getExchange(token_addr)
+        return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, sender, exchange_addr);
+    }
+
+    @public uint tokenToTokenTransferOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address recipient, address token_addr) {
+//        exchange_addr: address = self.factory.getExchange(token_addr)
+        return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, recipient, exchange_addr);
+    }
+
+    @public uint tokenToExchangeSwapInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address exchange_addr) {
+        return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, sender, exchange_addr);
+    }
+
+    @public uint tokenToExchangeTransferInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address recipient, address exchange_addr) {
+        assert (recipient != address(this));
+        return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, recipient, exchange_addr);
+    }
+
+    @public uint tokenToExchangeSwapOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address exchange_addr) {
+        return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, sender, exchange_addr);
+    }
+
+    @public uint tokenToExchangeTransferOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address recipient, address exchange_addr)) {
+        assert (recipient != address(this));
+        return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, recipient, exchange_addr);
+    }
+
+    @public uint getEthToTokenInputPrice(uint eth_sold) {
+        assert (eth_sold > 0);
+        uint token_reserve = token.balanceOf(address(this));
+        return getInputPrice(eth_sold, self.balance, token_reserve);
+    }
+
+    @public uint getEthToTokenOutputPrice(uint tokens_bought) {
+        assert (tokens_bought > 0);
+        uint token_reserve = token.balanceOf(address(this));
+        uint eth_sold = getOutputPrice(tokens_bought, balance(address(this)), token_reserve);
+        return eth_sold;
+    }
+
+    @public uint getTokenToEthInputPrice(uint tokens_sold) {
+        assert (tokens_sold > 0);
+        uint token_reserve = token.balanceOf(address(this));
+        uint eth_bought = getInputPrice(tokens_sold, token_reserve, balance(address(this)));
+        return eth_bought;
+    }
+
+    @public uint getTokenToEthOutputPrice(uint eth_bought) {
+        assert (eth_bought > 0);
+        uint token_reserve = token.balanceOf(address(this));
+        return getOutputPrice(eth_bought, token_reserve, balance(address(this)));
+    }
+
+    @public address tokenAddress() {
+        return address(token);
+    }
+
+
+//# @return Address of factory that created this exchange.
+//@public
+//@constant
+//def factoryAddress() -> address(Factory):
+//    return self.factory
+
+    @public uint balanceOf(address _owner) {
+        return balances[_owner];
+    }
+
+    @public bool transfer(address _to, uint _value) {
+        balances[sender] -= _value;
+        balances[_to] += _value;
+        return true;
+    }
+
+    @public bool transferFrom(address _from, address _to, uint _value) {
+        balances[_from] -= _value;
+        balances[_to] += _value;
+        allowances[_from][sender] -= _value;
+        return true;
+    }
+
+    @public bool approve(address _spender, uint _value) {
+        allowances[sender][_spender] = _value;
+        return true;
+    }
+
+    @public uint allowance(address _owner, address _spender) {
+        return allowances[_owner][_spender];
+    }
 
 }
