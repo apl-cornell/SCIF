@@ -429,7 +429,7 @@ public class TypeChecker {
             int idx = 0;
             Set<String> expSet = new HashSet<>();
             for (int i = 0; i < result.getSuggestions().size(); ++i) {
-                if (i > 0) continue; // only output the first suggestion
+                // if (i > 0) continue; // only output the first suggestion
                 double weight = result.getSuggestions().get(i).getWeight();
                 if (best > weight) {
                     best = weight;

@@ -47,7 +47,7 @@ public class Name extends Variable {
             assert false;
             return null;
         }
-        assert false : id;
+        assert false : "variable not found: " + id + " at " + location.errString();
         return null;
     }
 

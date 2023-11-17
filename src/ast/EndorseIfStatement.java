@@ -9,6 +9,7 @@ import java.util.Map;
 import typecheck.CodeLocation;
 import typecheck.Context;
 import typecheck.ExpOutcome;
+import typecheck.Label;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.PsiUnit;
@@ -98,18 +99,20 @@ public class EndorseIfStatement extends Statement {
 
          */
 
-        String IfTestNormalPc = toOutCome.psi.getNormalPath().c.pc;
-        String IfTestNormalLambda = toOutCome.psi.getNormalPath().c.lambda;
+        String IfTestNormalPc = beginContext.pc;
+        String IfTestNormalLambda = beginContext.lambda;
         if (ifStatement.body.size() > 0 || ifStatement.orelse.size() > 0) {
             Utils.genSequenceConstraints(env, beginContext.lambda, IfTestNormalPc, IfTestNormalLambda, IfNamePcAfter, ifStatement.test.location);
         }
         env.incScopeLayer();
 
+        Label fromLabel = env.toLabel(from);
+        Label toLabel = env.toLabel(to);
         // test if all vars to be endorsed flows to from-label
         for (Name name: expressionList) {
             String id = name.id;
             VarSym sym = env.getVar(id);
-            env.cons.add(new Constraint(new Inequality(sym.labelNameSLC(), from.toSHErrLocFmt()), env.hypothesis(), name.location, env.curContractSym().getName(),
+            env.cons.add(new Constraint(new Inequality(sym.labelNameSLC(), fromLabel.toSHErrLocFmt()), env.hypothesis(), name.location, env.curContractSym().getName(),
             "Variables to be endorsed must flows to from-label"));
         }
 
@@ -118,11 +121,18 @@ public class EndorseIfStatement extends Statement {
             String id = name.id;
             VarSym sym = env.getVar(id);
             VarSym newSym = new VarSym(sym, scopeContext);
-            newSym.ifl = env.toLabel(to);
+            newSym.ifl = toLabel;
             env.cons.add(new Constraint(
                     new Inequality(newSym.labelNameSLC(), Relation.EQ, newSym.labelValueSLC()),
                     env.hypothesis(), location, env.curContractSym().getName(),
                     "Variable " + newSym.getName() + " may be endorsed incorrectly"));
+            if (sym.isPrincipalVar()) {
+                env.addTrustConstraint(new Constraint(
+                        new Inequality(sym.toSHErrLocFmt(), Relation.EQ, newSym.toSHErrLocFmt()),
+                        env.hypothesis(), location, env.curContractSym().getName(),
+                        "final variable " + newSym.getName() + " may be endorsed incorrectly"
+                ));
+            }
             env.addVar(newSym.getName(), newSym);
         }
 
