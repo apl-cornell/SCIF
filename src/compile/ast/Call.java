@@ -7,10 +7,16 @@ import java.util.stream.Collectors;
 public class Call extends Expression {
     String funcName;
     List<Expression> argValues;
+    CallSpec callSpec;
 
     public Call(String funcName, List<Expression> argValues) {
         this.funcName = funcName;
         this.argValues = argValues;
+    }
+    public Call(String funcName, List<Expression> argValues, CallSpec callSpec) {
+        this.funcName = funcName;
+        this.argValues = argValues;
+        this.callSpec = callSpec;
     }
 
     public Call(String funcName) {
@@ -21,6 +27,7 @@ public class Call extends Expression {
     @Override
     public String toSolCode() {
         return funcName +
+                (callSpec != null ? callSpec.toSolCode() : "") +
                 "(" +
                     String.join(", ", argValues.stream().map(value -> value.toSolCode()).collect(
                         Collectors.toList())) +

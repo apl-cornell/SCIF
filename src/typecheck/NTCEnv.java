@@ -21,6 +21,7 @@ public class NTCEnv {
 
     // info about constructor
     boolean inConstructor, calledSuper;
+    private boolean inAtomic = false;
 
     public NTCEnv(ContractSym contractSym) {
         contractSymMap = new HashMap<>();
@@ -300,5 +301,17 @@ public class NTCEnv {
 
     public void addType(String structName, StructTypeSym toStructType) {
         addSym(structName, toStructType);
+    }
+
+    public void enterAtomic() {
+        inAtomic = true;
+    }
+
+    public void exitAtomic() {
+        inAtomic = false;
+    }
+
+    public boolean inAtomic() {
+        return inAtomic;
     }
 }

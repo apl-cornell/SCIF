@@ -7,7 +7,7 @@ public class LowLevelCall extends ExternalCall {
     FunctionSig functionSig;
 
     public LowLevelCall(FunctionSig functionSig, Expression contractVar, String funcName, List<Expression> argValues) {
-        super(contractVar, funcName, argValues);
+        super(contractVar, funcName, argValues, null);
         this.functionSig = functionSig;
     }
 

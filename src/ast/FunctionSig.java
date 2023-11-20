@@ -5,6 +5,7 @@ import compile.Utils;
 import compile.ast.Argument;
 import compile.ast.Type;
 import java.util.List;
+import java.util.Map.Entry;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -367,6 +368,15 @@ public class FunctionSig extends TopLayerNode {
                         true
                 ));
         // final uint{sender} value;
+
+        // other built-in vars
+        for (Entry<String, String> entry: typecheck.Utils.BUILTIN_INMETHOD_VARS.entrySet()) {
+            String varName = entry.getKey();
+            String typeName = entry.getValue();
+            VarSym varSym = new VarSym(varName, (TypeSym) curSymTab.lookup(typeName), labelSender,
+                    typecheck.Utils.BUILTIN_LOCATION, now, true, true, true);
+            curSymTab.add(varName, varSym);
+        }
     }
 
     protected void addBuiltInResult(SymTab curSymTab, ScopeContext now) {

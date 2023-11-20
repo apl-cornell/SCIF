@@ -84,7 +84,7 @@ public class Throw extends Statement {
         // String rtnTypeName = exceptionSym.returnType.name;
         // env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
 
-        if (!parent.isCheckedException(exceptionSym, false)) {
+        if (!parent.isCheckedException(exceptionSym, false) && !env.inAtomic()) {
             System.err.println("Unchecked exception " + exceptionSym.getName() + " at " + "location: "
                     + location.errString());
             throw new RuntimeException();

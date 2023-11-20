@@ -71,8 +71,32 @@ public class Utils {
     public static final String METHOD_BALANCE_NAME = "balance";
     public static final CodeLocation BUILTIN_LOCATION = new CodeLocation(0, 0, "BUILTIN");
     public static final String LABEL_PAYVALUE = "value";
+    public static final String BUILT_IN_GAS = "gas";
     public static final String VOID_TYPE = "void";
     public static final String BUILTIN_CONTRACT = "Builtin";
+
+    public static final Map<String, String> BUILTIN_INMETHOD_VARS = generateBuiltInInMethodVars();
+
+    private static Map<String, String> generateBuiltInInMethodVars() {
+        Map<String, String> result = new HashMap<>();
+        result.put("now", "uint");
+        return result;
+    }
+
+    public static final Map<String, String> BUILTIN_GLOBAL_CONSTANTS = generateBuiltInGlobalConstants();
+
+    private static Map<String, String> generateBuiltInGlobalConstants() {
+        Map<String, String> result = new HashMap<>();
+        // time units
+        int sec = 1, min = sec * 60, hour = min * 60, day = hour * 24, week = day * 7;
+        result.put("second", String.valueOf(sec));
+        result.put("minute", String.valueOf(min));
+        result.put("hour", String.valueOf(hour));
+        result.put("day", String.valueOf(day));
+        result.put("week", String.valueOf(week));
+        return result;
+    }
+
     public static final String BASE_CONTRACT_IMP_NAME = "ContractImp";
     public static final List<String> BUILTIN_FILENAMES = Arrays.asList(
             "builtin_files/Contract.scif",

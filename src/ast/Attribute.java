@@ -38,6 +38,7 @@ public class Attribute extends TrailerExpr {
     public VarSym getVarInfo(NTCEnv env) {
         VarSym rtnVarSym;
         VarSym parentVarSym = value.getVarInfo(env);
+        assert parentVarSym != null: "at " + location.errString();
         if (parentVarSym.typeSym instanceof StructTypeSym) {
             StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;
             rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);

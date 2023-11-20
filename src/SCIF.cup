@@ -187,6 +187,8 @@ nonterminal EndorseIfStatement endorseIf_stmt;
 nonterminal Call call_expr;
 nonterminal Revert revert_stmt;
 nonterminal List<Name> name_list, name_list_oneplus;
+nonterminal CallSpec transaction_spec;
+nonterminal java.util.Map<String, Expression> arg_spec;
 
 precedence left EQUALGREATER;
 precedence left OR;
@@ -930,7 +932,7 @@ atomic_stmt ::= ATOMIC:x suite:s exceptall_stmts:es {:
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
-throw_stmt ::= THROW:x trailer_expr:e SEMI{:
+throw_stmt ::= THROW:x call_expr:e SEMI{:
         if (!(e instanceof Call)) {
             return null;
         }
@@ -956,9 +958,10 @@ except_stmts ::=
     :};
 
 exceptall_stmts ::=
-    exceptall_clause:e {:
-        ArrayList<ExceptHandler> rtn = new ArrayList<>();
-        rtn.add(e);
+//    exceptall_clause:e {:
+    {:
+//        ArrayList<ExceptHandler> rtn = new ArrayList<>();
+        List<ExceptHandler> rtn = new ArrayList<>();
         RESULT = rtn;
     :}
     | exceptall_stmts:s exceptall_clause:e {:
@@ -1240,6 +1243,9 @@ expr ::=
     | constant:a {:
         RESULT = a;
     :}
+    | call_expr:a {:
+        RESULT = a;
+    :}
     ;
 
 assignable ::=
@@ -1249,16 +1255,36 @@ assignable ::=
         RESULT = a;
     :};
 
-call_expr ::= trailer_expr:e LPAR RPAR {:
+call_expr ::= trailer_expr:e transaction_spec:ts LPAR RPAR {:
         Call c = new Call();
         c.setValue(e);
+        c.setSpec(ts);
         RESULT = c;
         RESULT.setLoc(new CodeLocation(eleft, eright, filename));
     :}
-    | trailer_expr:e LPAR arglist:c RPAR {:
+    | trailer_expr:e transaction_spec:ts LPAR arglist:c RPAR {:
              c.setValue(e);
+            c.setSpec(ts);
              RESULT = c;
              RESULT.setLoc(new CodeLocation(eleft, eright, filename));
+    :}
+    | trailer_expr:e LPAR RPAR {:
+          Call c = new Call();
+          c.setValue(e);
+          RESULT = c;
+          RESULT.setLoc(new CodeLocation(eleft, eright, filename));
+      :}
+      | trailer_expr:e LPAR arglist:c RPAR {:
+               c.setValue(e);
+               RESULT = c;
+               RESULT.setLoc(new CodeLocation(eleft, eright, filename));
+      :}
+    | atom:a transaction_spec:ts LPAR RPAR {:
+        Call c = new Call();
+        c.setValue(a);
+        c.setSpec(ts);
+        RESULT = c;
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | atom:a LPAR RPAR {:
         Call c = new Call();
@@ -1266,10 +1292,35 @@ call_expr ::= trailer_expr:e LPAR RPAR {:
         RESULT = c;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
+    | atom:a transaction_spec:ts LPAR arglist:c RPAR {:
+        c.setValue(a);
+        c.setSpec(ts);
+        RESULT = c;
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :}
     | atom:a LPAR arglist:c RPAR {:
         c.setValue(a);
         RESULT = c;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :}
+    ;
+
+transaction_spec ::=
+    LBRACE arg_spec:spec RBRACE {:
+        RESULT = new CallSpec(spec);
+        RESULT.setLoc(new CodeLocation(specleft, specright, filename));
+    :}
+    ;
+
+arg_spec ::=
+    arg_spec:m COMMA NAME:name EQUAL expr:exp {:
+        m.put((String)name, exp);
+        RESULT = m;
+    :}
+    | NAME:name EQUAL expr:exp {:
+        java.util.Map<String, Expression> args = new HashMap<>();
+        args.put((String)name, exp);
+        RESULT = args;
     :}
     ;
 
@@ -1384,15 +1435,15 @@ atom ::=
 //                   ((test | star_expr)
 //                    (comp_for | (',' (test | star_expr))* [','])) )
 trailer ::= 
-    LPAR:a RPAR {:
-        //TODO: distinguish calls and initialization
-        RESULT = new Call();
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}
-    | LPAR arglist:a RPAR {:
-        RESULT = a;
-    :}
-    | LSQB expr:a RSQB {:
+//    LPAR:a RPAR {:
+//        //TODO: distinguish calls and initialization
+//        RESULT = new Call();
+//        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+//    :}
+//    | LPAR arglist:a RPAR {:
+//        RESULT = a;
+//    :}
+    LSQB expr:a RSQB {:
         RESULT = new Subscript(null, a);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}

@@ -34,7 +34,7 @@ contract ERC20 {
         return _totalSupply;
     }
 
-    @public uint balanceOf(address account) {
+    @public uint balanceOf(address account) { // check it, should be external pc
         return _balances[account];
     }
 
@@ -52,7 +52,7 @@ contract ERC20 {
         }
     }
 
-    @public uint allowance(final address owner, final address spender) {
+    @public uint{owner} allowance(final address owner, final address spender) {
         return endorse(_allowances[owner][spender], owner->this);
     }
 

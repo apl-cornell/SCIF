@@ -56,7 +56,11 @@ public class Arg extends Node {
     public VarSym parseArg(NTCEnv env, ScopeContext parent) {
         // ScopeContext now = new ScopeContext(this, parent);
         VarSym varSym = env.newVarSym(name, annotation, isStatic, isFinal, true, location, parent);
-        env.addSym(name, varSym);
+        try {
+            env.addSym(name, varSym);
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e.getMessage() + " at " + location.errString());
+        }
         if (annotation.label() != null) {
             varSym.setLabel(env.newLabel(annotation.label()));
         }

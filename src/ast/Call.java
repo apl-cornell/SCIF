@@ -15,6 +15,7 @@ import compile.ast.Statement;
 import compile.ast.Subscript;
 import compile.ast.Type;
 import compile.ast.VarDec;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -36,6 +37,7 @@ public class Call extends TrailerExpr {
     FuncSym funcSym = null;
     private boolean isCast;
     boolean builtIn = false, ntced = false;
+    CallSpec callSpec;
 
     public Call() {
         this.args = new ArrayList<>();
@@ -54,6 +56,10 @@ public class Call extends TrailerExpr {
         this.args = args;
     }
 
+    public void setSpec(CallSpec callSpec) {
+        this.callSpec = callSpec;
+    }
+
     public Expression getArgAt(int index) {
         return args.get(index);
     }
@@ -69,6 +75,7 @@ public class Call extends TrailerExpr {
                 // a.b(c), a must be a contract or an array
                 extern = true;
                 Attribute att = (Attribute) value;
+                assert att.value instanceof Name : "at " + location.errString();
                 String varName = ((Name) att.value).id;
                 funcName = att.attr.id;
                 Sym s = env.getCurSym(varName);
@@ -154,9 +161,13 @@ public class Call extends TrailerExpr {
                 this.builtIn = true;
             }
         }
-        assert !env.inConstructor() || env.superCalled() : "should not call methods before called super in constructor: " + funcName + " at " + location.toString();
-        assert args.size() == funcSym.parameters.size() : "number of values provided does not match the number of arguments of the called method: " + funcName + " at " + location.toString();
+        assert !env.inConstructor() || env.superCalled() : "should not call methods before called super in constructor: " + funcName + " at " + location.errString();
+        assert args.size() == funcSym.parameters.size() : "number of values provided does not match the number of arguments of the called method: " + funcName + " at " + location.errString();
         this.funcSym = funcSym;
+
+        if (extern && callSpec != null) {
+            callSpec.ntcGenCons(env, now);
+        }
         // typecheck arguments
         for (int i = 0; i < args.size(); ++i) {
             Expression arg = args.get(i);
@@ -169,7 +180,7 @@ public class Call extends TrailerExpr {
         env.addCons(now.genCons(rtnTypeName, Relation.EQ, env, location));
 
         for (Map.Entry<ExceptionTypeSym, String> tl : funcSym.exceptions.entrySet()) {
-            if (!parent.isCheckedException(tl.getKey(), extern)) {
+            if (!parent.isCheckedException(tl.getKey(), extern) && !env.inAtomic()) {
                 System.err.println(
                         "Unchecked exception: " + tl.getKey().getName() + " at " + location.errString());
                 throw new RuntimeException();
@@ -360,6 +371,14 @@ public class Call extends TrailerExpr {
         // ++createdHypoCount;
 
         // if external call and the target address is final, make this equal to the target address
+        if (externalCall && callSpec != null) {
+
+            PathOutcome co = callSpec.genConsVisit(env, false);
+            psi.joinExe(co);
+            env.inContext = typecheck.Utils.genNewContextAndConstraints(env, false, co.getNormalPath().c, beginContext.lambda, callSpec.nextPcSHL(), callSpec.location);
+
+        }
+
         if (externalCall && externalTargetSym.isFinal) {
             dependentLabelMapping.put(
                     externalContractSym.thisSym().toSHErrLocFmt(),
@@ -498,7 +517,7 @@ public class Call extends TrailerExpr {
             if (builtIn && funcName.equals("length")) {
                 return new Attr(target, funcName);
             }
-            callExp = new ExternalCall(target, funcName, argumentExps);
+            callExp = new ExternalCall(target, funcName, argumentExps, callSpec != null ? callSpec.solidityCodeGen(result, code) : null);
         }
         assert ntced : "funcSym being null: " + callExp.toSolCode() + " " + builtIn;
         assert !(funcName.equals("send") && !builtIn);
@@ -586,6 +605,7 @@ public class Call extends TrailerExpr {
     public List<Node> children() {
         List<Node> rtn = new ArrayList<>();
         rtn.add(value);
+        if (callSpec != null) rtn.add(callSpec);
         rtn.addAll(args);
         return rtn;
     }

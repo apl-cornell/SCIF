@@ -49,6 +49,7 @@ public class Atomic extends Statement {
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
         env.enterNewScope();
+        env.enterAtomic();
         ScopeContext rtn = null;
 
         // ScopeContext tryclause = new ScopeContext(this, now);
@@ -65,6 +66,7 @@ public class Atomic extends Statement {
             tmp = s.ntcGenCons(env, now);
         }
         env.exitNewScope();
+        env.exitAtomic();
 
         for (ExceptHandler h : handlers) {
             tmp = h.ntcGenCons(env, parent);

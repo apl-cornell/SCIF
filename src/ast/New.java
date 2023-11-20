@@ -55,6 +55,9 @@ public class New extends Expression {
                     "number of values provided does not match the number of arguments of the called method: "
                             + contractName + " at " + location.toString();
             this.constructor_call.funcSym = constructorSym;
+            if (constructor_call.callSpec != null) {
+                constructor_call.callSpec.ntcGenCons(env, now);
+            }
             // typecheck arguments
             for (int i = 0; i < constructor_call.args.size(); ++i) {
                 Expression arg = constructor_call.args.get(i);
@@ -135,6 +138,13 @@ public class New extends Expression {
                 env.inContext = new Context(
                         Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
                         beginContext.lambda);
+            }
+
+            if (constructor_call.callSpec != null) {
+                PathOutcome co = constructor_call.callSpec.genConsVisit(env, false);
+                psi.joinExe(co);
+                env.inContext = typecheck.Utils.genNewContextAndConstraints(env, false, co.getNormalPath().c, beginContext.lambda, constructor_call.callSpec.nextPcSHL(), constructor_call.callSpec.location);
+
             }
 
             String ifNamePc;
@@ -247,7 +257,7 @@ public class New extends Expression {
         for (Expression arg: constructor_call.args) {
             argExps.add(arg.solidityCodeGen(result, code));
         }
-        return isConstructor ? new compile.ast.New(contractName, argExps) : new compile.ast.Call(contractName, argExps);
+        return isConstructor ? new compile.ast.New(contractName, argExps, constructor_call.callSpec != null ? constructor_call.callSpec.solidityCodeGen(result, code) : null) : new compile.ast.Call(contractName, argExps);
     }
 
     @Override
