@@ -19,6 +19,10 @@ public class CallStatement extends Statement {
         this.call = call;
     }
 
+    public CallStatement(CallStatement callStatement) {
+        this.call = new Call(callStatement.call);
+    }
+
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         return call.ntcGenCons(env, parent);

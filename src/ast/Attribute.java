@@ -46,7 +46,7 @@ public class Attribute extends TrailerExpr {
             ExceptionTypeSym parentTypeInfo = (ExceptionTypeSym) parentVarSym.typeSym;
             rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
         } else {
-            assert false: "unknown types for attribute: " + value.toString();
+            assert false: "unknown types for attribute: " + value.toString() + " at " + location.errString();
             return null;
         }
         return rtnVarSym;
@@ -89,9 +89,10 @@ public class Attribute extends TrailerExpr {
         return new Attr(value.solidityCodeGen(result, code), attr.id);
     }
 
-    public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
+    @Override
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping) {
         VarSym rtnVarSym;
-        VarSym parentVarSym = value.getVarInfo(env, tail_position);
+        VarSym parentVarSym = value.getVarInfo(env, tail_position, dependentMapping);
         StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;
         rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
         return rtnVarSym;

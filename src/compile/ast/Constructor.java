@@ -19,7 +19,7 @@ public class Constructor extends Function {
         List<String> result = new ArrayList<>();
         addLine(result, "constructor(" +
                 Utils.argsListSol(args, true)
-                + ") {",indentLevel);
+                + ") payable {",indentLevel);
         for (Statement s: body) {
             result.addAll(s.toSolCode(indentLevel + 1));
         }

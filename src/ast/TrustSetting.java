@@ -80,8 +80,8 @@ public class TrustSetting extends Node {
         PrimitiveIfLabel labelTop = new PrimitiveIfLabel(new Name(Utils.LABEL_TOP));
         TrustConstraint thisFlowsToBot = new TrustConstraint(labelThis, Relation.LEQ, labelBot);
         TrustConstraint topFlowsToThis = new TrustConstraint(labelTop, Relation.LEQ, labelThis);
-        trust_list.add(thisFlowsToBot);
-        trust_list.add(topFlowsToThis);
+//        trust_list.add(thisFlowsToBot);
+//        trust_list.add(topFlowsToThis);
     }
 
     public void genConsVisit(VisitEnv env, boolean tail_position) {

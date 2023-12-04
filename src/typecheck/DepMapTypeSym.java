@@ -12,7 +12,6 @@ import ast.LabeledType;
 public class DepMapTypeSym extends MapTypeSym {
 
     private VarSym key;
-    private Label valueLabel;
 
     public DepMapTypeSym(TypeSym keyType, String keyName, TypeSym valueType, Label valueLabel, ScopeContext defContext, ScopeContext newContext) {
         super(keyType, valueType, defContext);

@@ -30,9 +30,10 @@ public class TypeChecker {
         Given a list of SCIF source files, this method typechecks all code ignoring information flow control.
         It generates constraints in SHErrLoc format and put them in outputFile, then runs ShErrLoc to get error info.
      */
-    public static List<SourceFile> regularTypecheck(List<File> inputFiles, File outputFile,
+    public static List<SourceFile> regularTypecheck(List<File> inputFiles, File logDir,
             boolean DEBUG) throws IOException {
 
+        File outputFile = new File(logDir, SCIF.newFileName("ntc", "cons"));
         logger.trace("typecheck starts...");
 
         /*
@@ -141,6 +142,7 @@ public class TypeChecker {
         // Generate constraints
         for (SourceFile root : roots) {
             if (!root.isBuiltIn() && root instanceof ContractFile) {
+//                ntcEnv.enterFile(root.getSourceFilePath());
                 root.ntcGenCons(ntcEnv, null);
             }
         }
@@ -150,28 +152,44 @@ public class TypeChecker {
         // constructors: all types
         // assumptions: none or relations between types
         // constraints
-        if (!Utils.writeCons2File(ntcEnv.getTypeSet(), ntcEnv.getTypeRelationCons(), ntcEnv.cons(),
-                outputFile, false, null)) {
-            return roots;
-        }
-        boolean result = false;
-        try {
-            result = runSLC(ntcEnv.programMap(), outputFile.getAbsolutePath(), DEBUG);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+//        List<Constraint> contractCons = ntcEnv.contractCons();
+//        for (SourceFile root : roots) {
+//            if (!root.isBuiltIn() && root instanceof ContractFile) {
+//                String filename = root.getContractName();
+//                for (String methodname : ntcEnv.getMethodnames(root.getSourceFilePath())) {
+                    List<Constraint> cons = ntcEnv.cons();
+//                    List<Constraint> cons = new ArrayList<>();
+//                    cons.addAll(contractCons);
+//                    cons.addAll(ntcEnv.methodCons(root.getSourceFilePath(), methodname));
+//                    File outputFile = new File(logDir,
+//                            SCIF.newFileName(filename + "." + methodname, "ntc"));
+                    if (!Utils.writeCons2File(ntcEnv.getTypeSet(), ntcEnv.getTypeRelationCons(),
+                            cons,
+                            outputFile, false, null)) {
+                        return roots;
+                    }
+                    try {
+                        if (!runSLC(ntcEnv.programMap(), outputFile.getAbsolutePath(), DEBUG)) {
+                            return null;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+//                }
+//            }
+//        }
 
-        return result ? roots : null;
+        return roots;
     }
 
-    public static boolean ifcTypecheck(List<SourceFile> roots, List<File> outputFiles,
+    public static boolean ifcTypecheck(List<SourceFile> roots, File logDir,
             boolean DEBUG) {
 
-        Map<SourceFile, File> outputFileMap = new HashMap<>();
-        for (int i = 0; i < roots.size(); ++i) {
-            outputFileMap.put(roots.get(i), outputFiles.get(i));
-        }
+//        Map<SourceFile, File> outputFileMap = new HashMap<>();
+//        for (int i = 0; i < roots.size(); ++i) {
+//            outputFileMap.put(roots.get(i), outputFiles.get(i));
+//        }
 
         // HashMap<String, ContractSym> contractMap = new HashMap<>();
         SymTab contractMap = new SymTab();
@@ -242,8 +260,9 @@ public class TypeChecker {
         for (SourceFile root : roots)
             if (root instanceof ContractFile) {
                 env.programMap.put(root.getContractName(), root);
+                if (root.isBuiltIn()) continue;
                 env.sigReq.clear();
-                if (!ifcTypecheck((ContractFile) root, env, outputFileMap.get(root), DEBUG)) {
+                if (!ifcTypecheck((ContractFile) root, env, logDir, DEBUG)) {
                     return false;
                 }
             }
@@ -358,7 +377,7 @@ public class TypeChecker {
         // env.addSigCons(contractName, trustCons, cons);
     }
 
-    private static boolean ifcTypecheck(ContractFile contractFile, VisitEnv env, File outputFile,
+    private static boolean ifcTypecheck(ContractFile contractFile, VisitEnv env, File logDir,
             boolean DEBUG) {
         String contractName = contractFile.getContractName();//contractNames.get(fileIdx);
         InterfaceSym contractSym = env.getContract(contractName);
@@ -367,9 +386,9 @@ public class TypeChecker {
 
         env.setCurContract(contractSym);
         // env.curSymTab.setParent(env.globalSymTab);//TODO
-        env.cons = new ArrayList<>();
+        env.enterNewContract();
+//        env.cons = new ArrayList<>();
 
-        logger.debug("Display varMap:");
         for (Map.Entry<String, VarSym> varPair : contractSym.symTab.getVars().entrySet()) {
             VarSym var = varPair.getValue();
             String varName = var.labelNameSLC();
@@ -394,28 +413,45 @@ public class TypeChecker {
         });
 
         // System.out.println("prinSet size: " + env.principalSet().size());
-        if (!Utils.writeCons2File(env.principalSet(), env.trustCons(), env.cons, outputFile, true, contractSym)) {
-            return true;
+        List<Constraint> contractCons = env.getCons(Utils.CONTRACT_KEYWORD), contractTrustCons = env.getTrustCons(Utils.CONTRACT_KEYWORD);
+
+        for (String methodName : env.getMethodNameSet()) {
+            if (methodName.equals(Utils.CONTRACT_KEYWORD)) continue;
+            System.err.println("checking method: " + methodName);
+            File outputFile = new File(logDir, SCIF.newFileName(methodName, "ifc"));
+            List<Constraint> cons = new ArrayList<>();
+            List<Constraint> trustCons = new ArrayList<>();
+            cons.addAll(contractCons);
+            cons.addAll(env.getCons(methodName));
+            trustCons.addAll(contractTrustCons);
+            trustCons.addAll(env.getTrustCons(methodName));
+            if (!Utils.writeCons2File(env.principalSet(), trustCons, cons, outputFile,
+                    true, contractSym)) {
+                continue;
+            }
+            boolean result = false;
+            try {
+                result = runSLC(env.programMap, outputFile.getAbsolutePath(), DEBUG);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+            if (!result) return false;
         }
-        boolean result = false;
-        try {
-            result = runSLC(env.programMap, outputFile.getAbsolutePath(), DEBUG);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-        return result;
+        return true;
     }
 
     static boolean runSLC(Map<String, SourceFile> programMap, String outputFileName,
             boolean DEBUG) throws Exception {
-        logger.trace("running SLC");
+//        logger.trace("running SLC");
 
 
         String classDirectoryPath = new File(
                 SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
         sherrloc.diagnostic.DiagnosticConstraintResult result = Utils.runSherrloc(outputFileName);
-        logger.debug("runSLC: " + result);
+        System.err.println("runSLC: " + outputFileName + " " + result.success());
+//        System.err.println(Arrays.toString(Utils.runSLCCMD(classDirectoryPath, outputFileName)));
+//        logger.debug("runSLC: " + result);
         if (result.success()) {
             // System.out.println(Utils.TYPECHECK_PASS_MSG);
         } else {

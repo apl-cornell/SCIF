@@ -74,7 +74,8 @@ public class Name extends Variable {
         return ((VarSym) env.getCurSym(id));
     }
 
-    public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
+    @Override
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping) {
         VarSym rnt = env.getVar(id);
         return rnt;
     }

@@ -7,4 +7,10 @@ contract EndorseIf {
             num = amount;
         }
     }
+//    @public
+//    bool transfer2(address to, uint amount) {
+//        endorse([to, amount], any -> this) {
+//            num = amount;
+//        }
+//    }
 }

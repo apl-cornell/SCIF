@@ -4,7 +4,8 @@ contract DeployToken {
     EmptyContract2 token;
 
     @public
-    bool{any} deploy{any->this;any}() {
+    @native
+    bool{any} deploy() {
         token = new EmptyContract2();
         return token.trusts(address(token), address(this));
     }

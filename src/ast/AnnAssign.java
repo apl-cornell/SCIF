@@ -31,6 +31,7 @@ public class AnnAssign extends Statement {
         this.value = value;
         this.isStatic = isConst;
         this.isFinal = isFinal;
+//        setToDefault();
     }
     public AnnAssign(Name target, LabeledType annotation, Expression value,
             boolean isConst, boolean isFinal, boolean isBuiltIn) {
@@ -40,14 +41,15 @@ public class AnnAssign extends Statement {
         this.isStatic = isConst;
         this.isFinal = isFinal;
         this.isBuiltIn = isBuiltIn;
+//        setToDefault();
     }
 
     public void setType(LabeledType type) {
         this.annotation = type;
     }
 
-    public void setToDefault(IfLabel lbl) {
-        annotation.setToDefault(lbl);
+    public void setToDefault() {
+        annotation.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
 
     public void setFinal(boolean isFinal) {

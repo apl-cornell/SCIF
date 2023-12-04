@@ -19,12 +19,14 @@ contract Dexible {
     void multiSwap(IERC20[] tokens, IExchange[] routers, uint[] amounts, bytes extraData)
         throws (FailedSwap) {
         atomic {
-            for (uint i = 0; i < tokens.length() - 1; ++i) {
+            uint i = 0;
+            while (i < tokens.length() - 1) {
                 final IExchange router = routers[i];
                 token[i].approve(sender, router, amounts[i]);
                 assert router => sender;
                 router.exchange(
                     sender, tokens[i], tokens[i + 1], amounts[i], extraData);
+                i += 1;
             }
         } rescue * {
             throw FailedSwap();

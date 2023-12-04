@@ -52,7 +52,7 @@ public class FunctionDef extends FunctionSig {
         env.enterNewScope();
         // add args to local sym;
         String funcName = this.name;
-        logger.debug("func: " + funcName);
+        System.err.println("entering method: " + name + " " + body.size());
         FuncSym funcSym = ((FuncSym) env.getCurSym(funcName));
         Map<ExceptionTypeSym, Boolean> exceptionTypeSyms = new HashMap<>();
         for (Map.Entry<ExceptionTypeSym, String> t : funcSym.exceptions.entrySet()) {
@@ -77,6 +77,7 @@ public class FunctionDef extends FunctionSig {
                     "Label of this method's return value"));
         }
 
+//        env.enterMethod(getName());
         if (isConstructor()) {
             env.enterConstructor();
 //            System.err.println("containing statments: " + name + " " + body.size() + " from " + env.curContractSym().getName());
@@ -93,6 +94,7 @@ public class FunctionDef extends FunctionSig {
         }
         //}
         //env.setCurSymTab(env.curSymTab().getParent());
+//        env.exitMethod();
         env.exitNewScope();
         return now;
     }
@@ -102,6 +104,7 @@ public class FunctionDef extends FunctionSig {
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_info) {
         if (isBuiltIn() || isNative() || isSuperConstructor()) return null;
         env.incScopeLayer();
+        env.enterNewMethod(getName());
         addBuiltInVars(env.curSymTab, scopeContext);
         if (!returnVoid()) addBuiltInResult(env.curSymTab, scopeContext);
 
@@ -181,6 +184,7 @@ public class FunctionDef extends FunctionSig {
         }
 
         env.decScopeLayer();
+        env.exitMethod();
 
         return null;
     }
@@ -219,6 +223,7 @@ public class FunctionDef extends FunctionSig {
         if (isConstructor()) {
             List<Argument> arguments = args.solidityCodeGen(code);
             List<compile.ast.Statement> statements = new ArrayList<>();
+            compile.Utils.addBuiltInVars(true, statements, code);
             for (Statement s: body) {
                 statements.addAll(s.solidityCodeGen(code));
             }
@@ -296,9 +301,14 @@ public class FunctionDef extends FunctionSig {
     }
 
     public void renameSuperCall(String extendsContractName) {
+        List<Statement> newBody = new ArrayList<>();
         for (Statement s: body) {
             if (s instanceof ast.CallStatement callStatement) {
-                callStatement.call.checkAndRenameSuper(extendsContractName);
+                CallStatement newS = new CallStatement(callStatement);
+                newS.call.checkAndRenameSuper(extendsContractName);
+                newBody.add(new CallStatement(new ast.Call()));
+            } else {
+                newBody.add(s);
             }
         }
     }

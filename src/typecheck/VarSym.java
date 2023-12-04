@@ -134,7 +134,7 @@ public class VarSym extends Sym {
     }
 
     public boolean isPrincipalVar() {
-        return isFinal && (typeSym instanceof ContractSym || typeSym.getName().equals(Utils.ADDRESS_TYPE));
+        return isFinal && (typeSym instanceof ContractSym || typeSym instanceof InterfaceSym || typeSym.getName().equals(Utils.ADDRESS_TYPE));
     }
 
     @Override

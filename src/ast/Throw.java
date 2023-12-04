@@ -65,11 +65,8 @@ public class Throw extends Statement {
             exceptionSym = ((ExceptionTypeSym) s);
         }
         // check if the parameter number matches
-        if (exceptionSym.parameters().size() != exception.args.size()) {
-            System.err.println("Throwing an exception " + exceptionSym.getName() + " with unmatched parameter number at " + "location: "
-                    + location.toString());
-            throw new RuntimeException();
-        }
+        assert exceptionSym.parameters().size() == exception.args.size() : "Throwing an exception " + exceptionSym.getName() + " with unmatched parameter number at " + "location: "
+                + location.errString();
 
         // typecheck arguments
         for (int i = 0; i < exception.args.size(); ++i) {

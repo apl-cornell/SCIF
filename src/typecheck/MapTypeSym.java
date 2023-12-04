@@ -7,6 +7,7 @@ public class MapTypeSym extends TypeSym {
     // types of key and value have no labels
     public TypeSym keyType;
     public TypeSym valueType;
+    protected Label valueLabel;
 
     /*public MapTypeSym() {
     }*/

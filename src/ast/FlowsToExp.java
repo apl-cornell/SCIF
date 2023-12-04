@@ -93,14 +93,19 @@ public class FlowsToExp extends Expression {
             Name left = (Name) lhs, right = (Name) rhs;
             Sym lsym = env.getCurSym(left.id), rsym = env.getCurSym(right.id);
             if (lsym instanceof VarSym && rsym instanceof VarSym) {
-                if (((VarSym) lsym).isFinal && ((VarSym) rsym).isFinal && ((VarSym) lsym).isPrincipalVar() && ((VarSym) rsym).isPrincipalVar()) {
-                    env.addCons(
+                boolean lpass, rpass;
+                lpass = ((VarSym) lsym).isPrincipalVar();
+                rpass = ((VarSym) rsym).isPrincipalVar();
+                assert lpass : "dynamic trust queries can only happen between final address variables: " + lsym.getName() + " at " + location.errString();
+                assert rpass : "dynamic trust queries can only happen between final address variables: " + rsym.getName() + " at " + location.errString();
+                env.addCons(
                             now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
-                    return now;
-                }
+                return now;
+
             }
         }
-        throw new RuntimeException("dynamic trust queries can only happen between final address variables");
+        assert false: location.errString();
+        return null;
     }
 
     @Override

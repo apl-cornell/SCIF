@@ -1,0 +1,94 @@
+contract ERC20 {
+    map(address, uint) _balances;
+    map(address, map(address, uint)) _allowances;
+    uint _totalSupply;
+    uint _burnt;
+    bytes _name;
+    bytes _symbol;
+
+    exception ERC20InsufficientBalance(address owner, uint cur, uint needed);
+    exception ERC20InsufficientAllowance(address owner, uint cur, uint needed);
+
+    constructor(bytes name_, bytes symbol_) {
+        _name = name_;
+        _symbol = symbol_;
+        super();
+    }
+
+    @public bytes name() {
+        return _name;
+    }
+
+    @public bytes symbol() {
+        return _symbol;
+    }
+
+    @public uint decimals() {
+        return 18;
+    }
+
+    @public uint totalSupply() {
+        return _totalSupply;
+    }
+
+    @public uint balanceOf(address account) {
+        return _balances[account];
+    }
+
+    @public uint burnt() {
+        return _burnt;
+    }
+
+    @public uint allowance(final address owner, address spender) {
+        return _allowances[owner][spender];
+    }
+
+    @public void approve(address spender, uint val) {
+        _allowances[sender][spender] = val;
+    }
+
+    @public void approveFrom(address from, address spender, uint val) {
+        _allowances[from][spender] = val;
+    }
+
+    @public void transfer(address from, address to, uint val) throws (ERC20InsufficientBalance) {
+        _transfer(from, to, val);
+    }
+
+    @public void transferFrom(address from, address to, uint val) throws (ERC20InsufficientAllowance, ERC20InsufficientBalance) {
+        _spendAllowance(from, sender, val);
+        _transfer(from, to, val);
+    }
+
+    @public void mint(address account, uint val) {
+        _totalSupply += val;
+        _balances[account] += val;
+    }
+
+    @public void burn(address account, uint val) throws (ERC20InsufficientBalance) {
+        if (_balances[account] < val) {
+            throw ERC20InsufficientBalance(account, _balances[account], val);
+        }
+        _balances[account] -= val;
+        _burnt += val;
+    }
+
+    void _transfer(address from, address to, uint val) throws (ERC20InsufficientBalance) {
+        uint fromBalance = _balances[from];
+        if (fromBalance < val) {
+            throw ERC20InsufficientBalance(from, fromBalance, val);
+        }
+        _balances[from] = fromBalance - val;
+        _balances[to] -= val;
+    }
+
+    void _spendAllowance(address owner, address spender, uint val) throws (ERC20InsufficientAllowance) {
+        uint currentAllowance = allowance(owner, spender);
+        if (currentAllowance != UINT_MAX) {
+            if (currentAllowance < val) {
+                throw ERC20InsufficientAllowance(spender, currentAllowance, val);
+            }
+            _allowances[owner][spender] = currentAllowance - val;
+        }
+    }
+}

@@ -7,7 +7,7 @@ contract ExceptionDefinition {
     @public
     void foo{sender -> this; any}(uint a, uint b) throws (Z, Y) {
         try {
-            bar(a, b);
+            bar(endorse(a, sender->this), endorse(b, sender->this));
             //chigh.f(); // f throws (Y);
             //clow.g(); // g throws (X{this}); THROWS Z SECRETLY
             //clow2.g(); // throws (X{this});
@@ -22,7 +22,6 @@ contract ExceptionDefinition {
         }
     }
 
-    @public
     void bar(uint a, uint b) throws (Y, X) {
         if (a > b) {
             throw Y(a, b);

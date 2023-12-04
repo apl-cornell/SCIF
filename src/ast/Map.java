@@ -14,11 +14,18 @@ public class Map extends Type {
 
     public Type keyType;
     public Type valueType;
+    protected IfLabel valueLabel;
 
     public Map(Type keyType, Type valueType) {
         super(Utils.MAP_TYPE);
         this.keyType = keyType;
         this.valueType = valueType;
+    }
+    public Map(Type keyType, Type valueType, IfLabel valueLabel) {
+        super(Utils.MAP_TYPE);
+        this.keyType = keyType;
+        this.valueType = valueType;
+        this.valueLabel = valueLabel;
     }
     @Override
     public String toSolCode() {
@@ -33,6 +40,7 @@ public class Map extends Type {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(keyType);
         rtn.add(valueType);
+        rtn.add(valueLabel);
         return rtn;
     }
 
@@ -41,7 +49,9 @@ public class Map extends Type {
         return annotation instanceof Map &&
                 super.typeMatch(annotation) &&
                 keyType.typeMatch(((Map) annotation).keyType) &&
-                valueType.typeMatch(((Map) annotation).valueType);
+                valueType.typeMatch(((Map) annotation).valueType) &&
+                valueLabel.typeMatch(((Map) annotation).valueLabel)
+                ;
     }
 
     @Override

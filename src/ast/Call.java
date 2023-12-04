@@ -43,6 +43,14 @@ public class Call extends TrailerExpr {
         this.args = new ArrayList<>();
     }
 
+    public Call(Call call) {
+        value = call.value;
+        args = call.args;
+        if (value instanceof Name) {
+            value = new Name(((Name) value).id);
+        }
+    }
+
     public Call(Expression x, List<Expression> ys) {
         value = x;
         args = ys;
@@ -79,6 +87,7 @@ public class Call extends TrailerExpr {
                 String varName = ((Name) att.value).id;
                 funcName = att.attr.id;
                 Sym s = env.getCurSym(varName);
+                assert s != null: "variable not found: " + varName + " at " + location.errString();
                 logger.debug("var " + varName + ": " + s.getName());
                 if (s instanceof VarSym varSym) {
                     if (varSym.typeSym instanceof InterfaceSym contractSym) {
@@ -132,7 +141,7 @@ public class Call extends TrailerExpr {
             funcName = ((Name) value).id;
             Sym s;
             if (funcName.equals(Utils.SUPER_KEYWORD)) {
-                assert !env.superCalled() : "should nto call super() twice in the constructor: " + location.toString();
+                assert !env.superCalled() : "should not call super() twice in the constructor: " + location.toString();
                 assert env.inConstructor() : "should not call super() outside the constructor: " + location.toString();
                 String newFuncName = Utils.genSuperName(env.curContractSym().getName());
                 s = env.getCurSym(newFuncName);
@@ -148,12 +157,12 @@ public class Call extends TrailerExpr {
                 return null;
             }
             if (!(s instanceof FuncSym)) {
-                if (s instanceof ContractSym || s instanceof BuiltinTypeSym) {
+                if (s instanceof InterfaceSym || s instanceof BuiltinTypeSym) {
                     env.addCons(now.genCons(s.getName(), Relation.EQ, env, location));
                     isCast = true;
                     return now;
                 }
-                assert false: "contract not found: " + s.getName();
+                assert false: "contract not found: " + s.getName() + " at " + location.errString();
                 return null;
             }
             funcSym = ((FuncSym) s);
@@ -385,6 +394,7 @@ public class Call extends TrailerExpr {
                     externalTargetSym.toSHErrLocFmt());
         }
 
+//        System.err.println("Call: " + funcName);
         for (int i = 0; i < args.size(); ++i) {
             Expression arg = args.get(i);
             VarSym argSym = funcSym.parameters.get(i);
@@ -393,6 +403,7 @@ public class Call extends TrailerExpr {
                 if (arg instanceof Name) {
                     VarSym valueSym = (VarSym) env.getVar(((Name) arg).id);
                     if (valueSym.isPrincipalVar()) {
+//                        System.err.println("dependent " + argSym.typeSym + " -> " + valueSym.toSHErrLocFmt());
                         dependentLabelMapping.put(argSym.toSHErrLocFmt(), valueSym.toSHErrLocFmt());
                     }
                 }
@@ -465,20 +476,21 @@ public class Call extends TrailerExpr {
                 location, env.curContractSym().getName(),
                 "Calling this function does not respect static reentrancy locks"));
 
-        env.cons.add(new Constraint(
-                new Inequality(Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
-                        Relation.EQ, endContext.lambda), env.hypothesis(), location,
-                env.curContractSym().getName(),
-                typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-
         if (!tail_position) {
+            env.cons.add(new Constraint(
+                    new Inequality(Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
+                            Relation.EQ, endContext.lambda), env.hypothesis(), location,
+                    env.curContractSym().getName(),
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+
             env.cons.add(new Constraint(
                     new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
                     env.hypothesis(), location, env.curContractSym().getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 
-        String ifNameFuncRtnValue = funcSym.returnSLC();
+        String ifNameFuncRtnValue = funcSym.rtn.toSHErrLocFmt(dependentLabelMapping);
+//        System.err.println("return label: " + ifNameFuncRtnValue);
         // String ifNameFuncRtnLock = funcSym.getLabelNameRtnLock();
         psi.joinExe(expPsi);
 

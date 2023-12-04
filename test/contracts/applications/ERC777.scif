@@ -1,0 +1,7 @@
+import "./ERC20_depmap.scif";
+
+contract ERC777 extends ERC20 {
+    constructor(bytes name_, bytes symbol_) {
+        super(name_, symbol_);
+    }
+}

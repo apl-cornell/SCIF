@@ -1,0 +1,164 @@
+contract KoET {
+
+    struct Monarch {
+        // Address to which their compensation will be sent.
+        address etherAddress;
+        // A name by which they wish to be known.
+        // NB: Unfortunately "string" seems to expose some bugs in web3.
+        bytes name;
+        // How much did they pay to become monarch?
+        uint claimPrice;
+        // When did their rule start (based on block.timestamp)?
+        uint coronationTimestamp;
+    }
+    uint u_wei;
+    uint u_szabo;
+    uint u_finney;
+    uint u_ether;
+
+    // The wizard is the hidden power behind the throne; they
+    // occupy the throne during gaps in succession and collect fees.
+    address wizardAddress;
+
+
+    // How much must the first monarch pay?
+    uint startingClaimPrice;
+
+    // The next claimPrice is calculated from the previous claimFee
+    // by multiplying by claimFeeAdjustNum and dividing by claimFeeAdjustDen -
+    // for example, num=3 and den=2 would cause a 50% increase.
+    uint claimPriceAdjustNum;
+    uint claimPriceAdjustDen;
+
+    // How much of each claimFee goes to the wizard (expressed as a fraction)?
+    // e.g. num=1 and den=100 would deduct 1% for the wizard, leaving 99% as
+    // the compensation fee for the usurped monarch.
+    uint wizardCommissionFractionNum;
+    uint wizardCommissionFractionDen;
+
+    // How much must an agent pay now to become the monarch?
+    uint currentClaimPrice;
+
+    // The King (or Queen) of the Ether.
+    Monarch currentMonarch;
+
+    // Earliest-first list of previous throne holders.
+    Monarch[] pastMonarchs;
+
+    // Create a new throne, with the creator as wizard and first ruler.
+    // Sets up some hopefully sensible defaults.
+    constructor(bytes name) {
+        super();
+        u_wei = 1;
+        uint base = 1000000000;
+        u_szabo = base * 1000;
+        u_finney = u_szabo * 1000;
+        u_ether = u_finney * 1000;
+        startingClaimPrice = 100 * u_finney;
+        claimPriceAdjustNum = 3;
+        claimPriceAdjustDen = 2;
+        wizardCommissionFractionNum = 1;
+        wizardAddress = sender;
+        currentClaimPrice = startingClaimPrice;
+        currentMonarch = endorse(new Monarch(
+            wizardAddress,
+            name,
+            0,
+            now
+        ), sender->this);
+    }
+
+    @public uint numberOfMonarchs() {
+        return pastMonarchs.length();
+    }
+
+    // Claim the throne for the given name by paying the currentClaimFee.
+    @public void claimThrone(bytes name) {
+
+        uint valuePaid = value;
+
+        // If they paid too little, reject claim and refund their money.
+        if (valuePaid < currentClaimPrice) {
+            send(sender, valuePaid);
+        } else {
+
+            // If they paid too much, continue with claim but refund the excess.
+            if (valuePaid > currentClaimPrice) {
+                uint excessPaid = valuePaid - currentClaimPrice;
+                lock(this) {
+                    send(sender, excessPaid);
+                }
+                valuePaid = valuePaid - excessPaid;
+            }
+
+            // The claim price payment goes to the current monarch as compensation
+            // (with a commission held back for the wizard). We let the wizard's
+            // payments accumulate to avoid wasting gas sending small fees.
+
+            uint wizardCommission = (valuePaid * wizardCommissionFractionNum) / wizardCommissionFractionDen;
+
+            uint compensation = valuePaid - wizardCommission;
+
+            if (currentMonarch.etherAddress != wizardAddress) {
+                lock(this) {
+                    send(currentMonarch.etherAddress, compensation);
+                }
+            } else {
+                // When the throne is vacant, the fee accumulates for the wizard.
+            }
+
+            // Usurp the current monarch, replacing them with the new one.
+            pastMonarchs.push(currentMonarch);
+            currentMonarch = endorse(new Monarch(
+                sender,
+                name,
+                valuePaid,
+                now
+            ), sender->this);
+
+            // Increase the claim fee for next time.
+            // Stop number of trailing decimals getting silly - we round it a bit.
+            uint rawNewClaimPrice = currentClaimPrice * claimPriceAdjustNum / claimPriceAdjustDen;
+            if (rawNewClaimPrice < 10 * u_finney) {
+                currentClaimPrice = rawNewClaimPrice;
+            } else {
+                if (rawNewClaimPrice < 100 * u_finney) {
+                    currentClaimPrice = 100 * u_szabo * (rawNewClaimPrice / 100 * u_szabo);
+                } else {
+                    if (rawNewClaimPrice < 1 * u_ether) {
+                        currentClaimPrice = 1 * u_finney * (rawNewClaimPrice / 1 * u_finney);
+                    } else {
+                        if (rawNewClaimPrice < 10 * u_ether) {
+                            currentClaimPrice = 10 * u_finney * (rawNewClaimPrice / 10 * u_finney);
+                        } else {
+                            if (rawNewClaimPrice < 100 * u_ether) {
+                                currentClaimPrice = 100 * u_finney * (rawNewClaimPrice / 100 * u_finney);
+                            } else {
+                                if (rawNewClaimPrice < 1000 * u_ether) {
+                                    currentClaimPrice = 1 * u_ether * (rawNewClaimPrice / 1 * u_ether);
+                                } else {
+                                    if (rawNewClaimPrice < 10000 * u_ether) {
+                                        currentClaimPrice = 10 * u_ether * (rawNewClaimPrice / 10 * u_ether);
+                                    } else {
+                                        currentClaimPrice = rawNewClaimPrice;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Used only by the wizard to collect his commission.
+    @public void sweepCommission{this;any}(uint amount) {
+        send(wizardAddress, amount);
+    }
+
+    // Used only by the wizard to collect his commission.
+    @public void setNewWizard{this}(address newWizard) {
+        wizardAddress = newWizard;
+    }
+
+}

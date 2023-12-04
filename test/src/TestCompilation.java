@@ -34,30 +34,30 @@ public class TestCompilation {
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         System.out.println(inputFilePath + ": " + input);
-        File ntcConsFile = new File(logDir, "ntc.cons");
+//        File ntcConsFile = new File(logDir, "ntc.cons");
         List<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
         List<SourceFile> roots = null;
         try {
-            roots = TypeChecker.regularTypecheck(files, ntcConsFile, m_debug);
+            roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
         } catch (Exception e) {
             e.printStackTrace();
             assert false;
         }
         assertNotNull(roots);
         // System.out.println("["+ outputFileName + "]");
-        List<File> ifcConsFiles = new ArrayList<>();
-        for (int i = 0; i < roots.size(); ++i) {
-            File IFCConsFile;
-            IFCConsFile = new File(logDir, "ifc" + i + ".cons");
-            ifcConsFiles.add(IFCConsFile);
-        }
+//        List<File> ifcConsFiles = new ArrayList<>();
+//        for (int i = 0; i < roots.size(); ++i) {
+//            File IFCConsFile;
+//            IFCConsFile = new File(logDir, "ifc" + i + ".cons");
+//            ifcConsFiles.add(IFCConsFile);
+//        }
 
         System.out.println("\nInformation Flow Typechecking:");
 
         boolean passIFC = false;
         try {
-            passIFC = TypeChecker.ifcTypecheck(roots, ifcConsFiles, m_debug);
+            passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
         } catch (Exception exp) {
             exp.printStackTrace();
         }

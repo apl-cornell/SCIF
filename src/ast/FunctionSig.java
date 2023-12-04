@@ -87,7 +87,7 @@ public class FunctionSig extends TopLayerNode {
             } else {
                 assert rtn != null;
                 rtn = new LabeledType(rtn.type(),
-                        new PrimitiveIfLabel(new Name(typecheck.Utils.LABEL_THIS)));
+                        funcLabels.begin_pc);
             }
         }
         for (LabeledType exception : exceptionList) {

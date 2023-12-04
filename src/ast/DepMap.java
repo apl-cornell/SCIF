@@ -11,26 +11,28 @@ import typecheck.VarSym;
 public class DepMap extends Map {
     final private String keyName;
     final private LabeledType labeledKeyType;
-    private IfLabel valueLabel;
+//    private IfLabel valueLabel;
     public DepMap(Type keyType, String keyName, LabeledType valueType) {
-        super(keyType, valueType.type());
+        super(keyType, valueType.type(), valueType.label());
         this.keyName = keyName;
         this.labeledKeyType = new LabeledType(keyType, new PrimitiveIfLabel(new Name(Utils.LABEL_BOTTOM)));
-        this.valueLabel = valueType.label();
+//        this.valueLabel = valueType.label();
     }
 
     @Override
     public boolean typeMatch(Type annotation) {
         return annotation instanceof DepMap &&
                 super.typeMatch(annotation) &&
-                keyName.equals(((DepMap) annotation).keyName) &&
-                valueLabel.typeMatch(((DepMap) annotation).valueLabel);
+                keyName.equals(((DepMap) annotation).keyName)
+        ;
+//        &&
+//                valueLabel.typeMatch(((DepMap) annotation).valueLabel);
     }
 
     @Override
     public List<Node> children() {
         List<Node> rtn = super.children();
-        rtn.add(valueLabel);
+//        rtn.add(valueLabel);
         return rtn;
     }
 

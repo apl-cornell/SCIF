@@ -33,7 +33,7 @@ contract Uniswap {
             balances[sender] += liquidity_minted;
             totalSupply = total_liquidity + liquidity_minted;
             atomic {
-                assert (token.transferFrom(sender, address(this), token_amount));
+                token.transferFrom(sender, address(this), token_amount);
             }
             return liquidity_minted;
         }
@@ -45,7 +45,7 @@ contract Uniswap {
             totalSupply = initial_liquidity;
             balances[sender] = initial_liquidity;
             atomic {
-                assert (token.transferFrom(sender, address(this), token_amount));
+                token.transferFrom(sender, address(this), token_amount);
             }
             return initial_liquidity;
         }
@@ -63,7 +63,7 @@ contract Uniswap {
         totalSupply = total_liquidity - amount;
         send(sender, eth_amount);
         atomic {
-            assert (token.transfer(address(this), sender, token_amount));
+            token.transfer(address(this), sender, token_amount);
         }
 //        return eth_amount, token_amount
     }
@@ -89,7 +89,7 @@ contract Uniswap {
         uint tokens_bought = getInputPrice(eth_sold, balance(address(this)) - eth_sold, token_reserve);
         assert (tokens_bought >= min_tokens);
         atomic {
-            assert (token.transfer(address(this), recipient, tokens_bought));
+            token.transfer(address(this), recipient, tokens_bought);
         }
         return tokens_bought;
     }
@@ -112,7 +112,7 @@ contract Uniswap {
             send(buyer, eth_refund);
         }
         atomic {
-            assert (token.transfer(address(this), recipient, tokens_bought));
+            token.transfer(address(this), recipient, tokens_bought);
         }
         return eth_sold;
     }
@@ -134,7 +134,7 @@ contract Uniswap {
         assert (wei_bought >= min_eth);
         send(recipient, wei_bought);
         atomic {
-            assert (token.transferFrom(buyer, address(this), tokens_sold));
+            token.transferFrom(buyer, address(this), tokens_sold);
         }
         return wei_bought;
     }
@@ -155,7 +155,7 @@ contract Uniswap {
         assert (max_tokens >= tokens_sold);
         send(recipient, eth_bought);
         atomic {
-            assert token.transferFrom(buyer, address(this), tokens_sold);
+            token.transferFrom(buyer, address(this), tokens_sold);
         }
         return tokens_sold;
     }
@@ -177,10 +177,10 @@ contract Uniswap {
         uint wei_bought = eth_bought;
         assert (wei_bought >= min_eth_bought);
         atomic {
-            assert (token.transferFrom(buyer, address(this), tokens_sold));
+            token.transferFrom(buyer, address(this), tokens_sold);
         }
         Uniswap exchange = Uniswap(exchange_addr);
-        uint tokens_bought = exchange.ethToTokenTransferInput{value: wei_bought}(min_tokens_bought, deadline, recipient);
+        uint tokens_bought = exchange.ethToTokenTransferInput(min_tokens_bought, deadline, recipient){value = wei_bought};
         return tokens_bought;
     }
 
@@ -202,8 +202,10 @@ contract Uniswap {
         uint token_reserve = token.balanceOf(address(this));
         uint tokens_sold = getOutputPrice(eth_bought, token_reserve, balance(address(this)));
         assert (max_tokens_sold >= tokens_sold && max_eth_sold >= eth_bought);
-        assert (token.transferFrom(buyer, address(this), tokens_sold));
-        uint eth_sold = exchange.ethToTokenTransferOutput(tokens_bought, deadline, recipient, eth_bought);
+        atomic {
+            token.transferFrom(buyer, address(this), tokens_sold);
+        }
+        uint eth_sold = exchange.ethToTokenTransferOutput(tokens_bought, deadline, recipient){value = eth_bought};
         return tokens_sold;
     }
 
@@ -238,7 +240,7 @@ contract Uniswap {
     @public uint getEthToTokenInputPrice(uint eth_sold) {
         assert (eth_sold > 0);
         uint token_reserve = token.balanceOf(address(this));
-        return getInputPrice(eth_sold, self.balance, token_reserve);
+        return getInputPrice(eth_sold, balance(address(this)), token_reserve);
     }
 
     @public uint getEthToTokenOutputPrice(uint tokens_bought) {
@@ -272,30 +274,30 @@ contract Uniswap {
 //def factoryAddress() -> address(Factory):
 //    return self.factory
 
-    @public uint balanceOf(address _owner) {
-        return balances[_owner];
-    }
-
-    @public bool transfer(address _to, uint _value) {
-        balances[sender] -= _value;
-        balances[_to] += _value;
-        return true;
-    }
-
-    @public bool transferFrom(address _from, address _to, uint _value) {
-        balances[_from] -= _value;
-        balances[_to] += _value;
-        allowances[_from][sender] -= _value;
-        return true;
-    }
-
-    @public bool approve(address _spender, uint _value) {
-        allowances[sender][_spender] = _value;
-        return true;
-    }
-
-    @public uint allowance(address _owner, address _spender) {
-        return allowances[_owner][_spender];
-    }
+//    @public uint balanceOf(address _owner) {
+//        return balances[_owner];
+//    }
+//
+//    @public bool transfer(address _to, uint _value) {
+//        balances[sender] -= _value;
+//        balances[_to] += _value;
+//        return true;
+//    }
+//
+//    @public bool transferFrom(address _from, address _to, uint _value) {
+//        balances[_from] -= _value;
+//        balances[_to] += _value;
+//        allowances[_from][sender] -= _value;
+//        return true;
+//    }
+//
+//    @public bool approve(address _spender, uint _value) {
+//        allowances[sender][_spender] = _value;
+//        return true;
+//    }
+//
+//    @public uint allowance(address _owner, address _spender) {
+//        return allowances[_owner][_spender];
+//    }
 
 }

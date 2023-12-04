@@ -76,6 +76,7 @@ public class Utils {
     public static final String BUILTIN_CONTRACT = "Builtin";
 
     public static final Map<String, String> BUILTIN_INMETHOD_VARS = generateBuiltInInMethodVars();
+    public static final String CONTRACT_KEYWORD = "contract";
 
     private static Map<String, String> generateBuiltInInMethodVars() {
         Map<String, String> result = new HashMap<>();
@@ -224,7 +225,29 @@ public class Utils {
         return result;
 
         //sherrloc.diagnostic.ErrorDiagnosis diagnosis = new sherrloc.diagnostic.ErrorDiagnosis();
-        /*String[] command = new String[] {"bash", "-c", path + "/sherrloc/sherrloc -c " + consFilePath};
+//        String[] command = new String[] {"bash", "-c", path + "./sherrloc/sherrloc -c " + consFilePath};
+//        ProcessBuilder pb = new ProcessBuilder(command);
+//        pb.inheritIO();
+//        Process p = pb.start();
+//        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+//        ArrayList<String> list = new ArrayList<>();
+//        String tmp;
+//        while ((tmp = br.readLine()) != null) {
+//            list.add(tmp);
+//            //System.err.println(tmp);
+//        }
+//        p.waitFor();
+//        logger.debug("finished run SLC, collecting output...");
+//        p.destroy();
+//        br.close();
+//        return list.toArray(new String[0]);
+    }
+    public static String[] runSLCCMD(String path, String consFilePath)
+            throws Exception {
+
+//        sherrloc.diagnostic.ErrorDiagnosis diagnosis = new sherrloc.diagnostic.ErrorDiagnosis();
+        String[] command = new String[] {"bash", "-c", path + "/../../../../sherrloc/sherrloc -c " + consFilePath};
+        System.err.println(Arrays.toString(command));
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
         Process p = pb.start();
@@ -239,7 +262,7 @@ public class Utils {
         logger.debug("finished run SLC, collecting output...");
         p.destroy();
         br.close();
-        return list.toArray(new String[0]);*/
+        return list.toArray(new String[0]);
     }
 
     public static String joinLabels(String lhs, String rhs) {
@@ -318,10 +341,13 @@ public class Utils {
                     }
                     consFile.write(top.toSHErrLocFmt() + " == " + contractSym.thisSym().toSHErrLocFmt() + ";\n");
                 }
-                for (Constraint con : assumptions) {
-                    consFile.write(con.toSherrlocFmt(false) + "\n");
-                }
+//                for (Constraint con : assumptions) {
+//                    consFile.write(con.toSherrlocFmt(false) + "\n");
+//                }
                 consFile.write("%%\n");
+                for (Constraint con : assumptions) {
+                    consFile.write(con.toSherrlocFmt(true) + "\n");
+                }
             } else {
                 consFile.write("\n");
             }
@@ -828,6 +854,12 @@ public class Utils {
 //                    new Context(so.getNormalPath().c);
 
         }
+    }
+
+
+    static int inferredLabelCount = 0;
+    public static IfLabel newInferredLabel() {
+        return new PrimitiveIfLabel(new Name("__inferredLabel" + inferredLabelCount));
     }
 }
 

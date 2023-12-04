@@ -1,7 +1,9 @@
 package ast;
 
+import java.util.Map;
 import typecheck.Label;
 import typecheck.ScopeContext;
+import typecheck.VarSym;
 import typecheck.VisitEnv;
 
 import java.util.HashSet;
@@ -27,5 +29,9 @@ public abstract class IfLabel extends Expression {
     // public abstract void findPrincipal(HashSet<String> principalSet);
 
     public abstract boolean typeMatch(IfLabel begin_pc);
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping) {
+        assert false;
+        return null;
+    }
 
 }

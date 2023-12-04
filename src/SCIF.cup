@@ -658,15 +658,10 @@ depMap ::=
         keyType.setLoc(new CodeLocation(keyTypeNameleft, keyTypeNameright, filename));
         RESULT = new ast.DepMap(keyType, keyName, valueType);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
-    | MAP:x LPAR type:keyType COMMA labeledType:valueType RPAR {:
-        RESULT = new ast.DepMap(keyType, "?", valueType);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
 ifLabel ::= unitIfLabel:a {:
         RESULT = a;
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :} 
     | ifLabel:a MEET ifLabel:b {:
         RESULT = new ComplexIfLabel(a, IfOperator.MEET, b);
@@ -720,6 +715,10 @@ nonarray_type ::=
 mapType ::=
     MAP:x LPAR type:keyType COMMA type:valueType RPAR {:
         RESULT = new ast.Map(keyType, valueType);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
+    | MAP:x LPAR type:keyType COMMA labeledType:valueType RPAR {:
+        RESULT = new ast.Map(keyType, valueType.type(), valueType.label());
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | depMap:a {:
@@ -816,26 +815,64 @@ tfpdef ::=
         RESULT.setLoc(new CodeLocation(bleft, bright, filename));
     :};
 
-varDec ::= maybeLabeledType:a annassign:b SEMI {:
-        logger.debug("variable declaration");
-        b.setType(a);
-        b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+varDec ::=
+    type:t annassign:b SEMI {:
+        LabeledType lt = new LabeledType(t, null);
+        lt.setLoc(new CodeLocation(tleft, tright, filename));
+//        b.setFinal(m.contains(sym.FINAL));
+        b.setType(lt);
+        b.setToDefault();
         RESULT = b;
     :}
-    | FINAL maybeLabeledType:a annassign:b SEMI {:
-        logger.debug("variable declaration");
-        b.setType(a);
-        b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+    | type:t LBRACE ifLabel:l RBRACE annassign:b SEMI {:
+//        b.setFinal(m.contains(sym.FINAL));
+        LabeledType lt = new LabeledType(t, l);
+        lt.setLoc(new CodeLocation(tleft, tright, filename));
+        b.setType(lt);
+        b.setToDefault();
+        RESULT = b;
+    :}
+    |
+    FINAL type:t annassign:b SEMI {:
+        LabeledType lt = new LabeledType(t, null);
+        lt.setLoc(new CodeLocation(tleft, tright, filename));
         b.setFinal(true);
+        b.setType(lt);
+        b.setToDefault();
         RESULT = b;
     :}
-    | STATIC maybeLabeledType:a annassign:b SEMI {:
-        logger.debug("variable declaration");
-        b.setType(a);
-        b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
-        b.setStatic(true);
+    | FINAL type:t LBRACE ifLabel:l RBRACE annassign:b SEMI {:
+        b.setFinal(true);
+        LabeledType lt = new LabeledType(t, l);
+        lt.setLoc(new CodeLocation(tleft, tright, filename));
+        b.setType(lt);
+        b.setToDefault();
         RESULT = b;
-    :};
+    :}
+//    | maybeLabeledType:a annassign:b SEMI {:
+//        logger.debug("variable declaration");
+//        b.setType(a);
+////        b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+//        b.setToDefault();
+//        RESULT = b;
+//    :}
+//    | FINAL maybeLabeledType:a annassign:b SEMI {:
+//        logger.debug("variable declaration");
+//        b.setType(a);
+////        b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+//        b.setToDefault();
+//        b.setFinal(true);
+//        RESULT = b;
+//    :}
+//    | STATIC maybeLabeledType:a annassign:b SEMI {:
+//        logger.debug("variable declaration");
+//        b.setType(a);
+////     b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+//        b.setToDefault();
+//        b.setStatic(true);
+//        RESULT = b;
+//    :}
+    ;
 
 stmts ::=
     stmt:a {:
@@ -857,9 +894,9 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     | guard_block:a {: RESULT = a; :}
     | if_stmt:a {:RESULT = a;:}
     | while_stmt:a {: RESULT = a; :}
-    | for_stmt:a {: RESULT = a; :}
-    | dynamic_stmt:a {: RESULT = a; :}
-    | excborder_stmt:a {: RESULT = a; :}
+//    | for_stmt:a {: RESULT = a; :}
+//    | dynamic_stmt:a {: RESULT = a; :}
+//    | excborder_stmt:a {: RESULT = a; :}
     | try_stmt:a {: RESULT = a; :}
     | atomic_stmt:a {: RESULT = a; :}
     | throw_stmt:a {: RESULT = a;:}
@@ -1255,14 +1292,14 @@ assignable ::=
         RESULT = a;
     :};
 
-call_expr ::= trailer_expr:e transaction_spec:ts LPAR RPAR {:
+call_expr ::= trailer_expr:e  LPAR RPAR transaction_spec:ts{:
         Call c = new Call();
         c.setValue(e);
         c.setSpec(ts);
         RESULT = c;
         RESULT.setLoc(new CodeLocation(eleft, eright, filename));
     :}
-    | trailer_expr:e transaction_spec:ts LPAR arglist:c RPAR {:
+    | trailer_expr:e LPAR arglist:c RPAR transaction_spec:ts{:
              c.setValue(e);
             c.setSpec(ts);
              RESULT = c;
@@ -1279,7 +1316,7 @@ call_expr ::= trailer_expr:e transaction_spec:ts LPAR RPAR {:
                RESULT = c;
                RESULT.setLoc(new CodeLocation(eleft, eright, filename));
       :}
-    | atom:a transaction_spec:ts LPAR RPAR {:
+    | atom:a LPAR RPAR transaction_spec:ts  {:
         Call c = new Call();
         c.setValue(a);
         c.setSpec(ts);
@@ -1292,7 +1329,7 @@ call_expr ::= trailer_expr:e transaction_spec:ts LPAR RPAR {:
         RESULT = c;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
-    | atom:a transaction_spec:ts LPAR arglist:c RPAR {:
+    | atom:a LPAR arglist:c RPAR transaction_spec:ts  {:
         c.setValue(a);
         c.setSpec(ts);
         RESULT = c;
@@ -1427,13 +1464,6 @@ atom ::=
         RESULT = null; //TODO
     :}*/
 
-// trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
-// subscript: test | [test] ':' [test] [sliceop]
-// testlist: test (',' test)* [',']
-// dictorsetmaker: ( ((test ':' test | '**' expr)
-//                    (comp_for | (',' (test ':' test | '**' expr))* [','])) |
-//                   ((test | star_expr)
-//                    (comp_for | (',' (test | star_expr))* [','])) )
 trailer ::= 
 //    LPAR:a RPAR {:
 //        //TODO: distinguish calls and initialization

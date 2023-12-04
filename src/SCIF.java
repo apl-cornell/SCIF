@@ -3,7 +3,9 @@
 import ast.SourceFile;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
@@ -29,8 +31,8 @@ public class SCIF implements Callable<Integer> {
     @Option(names = "-debug")
     private boolean m_debug;
 
-    @Option(names = "-lg", arity = "1..*", description = "The log file.")
-    private String[] m_outputFileNames;
+    @Option(names = "-lg", arity = "1..*", description = "The log directory.")
+    private String[] m_logDir;
 
     @Option(names = "-o", arity = "1..*", description = "The output file.")
     private String[] m_solFileNames;
@@ -63,18 +65,21 @@ public class SCIF implements Callable<Integer> {
      * @param outputFileNames
      * @return The manipulated AST.
      */
-    private List<SourceFile> _typecheck(String[] outputFileNames)
+    private List<SourceFile> _typecheck(String[] logDirs)
             throws TypeCheckFailure, IOException {
         File logDir = new File("./.scif");
+        if (logDirs != null) {
+            logDir = new File(logDirs[0]);
+        }
         logDir.mkdirs();
 
-        File NTCConsFile;
-        if (outputFileNames == null || outputFileNames.length <= 0) {
-            NTCConsFile = new File(logDir, "ntc.cons");
+//        File NTCConsFile;
+//        if (logDirs == null || logDirs.length <= 0) {
+//            NTCConsFile = new File(logDir, "ntc.cons");
             // outputFile.deleteOnExit();
-        } else {
-            NTCConsFile = new File(outputFileNames[0]);
-        }
+//        } else {
+//            NTCConsFile = new File(logDirs[0]);
+//        }
 
         //List<File> files = ImmutableList.copyOf(m_inputFiles);
         List<File> files = new ArrayList<>();
@@ -82,7 +87,7 @@ public class SCIF implements Callable<Integer> {
             files.add(file);
         }
 //        System.out.println("Regular Type Checking:");
-        List<SourceFile> roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
+        List<SourceFile> roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
         boolean passNTC = true;
         //if (!Utils.emptyFile(outputFileName))
         //    passNTC = runSLC(outputFileName);
@@ -95,18 +100,18 @@ public class SCIF implements Callable<Integer> {
         }
         // System.out.println("["+ outputFileName + "]");
         List<File> IFCConsFiles = new ArrayList<>();
-        for (int i = 0; i < roots.size(); ++i) {
-            File IFCConsFile;
-            if (outputFileNames == null || outputFileNames.length <= i + 1) {
-                IFCConsFile = new File(logDir, "ifc" + i + ".cons");
-            } else {
-                IFCConsFile = new File(outputFileNames[i + 1]);
-            }
-            IFCConsFiles.add(IFCConsFile);
-        }
+//        for (int i = 0; i < roots.size(); ++i) {
+//            File IFCConsFile;
+//            if (outputFileNames == null || outputFileNames.length <= i + 1) {
+//                IFCConsFile = new File(logDir, "ifc" + i + ".cons");
+//            } else {
+//                IFCConsFile = new File(outputFileNames[i + 1]);
+//            }
+//            IFCConsFiles.add(IFCConsFile);
+//        }
 
 //        System.out.println("\nInformation Flow Type Checking:");
-        boolean passIFC = TypeChecker.ifcTypecheck(roots, IFCConsFiles, m_debug);
+        boolean passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
         // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
         // logger.debug("running SHErrLoc...");
         // boolean passIFC = runSLC(outputFileName);
@@ -128,7 +133,7 @@ public class SCIF implements Callable<Integer> {
         if (m_funcRequest == null || m_funcRequest.compile) {
             List<SourceFile> roots;
             try {
-                roots = _typecheck(new String[0]);
+                roots = _typecheck(null);
             } catch (TypeCheckFailure e) {
                 System.out.println(e.explanation());
                 return 0;
@@ -158,12 +163,12 @@ public class SCIF implements Callable<Integer> {
             }
         } else if (m_funcRequest.typecheck) {
             try {
-                _typecheck(m_outputFileNames);
+                _typecheck(m_logDir);
             } catch (TypeCheckFailure e) {
                 System.out.println(e.explanation());
             }
         } else if (m_funcRequest.parse) {
-            File astOutputFile = m_outputFileNames == null ? null : new File(m_outputFileNames[0]);
+            File astOutputFile = m_logDir == null ? null : new File(m_logDir[0] + newFileName("parse", "result"));
             Parser.parse(m_inputFiles[0], astOutputFile);
         } else if (m_funcRequest.tokenize) {
             LexerTest.tokenize(m_inputFiles[0]);
@@ -175,5 +180,21 @@ public class SCIF implements Callable<Integer> {
         return 0;
     }
 
+    public static String newFileName(String prefix, String suffix) {
+        int counter = 0;
+        String filename;
+        while (true) {
+            filename = prefix +String.valueOf(counter) + "." + suffix;
+            if (!fileNames.contains(filename)) {
+                fileNames.add(filename);
+                return filename;
+            }
+            counter += 1;
+        }
+    }
+
     protected static final Logger logger = LogManager.getLogger(SCIF.class);
+
+
+    static Set<String> fileNames = new HashSet<>();
 }

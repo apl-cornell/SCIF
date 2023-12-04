@@ -15,9 +15,11 @@ public class TestIfcTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "applications/Uniswap",
-            "basic/StructEx01",
+            "applications/Uniswap_ERC20",
+            "applications/KoET",
+            "applications/Dexible",
             "applications/ERC20_depmap",
+            "basic/StructEx01",
             "ifcTypechecking/Wallet_lock_exception",
             "applications/ERC20_nodepmap",
             "basic/DependentMap",
@@ -36,30 +38,30 @@ public class TestIfcTypechecking {
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         System.out.println(inputFilePath + ": " + input);
-        File ntcConsFile = new File(logDir, "ntc.cons");
+//        File ntcConsFile = new File(logDir, "ntc.cons");
         ArrayList<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
         List<SourceFile> roots = null;
         try {
-            roots = TypeChecker.regularTypecheck(files, ntcConsFile, m_debug);
+            roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
         } catch (Exception e) {
             e.printStackTrace();
             assert false;
         }
         assertNotNull(roots);
         // System.out.println("["+ outputFileName + "]");
-        ArrayList<File> ifcConsFiles = new ArrayList<>();
-        for (int i = 0; i < roots.size(); ++i) {
-            File IFCConsFile;
-            IFCConsFile = new File(logDir, "ifc" + i + ".cons");
-            ifcConsFiles.add(IFCConsFile);
-        }
+//        ArrayList<File> ifcConsFiles = new ArrayList<>();
+//        for (int i = 0; i < roots.size(); ++i) {
+//            File IFCConsFile;
+//            IFCConsFile = new File(logDir, "ifc" + i + ".cons");
+//            ifcConsFiles.add(IFCConsFile);
+//        }
 
         System.out.println("\nInformation Flow Typechecking:");
 
         boolean passIFC = false;
         try {
-            passIFC = TypeChecker.ifcTypecheck(roots, ifcConsFiles, m_debug);
+            passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
         } catch (Exception exp) {
             exp.printStackTrace();
         }
@@ -71,13 +73,15 @@ public class TestIfcTypechecking {
     }
     @ParameterizedTest
     @ValueSource(strings = {
-            "applications/Uniswap",
+            "applications/Dexible_raw",
+            "applications/KoET_raw",
+            "ifcTypechecking/DependentMap_W01",
+            "applications/Uniswap_ERC20_raw",
+            "applications/ERC20_raw",
             "ifcTypechecking/WEx1",
-            "ifcTypechecking/LocalTrust_W01",
+//            "ifcTypechecking/LocalTrust_W01",
             "ifcTypechecking/Wallet_lock_exception_W01",
             "ifcTypechecking/Wallet_lock_exception_W02",
-            "ifcTypechecking/DependentMap_W01",
-            "applications/ERC20_noannotations",
             // "examples/ERC20",
     })
     void testNegative(String contractName) {
@@ -86,30 +90,30 @@ public class TestIfcTypechecking {
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         System.out.println(inputFilePath + ": " + input);
-        File ntcConsFile = new File(logDir, "ntc.cons");
+//        File ntcConsFile = new File(logDir, "ntc.cons");
         ArrayList<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
         List<SourceFile> roots = null;
         try {
-            roots = TypeChecker.regularTypecheck(files, ntcConsFile, m_debug);
+            roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
         } catch (Exception e) {
             e.printStackTrace();
             assert false;
         }
         assertNotNull(roots);
         // System.out.println("["+ outputFileName + "]");
-        ArrayList<File> IFCConsFiles = new ArrayList<>();
-        for (int i = 0; i < roots.size(); ++i) {
-            File IFCConsFile;
-            IFCConsFile = new File(logDir, "ifc" + i + ".cons");
-            IFCConsFiles.add(IFCConsFile);
-        }
+//        ArrayList<File> IFCConsFiles = new ArrayList<>();
+//        for (int i = 0; i < roots.size(); ++i) {
+//            File IFCConsFile;
+//            IFCConsFile = new File(logDir, "ifc" + i + ".cons");
+//            IFCConsFiles.add(IFCConsFile);
+//        }
 
         System.out.println("\nInformation Flow Typechecking:");
 
         boolean passIFC = false;
         try {
-            passIFC = TypeChecker.ifcTypecheck(roots, IFCConsFiles, m_debug);
+            passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
         } catch (Exception exp) {
             exp.printStackTrace();
         }

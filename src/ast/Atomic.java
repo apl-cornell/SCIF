@@ -182,7 +182,7 @@ public class Atomic extends Statement {
         PathOutcome input = new PathOutcome();
         env.incScopeLayer();
         PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        Utils.genConsStatmentsWithException(body, env, so, psi, false);
+        Utils.genConsStatmentsWithException(body, env, so, psi, tail_position);
         env.decScopeLayer();
         for (ExceptHandler h : handlers) {
             ExceptionTypeSym expSym = env.getExp(h.name());

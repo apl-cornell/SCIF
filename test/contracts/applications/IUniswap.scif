@@ -1,0 +1,3 @@
+interface IUniswap {
+    @public uint tokenToTokenTransferInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address recipient, address token_addr);
+}

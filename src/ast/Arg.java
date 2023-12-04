@@ -78,7 +78,6 @@ public class Arg extends Node {
         }
         ScopeContext type = annotation.ntcGenCons(env, now);
 
-
         env.addCons(type.genCons(now, Relation.EQ, env, location));
 
         return now;

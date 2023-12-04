@@ -5,7 +5,7 @@ contract DependentMap {
 
 
     @public
-    void{sender} foo(uint{any} amount) {
+    void foo(uint{any} amount) {
         balances[sender] = amount;
     }
 }

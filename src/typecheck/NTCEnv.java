@@ -1,6 +1,7 @@
 package typecheck;
 
 import ast.*;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import typecheck.sherrlocUtils.Constraint;
@@ -14,6 +15,8 @@ public class NTCEnv {
     private java.util.Map<String, InterfaceSym> contractSymMap; // full filename -> ContractSym
     private SymTab curSymTab;
     private List<Constraint> cons;
+    private java.util.Map<String, java.util.Map<String, List<Constraint>>> conMap;
+    private List<Constraint> contractCons;
     private Hypothesis globalHypothesis;
     private InterfaceSym curContractSym;
     private String currentSourceFileFullName;
@@ -25,7 +28,8 @@ public class NTCEnv {
 
     public NTCEnv(ContractSym contractSym) {
         contractSymMap = new HashMap<>();
-        cons = new ArrayList<>();
+        contractCons = cons = new ArrayList<>();
+        conMap = new HashMap<>();
         curSymTab = new SymTab();
         globalHypothesis = new Hypothesis();
         curContractSym = contractSym;
@@ -313,5 +317,34 @@ public class NTCEnv {
 
     public boolean inAtomic() {
         return inAtomic;
+    }
+
+    public void enterMethod(String name) {
+        cons = new ArrayList<>();
+        conMap.get(currentSourceFileFullName).put(name, cons);
+    }
+
+    public void enterFile(String sourceFilePath) {
+        conMap.put(sourceFilePath, new HashMap<>());
+    }
+
+    public void exitMethod() {
+        cons = contractCons;
+    }
+
+    public Set<String> getFilenames() {
+        return conMap.keySet();
+    }
+
+    public Set<String> getMethodnames(String filename) {
+        return conMap.get(filename).keySet();
+    }
+
+    public List<Constraint> contractCons() {
+        return contractCons;
+    }
+
+    public Collection<? extends Constraint> methodCons(String sourceFilePath, String methodname) {
+        return conMap.get(sourceFilePath).get(methodname);
     }
 }

@@ -5,14 +5,14 @@ contract ERC20 implements IERC20 {
     map(address owner, map(address, uint{owner}){owner}) allowances;
 
     @public
-    void approve{sender}(final address allowed, uint amount) {
+    void approve{sender}(address allowed, uint amount) {
         allowances[sender][allowed] = amount;
     }
 
     //
     //  dynamically check that (msg.sender join l_deputy) => from
     @public
-    bool transfer{from -> this}(final address from, address to, uint amount) {
+    bool{this} transfer{from -> this}(final address from, address to, uint amount) {
     // bool transfer{from -> this; 1}(final address from, address to, uint amount) {
         endorse([from, to, amount], from -> this)
         if (balances[from] >= amount) {

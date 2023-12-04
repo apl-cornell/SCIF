@@ -3,6 +3,7 @@ package ast;
 import compile.CompileEnv;
 import compile.ast.Statement;
 import compile.ast.Type;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
@@ -100,7 +101,10 @@ public class Subscript extends TrailerExpr {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
-        VarSym valueVarSym = value.getVarInfo(env, false);
+
+        Map<String, String> dependentMapping = new HashMap<>();
+        VarSym valueVarSym = value.getVarInfo(env, false, dependentMapping);
+
         String ifNameValue = valueVarSym.labelNameSLC();
         // String ifNameRtnValue = ifNameValue + "." + "Subscript" + location.toString();
         String ifNameRtnValue = toSHErrLocFmt();
@@ -114,23 +118,27 @@ public class Subscript extends TrailerExpr {
             // the result value of this expression has the label dependent to index
 
             // DepMapTypeSym typeSym = (DepMapTypeSym) valueVarSym.typeSym;
-            VarSym indexVarSym = index.getVarInfo(env, tail_position);
+            Map<String, String> indexMapping = new HashMap<>();
+            VarSym indexVarSym = index.getVarInfo(env, tail_position, indexMapping);
             logger.debug("subscript/DepMap:");
             logger.debug("lookup at: " + index.toString());
             logger.debug(indexVarSym.toString());
             String ifNameIndex = indexVarSym.toSHErrLocFmt();
 
             if (indexVarSym.isPrincipalVar()) {
-                logger.debug("typename {} to {}", valueVarSym.typeSym.getName(), ifNameIndex);
+//                logger.debug("typename {} to {}", valueVarSym.typeSym.getName(), ifNameIndex);
+                System.err.println("typename " + depMapTypeSym.label() + " to " + ifNameIndex);
 
-                String ifDepMapValue = depMapTypeSym.label().toSHErrLocFmt(depMapTypeSym.key().toSHErrLocFmt(),
-                        ifNameIndex);
-
-                env.cons.add(
-                        new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue),
-                                env.hypothesis(), location, env.curContractSym().getName(),
-                                "Integrity level of the subscripted value is not expected"));
-                return new ExpOutcome(ifNameRtnValue, io.psi);
+                dependentMapping.put(depMapTypeSym.key().toSHErrLocFmt(), ifNameIndex);
+                String ifDepMapValue = depMapTypeSym.label().toSHErrLocFmt(dependentMapping);
+//                String ifDepMapValue = depMapTypeSym.label().toSHErrLocFmt(depMapTypeSym.key().toSHErrLocFmt(),
+//                        ifNameIndex);
+//
+//                env.addTrustConstraint(
+//                        new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue),
+//                                env.hypothesis(), location, env.curContractSym().getName(),
+//                                "Integrity level of the subscripted value is not expected"));
+                return new ExpOutcome(ifDepMapValue, io.psi);
 
             } else {
                 assert false;
@@ -156,20 +164,28 @@ public class Subscript extends TrailerExpr {
         return new compile.ast.Subscript(value.solidityCodeGen(result, code), index.solidityCodeGen(result, code));
     }
 
-    public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
+    @Override
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping) {
         VarSym rtnVarSym = null;
-        VarSym valueVarSym = value.getVarInfo(env, false);
+        VarSym valueVarSym = value.getVarInfo(env, false, dependentMapping);
         String ifNameValue = valueVarSym.labelNameSLC();
-        String ifNameRtn = ifNameValue + "." + "Subscript" + location.toString();
+//        String ifNameRtn = ifNameValue + "." + "Subscript" + location.toString();
+        String ifNameRtn = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
         if (valueVarSym.typeSym instanceof DepMapTypeSym depMapTypeSym) {
             // check if the index value is a principal
-            VarSym indexVarSym = index.getVarInfo(env, tail_position);
+            Map<String, String> indexMapping = new HashMap<>();
+            VarSym indexVarSym = index.getVarInfo(env, tail_position, indexMapping);
             String ifNameIndex = indexVarSym.toSHErrLocFmt();
             if (indexVarSym.isPrincipalVar()) {
 
                 TypeSym rtnTypeSym = depMapTypeSym.valueType;
+                dependentMapping.put(depMapTypeSym.key().toSHErrLocFmt(), ifNameIndex);
                 rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
                         rtnTypeSym.defContext(), false, false, false);
+                env.cons.add(
+                        new Constraint(new Inequality(depMapTypeSym.label().toSHErrLocFmt(dependentMapping), rtnVarSym.labelNameSLC()), env.hypothesis(), location,
+                                env.curContractSym().getName(),
+                                "Label of the subscript value"));
 
 //                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(valueVarSym.typeSym.name(),
 //                        ifNameIndex);
@@ -180,28 +196,28 @@ public class Subscript extends TrailerExpr {
 //                                "Label of the subscript variable"));
 
             } else {
-                logger.error("non-address type variable as index to access DEPMAP @{}",
-                        locToString());
+//                logger.error(,
+//                        locToString());
+                assert false: "non-address type variable as index to access a dependent map: at " + location.errString();
                 //System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());
                 return null;
             }
         } else {
             String ifNameIndex = index.genConsVisit(env, tail_position).valueLabelName;
-            ifNameRtn = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
+
+            TypeSym rtnTypeSym = new BuiltinTypeSym(ifNameRtn);
+            rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
+                    valueVarSym.defContext(), false, false, false);
             env.cons.add(
-                    new Constraint(new Inequality(ifNameValue, ifNameRtn), env.hypothesis(), location,
+                    new Constraint(new Inequality(ifNameValue, rtnVarSym.labelNameSLC()), env.hypothesis(), location,
                             env.curContractSym().getName(),
-                            "Label of the subscript variable"));
+                            "Label of the subscript value"));
 
             env.cons.add(
-                    new Constraint(new Inequality(ifNameIndex, ifNameRtn), env.hypothesis(), location,
+                    new Constraint(new Inequality(ifNameIndex, rtnVarSym.labelNameSLC()), env.hypothesis(), location,
                             env.curContractSym().getName(),
                             "Label of the subscript index value"));
 
-            TypeSym rtnTypeSym = new BuiltinTypeSym(ifNameRtn);
-            //TODO: more careful thoughts
-            rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
-                    valueVarSym.defContext(), false, false, false);
         }
         return rtnVarSym;
     }

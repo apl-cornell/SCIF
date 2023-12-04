@@ -142,6 +142,7 @@ public class Contract extends TopLayerNode {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+        System.err.println("entering contract: " + contractName);
         ScopeContext now = new ScopeContext(this, parent);
         env.setCurContractSym(env.getContract(contractName));
 
@@ -412,6 +413,7 @@ public class Contract extends TopLayerNode {
             newStructDefs.addAll(structDefs.subList(builtInIndex, structDefs.size()));
 
 
+            builtInIndex = 0;
             for (StateVariableDeclaration a : varDeclarations) {
                 if (a.isBuiltIn())
                     newStateVarDecs.add(a);

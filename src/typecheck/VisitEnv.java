@@ -5,6 +5,7 @@ import ast.IfLabel;
 import ast.Interface;
 import ast.PrimitiveIfLabel;
 import ast.SourceFile;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
@@ -22,8 +23,9 @@ public class VisitEnv {
     public Context inContext;
     // public PathOutcome outContext;
     // public HashMap<String, FuncInfo> funcMap;
+    private Map<String, List<Constraint>> conMap, trustConMap;
     public List<Constraint> cons;
-    private final List<Constraint> trustCons;
+    private List<Constraint> trustCons;
     // public LookupMaps varNameMap;
     public SymTab globalSymTab;
     public SymTab curSymTab;
@@ -229,4 +231,38 @@ public class VisitEnv {
             throw new RuntimeException("Unable to resolve the label: " + ifl);
         }
     }
+
+    public void enterNewContract() {
+        conMap = new HashMap<>();
+        trustConMap = new HashMap<>();
+        cons = new ArrayList<>();
+        trustCons = new ArrayList<>();
+        conMap.put("contract", cons);
+        trustConMap.put("contract", trustCons);
+    }
+
+    public void enterNewMethod(String name) {
+        cons = new ArrayList<>();
+        trustCons = new ArrayList<>();
+        conMap.put(name, cons);
+        trustConMap.put(name, trustCons);
+    }
+
+    public void exitMethod() {
+        cons = conMap.get(Utils.CONTRACT_KEYWORD);
+        trustCons = trustConMap.get(Utils.CONTRACT_KEYWORD);
+    }
+
+    public List<Constraint> getCons(String key) {
+        return conMap.get(key);
+    }
+
+    public List<Constraint> getTrustCons(String key) {
+        return trustConMap.get(key);
+    }
+
+    public Set<String> getMethodNameSet() {
+        return conMap.keySet();
+    }
+
 }

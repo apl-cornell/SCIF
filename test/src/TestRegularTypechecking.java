@@ -16,6 +16,14 @@ public class TestRegularTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "applications/ERC20_raw",
+            "applications/ERC20_nodepmap",
+            "applications/ERC20_depmap",
+            "applications/Dexible_raw",
+            "applications/KoET_raw",
+            "applications/ERC777",
+            "applications/Uniswap_ERC20_raw",
+            "applications/Uniswap_ERC777",
             "basic/StructEx01",
             "basic/DependentMap",
             "basic/EmptyContract",
@@ -27,8 +35,6 @@ public class TestRegularTypechecking {
             "ifcTypechecking/Wallet_lock_exception",
             "examples/ERC20",
             "examples/DeployToken",
-            "applications/ERC20_noannotations",
-            "applications/ERC20_nodepmap",
     })
     void testPositive(String contractName) {
         File logDir = new File("./.scif");
@@ -36,13 +42,13 @@ public class TestRegularTypechecking {
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         System.out.println(inputFilePath + ": " + input);
-        File NTCConsFile = new File(logDir, "ntc.cons");
+//        File NTCConsFile = new File(logDir, "ntc.cons");
         ArrayList<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
 
         List<SourceFile> roots = null;
         try {
-            roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
+            roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -69,12 +75,12 @@ public class TestRegularTypechecking {
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         System.out.println(inputFilePath + ": " + input);
-        File NTCConsFile = new File(logDir, "ntc.cons");
+//        File NTCConsFile = new File(logDir, "ntc.cons");
         ArrayList<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
         List<SourceFile> roots = null;
         try {
-            roots = TypeChecker.regularTypecheck(files, NTCConsFile, m_debug);
+            roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
         } catch (Exception exp) {
             exp.printStackTrace();
         } catch (AssertionError err) {

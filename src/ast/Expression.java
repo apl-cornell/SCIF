@@ -11,7 +11,9 @@ import typecheck.*;
 
 public abstract class Expression extends Node {
 
-    public VarSym getVarInfo(VisitEnv env, boolean tail_position) {
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping)
+    {
+        assert false;
         return null;
     }
 

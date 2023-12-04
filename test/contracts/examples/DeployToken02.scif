@@ -5,7 +5,7 @@ contract DeployToken {
 
     @public
     bool{any} deploy{any->this;any}() {
-        token = new EmptyContract2{value = 1000}();
-        return token.trusts{value = 1000, gas = 10000000}(address(token), address(this));
+        token = new EmptyContract2(){value = 1000};
+        return token.trusts(address(token), address(this)){value = 1000, gas = 10000000};
     }
 }
