@@ -170,10 +170,14 @@ public class FunctionDef extends FunctionSig {
             // Context CO = new Context(Utils.getLabelNamePc(stmt.location), Utils.getLabelNameLock(stmt.location));
             // env.outContext = CO;
             ++index;
-            CO = stmt.genConsVisit(env, index == body.size() && tail_info);
+            String prevLambda = env.inContext.lambda;
+            boolean isTail = index == body.size() && tail_info;
+            CO = stmt.genConsVisit(env, isTail);
             //Context CO = env.outContext;
             if (CO.existsNormalPath()) {
-                env.inContext = new Context(CO.getNormalPath().c());
+                env.inContext = Utils.genNewContextAndConstraints(env, isTail, CO.getNormalPath().c, prevLambda, stmt.nextPcSHL(), stmt.location());
+
+//                env.inContext = new Context(CO.getNormalPath().c());
             } else {
                 break;
             }

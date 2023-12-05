@@ -87,4 +87,9 @@ public class ExceptionDef extends TopLayerNode {
     public boolean isBuiltIn() {
         return isBuiltIn;
     }
+
+    public boolean typeMatch(ExceptionDef exceptionDef) {
+        return exceptionName.equals(exceptionDef.exceptionName) &&
+                arguments.typeMatch(exceptionDef.arguments);
+    }
 }

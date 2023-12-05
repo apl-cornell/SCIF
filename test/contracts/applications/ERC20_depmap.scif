@@ -1,4 +1,6 @@
-contract ERC20 {
+import "./IERC20.scif";
+
+contract ERC20 implements IERC20 {
     map(address, uint) _balances;
     map(address owner, map(address, uint{owner}){owner}) _allowances;
     uint _burnt;
@@ -39,16 +41,11 @@ contract ERC20 {
         return _burnt;
     }
 
-    @public void approve(address spender, uint val) {
-        address _to = endorse(spender, sender->this);
-        uint _val = endorse(val, sender->this);
-        _allowances[sender][_to] = _val;
+    @public void approve{sender}(address spender, uint val) {
+        _allowances[sender][spender] = val;
     }
 
-    @public void approveFrom{from->this}(final address from, address spender, uint val) {
-        address _from = endorse(from, sender->this);
-        address _to = endorse(spender, sender->this);
-        uint _val = endorse(val, sender->this);
+    @public void approveFrom{from}(final address from, address spender, uint val) {
         _allowances[from][spender] = val;
     }
 

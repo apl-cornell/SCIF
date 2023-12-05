@@ -105,8 +105,9 @@ public class Contract extends TopLayerNode {
         // SymTab curSymTab = new SymTab(env.curSymTab());
         env.enterNewScope();
         Utils.addBuiltInTypes(env.curSymTab());
+        VarSym anySym = (VarSym) env.getCurSym(Utils.LABEL_BOTTOM);
         // env.initSymTab(curSymTab);
-        ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), new ArrayList<>(), this);
+        ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), new ArrayList<>(), this, anySym);
         env.addContractSym(env.currentSourceFileFullName(), contractSym);
         env.addSym(contractName, contractSym);
         env.setCurContractSym(contractSym);
@@ -163,6 +164,7 @@ public class Contract extends TopLayerNode {
             fDef.ntcGenCons(env, now);
         }
 
+        System.err.println("exiting contract: " + contractName);
         return now;
     }
 
@@ -304,16 +306,29 @@ public class Contract extends TopLayerNode {
             nameSet.add(f.name);
         }
 
+        Map<String, StructDef> structMap = new HashMap<>();
+        for (StructDef f : structDefs) {
+            structMap.put(f.structName, f);
+        }
         for (StructDef structDef: itrface.structDefs) {
             if (structDef.isBuiltIn()) continue;
             if (nameSet.contains(structDef.structName)) {
-                assert false: structDef.structName;
+                if (!structDef.typeMatch(structMap.get(structDef.structName))) {
+                    assert false : structDef.structName;
+                }
             }
+        }
+
+        Map<String, ExceptionDef> expMap = new HashMap<>();
+        for (ExceptionDef f : exceptionDefs) {
+            expMap.put(f.exceptionName, f);
         }
         for (ExceptionDef exp: itrface.exceptionDefs) {
             if (exp.isBuiltIn()) continue;
             if (nameSet.contains(exp.exceptionName)) {
-                assert false: exp.exceptionName;
+                if (!exp.typeMatch(expMap.get(exp.exceptionName))) {
+                    assert false : exp.exceptionName;
+                }
             }
         }
 

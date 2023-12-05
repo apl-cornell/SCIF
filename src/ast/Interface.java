@@ -14,6 +14,7 @@ import typecheck.NTCEnv;
 import java.util.ArrayList;
 import java.util.HashSet;
 import typecheck.Utils;
+import typecheck.VarSym;
 
 public class Interface extends TopLayerNode {
 
@@ -50,7 +51,8 @@ public class Interface extends TopLayerNode {
         // SymTab curSymTab = new SymTab(env.curSymTab());
         env.enterNewScope();
         Utils.addBuiltInTypes(env.curSymTab());
-        InterfaceSym interfaceSym = new InterfaceSym(contractName, env.curSymTab(), new ArrayList<>(), this);
+        VarSym anySym = (VarSym) env.getCurSym(Utils.LABEL_BOTTOM);
+        InterfaceSym interfaceSym = new InterfaceSym(contractName, env.curSymTab(), new ArrayList<>(), this, anySym);
         env.addContractSym(env.currentSourceFileFullName(), interfaceSym);
         env.addSym(contractName, interfaceSym);
         env.setCurContractSym(interfaceSym);

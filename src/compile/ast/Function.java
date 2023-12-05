@@ -52,6 +52,7 @@ public class Function extends FunctionSig {
         addLine(result, "{", indentLevel);
 
         for (Statement s: body) {
+            assert s != null : name + "\n" + String.join("\n", result);
             result.addAll(s.toSolCode(indentLevel + 1));
         }
 

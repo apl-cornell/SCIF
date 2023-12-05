@@ -1,0 +1,10 @@
+contract Constructor0 {
+    uint a;
+    uint b;
+
+    constructor(uint _a, uint _b) {
+        a = endorse(_a, sender->this);
+        b = endorse(_b, sender->this);
+        super();
+    }
+}

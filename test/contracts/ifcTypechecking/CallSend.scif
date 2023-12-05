@@ -1,0 +1,16 @@
+import "../applications/IERC20.scif";
+import "../applications/IERC777.scif";
+
+contract CallSend {
+    IERC777 token;
+
+    @private
+    void tokenToEthInput() {
+
+//        send(sender, 0);
+        atomic {
+           token.transferFrom(sender, sender, 0);
+        }
+    }
+
+}

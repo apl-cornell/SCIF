@@ -30,30 +30,35 @@ public class InterfaceSym extends TypeSym {
     protected List<Assumption> assumptions;
     protected Node astNode;
     //private VarSym thisSym;
+    private VarSym anySym;
 
     public InterfaceSym(String name,
             SymTab symTab,
             // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
             List<Assumption> assumptions,
             // Label label,
-            Interface itrface) {
+            Interface itrface,
+            VarSym any) {
         super(name, itrface.getScopeContext());
         this.symTab = symTab;
         this.assumptions = assumptions;
         // this.label = label;
         astNode = itrface;
+        anySym = any;
     }
     public InterfaceSym(String name,
             SymTab symTab,
             // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
             List<Assumption> assumptions,
             // Label label,
-            ScopeContext context) {
+            ScopeContext context,
+            VarSym any) {
         super(name, context);
         this.symTab = symTab;
         this.assumptions = assumptions;
         // this.label = label;
         astNode = null;
+        anySym = any;
     }
 
     public InterfaceSym(String contractName, Interface itrface) {
@@ -261,5 +266,11 @@ public class InterfaceSym extends TypeSym {
             sb.append(sym.getKey());
         }
         return sb.toString();
+    }
+
+    public VarSym any() {
+        VarSym anySym = (VarSym) lookupSym(Utils.LABEL_BOTTOM);
+        assert anySym != null;
+        return anySym;
     }
 }

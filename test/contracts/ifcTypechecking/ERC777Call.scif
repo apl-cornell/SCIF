@@ -1,0 +1,6 @@
+constructor ERC777Call {
+    uint a;
+    @public void foo() {
+
+    }
+}

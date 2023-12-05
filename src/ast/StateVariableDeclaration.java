@@ -268,4 +268,10 @@ public class StateVariableDeclaration extends TopLayerNode {
         return interfaceSym.newVarSym(((Name) name).id, type, isStatic, isFinal, isBuiltin, location,
                 scopeContext);
     }
+
+    public boolean typeMatch(StateVariableDeclaration stateVariableDeclaration) {
+        return name.typeMatch(stateVariableDeclaration.name) &&
+                type.typeMatch(stateVariableDeclaration.type) &&
+                (value == stateVariableDeclaration.value || value.typeMatch(stateVariableDeclaration.value));
+    }
 }

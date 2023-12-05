@@ -266,6 +266,7 @@ public class VisitEnv {
         List<String> tmp = conMap.keySet().stream().sorted().collect(Collectors.toList());
         List<String> result = new ArrayList<>();
         Collections.reverse(tmp);
+        tmp = moveFirst("addLiquidity", tmp);
         boolean existConstructor = false;
         for (String name: tmp) {
             if (name.equals("constructor")) {
@@ -276,6 +277,22 @@ public class VisitEnv {
         }
         if (existConstructor) {
             result.add("constructor");
+        }
+        return result;
+    }
+
+    private List<String> moveFirst(String name0, List<String> tmp) {
+        List<String> result = new ArrayList<>();
+        boolean existname0 = false;
+        for (String name: tmp) {
+            if (name.equals(name0)) {
+                existname0 = true;
+            } else {
+                result.add(name);
+            }
+        }
+        if (existname0) {
+            result.add(0, name0);
         }
         return result;
     }

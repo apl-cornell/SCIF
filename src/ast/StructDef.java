@@ -58,4 +58,18 @@ public class StructDef extends TopLayerNode {
     public boolean isBuiltIn() {
         return isBuiltIn;
     }
+
+    public boolean typeMatch(StructDef structDef) {
+        if (!structName.equals(structDef.structName)) {
+            return false;
+        }
+        int i = 0;
+        while (i < members.size()) {
+            if (!members.get(i).typeMatch(structDef.members.get(i))) {
+                return false;
+            }
+            ++i;
+        }
+        return true;
+    }
 }

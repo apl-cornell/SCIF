@@ -12,8 +12,9 @@ public class ContractSym extends InterfaceSym {
             // HashSet<String> iptContracts, HashMap<String, Type> typeMap, HashMap<String, VarInfo> varMap, HashMap<String, FuncInfo> funcMap,
             List<Assumption> assumptions,
             // Label label,
-            Contract contract) {
-        super(name, symTab, assumptions, contract.getScopeContext());
+            Contract contract,
+            VarSym anySym) {
+        super(name, symTab, assumptions, contract.getScopeContext(), anySym);
         astNode = contract;
     }
 

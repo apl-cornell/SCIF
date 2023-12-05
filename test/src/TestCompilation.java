@@ -13,6 +13,12 @@ public class TestCompilation {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "applications/Uniswap_ERC20",
+            "applications/Uniswap_ERC777",
+            "applications/Dexible",
+            "applications/KoET",
+            "applications/ERC20_depmap",
+            "applications/ERC20_nodepmap",
 //            "examples/DeployToken02", TODO
             "basic/StructEx04",
             "basic/StructEx03",

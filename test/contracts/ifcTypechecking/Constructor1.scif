@@ -1,0 +1,10 @@
+import "./Constructor0.scif";
+
+contract Constructor1 extends Constructor0 {
+    uint c;
+
+    constructor(uint a, uint b, uint _c) {
+        c = endorse(_c, sender->this);
+        super(endorse(a, sender->this), endorse(b, sender->this));
+    }
+}

@@ -87,8 +87,8 @@ public class FuncLabels extends Node {
         senderLbl.setLoc(funcLocation);
         thisLbl.setLoc(funcLocation);
         if (isConstructor) {
-            begin_pc = gamma_label = end_pc = senderLbl;
-            to_pc = thisLbl;
+            begin_pc = senderLbl;
+            to_pc = gamma_label = end_pc = thisLbl;
             location = funcLocation;
         } else {
             if (gamma_label != null) {

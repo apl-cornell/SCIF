@@ -169,6 +169,9 @@ public class TypeChecker {
                         return roots;
                     }
                     try {
+                        if (DEBUG) {
+                            System.err.println("regular type-checking using SLC...");
+                        }
                         if (!runSLC(ntcEnv.programMap(), outputFile.getAbsolutePath(), DEBUG)) {
                             return null;
                         }
@@ -313,7 +316,7 @@ public class TypeChecker {
 
         for (Map.Entry<String, FuncSym> funcPair : contractSym.symTab.getFuncs().entrySet()) {
             FuncSym func = funcPair.getValue();
-            logger.debug("add func's sig constraints: [" + func.funcName + "]");
+//            logger.debug("add func's sig constraints: [" + func.funcName + "]");
             //TODO: simplify
             namespace = "";
             String ifNameCallBeforeLabel = func.externalPcSLC();

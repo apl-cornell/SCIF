@@ -16,9 +16,9 @@ public class TestIfcTypechecking {
     @ParameterizedTest
     @ValueSource(strings = {
             "applications/Uniswap_ERC20",
+            "applications/ERC20_depmap",
             "applications/KoET",
             "applications/Dexible",
-            "applications/ERC20_depmap",
             "basic/StructEx01",
             "ifcTypechecking/Wallet_lock_exception",
             "applications/ERC20_nodepmap",

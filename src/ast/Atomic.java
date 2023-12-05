@@ -153,8 +153,9 @@ public class Atomic extends Statement {
                     new IfStatement(handlingBranches, List.of(handler.solidityCodeGen(code, writeMap, dataVar)));
         }
         code.exitVarScope();
-
-        solBody.add(handlingBranches);
+        if (handlingBranches != null) {
+            solBody.add(handlingBranches);
+        }
         return solBody;
     }
 

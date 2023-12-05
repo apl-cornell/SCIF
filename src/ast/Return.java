@@ -89,6 +89,7 @@ public class Return extends Statement {
         // otherwise,
         List<compile.ast.Statement> result = new ArrayList<>();
         result.addAll(code.compileReturn(value != null ? value.solidityCodeGen(result, code) : null));
+        assert result.size() > 0;
         return result;
     }
 

@@ -819,6 +819,8 @@ public class Utils {
     }
 
     public static Context genNewContextAndConstraints(VisitEnv env, boolean tail_position, Context c, String prevLambda, String newPc, CodeLocation location) {
+        env.cons.add(new Constraint(new Inequality(prevLambda, c.lambda), env.hypothesis(), location, env.curContractSym().getName(),
+                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         if (tail_position) return c;
         assert c != null: location.errString();
         genSequenceConstraints(env, prevLambda, c.pc, c.lambda, newPc, location);

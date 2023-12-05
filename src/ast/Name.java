@@ -34,7 +34,7 @@ public class Name extends Variable {
         logger.debug("Name: " + id);
         // logger.debug(s.toString());
         if (s instanceof FuncSym) {
-            assert false;
+            assert false : id + " at " + location.errString();
             return null;
         } else if (s instanceof VarSym) {
             ScopeContext now = new ScopeContext(this, parent);

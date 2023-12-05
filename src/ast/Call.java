@@ -318,10 +318,12 @@ public class Call extends TrailerExpr {
 
                 env.addSigReq(namespace, conType.getName());
                 ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-                funcSym = env.getContract(conType.getName()).getFunc(funcName);
+                InterfaceSym contractSym = env.getContract(conType.getName());
+                funcSym = contractSym.getFunc(funcName);
                 assert funcSym != null : "not found: " + conType.getName() + "." + funcName;
 
                 dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(), env.thisSym().toSHErrLocFmt());
+                dependentLabelMapping.put(contractSym.any().toSHErrLocFmt(), env.curContractSym().any().toSHErrLocFmt());
 
                 ifFuncCallPcBefore = funcSym.externalPc();
                 ifFuncCallPcAfter = funcSym.internalPc();
