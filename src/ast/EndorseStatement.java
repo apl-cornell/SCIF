@@ -36,6 +36,7 @@ public class EndorseStatement extends Statement {
 
     @Override
     public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+        code.countEndorse(expressionList.size());
         List<compile.ast.Statement> result = new ArrayList<>();
         for (Statement s: body) {
             result.addAll(s.solidityCodeGen(code));

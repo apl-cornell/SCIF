@@ -16,6 +16,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -212,5 +213,13 @@ public class Utils {
             code.addLocalVar(varName, varType);
             statements.add(valueDec);
         }
+    }
+
+    public static List<String> genStatsLines(CompileEnv env) {
+        List<String> result = new ArrayList<>();
+        int endorseCount = env.endorseCount();
+        int dynamicCallCount = env.dynamicCallCount();
+        result.add("// endorse: " + endorseCount + ", dynamic calls: " + dynamicCallCount);
+        return result;
     }
 }

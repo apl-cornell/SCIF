@@ -35,6 +35,7 @@ public class CompileEnv {
     TemporaryNameManager temporaryNameManager;
     Map<String, ExceptionTypeSym> exceptionSymTable;
     List<Function> temporaryFunctions;
+    Stats stats = new Stats();
 
 
     /**
@@ -160,6 +161,21 @@ public class CompileEnv {
         exceptionManager.clear();
     }
 
+    public void countEndorse() {
+        stats.endorse();
+    }
+    public void countEndorse(int size) {
+        stats.endorse(size);
+    }
+
+    public int endorseCount() {
+        return stats.endorseCount();
+    }
+
+    public int dynamicCallCount() {
+        return stats.dynamicCallCount();
+    }
+
     public enum ScopeType {
         CONTRACT, METHOD, TRY, ATOMIC
     }
@@ -222,6 +238,7 @@ public class CompileEnv {
         List<compile.ast.Expression> argValues = new ArrayList<>();
         argValues.add(new SingleVar(labelTable.containsKey(l) ? labelTable.get(l) : l));
         argValues.add(new SingleVar(labelTable.containsKey(r) ? labelTable.get(r) : r));
+        stats.trusts();
         return new compile.ast.Call(compile.Utils.TRUSTS_CALL, argValues);
 //            return new compile.ast.ExternalCall(new compile.ast.Call("getTrustManager"),
 //                        "trusts", argValues
@@ -230,6 +247,7 @@ public class CompileEnv {
 
     }
     compile.ast.Call ifUnlocked(String l) {
+        stats.bypassLocks();
         return new compile.ast.Call(compile.Utils.BYPASSLOCK_CALL, List.of(new SingleVar(labelTable.containsKey(l) ? labelTable.get(l) : l)));
 //        return new ExternalCall(new compile.ast.Call("getLockManager"),
 //                "locked",
@@ -543,6 +561,7 @@ public class CompileEnv {
     }
 
     public compile.ast.Call lock(String addr) {
+        stats.acquireLock();
         return new compile.ast.Call(compile.Utils.LOCK_CALL,
                 List.of(new SingleVar(labelTable.containsKey(addr) ? labelTable.get(addr) : addr)));
 //        return new ExternalCall(new compile.ast.Call("getLockManager"),
@@ -552,6 +571,7 @@ public class CompileEnv {
     }
 
     public compile.ast.Call unlock(String addr) {
+        stats.releaseLock();
         return new compile.ast.Call(compile.Utils.UNLOCK_CALL,
                 List.of(new SingleVar(labelTable.containsKey(addr) ? labelTable.get(addr) : addr)));
 //        return new ExternalCall(new compile.ast.Call("getLockManager"),

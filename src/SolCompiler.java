@@ -20,8 +20,9 @@ public class SolCompiler {
 
             CompileEnv env = new CompileEnv();
             // System.err.println("Compiling " + root.getContractName() + ":");
-            SolNode node = root.solidityCodeGen(env);
+            compile.ast.SourceFile node = root.solidityCodeGen(env);
 
+            node.addStats(env);
             Utils.writeToFile(node, outputFile);
             // Utils.printCode(node);
 

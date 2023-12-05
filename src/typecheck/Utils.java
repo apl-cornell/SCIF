@@ -216,7 +216,7 @@ public class Utils {
 
     public static sherrloc.diagnostic.DiagnosticConstraintResult runSherrloc(String consFilePath)
             throws Exception {
-        logger.debug("runSherrloc()...");
+//        logger.debug("runSherrloc()...");
         String[] args = new String[]{"-c", consFilePath};
         DiagnosticOptions options = new DiagnosticOptions(args);
         ErrorDiagnosis ana = ErrorDiagnosis.getAnalysisInstance(options);
@@ -647,13 +647,13 @@ public class Utils {
         }
     }
 
-    public static void contextFlow(VisitEnv env, Context outContext, Context funcEndContext,
+    public static void contextFlow(VisitEnv env, Context outContext, Context endContext,
             CodeLocation location) {
-        env.addTrustConstraint(new Constraint(new Inequality(outContext.lambda, funcEndContext.lambda),
+        env.addTrustConstraint(new Constraint(new Inequality(outContext.lambda, endContext.lambda),
                 env.hypothesis(), location, env.curContractSym().getName(),
                 "actually-maintained lock of the last sub-statement flows to parent-statement's one"));
         env.addTrustConstraint(
-                new Constraint(new Inequality(outContext.pc, funcEndContext.pc), env.hypothesis(),
+                new Constraint(new Inequality(outContext.pc, endContext.pc), env.hypothesis(),
                         location, env.curContractSym().getName(),
                         "normal termination control flow of the last sub-statement flows to parent-statement's one"));
     }

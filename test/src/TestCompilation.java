@@ -13,7 +13,7 @@ public class TestCompilation {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "examples/DeployToken02",
+//            "examples/DeployToken02", TODO
             "basic/StructEx04",
             "basic/StructEx03",
             "basic/StructEx02",

@@ -68,7 +68,6 @@ contract Uniswap {
         atomic {
             token.transfer(address(this), sender, token_amount);
         }
-//        return eth_amount, token_amount
     }
 //
 //    uint getInputPrice(uint input_amount, uint input_reserve, uint output_reserve) {

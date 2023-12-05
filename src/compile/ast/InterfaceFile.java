@@ -2,6 +2,7 @@ package compile.ast;
 
 import static compile.Utils.addLine;
 
+import compile.CompileEnv;
 import compile.Utils;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,5 +26,10 @@ public class InterfaceFile implements SourceFile {
         }
         result.addAll(itrface.toSolCode(indentLevel));
         return result;
+    }
+
+    @Override
+    public void addStats(CompileEnv env) {
+        // pass
     }
 }

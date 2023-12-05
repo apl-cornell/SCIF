@@ -63,6 +63,7 @@ public class Endorse extends Expression {
 
     @Override
     public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        code.countEndorse();
         return value.solidityCodeGen(result, code);
     }
 

@@ -8,6 +8,7 @@ import ast.SourceFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Collectors;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 
@@ -261,8 +262,10 @@ public class VisitEnv {
         return trustConMap.get(key);
     }
 
-    public Set<String> getMethodNameSet() {
-        return conMap.keySet();
+    public List<String> getMethodNameSet() {
+        List<String> result = conMap.keySet().stream().sorted().collect(Collectors.toList());
+        Collections.reverse(result);
+        return result;
     }
 
 }
