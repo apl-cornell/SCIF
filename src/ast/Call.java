@@ -388,10 +388,18 @@ public class Call extends TrailerExpr {
 
         }
 
-        if (externalCall && externalTargetSym.isFinal) {
-            dependentLabelMapping.put(
-                    externalContractSym.thisSym().toSHErrLocFmt(),
-                    externalTargetSym.toSHErrLocFmt());
+        if (externalCall) {
+
+            if (externalTargetSym.isFinal) {
+                dependentLabelMapping.put(
+                        externalContractSym.thisSym().toSHErrLocFmt(),
+                        externalTargetSym.toSHErrLocFmt());
+            } else {
+                System.err.println("call " + funcName + " with this as " + ifContRtn);
+                dependentLabelMapping.put(
+                        externalContractSym.thisSym().toSHErrLocFmt(),
+                        ifContRtn);
+            }
         }
 
 //        System.err.println("Call: " + funcName);
@@ -447,7 +455,7 @@ public class Call extends TrailerExpr {
 
         PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
                 Utils.joinLabels(psi.getNormalPath().c.pc, funcSym.endPc().toSHErrLocFmt(dependentLabelMapping)),
-                Utils.joinLabels(funcSym.getLabelNameCallGamma(), funcSym.internalPcSLC())
+                funcSym.getLabelNameCallGamma()
         )));
 
         for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
@@ -466,7 +474,6 @@ public class Call extends TrailerExpr {
 
         //TODO
 
-        typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
         env.cons.add(
                 new Constraint(new Inequality(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping)), env.hypothesis(),
                         location, env.curContractSym().getName(),
@@ -476,23 +483,34 @@ public class Call extends TrailerExpr {
                 location, env.curContractSym().getName(),
                 "Calling this function does not respect static reentrancy locks"));
 
-        if (!tail_position) {
+
+        if (externalCall) {
             env.cons.add(new Constraint(
-                    new Inequality(Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
+                    new Inequality(Utils.joinLabels(ifContRtn,
+                            ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
                             Relation.EQ, endContext.lambda), env.hypothesis(), location,
                     env.curContractSym().getName(),
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                    "Calling this function does not respect static reentrancy locks"));
+        }
+        if (!tail_position) {
+//            env.cons.add(new Constraint(
+//                    new Inequality(Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
+//                            Relation.EQ, endContext.lambda), env.hypothesis(), location,
+//                    env.curContractSym().getName(),
+//                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
 
-            env.cons.add(new Constraint(
-                    new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+//            env.cons.add(new Constraint(
+//                    new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
+//                    env.hypothesis(), location, env.curContractSym().getName(),
+//                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
 
         String ifNameFuncRtnValue = funcSym.rtn.toSHErrLocFmt(dependentLabelMapping);
 //        System.err.println("return label: " + ifNameFuncRtnValue);
         // String ifNameFuncRtnLock = funcSym.getLabelNameRtnLock();
         psi.joinExe(expPsi);
+        typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
+        psi.setNormalPath(endContext);
 
         return new ExpOutcome(ifNameFuncRtnValue, psi);
     }

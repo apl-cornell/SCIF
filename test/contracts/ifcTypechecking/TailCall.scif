@@ -1,0 +1,11 @@
+contract TailCall {
+    uint a;
+
+    @public
+    void foo{this->this;this}() {
+        bar();
+    }
+
+    void bar{this->this;any}() {
+    }
+}

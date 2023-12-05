@@ -82,6 +82,7 @@ public class TestIfcTypechecking {
 //            "ifcTypechecking/LocalTrust_W01",
             "ifcTypechecking/Wallet_lock_exception_W01",
             "ifcTypechecking/Wallet_lock_exception_W02",
+            "ifcTypechecking/TailCall",
             // "examples/ERC20",
     })
     void testNegative(String contractName) {

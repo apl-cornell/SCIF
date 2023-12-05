@@ -66,13 +66,14 @@ contract ERC20 {
         return _allowances[owner][spender];
     }
 
-    @public void transferFrom{sender -> from; any}(final address from, address to, uint val) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this}) {
+    @public void transferFrom{sender -> from; sender}(final address from, address to, uint val) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this}) {
         endorse([from, to, val], sender -> from)
         if (_allowances[from][sender] >= val) {
             transfer(from, to, val);
             _allowances[from][sender] -= val;
+        } else {
+            throw ERC20InsufficientAllowance(to, _allowances[from][sender], val);
         }
-        throw ERC20InsufficientAllowance(to, _allowances[from][sender], val);
     }
 
     void _spendAllowance{owner}(final address owner, address spender, uint val) throws (ERC20InsufficientAllowance) {

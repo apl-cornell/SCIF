@@ -1,0 +1,6 @@
+contract CallBalance {
+    @public
+    void foo() {
+        uint a = balance(address(0));
+    }
+}

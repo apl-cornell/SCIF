@@ -8,33 +8,23 @@ contract Dexible {
         super();
     }
 
-    @public void swap(IERC20 tokenIn, IERC20 tokenOut, final IExchange router, uint amount)
+    @public void swap{sender}(IERC20 tokenIn, IERC20 tokenOut, IExchange router, uint amount)
         throws (FailedSwap) {
         atomic {
-            lock(this) {
-                tokenIn.approveFrom(sender, address(router), amount);
-            }
-            assert router => sender;
+            tokenIn.approveFrom(sender, address(router), amount);
             router.exchange(sender, tokenIn, tokenOut, amount);
         } rescue * {
             throw FailedSwap();
         }
     }
 
-    @public void multiSwap(IERC20[] tokens, IExchange[] routers, uint[] amounts)
+    @public void multiSwap{sender}(IERC20[] tokens, IExchange[] routers, uint[] amounts)
         throws (FailedSwap) {
         atomic {
             uint{sender} i = 0;
-            lock(this) {
-                while (i < tokens.length() - 1) {
-                    final IExchange{sender} router = routers[i];
-                    final IERC20{sender} tokenIn = tokens[i];
-                    tokenIn.approveFrom(sender, address(router), amounts[i]);
-                    assert router => sender;
-                    router.exchange(
-                        sender, tokens[i], tokens[i + 1], amounts[i]);
-                    i += 1;
-                }
+            while (i < tokens.length() - 1) {
+                swap(tokens[i], tokens[i + 1], routers[i], amounts[i]);
+                i += 1;
             }
         } rescue * {
             throw FailedSwap();

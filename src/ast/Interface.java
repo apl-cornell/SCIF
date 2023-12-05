@@ -333,7 +333,7 @@ public class Interface extends TopLayerNode {
                 Utils.METHOD_BALANCE_NAME,
                 new FuncLabels(
                         labelBot,
-                        labelTop,
+                        labelBot,
                         labelTop,
                         labelTop
                 ),

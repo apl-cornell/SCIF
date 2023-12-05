@@ -263,8 +263,20 @@ public class VisitEnv {
     }
 
     public List<String> getMethodNameSet() {
-        List<String> result = conMap.keySet().stream().sorted().collect(Collectors.toList());
-        Collections.reverse(result);
+        List<String> tmp = conMap.keySet().stream().sorted().collect(Collectors.toList());
+        List<String> result = new ArrayList<>();
+        Collections.reverse(tmp);
+        boolean existConstructor = false;
+        for (String name: tmp) {
+            if (name.equals("constructor")) {
+                existConstructor = true;
+            } else {
+                result.add(name);
+            }
+        }
+        if (existConstructor) {
+            result.add("constructor");
+        }
         return result;
     }
 

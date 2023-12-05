@@ -73,7 +73,7 @@ contract KoET {
     }
 
     // Claim the throne for the given name by paying the currentClaimFee.
-    @public void claimThrone(bytes name) {
+    @public void claimThrone{sender->this;any}(bytes name) {
 
         uint valuePaid = value;
 

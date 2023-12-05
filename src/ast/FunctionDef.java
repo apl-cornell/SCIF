@@ -133,10 +133,10 @@ public class FunctionDef extends FunctionSig {
                         funcLabels.to_pc.location,
                         "Control flow of this method start with its call-after(second) label"));
 
-        String ifNameContract = env.curContractSym().getLabelNameContract();
-        env.addTrustConstraint(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis(),
-                funcLabels.begin_pc.location,
-                "This contract should be trusted enough to call this method"));
+//        String ifNameContract = env.curContractSym().getLabelNameContract();
+//        env.addTrustConstraint(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis(),
+//                funcLabels.begin_pc.location,
+//                "This contract should be trusted enough to call this method"));
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
         env.addTrustConstraint(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis(),
@@ -179,6 +179,7 @@ public class FunctionDef extends FunctionSig {
             }
         }
         if (body.size() > 0 && CO.existsNormalPath()) {
+            System.err.println("method: " + funcLocalName);
             Utils.contextFlow(env, CO.getNormalPath().c(), funcEndContext.c(),
                     body.get(body.size() - 1).location);
         }

@@ -766,6 +766,7 @@ public class Utils {
                     break;
                 }
             }
+            if (program == null) continue;
             assert program != null : contractName;
 
 

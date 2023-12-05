@@ -415,6 +415,7 @@ public class TypeChecker {
         // System.out.println("prinSet size: " + env.principalSet().size());
         List<Constraint> contractCons = env.getCons(Utils.CONTRACT_KEYWORD), contractTrustCons = env.getTrustCons(Utils.CONTRACT_KEYWORD);
 
+
         for (String methodName : env.getMethodNameSet()) {
             if (methodName.equals(Utils.CONTRACT_KEYWORD)) continue;
             System.err.println("checking method: " + methodName);

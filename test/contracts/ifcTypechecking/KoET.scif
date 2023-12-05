@@ -1,0 +1,21 @@
+contract KoET {
+
+
+    // How much must an agent pay now to become the monarch?
+    uint currentClaimPrice;
+
+
+    // Claim the throne for the given name by paying the currentClaimFee.
+    @public void claimThrone{sender->this;any}() {
+        // If they paid too little, reject claim and refund their money.
+        if (true) {
+            send(sender, 0);
+        } else {
+            lock(this) {
+                send(sender, 0);
+            }
+            currentClaimPrice = 0;
+        }
+    }
+
+}

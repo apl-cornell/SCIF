@@ -121,6 +121,9 @@ public class AnnAssign extends Statement {
         String id = ((Name) target).id;
         logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
         CodeLocation loc = location;
+//        if (annotation.label() == null) {
+//            annotation.setToDefault(env.curFuncExternalLabel);
+//        }
         varSym = env.curContractSym().newVarSym(id, annotation, isStatic, isFinal, isBuiltIn, loc,
                 scopeContext);
         env.addVar(id, varSym);

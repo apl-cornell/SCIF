@@ -58,7 +58,7 @@ public class PathOutcome {
     }
 
     public void joinExe(PathOutcome psi) {
-        PsiUnit n = getNormalPath();
+        PsiUnit n = psi.getNormalPath();
         join(psi);
         if (n != null) {
             setNormalPath(n.c);
