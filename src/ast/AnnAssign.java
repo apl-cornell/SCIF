@@ -1,6 +1,7 @@
 package ast;
 
 import compile.CompileEnv;
+import compile.ast.ContractType;
 import compile.ast.SingleVar;
 import compile.ast.PrimitiveType;
 import compile.ast.Type;
@@ -23,6 +24,7 @@ public class AnnAssign extends Statement {
     private boolean isStatic;
     private boolean isFinal;
     private boolean isBuiltIn = false;
+    private boolean isContractType = false;
 
     public AnnAssign(Name target, LabeledType annotation, Expression value,
             boolean isConst, boolean isFinal) {
@@ -91,6 +93,7 @@ public class AnnAssign extends Statement {
             throw new RuntimeException("local duplicate variable name " + name + " at " + location);
         }
         VarSym varSym = new VarSym(env.newVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, now));
+//        isContractType = varSym.typeSym instanceof InterfaceSym;
         env.addSym(name, varSym);
         if (annotation.label() != null) {
             varSym.setLabel(env.newLabel(annotation.label()));
@@ -218,7 +221,10 @@ public class AnnAssign extends Statement {
 //    }
 
     public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
-        PrimitiveType varType = new PrimitiveType(annotation.type().name);
+        Type varType =
+                annotation.type().solidityCodeGen(code);
+//            isContractType ? new ContractType(annotation.type().name) :
+//                new PrimitiveType(annotation.type().name);
         String varName = target.id;
         List<compile.ast.Statement> result = new ArrayList<>();
         if (value != null) {

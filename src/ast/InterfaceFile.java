@@ -14,6 +14,7 @@ import typecheck.InheritGraph;
 import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
+import typecheck.Utils;
 
 public class InterfaceFile extends SourceFile {
     private final Interface itrface;
@@ -47,14 +48,11 @@ public class InterfaceFile extends SourceFile {
     @Override
     public compile.ast.SourceFile solidityCodeGen(CompileEnv code) {
         List<Import> imports = new ArrayList<>();
-        for (String contractName : iptContracts) {
-            boolean exists = false;
-            if (itrface.contractName.equals(contractName)) {
-                exists = true;
-                break;
-            }
-            if (!exists) {
-                imports.add(new Import(contractName));
+        for (String contractName : originalImportPaths.keySet()) {
+            if (!itrface.contractName.equals(contractName) &&
+                !Utils.isBuiltInContractName(contractName))  {
+                imports.add(
+                        new Import(originalImportPaths.getOrDefault(contractName, contractName)));
             }
         }
         return new compile.ast.InterfaceFile(imports, itrface.solidityCodeGen(code));
@@ -107,6 +105,7 @@ public class InterfaceFile extends SourceFile {
                 // System.err.println(contract + " -> " + path + " from " + sourceFilePath);
             }
             resolvedIptContracts.add(path.toString());
+            originalImportPaths.put(path.toString(), contract);
             graph.addEdge(path.toString(), getSourceFilePath());
         }
         iptContracts = resolvedIptContracts;

@@ -1,10 +1,12 @@
 package ast;
 
 import compile.CompileEnv;
+import compile.ast.ContractType;
 import compile.ast.PrimitiveType;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.ExpOutcome;
+import typecheck.InterfaceSym;
 import typecheck.ScopeContext;
 import typecheck.NTCEnv;
 import typecheck.TypeSym;
@@ -18,6 +20,7 @@ public class Type extends Node {
     }
 
     String name;
+    private boolean isContractType;
 
     public Type(String name) {
         this.name = name;
@@ -27,6 +30,7 @@ public class Type extends Node {
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         TypeSym typeSym = (TypeSym) env.getCurSym(name);
+        isContractType = typeSym instanceof InterfaceSym;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
         return now;
     }
@@ -72,6 +76,7 @@ public class Type extends Node {
     }
 
     public compile.ast.Type solidityCodeGen(CompileEnv code) {
-        return new PrimitiveType(name);
+        return isContractType ? new ContractType(name) :
+                new PrimitiveType(name);
     }
 }

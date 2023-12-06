@@ -11,4 +11,8 @@ public class ArrayType implements Type {
     public String solCode() {
         return baseType.solCode() + "[]";
     }
+    @Override
+    public String solCode(boolean isLocal) {
+        return solCode() + (isLocal ?  " memory" : "");
+    }
 }

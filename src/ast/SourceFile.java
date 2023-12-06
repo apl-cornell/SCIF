@@ -26,6 +26,7 @@ public abstract class SourceFile extends Node {
         joined with super contracts' imports after code pasting
      */
     protected Set<String> iptContracts;
+    protected Map<String, String> originalImportPaths = new HashMap<>();
     protected final String contractName;
 
     /*

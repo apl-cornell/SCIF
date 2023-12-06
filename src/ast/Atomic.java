@@ -9,6 +9,7 @@ import compile.ast.Function;
 import compile.ast.IfStatement;
 import compile.ast.Literal;
 import compile.ast.LowLevelCall;
+import compile.ast.Revert;
 import compile.ast.SingleVar;
 import compile.ast.Type;
 import compile.ast.VarDec;
@@ -133,29 +134,34 @@ public class Atomic extends Statement {
                 List.of(ifShouldReturn)
         );
         ifNotRevertedBody.add(ifNormalEnd);
-        IfStatement ifNotReverted = new IfStatement(
-                succVar,
-                ifNotRevertedBody,
-                List.of(new Assign(statVar, new Literal(compile.Utils.RETURNCODE_FAILURE)))
-        );
-        // solBody.add(ifNotReverted);
-        solBody.add(ifNotReverted);
+        List<compile.ast.Statement> ifRevertedBody = new ArrayList<>(
+                List.of(new Assign(statVar, new Literal(compile.Utils.RETURNCODE_FAILURE))));
 
         IfStatement handlingBranches;
         handlingBranches = null;
 
+        Revert nohandler = new Revert();
         code.setCurrentStatVar(statVar);
         // test if there are any matching exceptions
         code.enterNewVarScope();
         for (ExceptHandler handler : handlers) {
             handlingBranches = handlingBranches == null ?
-                    handler.solidityCodeGen(code, writeMap, dataVar) :
-                    new IfStatement(handlingBranches, List.of(handler.solidityCodeGen(code, writeMap, dataVar)));
+                    new IfStatement(handler.solidityCodeGen(code, writeMap, dataVar), List.of(nohandler)) :
+                    new IfStatement(handler.solidityCodeGen(code, writeMap, dataVar), List.of(handlingBranches));
         }
         code.exitVarScope();
-        if (handlingBranches != null) {
-            solBody.add(handlingBranches);
+        if (handlingBranches == null) {
+            ifRevertedBody.add(nohandler);
+        } else {
+            ifRevertedBody.add(handlingBranches);
         }
+
+        IfStatement ifNotReverted = new IfStatement(
+                succVar,
+                ifNotRevertedBody,
+                ifRevertedBody);
+        solBody.add(ifNotReverted);
+
         return solBody;
     }
 

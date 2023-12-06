@@ -210,7 +210,7 @@ public class FunctionDef extends FunctionSig {
 
     @Override
     public Function solidityCodeGen(CompileEnv code) {
-        code.setCurrentMethod(this);
+        code.setCurrentMethod(this, returnSolType(code));
         code.enterNewVarScope();
         code.pushScope(ScopeType.METHOD);
         code.clearExceptionManager();
@@ -247,7 +247,7 @@ public class FunctionDef extends FunctionSig {
                 compile.Utils.addBuiltInVars(isPublic, wapperStatements, code);
             }
             List<Argument> arguments = args.solidityCodeGen(code);
-            Type returnType, originalReturnType = rtn.type().solidityCodeGen(code);
+            Type returnType, originalReturnType = returnSolType(code);
             if (exceptionFree()) {
                 returnType = originalReturnType;
             } else {
@@ -317,7 +317,10 @@ public class FunctionDef extends FunctionSig {
             }
         }
     }
-//
+
+    public Type returnSolType(CompileEnv code) {
+        return rtn.type().solidityCodeGen(code);
+    }
 //    @Override
 //    public String toSHErrLocFmt() {
 //        return this.getClass().getSimpleName() + "." + name() + "." + location;

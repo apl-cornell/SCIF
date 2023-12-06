@@ -31,7 +31,7 @@ contract Uniswap extends ERC20 {
             }
         }
         else {
-            assert (token != address(0) and value >= 1000000000);
+            assert (address(token) != address(0) and value >= 1000000000);
             assert (token_to_exchange[address(token)] == address(this));
             uint token_amount = endorse(max_tokens, sender->this);
             uint initial_liquidity = balance(address(this));

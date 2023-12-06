@@ -31,7 +31,7 @@ contract Uniswap extends ERC20 {
             }
         }
         else {
-            assert (token != address(0) and value >= 1000000000);
+            assert (address(token) != address(0) and value >= 1000000000);
             assert (token_to_exchange[address(token)] == address(this));
             uint token_amount = endorse(max_tokens, sender->this);
             uint initial_liquidity = balance(address(this));
@@ -267,8 +267,6 @@ contract Uniswap extends ERC20 {
     @public address tokenAddress() {
         return address(token);
     }
-
-
 //# @return Address of factory that created this exchange.
 //@public
 //@constant
@@ -300,5 +298,4 @@ contract Uniswap extends ERC20 {
 //    @public uint allowance(address _owner, address _spender) {
 //        return allowances[_owner][_spender];
 //    }
-
 }

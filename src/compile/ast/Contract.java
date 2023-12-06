@@ -24,7 +24,8 @@ public class Contract implements SolNode {
     public List<String> toSolCode(int indentLevel) {
         List<String> result = new ArrayList<>();
         addLine(result, "contract " + contractName +
-                (interfaceName.isEmpty() ? "" : " is " + interfaceName)+ " {", indentLevel);
+//                (interfaceName.isEmpty() ? "" : " is " + interfaceName)+
+                " {", indentLevel);
         for (StructDef structDef: structDefs) {
             result.addAll(structDef.toSolCode(indentLevel + 1));
         }

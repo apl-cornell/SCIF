@@ -85,6 +85,7 @@ public class ContractFile extends SourceFile {
                 // System.err.println(contract + " -> " + path + " from " + sourceFilePath);
             }
             resolvedIptContracts.add(path.toString());
+            originalImportPaths.put(path.toString(), contract);
             graph.addEdge(path.toString(), getSourceFilePath());
         }
         iptContracts = resolvedIptContracts;
@@ -141,10 +142,11 @@ public class ContractFile extends SourceFile {
     public compile.ast.SourceFile solidityCodeGen(CompileEnv code) {
         List<Import> imports = new ArrayList<>();
 
-        for (String contractName : iptContracts) {
+        for (String contractName : originalImportPaths.keySet()) {
             if (!contract.contractName.equals(contractName) &&
                 !Utils.isBuiltInContractName(contractName)) {
-                imports.add(new Import(contractName));
+                imports.add(
+                        new Import(originalImportPaths.getOrDefault(contractName, contractName)));
             }
         }
         return new compile.ast.ContractFile(imports, contract.solidityCodeGen(code));

@@ -77,6 +77,7 @@ public class Utils {
 
     public static final Map<String, String> BUILTIN_INMETHOD_VARS = generateBuiltInInMethodVars();
     public static final String CONTRACT_KEYWORD = "contract";
+    public static final String NOW = "now";
 
     private static Map<String, String> generateBuiltInInMethodVars() {
         Map<String, String> result = new HashMap<>();

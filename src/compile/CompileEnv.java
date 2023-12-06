@@ -6,14 +6,11 @@ import static compile.Utils.encodeCall;
 import ast.*;
 import compile.ast.Argument;
 import compile.ast.BinaryExpression;
-import compile.ast.ExternalCall;
 import compile.ast.Function;
 import compile.ast.IfStatement;
-import compile.ast.UnaryOperation;
 import compile.ast.SingleVar;
 import compile.ast.VarDec;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -101,9 +98,26 @@ public class CompileEnv {
                     new compile.ast.Return(List.of(new compile.ast.Literal(compile.Utils.RETURNCODE_RETURN), dataVar))
             );
         } else {
-            return List.of(
-                    new compile.ast.Return(List.of(new compile.ast.Literal(compile.Utils.RETURNCODE_NORMAL), dataVar))
-            );
+            if (currentMethod.exceptionFree()) {
+                if (currentMethod.returnVoid()) {
+                    return List.of(new compile.ast.Return());
+                } else {
+                    compile.ast.Expression decodeData = decodeVars(
+                            List.of(currentReturnType),
+                            dataVar
+                    );
+                    return List.of(new compile.ast.Return(
+                            decodeData
+                    ));
+                }
+
+            } else {
+                return List.of(
+                        new compile.ast.Return(
+                                List.of(new compile.ast.Literal(compile.Utils.RETURNCODE_NORMAL),
+                                        dataVar))
+                );
+            }
         }
     }
 
@@ -182,6 +196,7 @@ public class CompileEnv {
 
     Stack<ScopeType> scopeStack; // whether it is generating code for a SCIF method
     FunctionDef currentMethod;
+    compile.ast.Type currentReturnType;
     Map<String, compile.ast.Type> writeMap;
 
     public void setCurrentStatVar(SingleVar currentStatVar) {
@@ -190,8 +205,9 @@ public class CompileEnv {
 
     SingleVar currentStatVar;
 
-    public void setCurrentMethod(FunctionDef method) {
+    public void setCurrentMethod(FunctionDef method, compile.ast.Type type) {
         currentMethod = method;
+        currentReturnType = type;
     }
     public ScopeType currentScope() {
         return scopeStack.peek();
@@ -728,7 +744,6 @@ public class CompileEnv {
         assert exceptionSymTable.containsKey(name);
         return exceptionSymTable.get(name);
     }
-
 
     public String newTempVarName() {
         return temporaryNameManager.newVarName();

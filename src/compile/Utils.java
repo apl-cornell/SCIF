@@ -2,6 +2,7 @@ package compile;
 
 import ast.*;
 import compile.ast.Argument;
+import compile.ast.Attr;
 import compile.ast.Call;
 import compile.ast.Expression;
 import compile.ast.Literal;
@@ -191,6 +192,8 @@ public class Utils {
     public static Expression translateBuiltInFunc(Call callExp) {
         if (callExp.funcName().equals("send")) {
             return new Call("assert", List.of(new Call("payable(" + callExp.arg(0).toSolCode() + ").send", List.of(callExp.arg(1)))));
+        } else if (callExp.funcName().equals("balance")) {
+            return new Attr(new SingleVar(callExp.arg(0).toSolCode()), "balance");
         } else {
             return callExp;
         }
