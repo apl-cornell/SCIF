@@ -87,7 +87,7 @@ contract ERC20 {
             throw ERC20InsufficientBalance(from, fromBalance, val);
         }
         _balances[from] = fromBalance - val;
-        _balances[to] -= val;
+        _balances[to] += val;
     }
 
     void _spendAllowance(address owner, address spender, uint val) throws (ERC20InsufficientAllowance) {

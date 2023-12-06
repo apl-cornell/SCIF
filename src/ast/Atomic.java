@@ -9,6 +9,7 @@ import compile.ast.Function;
 import compile.ast.IfStatement;
 import compile.ast.Literal;
 import compile.ast.LowLevelCall;
+import compile.ast.PrimitiveType;
 import compile.ast.Revert;
 import compile.ast.SingleVar;
 import compile.ast.Type;
@@ -77,6 +78,32 @@ public class Atomic extends Statement {
 
     @Override
     public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
+//
+//        if (body.size() == 1 && body.get(0) instanceof CallStatement) {
+//            // if there is only one method call in the body
+//            CallStatement callStatement = (CallStatement) body.get(0);
+//            if (callStatement.allArgumentsAreValues()) {
+//                // if all arguments are values
+//                // statVar, dataVar = externalcall();
+//                // if statVar != 0, got to handler
+//                // else continue
+//                List<compile.ast.Statement> result = new ArrayList<>();
+//                SingleVar statVar = new SingleVar(code.newTempVarName());
+//                SingleVar dataVar = new SingleVar(code.newTempVarName());
+//                result.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_UINT, statVar.name()));
+//                result.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_BYTES, dataVar.name()));
+//                SingleVar tempVar = null;
+//                if (!funcSym.returnType.isVoid()) {
+//                    tempVar = new SingleVar(code.newTempVarName());
+//                    result.add(new VarDec(new PrimitiveType(funcSym.returnType.getName()), tempVar.name()));
+//                }
+//                result.add(new Assign(
+//                        List.of(statVar, dataVar),
+//                        callExp
+//                ));
+//            }
+//        }
+
         // convert the internal code into a "public" (potentially "external" for optimization purpose) method
         // unless the clause only contains one external call
         // all modified local variables need to be returned and assigned to the corresponding variables if terminated normally
@@ -98,6 +125,9 @@ public class Atomic extends Statement {
         readMap.putAll(writeMap);
         code.enterNewVarScope();
         Function newTempFunction = code.makeMethod(body, readMap, writeMap, ScopeType.ATOMIC);
+        LowLevelCall externalCall = new LowLevelCall(newTempFunction, compile.Utils.THIS_ADDRESS,
+                newTempFunction.funcName(), newTempFunction.argNames().stream().map(name -> new SingleVar(name)).collect(
+                Collectors.toList()));
         code.exitVarScope();
         code.addTemporaryFunction(newTempFunction);
 
@@ -112,9 +142,7 @@ public class Atomic extends Statement {
         solBody.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_BYTES, dataVar.name()));
         solBody.add(new Assign(
                 List.of(succVar, dataVar),
-                new LowLevelCall(newTempFunction, compile.Utils.THIS_ADDRESS,
-                        newTempFunction.funcName(), newTempFunction.argNames().stream().map(name -> new SingleVar(name)).collect(
-                        Collectors.toList()))
+                externalCall
         ));
 
         List<compile.ast.Statement> ifNotRevertedBody = code.splitStatAndData(dataVar, statVar);
