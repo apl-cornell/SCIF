@@ -267,35 +267,4 @@ contract Uniswap extends ERC20 {
     @public address tokenAddress() {
         return address(token);
     }
-//# @return Address of factory that created this exchange.
-//@public
-//@constant
-//def factoryAddress() -> address(Factory):
-//    return self.factory
-//
-//    @public uint balanceOf(address _owner) {
-//        return balances[_owner];
-//    }
-//
-//    @public bool transfer(address _to, uint _value) {
-//        balances[sender] -= _value;
-//        balances[_to] += _value;
-//        return true;
-//    }
-//
-//    @public bool transferFrom(address _from, address _to, uint _value) {
-//        balances[_from] -= _value;
-//        balances[_to] += _value;
-//        allowances[_from][sender] -= _value;
-//        return true;
-//    }
-//
-//    @public bool approve(address _spender, uint _value) {
-//        allowances[sender][_spender] = _value;
-//        return true;
-//    }
-//
-//    @public uint allowance(address _owner, address _spender) {
-//        return allowances[_owner][_spender];
-//    }
 }

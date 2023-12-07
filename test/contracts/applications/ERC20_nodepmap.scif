@@ -91,7 +91,7 @@ contract ERC20 {
     }
 
     void _spendAllowance(address owner, address spender, uint val) throws (ERC20InsufficientAllowance) {
-        uint currentAllowance = allowance(owner, spender);
+        uint currentAllowance = _allowances[owner][spender];// allowance(owner, spender);
         if (currentAllowance != UINT_MAX) {
             if (currentAllowance < val) {
                 throw ERC20InsufficientAllowance(spender, currentAllowance, val);
