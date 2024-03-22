@@ -57,14 +57,12 @@ public class Attribute extends TrailerExpr {
         //TODO: assuming only one-level attribute access
         // to add support to multi-level access
         String varName = ((Name) value).id;
-        if (!env.curContractSym().containVar(varName)) {
-            //TODO: throw errors: variable not found
-            return null;
-        }
+
         VarSym varSym = env.getVar(varName);
         if (!(varSym.typeSym instanceof StructTypeSym structType)) {
             //TODO: throw errors: variable not struct
-            return null;
+//            return null;
+            throw new RuntimeException("Variable not a struct: " + varName);
         }
 
         //String prevLockName = env.prevContext.lambda;
@@ -96,6 +94,14 @@ public class Attribute extends TrailerExpr {
         StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;
         rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
         return rtnVarSym;
+    }
+
+    public boolean isGlobalStruct(NTCEnv env) {
+        if (value instanceof Name) {
+            Sym parentVarSym = env.getCurSym(((Name) value).id);
+            return parentVarSym.isGlobal();
+        }
+        return false;
     }
 
 //    public String toSolCode() {

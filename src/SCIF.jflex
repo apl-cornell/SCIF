@@ -185,6 +185,7 @@ LineTerminator = \r|\n|\r\n
     "||"     { return op(sym.OR); }
     "&"     { return op(sym.AMPER); }
     "&&"     { return op(sym.AND); }
+    "!"     { return op(sym.NOT); }
     "<"     { return op(sym.LESS); }
     ">"     { return op(sym.GREATER); }
     "="     { return op(sym.EQUAL); }

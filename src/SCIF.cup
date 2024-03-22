@@ -1109,7 +1109,7 @@ annassign ::=
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 
-del_stmt ::= DELETE:x exprlist:a SEMI {:
+del_stmt ::= DELETE:x expr:a SEMI {:
             RESULT = new Delete(a);
             RESULT.setLoc(new CodeLocation(xleft, xright, filename));
         :};
