@@ -1,0 +1,138 @@
+contract SysEscrow {
+    struct Escrow {
+            // Set so we know the trade has already been created
+            bool exists;
+
+            address seller;
+            address buyer;
+            uint summ;
+            uint buyerCanCancelAfter;
+            bool buyerApprovedTheTransaction;
+            bool arbitratorStopTransaction;
+    }
+    address arbitrator;
+
+    uint MinDeposit; // = 600000000000000000; // 0.6 Ether
+
+    uint ARBITRATOR_PERCENT;// = 1; //1%
+
+
+    // Mapping of active trades. Key is a hash of the trade data
+    map(uint, Escrow) escrows;
+
+    constructor() {
+        arbitrator = sender;
+        MinDeposit = 6000000* 100000* 1000000;
+        ARBITRATOR_PERCENT = 1;
+        super();
+    }
+
+    @public void createEscrow(
+      /**
+       * Create a new escrow and add it to `escrows`.
+       * _tradeHash is created by hashing _tradeID, _seller, _buyer, _value and _fee variables. These variables must be supplied on future contract calls.
+       * v, r and s is the signature data supplied from the api. The sig is keccak256(_tradeHash, _paymentWindowInSeconds, _expiry).
+       */
+      uint _tradeHash, // The unique ID of the trade
+      address _seller, // The selling party of the trade
+      address _buyer, // The buying party of the trade
+      uint _paymentWindowInSeconds // The time in seconds from Escrow creation that the buyer can return money
+    ) {
+        Escrow currentEscrow = escrows[_tradeHash];
+        endorse([_seller, _buyer, _paymentWindowInSeconds], any -> this)
+        if (value >= MinDeposit && !(currentEscrow.exists)) {
+            uint _buyerCanCancelAfter =  now + _paymentWindowInSeconds;
+            escrows[_tradeHash] = new Escrow(true, _seller, _buyer, value, _buyerCanCancelAfter, false, false);
+        }
+    }
+
+    @public void setArbitrator{this}( address _newArbitrator ) {
+        /**
+         * Set the arbitrator to a new address. Only the owner can call this.
+         * @param address _newArbitrator
+         */
+        arbitrator = _newArbitrator;
+    }
+
+    @public
+    void cancelEscrow(
+      /**
+       * Cancel escrow. Return money to buyer
+       */
+      uint _tradeHash, // The unique ID of the trade
+      address _seller, // The selling party of the trade
+      address _buyer, // The buying party of the trade
+      uint _value //
+    )  {
+
+        Escrow currentEscrow = escrows[_tradeHash];
+        assert(currentEscrow.exists);
+        assert(currentEscrow.buyerCanCancelAfter<now);
+
+        uint arbitratorValue = currentEscrow.summ*ARBITRATOR_PERCENT/100;
+        uint buyerValue =  currentEscrow.summ - arbitratorValue;
+
+        lock(this) {
+            send(currentEscrow.buyer, buyerValue);
+            send(arbitrator, arbitratorValue);
+        }
+
+        delete escrows[_tradeHash];
+    }
+
+    @public
+    void approveEscrow(
+      /**
+       * Approve escrow.
+       */
+      uint _tradeHash, // The unique ID of the trade
+      address _seller, // The selling party of the trade
+      address _buyer, // The buying party of the trade
+      uint _value // Trade value
+    )  {
+        Escrow currentEscrow = escrows[_tradeHash];
+        assert(currentEscrow.exists);
+        assert(currentEscrow.buyer==sender);
+        currentEscrow.buyerApprovedTheTransaction = true;
+    }
+
+    @public
+    void releaseEscrow(
+      /**
+       * Release escrow. Send money to seller
+       */
+      uint _tradeHash, // The unique ID of the trade
+      address _seller, // The selling party of the trade
+      address _buyer, // The buying party of the trade
+      uint _value // Trade value
+    )  {
+        Escrow currentEscrow = escrows[_tradeHash];
+        assert(currentEscrow.exists);
+        assert(currentEscrow.buyerApprovedTheTransaction);
+
+
+        uint arbitratorValue = currentEscrow.summ*ARBITRATOR_PERCENT/100;
+        uint buyerValue =  currentEscrow.summ - arbitratorValue;
+
+        lock(this) {
+            send(currentEscrow.buyer, buyerValue);
+            send(arbitrator, arbitratorValue);
+        }
+
+        delete escrows[_tradeHash];
+
+    }
+
+
+
+    @private
+    bool isExistsEscrow(
+      uint _tradeHash, // The unique ID of the trade
+      address _seller, // The selling party of the trade
+      address _buyer, // The buying party of the trade
+      uint _value // Trade value
+    ) {
+        Escrow currentEscrow = escrows[_tradeHash];
+        return currentEscrow.exists;
+    }
+}

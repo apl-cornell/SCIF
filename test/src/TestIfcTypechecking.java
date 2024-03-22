@@ -15,6 +15,7 @@ public class TestIfcTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "applications/SysEscrow",
             "basic/Seq",
             "applications/HODLWallet",
             "applications/Dexible",

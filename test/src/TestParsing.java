@@ -11,6 +11,7 @@ public class TestParsing {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "applications/SysEscrow",
             "applications/HODLWallet",
             "basic/EmptyContract",
             "basic/EmptyContract2",
