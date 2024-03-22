@@ -1,14 +1,18 @@
 contract Seq {
-    uint{BOT} bal;
+    uint{any} bal;
+    Seq other;
 
     @public
-    void foo{BOT -> this; this}() {
-        bar();
-        bal = 20;
+    void foo{any -> this; any}() {
+//        endorse([sender], sender -> this)
+//        if (true) {
+            other.bar();
+            bal = 20;
+//        }
     }
 
     @public
-    void bar{BOT -> BOT; BOT}() {
+    void bar{any -> any; any}() {
 
     }
 }

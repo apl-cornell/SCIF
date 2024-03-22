@@ -11,6 +11,7 @@ public class TestParsing {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "applications/HODLWallet",
             "basic/EmptyContract",
             "basic/EmptyContract2",
             "basic/DependentMap",

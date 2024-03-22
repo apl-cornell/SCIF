@@ -16,6 +16,7 @@ public class TestRegularTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "applications/HODLWallet",
             "applications/ERC20_raw",
             "applications/ERC20_nodepmap",
             "applications/ERC20_depmap",

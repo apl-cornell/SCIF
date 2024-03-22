@@ -15,10 +15,12 @@ public class TestIfcTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "basic/Seq",
+            "applications/HODLWallet",
+            "applications/Dexible",
             "applications/Uniswap_ERC20",
             "applications/ERC20_depmap",
             "applications/KoET",
-            "applications/Dexible",
             "basic/StructEx01",
             "ifcTypechecking/Wallet_lock_exception",
             "applications/ERC20_nodepmap",
@@ -28,7 +30,6 @@ public class TestIfcTypechecking {
             "basic/ExceptionThrowAndCatch",
             "basic/EndroseIf",
             "examples/SimpleStorage",
-            // "basic/Seq",
             "examples/ERC20",
             "examples/DeployToken",
     })
