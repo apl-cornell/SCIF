@@ -61,6 +61,7 @@ public class Utils {
     public static final String PATH_TO_BASECONTRACTCENTRALIZED = "BaseContractCentralized";
 
     public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Static reentrancy locks should be maintained except during the last operation";
+    public static final String ERROR_MESSAGE_PC_IN_NONLAST_OPERATION = "Pc should be maintained except during the last operation";
 //    public static final String ERROR_MESSAGE_LOCK_IN_LAST_OPERATION = "The operation at tail position should respect the final reentrancy lock label";
 
     public static final String DEBUG_UNKNOWN_CONTRACT_NAME = "UNKNOWN";
@@ -814,11 +815,15 @@ public class Utils {
 
     public static void genSequenceConstraints(VisitEnv env, String prevLambda, String lastPc, String lastLambda, String newPc, CodeLocation location) {
         env.cons.add(new Constraint(new Inequality(lastPc, newPc), env.hypothesis(), location, env.curContractSym().getName(),
-                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                Utils.ERROR_MESSAGE_PC_IN_NONLAST_OPERATION));
         env.cons.add(new Constraint(new Inequality(lastLambda, joinLabels(prevLambda, newPc)), env.hypothesis(), location, env.curContractSym().getName(),
                 Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
     }
 
+    /*
+        Generate constraints for s.
+        If s is not the last op, prepare and generate the input context for the next op.
+     */
     public static Context genNewContextAndConstraints(VisitEnv env, boolean tail_position, Context c, String prevLambda, String newPc, CodeLocation location) {
         env.cons.add(new Constraint(new Inequality(prevLambda, c.lambda), env.hypothesis(), location, env.curContractSym().getName(),
                 Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
@@ -837,6 +842,7 @@ public class Utils {
             so = s.genConsVisit(env, isTail);
             psi.joinExe(so);
             // env.inContext = new Context(so.getNormalPath().c.pc, beginContext.lambda);
+//            boolean nextIsTail = index + 1 == body.size() && tail_positon;
             env.inContext = Utils.genNewContextAndConstraints(env, isTail, so.getNormalPath().c, prevLambda, s.nextPcSHL(), s.location());
 //                    new Context(so.getNormalPath().c);
 
@@ -854,6 +860,7 @@ public class Utils {
                 break;
             }
             // env.inContext = new Context(so.getNormalPath().c.pc, beginContext.lambda);
+//            boolean nextIsTail = (index + 1 == body.size() && tail_positon);
             env.inContext = Utils.genNewContextAndConstraints(env, isTail, so.getNormalPath().c, prevLambda, s.nextPcSHL(), s.location());
 //                    new Context(so.getNormalPath().c);
 

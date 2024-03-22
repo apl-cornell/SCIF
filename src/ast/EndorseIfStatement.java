@@ -66,8 +66,10 @@ public class EndorseIfStatement extends Statement {
         //Context condContext = to.psi
         rtnValueLabel = toOutCome.valueLabelName;
         String IfNameTest = toOutCome.valueLabelName;
+//        String IfTestNormalPc = to.psi.getNormalPath().c.pc;
+//        String IfTestNormalLambda = to.psi.getNormalPath().c.lambda;
         String IfNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
-        // env.ctxt += ".If" + location.toString();
+//         env.ctxt += ".If" + location.toString();
         String IfNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
         boolean createdHypo = false;

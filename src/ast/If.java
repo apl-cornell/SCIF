@@ -128,7 +128,7 @@ public class If extends Statement {
             if (normalUnit == null) {
                 break;
             }
-            env.inContext = Utils.genNewContextAndConstraints(env, index + 1 == body.size() && tail_position, normalUnit.c, prevLambda, stmt.nextPcSHL(), stmt.location);
+            env.inContext = Utils.genNewContextAndConstraints(env, index == body.size() && tail_position, normalUnit.c, prevLambda, stmt.nextPcSHL(), stmt.location);
             loc = stmt.location;
             // leftContext = new Context(tmp);
         }
@@ -153,7 +153,7 @@ public class If extends Statement {
             if (normalUnit == null) {
                 break;
             }
-            env.inContext = Utils.genNewContextAndConstraints(env, index + 1 == body.size() && tail_position, normalUnit.c, prevLambda, stmt.nextPcSHL(), stmt.location);
+            env.inContext = Utils.genNewContextAndConstraints(env, index == body.size() && tail_position, normalUnit.c, prevLambda, stmt.nextPcSHL(), stmt.location);
             // env.prevContext.lambda = rightContext.lambda;
         }
         env.decScopeLayer();

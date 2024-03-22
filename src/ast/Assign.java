@@ -42,7 +42,7 @@ public class Assign extends Statement {
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         // Context prevContext = env.prevContext;
 
-        String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
+        String ifNamePc = beginContext.pc; // Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
         ExpOutcome to = null;
         String ifNameTgt = "";

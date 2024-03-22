@@ -457,7 +457,8 @@ public class Call extends TrailerExpr {
 
         PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
                 Utils.joinLabels(psi.getNormalPath().c.pc, funcSym.endPc().toSHErrLocFmt(dependentLabelMapping)),
-                funcSym.getLabelNameCallGamma()
+//                funcSym.getLabelNameCallGamma()
+                ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)
         )));
 
         for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
@@ -505,6 +506,7 @@ public class Call extends TrailerExpr {
 //                    new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
 //                    env.hypothesis(), location, env.curContractSym().getName(),
 //                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            // apply the seq rule
         }
 
         String ifNameFuncRtnValue = funcSym.rtn.toSHErrLocFmt(dependentLabelMapping);
