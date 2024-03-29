@@ -168,6 +168,7 @@ LineTerminator = \r|\n|\r\n
     ")"     {
             return op(sym.RPAR); 
         }
+    "[]"    { return op(sym.SQBPAIR); }
     "["     {
             return op(sym.LSQB); 
         }

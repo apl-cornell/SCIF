@@ -30,6 +30,7 @@ public class Attribute extends TrailerExpr {
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         VarSym varSym = getVarInfo(env);
+        assert varSym != null: "attribute value not found: " + location.errString();
         ScopeContext now = new ScopeContext(this, parent);
         env.addCons(now.genCons(varSym.typeSym.getName(), Relation.EQ, env, location));
         return now;
@@ -74,7 +75,7 @@ public class Attribute extends TrailerExpr {
 //                env.curContractSym().getName(),
 //                "Integrity of the member"));
 //        if (!ifAttLabel.equals(attrValueLabel)) {
-            env.cons.add(new Constraint(new Inequality(ifNameRnt, attrValueLabel), env.hypothesis(),
+            env.cons.add(new Constraint(new Inequality(attrValueLabel, Relation.EQ, ifNameRnt), env.hypothesis(),
                     location, env.curContractSym().getName(),
                     "Integrity of the index value must be trusted to indicate the attribute"));
 //        }

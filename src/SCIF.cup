@@ -72,7 +72,7 @@ terminal ELSE;//, FROM;
 terminal JOIN, MEET;
 terminal IF, IMPORT, IN, IS, NOT;
 terminal OR, RETURN;
-terminal LPAR, RPAR, LSQB, RSQB, COLON, COMMA, SEMI;
+terminal LPAR, RPAR, LSQB, RSQB, SQBPAIR, COLON, COMMA, SEMI;
 terminal PLUS, MINUS, STAR, SLASH, VBAR, AMPER;
 terminal LESS, GREATER, EQUAL, DOT, PERCENT, LBRACE, RBRACE;
 terminal CIRCUMFLEX, TILDE, AT;
@@ -307,9 +307,6 @@ contract ::=
         constructors.addAll(f_defs);
         RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, e_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
-    :}
-    | error:err {:
-        report_fatal_error("Syntax error when parsing contract\n", err);
     :};
 
 contract_extends ::=
@@ -581,9 +578,6 @@ errorDef ::=
         logger.debug("exception def: " + a);
         RESULT = new ExceptionDef((String) a, b);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
-    | error:err {:
-        report_fatal_error("Syntax error when parsing a method", err);
     :};
 
 r_funcSig ::=
@@ -736,7 +730,7 @@ arrayType ::=
     :};
 
 arraySubs ::=
-    LSQB RSQB {:
+    SQBPAIR {:
         RESULT = new ArrayList<>();
         RESULT.add(0);
     :}
@@ -744,7 +738,7 @@ arraySubs ::=
         RESULT = new ArrayList<>();
         RESULT.add(Integer.valueOf((String)x));
     :}*/
-    | arraySubs:a LSQB RSQB {:
+    | arraySubs:a SQBPAIR {:
         a.add(0);
         RESULT = a;
     :}
