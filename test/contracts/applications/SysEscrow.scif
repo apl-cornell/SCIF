@@ -123,8 +123,6 @@ contract SysEscrow {
 
     }
 
-
-
     @private
     bool isExistsEscrow(
       uint _tradeHash, // The unique ID of the trade

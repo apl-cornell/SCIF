@@ -1,0 +1,13 @@
+contract Ex {
+    struct S1 {
+        uint a;
+        uint b;
+    }
+
+    @public
+    void structMemberAssign() {
+        S1{this} s1 = new S1(0, 1);
+        S1{sender} s2 = new S1(1, 1);
+        s1.a = s2.a;
+    }
+}

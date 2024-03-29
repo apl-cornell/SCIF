@@ -1,5 +1,4 @@
 contract HODLWallet {
-//    using SafeMath for uint256;
 
     map(address, uint) balances;
     map(address, uint) withdrawalCount;
@@ -34,19 +33,6 @@ contract HODLWallet {
             assert false;
         }
     }
-
-//    @public void withdraw(uint amount) {
-//        doWithdraw(sender, sender, amount);
-//    }
-//
-//    @public void withdrawTo(address to, uint amount) {
-//        doWithdraw(sender, to, amount);
-//    }
-//
-//    @public void withdrawFor(address from, uint amount) {
-//        assert (approvals[from][sender]);
-//        doWithdraw(from, sender, amount);
-//    }
 
     @public void withdrawForTo{sender -> from; sender}(final address from, address to, uint amount) {
         endorse([from, to, amount], sender -> from)

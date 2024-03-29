@@ -1,3 +1,6 @@
 interface IPolyCallee {
-    @public void poly
+    // called by PolyNetManager
+//    @public void polyCallBack{any}(bytes args, bytes _fromContractAddr, uint _fromChainId);
+//    @public void polyCallBack{origin}(final address origin, bytes args, bytes _fromContractAddr, uint _fromChainId);
+    @public void polyCallback{this}(final address origin, bytes{origin} args, bytes _fromContractAddr, uint _fromChainId);
 }

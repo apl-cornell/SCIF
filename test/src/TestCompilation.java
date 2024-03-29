@@ -13,6 +13,9 @@ public class TestCompilation {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "applications/EthCrossChainManager",
+            "applications/HODLWallet",
+            "applications/SysEscrow",
             "applications/Uniswap_ERC20",
             "applications/Uniswap_ERC777",
             "applications/Dexible",

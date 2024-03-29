@@ -15,6 +15,7 @@ public class TestIfcTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "applications/EthCrossChainManager",
             "applications/SysEscrow",
             "basic/Seq",
             "applications/HODLWallet",
@@ -75,6 +76,7 @@ public class TestIfcTypechecking {
     }
     @ParameterizedTest
     @ValueSource(strings = {
+            "basic/StructEx_W02",
             "applications/Dexible_raw",
             "applications/KoET_raw",
             "ifcTypechecking/DependentMap_W01",

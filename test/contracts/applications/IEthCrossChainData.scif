@@ -1,0 +1,10 @@
+interface IEthCrossChainData {
+    @public address[] getCurEpochConPubKeys();
+    @public void putCurEpochConPubKeys{this}(address[] keepers);
+    @public uint getCurEpochStartHeight();
+    @public uint getEthTxHashIndex();
+    @public void putCurEpochStartHeight{this}(uint height);
+    @public void putEthTxHash{this}(uint hash);
+    @public bool checkIfFromChainTxExist(uint fromChainID, uint txHash);
+    @public void markFromChainTxExist{this}(uint fromChainID, uint txHash);
+}

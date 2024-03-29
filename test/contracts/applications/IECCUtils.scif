@@ -1,0 +1,31 @@
+interface IECCUtils {
+    struct Header {
+        uint version;
+        uint chainId;
+        uint timestamp;
+        uint height;
+        uint consensusData;
+        uint prevBlockHash;
+        uint transactionsRoot;
+        uint crossStatesRoot;
+        uint blockRoot;
+        bytes consensusPayload;
+        address nextBookkeeper;
+    }
+    struct ToMerkleValue {
+        uint txHash;  // cross chain txhash
+        uint fromChainID;
+        uint crossChainId;
+        bytes fromContract;
+        uint toChainId;
+        address toContract;
+        bytes args;
+    }
+    @public bool verifySig{this}(Header{any} header, bytes{any} sigList, address[]{any} keepers, uint{any} m);
+    @public address verifyPubkey{this}(address[]{any} keepers);
+    @public bytes encodeParam{this}(uint{any} paramTxHash, address{any} _this, address{any} _sender, uint{any} toChainId, address{any} toContract, bytes{any} txData);
+    @public uint keccak256{this}(bytes{any} data);
+    @public uint merkleProveValue{this}(bytes{any} proof, uint{any} root);
+    @public ToMerkleValue merkleProve{this}(bytes{any} proof, uint{any} root);
+    @public uint getHeaderHash{this}(Header{any} header);
+}
