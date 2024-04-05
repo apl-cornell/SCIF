@@ -26,7 +26,13 @@ contract Uniswap extends ERC20 {
             result = liquidity_minted;
             atomic {
                 lock (this) {
-                    token.transferFrom(sender, address(this), token_amount);
+                    try {
+                        token.transferFrom(sender, address(this), token_amount);
+                    } catch (ERC20InsufficientAllowance e) {
+                        assert false;
+                    } catch (ERC20InsufficientBalance e) {
+                        assert false;
+                    }
                 }
             }
         }
@@ -40,7 +46,13 @@ contract Uniswap extends ERC20 {
             result = initial_liquidity;
             atomic {
                 lock (this) {
-                    token.transferFrom(sender, address(this), token_amount);
+                    try {
+                        token.transferFrom(sender, address(this), token_amount);
+                    } catch (ERC20InsufficientAllowance e) {
+                        assert false;
+                    } catch (ERC20InsufficientBalance e) {
+                        assert false;
+                    }
                 }
             }
         }
@@ -60,7 +72,11 @@ contract Uniswap extends ERC20 {
         lock(this) {
             send(sender, eth_amount);
             atomic {
-                token.transfer(address(this), sender, token_amount);
+                try {
+                    token.transfer(address(this), sender, token_amount);
+                } catch (ERC20InsufficientBalance e) {
+                    assert false;
+                }
             }
         }
     }
@@ -87,7 +103,11 @@ contract Uniswap extends ERC20 {
         assert (tokens_bought >= min_tokens);
         lock(this) {
             atomic {
-                token.transfer(address(this), recipient, tokens_bought);
+                try {
+                    token.transfer(address(this), recipient, tokens_bought);
+                } catch (ERC20InsufficientBalance e) {
+                    assert false;
+                }
             }
         }
         return tokens_bought;
@@ -115,7 +135,11 @@ contract Uniswap extends ERC20 {
         }
         lock(this) {
             atomic {
-                token.transfer(address(this), recipient, tokens_bought);
+                try {
+                    token.transfer(address(this), recipient, tokens_bought);
+                } catch (ERC20InsufficientBalance e) {
+                    assert false;
+                }
             }
         }
     }
@@ -138,7 +162,13 @@ contract Uniswap extends ERC20 {
         lock (this) {
             send(recipient, wei_bought);
             atomic {
-                token.transferFrom(buyer, address(this), tokens_sold);
+                try {
+                    token.transferFrom(buyer, address(this), tokens_sold);
+                } catch (ERC20InsufficientAllowance e) {
+                    assert false;
+                } catch (ERC20InsufficientBalance e) {
+                    assert false;
+                }
             }
         }
         return wei_bought;
@@ -161,7 +191,13 @@ contract Uniswap extends ERC20 {
         lock(this) {
             send(recipient, eth_bought);
             atomic {
-                token.transferFrom(buyer, address(this), tokens_sold);
+                try {
+                    token.transferFrom(buyer, address(this), tokens_sold);
+                } catch (ERC20InsufficientAllowance e) {
+                    assert false;
+                } catch (ERC20InsufficientBalance e) {
+                    assert false;
+                }
             }
         }
         return tokens_sold;
@@ -185,7 +221,13 @@ contract Uniswap extends ERC20 {
         assert (wei_bought >= min_eth_bought);
         lock(this) {
             atomic {
-                token.transferFrom(buyer, address(this), tokens_sold);
+                try {
+                    token.transferFrom(buyer, address(this), tokens_sold);
+                } catch (ERC20InsufficientAllowance e) {
+                    assert false;
+                } catch (ERC20InsufficientBalance e) {
+                    assert false;
+                }
             }
         }
         Uniswap exchange = Uniswap(exchange_addr);
@@ -212,8 +254,12 @@ contract Uniswap extends ERC20 {
         uint tokens_sold = getOutputPrice(eth_bought, token_reserve, balance(address(this)));
         assert (max_tokens_sold >= tokens_sold && max_eth_sold >= eth_bought);
         lock(this) {
-            atomic {
+            try {
                 token.transferFrom(buyer, address(this), tokens_sold);
+            } catch (ERC20InsufficientAllowance e) {
+                assert false;
+            } catch (ERC20InsufficientBalance e) {
+                assert false;
             }
         }
         uint eth_sold = exchange.ethToTokenTransferOutput(tokens_bought, deadline, recipient){value = eth_bought};

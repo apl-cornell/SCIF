@@ -34,12 +34,6 @@ contract EthCrossChainManager {
         super();
     }
 
-
-    /* @notice              sync Poly chain genesis block header to smart contrat
-    *  @dev                 this function can only be called once, nextbookkeeper of rawHeader can't be empty
-    *  @param rawHeader     Poly chain genesis block raw header or raw Header including switching consensus peers info
-    *  @return              true or false
-    */
     @public
     void initGenesisBlock(Header header, bytes pubKeyList) {
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
@@ -59,12 +53,6 @@ contract EthCrossChainManager {
         }
     }
 
-    /* @notice              change Poly chain consensus book keeper
-    *  @param rawHeader     Poly chain change book keeper block raw header
-    *  @param pubKeyList    Poly chain consensus nodes public key list
-    *  @param sigList       Poly chain consensus nodes signature list
-    *  @return              true or false
-    */
     @public
     void changeBookKeeper(Header header, address[] polyChainBKs, bytes sigList) {
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
@@ -91,14 +79,6 @@ contract EthCrossChainManager {
         }
     }
 
-
-    /* @notice              ERC20 token cross chain to other blockchain.
-    *                       this function push tx event to blockchain
-    *  @param toChainId     Target chain id
-    *  @param toContract    Target smart contract address in target block chain
-    *  @param txData        Transaction data for target chain, include to_address, amount
-    *  @return              true or false
-    */
     @public
     void crossChain(uint toChainId, address toContract, bytes txData) {
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
@@ -106,7 +86,6 @@ contract EthCrossChainManager {
         // To help differentiate two txs, the ethTxHashIndex is increasing automatically
         uint txHashIndex = eccd.getEthTxHashIndex();
 
-        // Convert the uint256 into bytes
         uint paramTxHash = txHashIndex;
 
         // Construct the makeTxParam, and put the hash info storage, to help provide proof of tx existence
@@ -116,15 +95,6 @@ contract EthCrossChainManager {
         eccd.putEthTxHash(cutils.keccak256(rawParam));
     }
 
-    /* @notice              Verify Poly chain header and proof, execute the cross chain tx from Poly chain to Ethereum
-    *  @param proof         Poly chain tx merkle proof
-    *  @param rawHeader     The header containing crossStateRoot to verify the above tx merkle proof
-    *  @param headerProof   The header merkle proof used to verify rawHeader
-    *  @param curRawHeader  Any header in current epoch consensus of Poly chain
-    *  @param headerSig     The coverted signature veriable for solidity derived from Poly chain consensus nodes' signature
-    *                       used to verify the validity of curRawHeader
-    *  @return              true or false
-    */
     @public
     void verifyHeaderAndExecuteTx(bytes proof, Header header, bytes headerProof, Header curHeader, bytes headerSig) {
         // Load ehereum cross chain data contract
@@ -144,9 +114,8 @@ contract EthCrossChainManager {
             assert(cutils.verifySig(header, headerSig, keepers, n - ( n - 1) / 3));
         } else {
 //          We need to verify the signature of curHeader
-            assert(cutils.verifySig(header, headerSig, keepers, n - ( n - 1) / 3));
+            assert(cutils.verifySig(curHeader, headerSig, keepers, n - ( n - 1) / 3));
 
-//          Then use curHeader.StateRoot and headerProof to verify rawHeader.CrossStateRoot
             uint proveValue = cutils.merkleProveValue(headerProof, curHeader.blockRoot);
             assert(cutils.getHeaderHash(header) == proveValue);
         }
