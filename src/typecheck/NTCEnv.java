@@ -150,8 +150,8 @@ public class NTCEnv {
      * @return
      */
     public Sym getExtSym(String contractName, String funcName) {
-        ContractSym extST = getContract(contractName);
-        assert extST != null;
+        InterfaceSym extST = getInterface(contractName);
+        assert extST != null: "external interface not found: " + contractName;
         return extST.lookupSym(funcName);
     }
 

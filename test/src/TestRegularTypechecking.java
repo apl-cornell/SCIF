@@ -16,6 +16,8 @@ public class TestRegularTypechecking {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "applications/Uniswap_ERC20_noe",
+            "applications/Uniswap_ERC777_noe",
             "applications/EthCrossChainManager",
             "applications/SysEscrow",
             "applications/HODLWallet",

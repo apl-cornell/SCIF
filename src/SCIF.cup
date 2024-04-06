@@ -765,15 +765,15 @@ nonarray_type ::=
         RESULT = new Type(((String)a));
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
-//    | extType:a {:
-//        RESULT = a;
-//    :}
+    | extType:a {:
+        RESULT = a;
+    :}
     | mapType:m {:
         RESULT = m;
     :};
 
 extType ::=
-    NAME:contractName DOT NAME:methodName {:
+    NAME:methodName AT NAME:contractName {:
         RESULT = new ExtType((String) contractName, (String) methodName);
         RESULT.setLoc(new CodeLocation(contractNameleft, contractNameright, filename));
     :}

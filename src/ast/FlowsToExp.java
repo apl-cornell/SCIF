@@ -74,7 +74,7 @@ public class FlowsToExp extends Expression {
     public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
         // lhs => rhs:
         // trusts(lhs, rhs);
-        return new Call(Utils.TRUSTS_CALL, List.of(new SingleVar(rhs.id), new SingleVar(lhs.id)));
+        return new Call(Utils.TRUSTS_CALL, List.of(new SingleVar("address(" + rhs.id + ")"), new SingleVar("address(" + lhs.id + ")")));
     }
 
     @Override

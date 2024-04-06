@@ -2,29 +2,29 @@ import "./IPolyCallee.scif";
 import "./IECCUtils.scif";
 import "./IEthCrossChainData.scif";
 contract EthCrossChainManager {
-    struct Header {
-        uint version;
-        uint chainId;
-        uint timestamp;
-        uint height;
-        uint consensusData;
-        uint prevBlockHash;
-        uint transactionsRoot;
-        uint crossStatesRoot;
-        uint blockRoot;
-        bytes consensusPayload;
-        address nextBookkeeper;
-    }
-
-    struct ToMerkleValue {
-        uint  txHash;  // cross chain txhash
-        uint fromChainID;
-        uint crossChainId;
-        bytes fromContract;
-        uint toChainId;
-        address toContract;
-        bytes args;
-    }
+//    struct Header {
+//        uint version;
+//        uint chainId;
+//        uint timestamp;
+//        uint height;
+//        uint consensusData;
+//        uint prevBlockHash;
+//        uint transactionsRoot;
+//        uint crossStatesRoot;
+//        uint blockRoot;
+//        bytes consensusPayload;
+//        address nextBookkeeper;
+//    }
+//
+//    struct ToMerkleValue {
+//        uint  txHash;  // cross chain txhash
+//        uint fromChainID;
+//        uint crossChainId;
+//        bytes fromContract;
+//        uint toChainId;
+//        address toContract;
+//        bytes args;
+//    }
     address EthCrossChainDataAddress;
     address EthECCUtilsAddress;
 
@@ -35,7 +35,7 @@ contract EthCrossChainManager {
     }
 
     @public
-    void initGenesisBlock(Header header, bytes pubKeyList) {
+    void initGenesisBlock(Header@IECCUtils header, bytes pubKeyList) {
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
         final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
         address[] keepers = eccd.getCurEpochConPubKeys();
@@ -54,7 +54,7 @@ contract EthCrossChainManager {
     }
 
     @public
-    void changeBookKeeper(Header header, address[] polyChainBKs, bytes sigList) {
+    void changeBookKeeper(Header@IECCUtils header, address[] polyChainBKs, bytes sigList) {
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
         final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
         // Make sure rawHeader.height is higher than recorded current epoch start height
@@ -96,7 +96,7 @@ contract EthCrossChainManager {
     }
 
     @public
-    void verifyHeaderAndExecuteTx(bytes proof, Header header, bytes headerProof, Header curHeader, bytes headerSig) {
+    void verifyHeaderAndExecuteTx(bytes proof, Header@IECCUtils header, bytes headerProof, Header@IECCUtils curHeader, bytes headerSig) {
         // Load ehereum cross chain data contract
         // Get stored consensus public key bytes of current poly chain epoch and deserialize Poly chain consensus public key bytes to address[]
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
@@ -121,7 +121,7 @@ contract EthCrossChainManager {
         }
 
         // Parse the toMerkleValue struct and make sure the tx has not been processed, then mark this tx as processed
-        ToMerkleValue toMerkleValue = cutils.merkleProve(proof, header.crossStatesRoot);
+        ToMerkleValue@IECCUtils toMerkleValue = cutils.merkleProve(proof, header.crossStatesRoot);
         assert(!eccd.checkIfFromChainTxExist(toMerkleValue.fromChainID, toMerkleValue.txHash));
         eccd.markFromChainTxExist(toMerkleValue.fromChainID, toMerkleValue.txHash);
 

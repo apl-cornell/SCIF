@@ -26,7 +26,7 @@ public class ExtType extends Type {
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         TypeSym typeSym = (TypeSym) env.getExtSym(contractName, name);
-        assert typeSym instanceof InterfaceSym;
+        assert !(typeSym instanceof InterfaceSym);
         isContractType = false;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
         return now;
