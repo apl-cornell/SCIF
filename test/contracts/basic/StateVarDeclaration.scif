@@ -3,4 +3,6 @@ contract StateVariableDeclaration {
     map(address, uint) balances;
     bool b;
     bytes d;
+
+    constructor() { super(); }
 }

@@ -6,6 +6,7 @@ contract StructEx {
 
     s0 a;
 
+    constructor() { super(); }
     @public uint init() {
         a = new s0(0, 1);
         return a.x;

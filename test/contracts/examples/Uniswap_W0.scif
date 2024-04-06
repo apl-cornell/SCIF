@@ -3,7 +3,7 @@ import "./IERC20.scif";
 contract Uniswap {
     IERC20 tX;
     IERC20 tY;
-
+    constructor() { super(); }
     @public
     uint exchangeXForY(final address buyer, uint xSold) {
         uint prod = tX.getBal(this) * tY.getBal(this);

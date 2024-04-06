@@ -3,6 +3,7 @@ contract ExceptionDefinition {
     exception Y(uint x, uint y);
     exception Z();
 
+    constructor() { super(); }
     // CA.
     @public
     void foo{sender -> this; any}(uint a, uint b) throws (Z, Y) {

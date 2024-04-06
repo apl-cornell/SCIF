@@ -2,7 +2,7 @@
 contract DependentMap {
     // name as a principal; name ⨆ this
     map(address name, uint{name}) balances;
-
+    constructor() { super(); }
     @public
     void{y} foo{y}(final address y, uint amount) {
         balances[y] = amount;

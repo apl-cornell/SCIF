@@ -2,6 +2,8 @@ contract Seq {
     uint{any} bal;
     Seq other;
 
+    constructor() { super(); }
+
     @public
     void foo{any -> this; any}() {
 //        endorse([sender], sender -> this)

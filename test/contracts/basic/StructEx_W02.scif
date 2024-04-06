@@ -4,6 +4,7 @@ contract Ex {
         uint b;
     }
 
+    constructor() { super(); }
     @public
     void structMemberAssign() {
         S1{this} s1 = new S1(0, 1);

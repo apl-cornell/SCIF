@@ -10,7 +10,7 @@ contract Wallet {
 //        super(...); // any one of the supers can do
 //        // ...
 //    }
-
+    constructor() { super(); }
     @public
     void withdraw(uint _amount) throws (balanceNotEnough, transferFailure) {
         uint amount = endorse(_amount, any -> this);

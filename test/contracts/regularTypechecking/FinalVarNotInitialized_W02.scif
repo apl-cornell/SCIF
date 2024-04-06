@@ -1,4 +1,6 @@
 contract FinalVar {
 
     final uint a;
+
+    constructor() { super(); }
 }

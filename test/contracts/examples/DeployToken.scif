@@ -2,7 +2,7 @@ import "../basic/EmptyContract2.scif";
 
 contract DeployToken {
     EmptyContract2 token;
-
+    constructor() { super(); }
     @public
     @native
     bool{any} deploy() {

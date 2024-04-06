@@ -1,7 +1,7 @@
 contract KoET {
     address currentMonarch;
     uint currentClaimPrice;
-
+    constructor() { super(); }
     @public
     void claimThrone() {
         assert value == currentClaimPrice;

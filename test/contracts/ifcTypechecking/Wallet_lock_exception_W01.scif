@@ -3,6 +3,8 @@ contract Wallet {
     exception balanceNotEnough();
     exception transferFailure();
 
+    constructor() { super(); }
+
     @public
     void withdraw{any -> this; this}(uint _amount) throws (balanceNotEnough, transferFailure) {
         uint amount = endorse(_amount, any -> this);

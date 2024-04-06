@@ -13,6 +13,10 @@ public class TestCompilation {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "basic/StructEx04",
+            "basic/StructEx03",
+            "basic/StructEx02",
+            "basic/StructEx01",
             "applications/EthCrossChainManager",
             "applications/HODLWallet",
             "applications/SysEscrow",
@@ -23,10 +27,6 @@ public class TestCompilation {
             "applications/ERC20_depmap",
             "applications/ERC20_nodepmap",
 //            "examples/DeployToken02", TODO
-            "basic/StructEx04",
-            "basic/StructEx03",
-            "basic/StructEx02",
-            "basic/StructEx01",
             "basic/DependentMap",
             "basic/EmptyContract",
             "basic/EmptyContract2",

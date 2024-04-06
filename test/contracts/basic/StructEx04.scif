@@ -11,6 +11,7 @@ contract StructEx {
 
     s1 a;
 
+    constructor() { super(); }
     @public uint init() {
         a = new s1(new s0(1, 2), 3);
         return a.y;

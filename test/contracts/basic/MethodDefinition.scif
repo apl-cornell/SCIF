@@ -1,5 +1,6 @@
 contract MethodDefinition {
     exception X();
+    constructor() { super(); }
     void foo() {
     }
 }

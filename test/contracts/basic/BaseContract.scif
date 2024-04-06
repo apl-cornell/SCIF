@@ -1,5 +1,5 @@
 contract BaseContract {
 //[this] {
 //}
-
+    constructor() { super(); }
 }

@@ -1,6 +1,7 @@
 contract TailCall {
     uint a;
 
+    constructor() { super(); }
     @public
     void foo{this->this;this}() {
         bar();

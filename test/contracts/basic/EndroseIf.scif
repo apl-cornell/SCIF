@@ -1,6 +1,7 @@
 contract EndorseIf {
     uint num;
 
+    constructor() { super(); }
     @public
     bool transfer(address to, uint amount) {
         endorse([to, amount], any -> this) if (amount > 0) {

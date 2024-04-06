@@ -20,7 +20,7 @@ public class Type extends Node {
     }
 
     String name;
-    private boolean isContractType;
+    boolean isContractType;
 
     public Type(String name) {
         this.name = name;

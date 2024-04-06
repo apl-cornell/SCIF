@@ -1,6 +1,7 @@
 contract SimpleStorage {
     uint num;
 
+    constructor() { super(); }
     @public
     void set(uint _num){
         num = endorse(_num, any -> this);

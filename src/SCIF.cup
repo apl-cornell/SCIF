@@ -66,7 +66,7 @@ parser code {:
 terminal String NAME, STRING_LITERAL;
 terminal NUMBER;
 terminal FALSE, TRUE, NONE;
-terminal AND, AS, ASSERT;
+terminal AND, ASSERT;
 terminal BREAK, CONTINUE;
 terminal ELSE;//, FROM;
 terminal JOIN, MEET;
@@ -79,15 +79,17 @@ terminal CIRCUMFLEX, TILDE, AT;
 terminal EQEQUAL, NOTEQUAL, LESSEQUAL, LEFTSHIFT, GREATEREQUAL, RIGHTSHIFT;
 terminal RARROW;
 terminal UNARY, COMP, BIT, ADDISH, MULISH;
-terminal ENDORSE, ENDORSEIF, GUARD;
+terminal ENDORSE, GUARD;
 terminal MAP;
 terminal CONTRACT, INTERFACE;
 terminal EQUALGREATER;
 terminal EXTENDS, IMPLEMENTS;
-terminal FINAL, STATIC;
+terminal FINAL;
+//terminal STATIC;
 terminal TRY, ATOMIC, CATCH, RESCUE, EXCEPTION, THROW, THROWS;
 terminal DELETE;
-terminal ERROR, CONSTRUCTOR;//, PERCENTEQUAL;
+terminal ERROR;
+terminal CONSTRUCTOR;//, PERCENTEQUAL;
 terminal ASSUME;
 terminal REVERT;
 terminal WHILE, FOR;
@@ -105,7 +107,7 @@ nonterminal List<StateVariableDeclaration> state_var_decs;
 nonterminal List<StateVariableDeclaration> plain_var_decs;
 nonterminal StateVariableDeclaration plain_var_dec;
 nonterminal StateVariableDeclaration state_var_dec;
-nonterminal List<ExceptionDef> exp_defs;
+nonterminal List<ExceptionDef> exp_defs, r_exp_defs;
 nonterminal List<FunctionDef> func_defs;
 //nonterminal Node<String> file_input_unit;
 nonterminal String decorator;
@@ -118,33 +120,34 @@ nonterminal List<Statement> stmts;
 nonterminal Statement stmt;
 nonterminal Statement assign_stmt, augassign_stmt;
 nonterminal AnnAssign varDec, annassign;
-nonterminal Statement del_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt, excborder_stmt;
+nonterminal Statement del_stmt, flow_stmt, break_stmt, continue_stmt, return_stmt;
 nonterminal String ipt_stmt;
 nonterminal String ipt_name;
-nonterminal String ipt_as_names;
+//nonterminal String ipt_as_names;
 nonterminal Statement assert_stmt;
 nonterminal CallStatement call_stmt;
 nonterminal If if_stmt;
 nonterminal Statement try_stmt, atomic_stmt;
-nonterminal Statement while_stmt, for_stmt;
-nonterminal List<Statement> iter_stmts;
-nonterminal Statement iter_stmt, inc_stmt, augassign_stmt_withoutsemi;
+nonterminal Statement while_stmt; //, for_stmt;
+//nonterminal List<Statement> iter_stmts;
+//nonterminal Statement iter_stmt, inc_stmt;
+nonterminal Statement augassign_stmt_withoutsemi;
 nonterminal List<ExceptHandler> except_stmts, exceptall_stmts;
 nonterminal ExceptHandler except_clause, exceptall_clause;
 nonterminal List<Statement> suite;
 nonterminal Expression expr, assignable;
 nonterminal CompareOperator comp_op;
-nonterminal BinaryOperator bin_op, bit_op, addish_op, mulish_op;
+nonterminal BinaryOperator bit_op, bin_op, addish_op, mulish_op;
 nonterminal UnaryOperator unary_op;
 // nonterminal ArrayList<Expression> trailers;
 nonterminal TrailerExpr trailer_expr;
 nonterminal Expression atom, constant;
 nonterminal Str strings;
 nonterminal TrailerExpr trailer;
-nonterminal List<Expression> exprlist, exprlist_sub;
-nonterminal Dictmaker dictmaker;
+//nonterminal List<Expression> exprlist, exprlist_sub;
+//nonterminal Dictmaker dictmaker;
 // dictmaker_sub;
-nonterminal Setmaker setmaker;
+//nonterminal Setmaker setmaker;
 // nonterminal Setmaker setmaker_sub;
 // nonterminal ClassDef classdef;
 nonterminal Call arglist;
@@ -152,13 +155,14 @@ nonterminal LabeledType labeledType, maybeLabeledType;
 nonterminal IfLabel ifLabel, unitIfLabel;
 nonterminal PrimitiveIfLabel primitiveIfLabel;
 nonterminal Type type, nonarray_type;
+nonterminal ExtType extType;
 nonterminal ast.Map mapType;
 nonterminal Array arrayType;
 nonterminal List<Integer> arraySubs;
 // nonterminal Autoendorse autoendorse;
 //nonterminal IfLabel maybeAutoendorseIfLabel;
-nonterminal List<String> polyDescription;
-nonterminal List<String> nameList;
+//nonterminal List<String> polyDescription;
+//nonterminal List<String> nameList;
 nonterminal Endorse endorseExpression;
 nonterminal ast.DepMap depMap;
 nonterminal List<FunctionSig> funcSigs;
@@ -171,18 +175,18 @@ nonterminal GuardBlock guard_block;
 nonterminal TrustSetting trust_setting;
 nonterminal List<TrustConstraint> trust_decs;
 nonterminal TrustConstraint trust_dec;
-nonterminal TrustAtom ifLabelorAddr;
+//nonterminal TrustAtom ifLabelorAddr;
 nonterminal Relation trust_operator;
-nonterminal java.util.Map<String, String> label_table;
+//nonterminal java.util.Map<String, String> label_table;
 nonterminal Set<Integer> modifiers;
-nonterminal DynamicStatement dynamic_stmt;
+//nonterminal DynamicStatement dynamic_stmt;
 nonterminal ExceptionDef errorDef;
 nonterminal LabeledType except_type;
 nonterminal List<LabeledType> except_types;
 nonterminal Throw throw_stmt;
 nonterminal List<FunctionDef> constructors;
 nonterminal FunctionDef constructor;
-nonterminal EndorseStatement endorse_stmt;
+//nonterminal EndorseStatement endorse_stmt;
 nonterminal EndorseIfStatement endorseIf_stmt;
 nonterminal Call call_expr;
 nonterminal Revert revert_stmt;
@@ -200,6 +204,7 @@ precedence left ADDISH, PLUS, MINUS;
 precedence left MULISH, STAR, AT, PERCENT, SLASH;
 precedence left UNARY;
 // precedence left LPAR, RPAR, LSQB, RSQB, LBRACE, RBRACE;
+precedence left JOIN, MEET;
 
 
 start with sourceCode;
@@ -280,20 +285,6 @@ contract ::=
         RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, e_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
-    | CONTRACT NAME: name IMPLEMENTS NAME: supercontract
-        LBRACE
-            trust_setting: t_setting
-            structDefs: s_decs
-            state_var_decs: v_decs
-            exp_defs: e_defs
-            constructors: constructors
-            func_defs: f_defs
-        RBRACE {:
-        // TrustSetting t_setting = new TrustSetting();
-        constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, (String) supercontract, "", t_setting, s_decs, v_decs, e_defs, constructors);
-        RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
-    :}
     | CONTRACT NAME: name IMPLEMENTS NAME: supercontract contract_extends: c_extends
         LBRACE
             trust_setting: t_setting
@@ -306,6 +297,34 @@ contract ::=
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
         RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, e_defs, constructors);
+        RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
+    :}
+    | CONTRACT NAME: name contract_extends: c_extends
+        LBRACE
+            trust_setting: t_setting
+            structDefs: s_decs
+            state_var_decs: v_decs
+//            exp_defs: e_defs
+            constructors: constructors
+            func_defs: f_defs
+        RBRACE {:
+        // TrustSetting t_setting = new TrustSetting();
+        constructors.addAll(f_defs);
+        RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), constructors);
+        RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
+    :}
+    | CONTRACT NAME: name IMPLEMENTS NAME: supercontract contract_extends: c_extends
+        LBRACE
+            trust_setting: t_setting
+            structDefs: s_decs
+            state_var_decs: v_decs
+//            exp_defs: e_defs
+            constructors: constructors
+            func_defs: f_defs
+        RBRACE {:
+        // TrustSetting t_setting = new TrustSetting();
+        constructors.addAll(f_defs);
+        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :};
 
@@ -345,16 +364,16 @@ trust_setting ::=
         RESULT = trustSetting;
     :};
 
-label_table ::=
-    NAME:a COLON NAME:b {:
-        HashMap<String, String> table = new HashMap<>();
-        table.put((String)a, (String)b);
-        RESULT = table;
-    :}
-    | label_table:table COMMA NAME:a COLON NAME:b {:
-        table.put((String)a, (String)b);
-        RESULT = table;
-    :};
+//label_table ::=
+//    NAME:a COLON NAME:b {:
+//        HashMap<String, String> table = new HashMap<>();
+//        table.put((String)a, (String)b);
+//        RESULT = table;
+//    :}
+//    | label_table:table COMMA NAME:a COLON NAME:b {:
+//        table.put((String)a, (String)b);
+//        RESULT = table;
+//    :};
 
 // version: trust dec
 trust_decs ::=
@@ -401,13 +420,22 @@ state_var_dec ::=
 //        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
 //
 //    :}
-    modifiers:m maybeLabeledType:t NAME:a SEMI {:
+    FINAL maybeLabeledType:t NAME:a SEMI {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
-        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, m.contains(sym.FINAL));
+        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, true);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :};
+    :}
+    | maybeLabeledType:t NAME:a SEMI {:
+          Name name = new Name((String)a);
+          name.setLoc(new CodeLocation(aleft, aright, filename));
+          StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, false);
+          RESULT = rnt;
+          RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+      :}
+;
+
 
 modifiers ::=
     FINAL:x {:
@@ -421,15 +449,39 @@ modifiers ::=
     :};
 
 exp_defs ::=
-    exp_defs:list errorDef:eDef {:
+    EXCEPTION:x NAME:a parameters:b SEMI {:
+        logger.debug("exception def: " + a);
+        ExceptionDef newDef = new ExceptionDef((String) a, b);
+        newDef.setLoc(new CodeLocation(xleft, xright, filename));
+        List<ExceptionDef> list = new ArrayList<>();
+        list.add(newDef);
+        RESULT = list;
+    :}
+    | EXCEPTION:x NAME:a parameters:b SEMI exp_defs:list {:
+        logger.debug("exception def: " + a);
+        ExceptionDef newDef = new ExceptionDef((String) a, b);
+        newDef.setLoc(new CodeLocation(xleft, xright, filename));
+        list.add(newDef);
+        RESULT = list;
+    :};
+//    r_exp_defs:list {:
+//        RESULT = list;
+//    :}
+//    | {:
+//        List<ExceptionDef> list = new ArrayList<>();
+//        RESULT = list;
+//    :};
+
+r_exp_defs ::=
+    errorDef:eDef {:
+        List<ExceptionDef> list = new ArrayList<>();
         list.add(eDef);
         RESULT = list;
     :}
-    | {:
-        List<ExceptionDef> list = new ArrayList<>();
+    | errorDef:eDef r_exp_defs:list {:
+        list.add(eDef);
         RESULT = list;
     :};
-
 
 structDefs ::=
     structDefs:list structDef:sDef {:
@@ -484,10 +536,15 @@ constructors ::=
         list.add(0, cons);
         RESULT = list;
     :}
-    | {:
+    | constructor:cons {:
         List<FunctionDef> list = new ArrayList<>();
+        list.add(0, cons);
         RESULT = list;
     :}
+//    | {:
+//        List<FunctionDef> list = new ArrayList<>();
+//        RESULT = list;
+//    :}
     ;
 
 constructor ::=
@@ -551,6 +608,15 @@ interface ::=
             funcSigs:a
         RBRACE {:
             RESULT = new Interface((String)name, c_extends, s_defs, e_defs, a);
+            RESULT.setLoc(new CodeLocation(ileft, iright, filename));
+    :}
+    | INTERFACE:i NAME:name contract_extends: c_extends
+        LBRACE
+            structDefs: s_defs
+//            exp_defs: e_defs
+            funcSigs:a
+        RBRACE {:
+            RESULT = new Interface((String)name, c_extends, s_defs, new ArrayList<>(), a);
             RESULT.setLoc(new CodeLocation(ileft, iright, filename));
     :};
 
@@ -695,16 +761,23 @@ type ::=
     :};
 
 nonarray_type ::=
-    atom:a {:
-        if (!(a instanceof Name)) {
-            assert false;
-        }
-        RESULT = new Type((((Name)a).id));
+    NAME:a {:
+        RESULT = new Type(((String)a));
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
+//    | extType:a {:
+//        RESULT = a;
+//    :}
     | mapType:m {:
         RESULT = m;
     :};
+
+extType ::=
+    NAME:contractName DOT NAME:methodName {:
+        RESULT = new ExtType((String) contractName, (String) methodName);
+        RESULT.setLoc(new CodeLocation(contractNameleft, contractNameright, filename));
+    :}
+;
 
 mapType ::=
     MAP:x LPAR type:keyType COMMA type:valueType RPAR {:
@@ -757,22 +830,22 @@ except_types ::=
         RESULT = list;
     :};
 
-polyDescription ::=
-    LSQB nameList:l RSQB {:
-        logger.debug("finished parsing polyDescription");
-        RESULT = l;
-    :};
-nameList ::=
-    NAME:x {:
-        logger.debug("parsing names in polyList");
-        List<String> rtn = new ArrayList<String>();
-        rtn.add((String)x);
-        RESULT = rtn;
-    :}
-    | nameList:l COMMA NAME:x {:
-        l.add((String)x);
-        RESULT = l;
-    :};
+//polyDescription ::=
+//    LSQB nameList:l RSQB {:
+//        logger.debug("finished parsing polyDescription");
+//        RESULT = l;
+//    :};
+//nameList ::=
+//    NAME:x {:
+//        logger.debug("parsing names in polyList");
+//        List<String> rtn = new ArrayList<String>();
+//        rtn.add((String)x);
+//        RESULT = rtn;
+//    :}
+//    | nameList:l COMMA NAME:x {:
+//        l.add((String)x);
+//        RESULT = l;
+//    :};
 
 parameters ::=
     LPAR typedarglist:a RPAR {:
@@ -910,13 +983,13 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     :}
     ;
 
-endorse_stmt ::=
-    ENDORSEIF:x LPAR name_list:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR IN suite:s {:
-        EndorseStatement statement = new EndorseStatement(exprList, from, to, s);
-        RESULT = statement;
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
-    ;
+//endorse_stmt ::=
+//    ENDORSEIF:x LPAR name_list:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR IN suite:s {:
+//        EndorseStatement statement = new EndorseStatement(exprList, from, to, s);
+//        RESULT = statement;
+//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+//    :}
+//    ;
 
 endorseIf_stmt ::=
     ENDORSE:x LPAR name_list:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR if_stmt:ifStmt {:
@@ -1032,18 +1105,18 @@ except_type ::=
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};*/
 
-dynamic_stmt ::= AT:x NAME:a trailer:b SEMI {:
-    if (!(b instanceof Call)) {
-        return null;
-    }
-
-    Name name = new Name((String)a);
-    name.setLoc(new CodeLocation(aleft, aright, filename));
-    b.setValue(name);
-    DynamicStatement rtn = new DynamicStatement((Call) b);
-    rtn.setLoc(new CodeLocation(xleft, xright, filename));
-    RESULT = rtn;
-:};
+//dynamic_stmt ::= AT:x NAME:a trailer:b SEMI {:
+//    if (!(b instanceof Call)) {
+//        return null;
+//    }
+//
+//    Name name = new Name((String)a);
+//    name.setLoc(new CodeLocation(aleft, aright, filename));
+//    b.setValue(name);
+//    DynamicStatement rtn = new DynamicStatement((Call) b);
+//    rtn.setLoc(new CodeLocation(xleft, xright, filename));
+//    RESULT = rtn;
+//:};
 
 assign_stmt ::=
     assignable:a EQUAL expr:b SEMI {:
@@ -1171,55 +1244,55 @@ while_stmt ::=
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
-for_stmt ::=
-    FOR:x LPAR varDec:newVars expr:test SEMI iter_stmts:iters RPAR suite:b {:
-        RESULT = new For(newVars, test, iters, b);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :};
+//for_stmt ::=
+//    FOR:x LPAR varDec:newVars expr:test SEMI iter_stmts:iters RPAR suite:b {:
+//        RESULT = new For(newVars, test, iters, b);
+//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+//    :};
 
-iter_stmts ::=
-    iter_stmt:s {:
-        List<Statement> list = new ArrayList<>();
-        list.add(s);
-        RESULT = list;
-    :}
-    | iter_stmts:a COMMA iter_stmt:s {:
-        a.add(s);
-        RESULT = a;
-    :}
-    ;
+//iter_stmts ::=
+//    iter_stmt:s {:
+//        List<Statement> list = new ArrayList<>();
+//        list.add(s);
+//        RESULT = list;
+//    :}
+//    | iter_stmts:a COMMA iter_stmt:s {:
+//        a.add(s);
+//        RESULT = a;
+//    :}
+//    ;
+//
+//iter_stmt ::=
+//    inc_stmt:a {: RESULT = a; :}
+//    | augassign_stmt_withoutsemi:a {: RESULT = a; :}
+//    ;
 
-iter_stmt ::=
-    inc_stmt:a {: RESULT = a; :}
-    | augassign_stmt_withoutsemi:a {: RESULT = a; :}
-    ;
-
-inc_stmt ::=
-    PLUS:x PLUS assignable:a {:
-        BinOp e = new BinOp(a, BinaryOperator.Add, new Num<Integer>(1));
-        e.setLoc(new CodeLocation(xleft, xright, filename));
-        RESULT = new Assign(a, e);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
-    | assignable:a PLUS PLUS {:
-        BinOp e = new BinOp(a, BinaryOperator.Add, new Num<Integer>(1));
-        e.setLoc(new CodeLocation(aleft, aright, filename));
-        RESULT = new Assign(a, e);
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}
-    | MINUS:x MINUS assignable:a {:
-        BinOp e = new BinOp(a, BinaryOperator.Sub, new Num<Integer>(1));
-        e.setLoc(new CodeLocation(xleft, xright, filename));
-        RESULT = new Assign(a, e);
-        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-    :}
-    | assignable:a MINUS MINUS {:
-        BinOp e = new BinOp(a, BinaryOperator.Sub, new Num<Integer>(1));
-        e.setLoc(new CodeLocation(aleft, aright, filename));
-        RESULT = new Assign(a, e);
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-    :}
-    ;
+//inc_stmt ::=
+//    PLUS:x PLUS assignable:a {:
+//        BinOp e = new BinOp(a, BinaryOperator.Add, new Num<Integer>(1));
+//        e.setLoc(new CodeLocation(xleft, xright, filename));
+//        RESULT = new Assign(a, e);
+//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+//    :}
+//    | assignable:a PLUS PLUS {:
+//        BinOp e = new BinOp(a, BinaryOperator.Add, new Num<Integer>(1));
+//        e.setLoc(new CodeLocation(aleft, aright, filename));
+//        RESULT = new Assign(a, e);
+//        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+//    :}
+//    | MINUS:x MINUS assignable:a {:
+//        BinOp e = new BinOp(a, BinaryOperator.Sub, new Num<Integer>(1));
+//        e.setLoc(new CodeLocation(xleft, xright, filename));
+//        RESULT = new Assign(a, e);
+//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+//    :}
+//    | assignable:a MINUS MINUS {:
+//        BinOp e = new BinOp(a, BinaryOperator.Sub, new Num<Integer>(1));
+//        e.setLoc(new CodeLocation(aleft, aright, filename));
+//        RESULT = new Assign(a, e);
+//        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+//    :}
+//    ;
 
 expr ::=
     NEW:n call_expr:constructor_call {:
@@ -1490,22 +1563,22 @@ arglist ::=
         list.addArg(a);
         RESULT = list;
     :};
-exprlist ::= 
-    exprlist_sub:a {:RESULT = a;:} 
-    | exprlist_sub:a COMMA {:RESULT = a;:};
-exprlist_sub ::=
-    expr:a {:
-        logger.debug("Creating an expression list: " + a);
-        List<Expression> rnt = new ArrayList<>();
-        rnt.add(a);
-        RESULT = rnt;
-    :}
-    //| star_expr:a {:RESULT = makeNode("exprlist_sub", a);:}
-    | exprlist_sub:list COMMA expr:a {:
-        logger.debug("Adding an expression to the list: " + a);
-        list.add(a);
-        RESULT = list;
-    :};
+//exprlist ::=
+//    exprlist_sub:a {:RESULT = a;:}
+//    | exprlist_sub:a COMMA {:RESULT = a;:};
+//exprlist_sub ::=
+//    expr:a {:
+//        logger.debug("Creating an expression list: " + a);
+//        List<Expression> rnt = new ArrayList<>();
+//        rnt.add(a);
+//        RESULT = rnt;
+//    :}
+//    //| star_expr:a {:RESULT = makeNode("exprlist_sub", a);:}
+//    | exprlist_sub:list COMMA expr:a {:
+//        logger.debug("Adding an expression to the list: " + a);
+//        list.add(a);
+//        RESULT = list;
+//    :};
 
 
 

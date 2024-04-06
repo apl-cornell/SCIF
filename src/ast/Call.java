@@ -189,7 +189,7 @@ public class Call extends TrailerExpr {
         env.addCons(now.genCons(rtnTypeName, Relation.EQ, env, location));
 
         for (Map.Entry<ExceptionTypeSym, String> tl : funcSym.exceptions.entrySet()) {
-            if (!parent.isCheckedException(tl.getKey(), extern) && !env.inAtomic()) {
+            if (!parent.isCheckedException(tl.getKey(), extern)) {
                 System.err.println(
                         "Unchecked exception: " + tl.getKey().getName() + " at " + location.errString());
                 throw new RuntimeException();

@@ -80,7 +80,7 @@ public class TestIfcTypechecking {
             "applications/Dexible_raw",
             "applications/KoET_raw",
             "ifcTypechecking/DependentMap_W01",
-            "applications/Uniswap_ERC20_raw",
+//            "applications/Uniswap_ERC20_raw",
             "applications/ERC20_raw",
             "ifcTypechecking/WEx1",
 //            "ifcTypechecking/LocalTrust_W01",

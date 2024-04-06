@@ -1,5 +1,6 @@
 contract WEx1 {
     uint high;
+    constructor() {super();}
     @public
     void set(uint{any} low) {
         high = low;

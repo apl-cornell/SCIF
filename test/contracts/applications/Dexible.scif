@@ -4,6 +4,8 @@ import "./IExchange.scif";
 contract Dexible {
     exception FailedSwap();
 
+    constructor() { super(); }
+
     @public void swap{sender}(IERC20 tokenIn, IERC20 tokenOut, IExchange router, uint amount)
         throws (FailedSwap) {
         atomic {
@@ -19,7 +21,11 @@ contract Dexible {
         atomic {
             uint{sender} i = 0;
             while (i < tokens.length() - 1) {
-                swap(tokens[i], tokens[i + 1], routers[i], amounts[i]);
+                try {
+                    swap(tokens[i], tokens[i + 1], routers[i], amounts[i]);
+                } catch (FailedSwap e) {
+                    assert false;
+                }
                 i += 1;
             }
         } rescue * {

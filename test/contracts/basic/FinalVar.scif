@@ -1,6 +1,7 @@
 contract FinalVar {
     uint a;
 
+    constructor() { super(); }
     @public
     void foo() {
         final uint b = 0;

@@ -56,6 +56,8 @@ public class Atomic extends Statement {
 
         // ScopeContext tryclause = new ScopeContext(this, now);
         ScopeContext tmp;
+        ScopeContext atomicScope = new ScopeContext(this, parent);
+        atomicScope.clearExceptions();
 
 //        for (ExceptHandler h : handlers) {
 //            ExceptionTypeSym t = env.getExceptionTypeSym(h.type());
@@ -64,8 +66,8 @@ public class Atomic extends Statement {
 //        }
 
         for (Statement s : body) {
-            assert !now.getSHErrLocName().startsWith("null");
-            tmp = s.ntcGenCons(env, now);
+//            assert !now.getSHErrLocName().startsWith("null");
+            tmp = s.ntcGenCons(env, atomicScope);
         }
         env.exitNewScope();
         env.exitAtomic();
@@ -73,12 +75,17 @@ public class Atomic extends Statement {
         for (ExceptHandler h : handlers) {
             tmp = h.ntcGenCons(env, parent);
         }
-        return now;
+        return atomicScope;
     }
 
     @Override
     public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
-//
+
+        // convert the internal code into a "public" (potentially "external" for optimization purpose) method
+        // unless the clause only contains one external call
+        // all modified local variables need to be returned and assigned to the corresponding variables if terminated normally
+
+
 //        if (body.size() == 1 && body.get(0) instanceof CallStatement) {
 //            // if there is only one method call in the body
 //            CallStatement callStatement = (CallStatement) body.get(0);
@@ -104,9 +111,6 @@ public class Atomic extends Statement {
 //            }
 //        }
 
-        // convert the internal code into a "public" (potentially "external" for optimization purpose) method
-        // unless the clause only contains one external call
-        // all modified local variables need to be returned and assigned to the corresponding variables if terminated normally
 
 
 

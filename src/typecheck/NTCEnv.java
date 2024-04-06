@@ -79,6 +79,12 @@ public class NTCEnv {
             return new BuiltinTypeSym(Utils.BuiltinType2ID(BuiltInT.VOID));
         }
 
+        if (astType instanceof ExtType extType) {
+            Sym s = getExtSym(extType.contractName(), extType.name());
+            assert s instanceof StructTypeSym;
+            return (TypeSym) s;
+        }
+
         Sym s = getCurSym(astType.name());
         if (s instanceof TypeSym)//Utils.isPrimitiveType(astType.x))
         {

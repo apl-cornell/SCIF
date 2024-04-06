@@ -5,7 +5,7 @@ contract StructEx {
     }
 
     s0 a;
-
+    constructor() { super(); }
     @public void init() {
         a = new s0(0, 1);
     }

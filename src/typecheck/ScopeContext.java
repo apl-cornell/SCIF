@@ -158,4 +158,8 @@ public class ScopeContext {
         return new Constraint(new Inequality(getSHErrLocName(), CompareOperator.Eq, sym.toSHErrLocFmt()),
                 env.globalHypothesis(), location, explanation);
     }
+
+    public void clearExceptions() {
+        funcExceptionMap.clear();
+    }
 }

@@ -6,6 +6,7 @@ import ast.Array;
 import ast.ComplexIfLabel;
 import ast.Contract;
 import ast.DepMap;
+import ast.ExtType;
 import ast.IfLabel;
 import ast.Interface;
 import ast.LabeledType;
@@ -88,6 +89,14 @@ public class InterfaceSym extends TypeSym {
     public TypeSym toTypeSym(Type astType, ScopeContext defContext) {
         if (astType == null) {
             return new BuiltinTypeSym("void");
+        }
+
+        if (astType instanceof ExtType extType) {
+            Sym s = symTab.lookup(extType.contractName());
+            assert s instanceof InterfaceSym;
+            s = ((InterfaceSym) s).getTypeSym(extType.name());
+            assert s instanceof StructTypeSym;
+            return (TypeSym) s;
         }
 
         Sym s = symTab.lookup(astType.name());

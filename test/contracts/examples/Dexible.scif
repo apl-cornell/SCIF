@@ -3,6 +3,7 @@ import "./IExchange.scif";
 
 contract Dexible {
     exception FailedSwap();
+    constructor() { super(); }
     @public
     void swap(IERC20 tokenIn, IERC20 tokenOut, final IExchange router, uint amount)
         throws (FailedSwap) {

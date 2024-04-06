@@ -3,7 +3,7 @@ import "./IERC20.scif";
 contract ERC20 implements IERC20 {
     map(address, uint) balances;
     map(address owner, map(address, uint{owner}){owner}) allowances;
-
+    constructor() { super(); }
     @public
     void approve{sender}(address allowed, uint amount) {
         allowances[sender][allowed] = amount;
