@@ -44,14 +44,6 @@ public class Arguments extends Node {
         return rnt;
     }
 
-    public List<VarSym> parseArgs(ContractSym contractSym) {
-        List<VarSym> rnt = new ArrayList<>();
-        for (Arg arg : args) {
-            rnt.add(arg.parseArg(contractSym));
-        }
-        return rnt;
-    }
-
     public List<VarSym> parseArgs(InterfaceSym interfaceSym) {
         List<VarSym> rnt = new ArrayList<>();
         for (Arg arg : args) {

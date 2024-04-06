@@ -135,7 +135,7 @@ public class TypeChecker {
             ntcEnv.addSourceFile(root.getSourceFilePath(), root);
 
             root.passScopeContext(null);
-            // System.err.println("Global checking " + root.getContractName());
+            System.err.println("Global checking " + root.getContractName());
             assert root.ntcGlobalInfo(ntcEnv, null): root.getContractName();
         }
 

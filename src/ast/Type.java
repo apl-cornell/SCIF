@@ -31,6 +31,7 @@ public class Type extends Node {
         ScopeContext now = new ScopeContext(this, parent);
         TypeSym typeSym = (TypeSym) env.getCurSym(name);
         isContractType = typeSym instanceof InterfaceSym;
+        System.err.println(name + " is contract: " + isContractType);
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
         return now;
     }
@@ -78,5 +79,9 @@ public class Type extends Node {
     public compile.ast.Type solidityCodeGen(CompileEnv code) {
         return isContractType ? new ContractType(name) :
                 new PrimitiveType(name);
+    }
+
+    public void setContractType(boolean b) {
+        isContractType = b;
     }
 }
