@@ -1,5 +1,8 @@
 package typecheck;
 
+import compile.ast.StructType;
+import compile.ast.Type;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,5 +46,10 @@ public class StructTypeSym extends TypeSym {
 
     public int merberSize() {
         return members.size();
+    }
+
+    @Override
+    public Type getType() {
+        return new StructType(this.getName());
     }
 }

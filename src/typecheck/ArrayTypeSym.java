@@ -1,5 +1,8 @@
 package typecheck;
 
+import compile.ast.ArrayType;
+import compile.ast.Type;
+
 public class ArrayTypeSym extends TypeSym {
     // types of key and value have no labels
     private final int size;
@@ -30,5 +33,10 @@ public class ArrayTypeSym extends TypeSym {
 
     public static String getArrayName(int size, TypeSym valueType) {
         return "A" + size + "." + valueType.getName();
+    }
+
+    @Override
+    public Type getType() {
+        return new ArrayType(valueType.getType());
     }
 }

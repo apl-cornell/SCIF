@@ -15,6 +15,8 @@ import ast.Node;
 import ast.PrimitiveIfLabel;
 import ast.StateVariableDeclaration;
 import ast.Type;
+import compile.ast.PrimitiveType;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -179,6 +181,11 @@ public class InterfaceSym extends TypeSym {
 
     public boolean isLValue() {
         return false;
+    }
+
+    @Override
+    public compile.ast.Type getType() {
+        return new PrimitiveType(this.getName());
     }
 
     public Sym lookupSym(String funcName) {

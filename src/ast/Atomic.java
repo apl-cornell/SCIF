@@ -2,33 +2,23 @@ package ast;
 
 import compile.CompileEnv;
 import compile.CompileEnv.ScopeType;
-import compile.ast.Assign;
-import compile.ast.BinaryExpression;
-import compile.ast.Call;
-import compile.ast.Function;
-import compile.ast.IfStatement;
-import compile.ast.Literal;
-import compile.ast.LowLevelCall;
-import compile.ast.PrimitiveType;
-import compile.ast.Revert;
-import compile.ast.SingleVar;
-import compile.ast.Type;
-import compile.ast.VarDec;
+import compile.ast.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import typecheck.Context;
-import typecheck.ExceptionTypeSym;
-import typecheck.NTCEnv;
-import typecheck.PathOutcome;
-import typecheck.PsiUnit;
-import typecheck.ScopeContext;
-import typecheck.Utils;
-import typecheck.VisitEnv;
+
+import compile.ast.Assign;
+import compile.ast.FunctionSig;
+import compile.ast.Literal;
+import compile.ast.Revert;
+import compile.ast.Type;
+import typecheck.*;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Relation;
 
 public class Atomic extends Statement {
 
@@ -111,29 +101,55 @@ public class Atomic extends Statement {
 //            }
 //        }
 
-
-
-
         List<compile.ast.Statement> solBody = new ArrayList<>();
+        LowLevelCall lowLevelCall = null;
 
         Map<String, Type> readMap, writeMap;
         readMap = new HashMap<>();
         writeMap = new HashMap<>();
 
-        // find out read and written local variables
-        for (Statement s : body) {
-            readMap.putAll(s.readMap(code));
-            writeMap.putAll(s.writeMap(code));
-            // solBody.addAll(s.solidityCodeGen(code));
+        if (body.size() == 1 && body.get(0) instanceof CallStatement && ((CallStatement) body.get(0)).call.value instanceof Attribute) {
+            Call call = ((CallStatement) body.get(0)).call;
+            List<compile.ast.Statement> result = body.get(0).solidityCodeGen(code);
+            if (result.size() == 1 && result.get(0) instanceof ExternalCall) {
+                ExternalCall externalCall = (ExternalCall) result.get(0);
+//                    LowLevelCall lowLevelCall = new LowLevelCall();
+
+                FuncSym funcSym = call.funcSym;
+                List<compile.ast.Expression> argValues = externalCall.getArgValues();
+                List<Argument> args = new ArrayList<>();
+
+                for (int i = 0; i < argValues.size(); i++) {
+                    TypeSym typeSym = funcSym.parameters.get(i).typeSym;
+                    Type type = typeSym.getType();
+                    args.add(new Argument(type, ""));
+                }
+                FunctionSig functionSig = new FunctionSig(externalCall.funcName(), args, new PrimitiveType(""), false, false);
+                try {
+                    SingleVar singleVar = new SingleVar("address(" + externalCall.getContractVar().toSolCode() + ")");
+                    lowLevelCall = new LowLevelCall(functionSig, singleVar, externalCall.funcName(), argValues);
+                } catch (Exception e) {
+                    lowLevelCall = null;
+                }
+            }
         }
-        readMap.putAll(writeMap);
-        code.enterNewVarScope();
-        Function newTempFunction = code.makeMethod(body, readMap, writeMap, ScopeType.ATOMIC);
-        LowLevelCall externalCall = new LowLevelCall(newTempFunction, compile.Utils.THIS_ADDRESS,
-                newTempFunction.funcName(), newTempFunction.argNames().stream().map(name -> new SingleVar(name)).collect(
-                Collectors.toList()));
-        code.exitVarScope();
-        code.addTemporaryFunction(newTempFunction);
+
+        if (lowLevelCall == null) {
+            // find out read and written local variables
+            for (Statement s : body) {
+                readMap.putAll(s.readMap(code));
+                writeMap.putAll(s.writeMap(code));
+                // solBody.addAll(s.solidityCodeGen(code));
+            }
+            readMap.putAll(writeMap);
+            code.enterNewVarScope();
+            Function newTempFunction = code.makeMethod(body, readMap, writeMap, ScopeType.ATOMIC);
+            lowLevelCall = new LowLevelCall(newTempFunction, compile.Utils.THIS_ADDRESS,
+                    newTempFunction.funcName(), newTempFunction.argNames().stream().map(name -> new SingleVar(name)).collect(
+                    Collectors.toList()));
+            code.exitVarScope();
+            code.addTemporaryFunction(newTempFunction);
+        }
 
         // generate an internal call: stat, data = newTempFunction(...);
         // UINT: stat
@@ -146,7 +162,7 @@ public class Atomic extends Statement {
         solBody.add(new VarDec(compile.Utils.PRIMITIVE_TYPE_BYTES, dataVar.name()));
         solBody.add(new Assign(
                 List.of(succVar, dataVar),
-                externalCall
+                lowLevelCall
         ));
 
         List<compile.ast.Statement> ifNotRevertedBody = code.splitStatAndData(dataVar, statVar);

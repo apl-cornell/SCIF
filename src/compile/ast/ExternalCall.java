@@ -10,6 +10,14 @@ public class ExternalCall extends Call {
         this.contractVar = contractVar;
     }
 
+    public List<Expression> getArgValues() {
+        return argValues;
+    }
+
+    public Expression getContractVar() {
+        return contractVar;
+    }
+
     @Override
     public String toSolCode() {
         return contractVar.toSolCode() + "." + super.toSolCode();
