@@ -1,0 +1,62 @@
+import "./IERC20.scif";
+import "./IDODOApprove.scif";
+import "./IExchange.scif";
+
+contract DODOV2Proxy01 {
+    address ETH_ADDRESS;
+    IDODOApprove DODO_APPROVE;
+
+    constructor(IDODOApprove dodoApprove, address ethAddress) {
+        super();
+        ETH_ADDRESS = endorse(ethAddress, sender -> this);
+        DODO_APPROVE = endorse(dodoApprove, sender -> this);
+    }
+
+    @payable
+    @public
+    uint externalSwap{sender->this}(
+        IERC20 fromToken,
+        IERC20 toToken,
+        final address approveTarget,
+        IExchange to, // like "router" in Dexible
+        uint fromTokenAmount,
+        uint minReturnAmount
+    ) {
+        // Endorse to this. Do not endorse to
+        IERC20 _toToken = endorse(toToken, sender -> this);
+        IERC20 _fromToken = endorse(fromToken, sender -> this);
+        uint _fromTokenAmount = endorse(fromTokenAmount, sender -> this);
+        address _approveTarget = endorse(approveTarget, sender -> this);
+
+        uint toTokenOriginBalance = _toToken.balanceOf(sender);
+
+        if (_fromToken != ETH_ADDRESS) {
+            lock(this) {
+                DODO_APPROVE.claimTokens( sender, _fromToken, address(this), _fromTokenAmount);
+            }
+            _fromToken.approve(_approveTarget, _fromTokenAmount);
+        }
+
+        lock(this) {
+            // To is the victim of the CDA
+            // To agrees to not use our full authority
+            to.exchange(sender, fromToken, toToken, value);
+        }
+
+        // Transfer any remaining fromToken and toToken back to the sender
+        uint fromRemainder = _fromToken.balanceOf(address(this));
+        _fromToken.transfer(address(this), sender, fromRemainder);
+
+        uint toRemainder = _toToken.balanceOf(address(this));
+        _toToken.transfer(address(this), sender, toRemainder);
+
+        // Calculate the return amount
+        uint returnAmount = _toToken.balanceOf(sender) - toTokenOriginBalance;
+
+        // Ensure the return amount meets the minimum requirement
+        assert(returnAmount >= minReturnAmount);
+
+        // Return the amount received
+        return returnAmount;
+    }
+}
