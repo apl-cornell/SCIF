@@ -1,0 +1,57 @@
+import "./IERC20.scif";
+import "./IDODOApprove.scif";
+
+contract DODOV2Proxy01 {
+    address ETH_ADDRESS;
+    IDODOApprove DODO_APPROVE;
+
+    // exception SwapFailedException();
+    // exception ERC20InsufficientBalance(address owner, uint cur, uint needed);
+
+    constructor(IDODOApprove dodoApprove, address ethAddress) {
+        super();
+        ETH_ADDRESS = ethAddress;
+        DODO_APPROVE = dodoApprove;
+    }
+
+    @public uint externalSwap{sender}(
+        IERC20{sender} fromToken,
+        IERC20{sender} toToken,
+        address{sender} approveTarget,
+        address{sender} to,
+        uint{sender} fromTokenAmount,
+        uint{sender} minReturnAmount
+    )
+    // throws (SwapFailedException)
+    {
+            // Record the original balance of toToken
+            uint{sender} toTokenOriginBalance = toToken.balanceOf(sender);
+
+            // If fromToken is not ETH, approve the transfer
+            if (fromToken != ETH_ADDRESS) {
+                DODO_APPROVE.claimTokens(fromToken, sender, address(this), fromTokenAmount);
+                fromToken.approve(approveTarget, fromTokenAmount);
+            }
+
+            // Perform the external call
+            // bool success = to.call{value: (fromToken == ETH_ADDRESS) ? msg.value : 0}(callDataConcat);
+            // if (!success) {
+            //     throw SwapFailedException();
+            // }
+
+            // Transfer any remaining fromToken and toToken back to the sender
+            IERC20 fromTokenEndorsed = endorse(fromToken, sender -> this);
+            IERC20 toTokenEndorsed = endorse(toToken, sender -> this);
+            fromToken.transfer(address(this), sender, fromTokenEndorsed.balanceOf(address(this)));
+            toToken.transfer(address(this), sender, toTokenEndorsed.balanceOf(address(this)));
+
+            // Calculate the return amount
+            uint{sender} returnAmount = toToken.balanceOf(sender) - toTokenOriginBalance;
+
+            // Ensure the return amount meets the minimum requirement
+            assert(returnAmount >= minReturnAmount);
+
+            // Return the amount received
+            return returnAmount;
+    }
+}
