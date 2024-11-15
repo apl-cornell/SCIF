@@ -1,0 +1,41 @@
+contract Presale {
+	map(address, uint) _balances;
+	uint total_received_amount;
+	uint MAX_TOTAL_AMOUNT_TO_RECEIVE;
+	address OWNER;
+
+	constructor() { super(); }
+
+	
+	void withdrawFunds {this} () {
+		if (balance(address(this)) > 0){
+			lock(this){
+				send(OWNER, balance(address(this)));
+			}
+		}
+	}
+
+	void sendRefund {this} () {
+		uint amount_to_refund = _balances[sender] + value;
+		_balances[sender] = 0;
+		lock(this) {
+			send(sender, amount_to_refund);
+		}
+	}
+
+	void receiveFunds {this} () {
+		if (total_received_amount + value > MAX_TOTAL_AMOUNT_TO_RECEIVE) {
+			uint change_to_return = total_received_amount + value - MAX_TOTAL_AMOUNT_TO_RECEIVE;
+			lock(this) {
+				send(sender, change_to_return);
+			}
+
+			uint acceptable_remainder = MAX_TOTAL_AMOUNT_TO_RECEIVE - total_received_amount;
+			_balances[sender] += acceptable_remainder;
+			total_received_amount += acceptable_remainder;
+		} else {
+			_balances[sender] += value;
+			total_received_amount += value;
+		}
+	}
+}

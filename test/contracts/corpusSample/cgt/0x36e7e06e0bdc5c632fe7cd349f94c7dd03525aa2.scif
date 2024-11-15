@@ -1,0 +1,16 @@
+import "./IUser.scif";
+
+
+contract Wallet {
+	constructor() { super(); }
+
+	@public
+	bytes execute(IUser _to, uint _value, bytes _data) {
+		if (value < 1000) {
+			lock(this) {
+				assert _to.callback(_to, _value, _data);
+			}
+		}
+	}
+}
+

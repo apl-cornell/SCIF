@@ -1,0 +1,3 @@
+interface JIincInterfaceForForwarder {
+	@public @payable bool deposit {addr} (final address addr);
+}

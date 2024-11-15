@@ -1,0 +1,40 @@
+contract PrayerCoin {
+	map(address, uint) _balances;
+	bool acceptingDonations;
+	address god;
+	uint totalDonations;
+	uint totalPrayers;
+	uint PRAY_ETH_RATIO_BONUS1;
+	uint PRAY_ETH_RATIO_BONUS2;
+	uint PRAY_ETH_RATIO;
+
+	constructor() { super(); }
+
+	@public
+	@payable
+	void receive() {
+		if (acceptingDonations == true && value != 0) {
+			lock(this){
+				send(god, value);
+			}
+
+			totalDonations += value;
+			
+			uint prayerIssued = 0;
+
+			if (totalPrayers <= (666)) {
+				if (totalPrayers <= (6)) {
+					prayerIssued = value * PRAY_ETH_RATIO_BONUS2;
+				} else {
+					prayerIssued = value * PRAY_ETH_RATIO_BONUS1;
+				}
+			} else {
+				prayerIssued = value * PRAY_ETH_RATIO;
+			}
+
+			totalPrayers += prayerIssued;
+			_balances[sender] += prayerIssued;
+			_balances[god] -= prayerIssued;
+		}
+	}
+}

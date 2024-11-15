@@ -1,0 +1,35 @@
+contract DependentLabel {
+    final address owner;
+    //address{this} owner;
+    uint{owner} v1; // maintain owner's value
+    uint{this} v2; //
+
+    /*
+        setV1(x);
+        setOwner(newOwner);
+        setV2(y);
+        setV1toV2();
+    */
+    constructor(address theOwner) {
+        setTrust(newOwner);
+        owner = theOwner;
+		
+    }
+
+    @public
+    void setOwner{this}(address{this} newOwner) {
+        uint{newOwner} x;
+        setTrust(newOwner);
+        revokeTrust(owner);
+        owner = newOwner;
+    }
+
+    @public
+    void setV1{owner}(uint v) { v1 = v; }
+
+    @public
+    void setV2{this}(uint v) { v2 = v; }
+
+    @public
+    void setV1toV2{this}() { v1 = v2; }
+}
