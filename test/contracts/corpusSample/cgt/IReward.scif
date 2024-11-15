@@ -1,0 +1,3 @@
+interface IReward {
+	@public bool giveBlockReward();
+}

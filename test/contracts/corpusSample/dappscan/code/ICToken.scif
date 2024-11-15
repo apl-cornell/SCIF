@@ -1,0 +1,3 @@
+interface ICToken {
+	@public uint borrowBalanceStored{account} (final address account);
+}

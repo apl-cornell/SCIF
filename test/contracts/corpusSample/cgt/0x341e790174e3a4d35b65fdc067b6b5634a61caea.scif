@@ -1,0 +1,27 @@
+import "./AmIOnTheFork.scif";
+
+contract ReplaySafeSplit {
+	AmIOnTheFork amIOnTheFork;
+
+	constructor() { super(); }
+
+	@public
+	bool split(address _targetFork, address _targetNoFork) {
+		address targetFork = endorse(_targetFork, any -> this);
+		address targetNoFork = endorse(_targetNoFork, any -> this);
+		bool b;
+		lock(this){
+			b = amIOnTheFork.forked();
+		}
+		if (b) {
+			lock(this) {
+				send(targetFork, value);
+			}
+		} else {
+			lock(this) {
+				send(targetNoFork, value);
+			}
+		}
+		return true;
+	}
+}

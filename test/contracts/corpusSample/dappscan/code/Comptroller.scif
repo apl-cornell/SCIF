@@ -1,0 +1,16 @@
+import "./ICToken.scif";
+
+contract Comptroller {
+	uint{this} test;
+
+	constructor() { super(); }
+
+	@public 
+	uint liquidateBorrowAllowed (ICToken cTokenBorrowed, address cTokenCollateral, address liquidator, address borrower, uint repayAmount) {
+		ICToken _cTokenBorrowed = endorse(cTokenBorrowed, any -> sender);
+		lock (this) {
+			uint borrowBalance = _cTokenBorrowed.borrowBalanceStored(endorse(borrower, any -> sender));
+		}
+		test += endorse(repayAmount, any -> this);
+	}
+}

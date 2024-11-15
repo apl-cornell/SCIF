@@ -1,0 +1,50 @@
+contract PixelMap {
+
+	struct Tile {
+        address owner;
+        string image;
+        string url;
+        uint price;
+    }
+
+	map(uint, Tile) tiles;
+	address owner;
+	address creator;
+	address NULL;
+
+
+	constructor() {
+		super();
+	}
+
+	@public
+	@payable
+	void buyTile(uint _location) {
+		uint location = endorse(_location, any -> this);
+		if (location <= 3969) {
+			Tile t = tiles[location];
+			uint price = t.price;
+			address owner;
+			if (t.owner != sender) {
+				if (t.owner == NULL) {
+					price = 2000;
+					owner = creator;
+				} else {
+					owner = t.owner;
+				}
+
+				if (price != 0 && value == price) {
+					lock(this) {
+						send(owner, price);
+					}
+					t.owner = sender;
+					t.price = 0;
+				}
+			}
+			
+		}
+		
+		
+	}
+
+}

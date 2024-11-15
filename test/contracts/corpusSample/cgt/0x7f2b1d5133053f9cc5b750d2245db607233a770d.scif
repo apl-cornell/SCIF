@@ -1,0 +1,15 @@
+contract Dappster {
+	map(address, uint) pendingWithdrawals;
+
+	constructor() { super(); }
+
+	@public
+	bool withdraw() {
+		uint amount = pendingWithdrawals[sender];
+		pendingWithdrawals[sender] = 0;
+		lock(this) {
+			send(sender, amount);
+		}
+		return true;
+	}
+}

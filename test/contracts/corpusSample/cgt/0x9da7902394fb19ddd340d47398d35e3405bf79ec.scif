@@ -1,0 +1,55 @@
+contract x15 {
+	struct earnerarray {
+		address etherAddress;
+		uint amount;
+	}
+	earnerarray[] crazyearners;
+	uint totalearners;
+	uint deposits_until_jackpot;
+	uint feeamount;
+	uint alpha;
+	uint beta;
+	uint _balance;
+	uint totaldeposited;
+	uint totalmoneyearned;
+	address kappa;
+
+	constructor() { super(); }
+
+	@public 
+	void enter() {
+		if (value < 30) {
+			lock(this) {
+				send(kappa, value);
+			}
+			// return;
+		}
+
+		uint calculator;
+		uint beta;
+		uint amount = value;
+		uint tot_pl = crazyearners.length();
+		totalearners = tot_pl + 1;
+		deposits_until_jackpot = 20 - (totalearners % 20);
+		crazyearners.push(new earnerarray(sender, amount));
+		feeamount = amount * alpha / 100;
+		_balance += amount;
+		totaldeposited += amount;
+		if (feeamount != 0) {
+			if (_balance > feeamount) {
+				lock(this) {
+					send(kappa, feeamount);	
+				}
+				_balance -= feeamount;
+				totalmoneyearned += feeamount;
+				if (alpha < 100) {
+					alpha += 30;
+				} else {
+					beta = alpha + amount;
+					calculator = alpha + beta / 2;
+					alpha = 100;
+				}
+			}
+		}
+	}
+}

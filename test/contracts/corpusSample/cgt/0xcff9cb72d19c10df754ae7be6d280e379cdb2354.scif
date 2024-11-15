@@ -1,0 +1,58 @@
+contract quick {
+
+	struct Person {
+		address etherAddress;
+		uint amount;
+  	}
+
+	Person[] persons;
+	uint collectedFees;
+	uint payoutIdx;
+	uint _balance;
+	address owner;
+
+	constructor() { super(); }
+
+	@private
+	void enter() {
+		if (value < 1) {
+			send(sender, value);
+			return;
+		}
+
+		uint amount;
+
+		if (value > 20) {
+			lock(this) {
+				send(sender, value - 20);
+			}
+			amount = 20;
+		} else {
+			amount = value;
+		}
+
+		uint idx = persons.length();
+		Person p = new Person(sender, amount);
+		persons.push(p);
+
+		if (idx != 0) {
+			collectedFees += amount / 10;
+			lock(this) {
+				send(owner, collectedFees);
+			}
+			collectedFees = 0;
+			_balance += amount - amount / 10;
+		} else {
+			_balance += amount;
+		}
+
+		Person payoutIdx_p = persons[payoutIdx];
+
+		while (_balance > payoutIdx_p.amount / 100 * 150) {
+			uint transactionAmount = payoutIdx_p.amount / 100 * 150;
+
+			_balance -= transactionAmount;
+			payoutIdx += 1;
+		}
+	}
+}
