@@ -1,0 +1,4 @@
+interface IDODOApprove {
+    @public void claimTokens{who}(final address who, address token, address dest, uint amount);
+    @public address getDODOProxy();
+}
