@@ -27,8 +27,10 @@ public class TypeChecker {
     }
 
     /*
-        Given a list of SCIF source files, this method typechecks all code ignoring information flow control.
-        It generates constraints in SHErrLoc format and put them in outputFile, then runs ShErrLoc to get error info.
+        Given a list of SCIF source files, this method type-checks all code,
+        ignoring information flow control.  It generates constraints in
+        SHErrLoc format and put them in outputFile, then runs SHErrLoc to get
+        error info.
      */
     public static List<SourceFile> regularTypecheck(List<File> inputFiles, File logDir,
             boolean DEBUG) throws IOException {
@@ -66,6 +68,7 @@ public class TypeChecker {
         while (!mentionedFiles.isEmpty()) {
             File file = mentionedFiles.poll();
             Symbol result = Parser.parse(file, null);
+            if (result == null) return null;
             SourceFile root = (SourceFile) result.value;
             fileMap.put(root.getSourceFilePath(), root);
             // TODO root.setName(inputFile.name());
@@ -76,7 +79,7 @@ public class TypeChecker {
             roots.add(root);
             assert root.ntcAddImportEdges(graph);
 
-            for (String filePath: root.importPaths()) {
+            for (String filePath : root.importPaths()) {
                 if (!includedFilePaths.contains(filePath)) {
                     mentionedFiles.add(new File(filePath));
                     includedFilePaths.add(filePath);
@@ -176,7 +179,7 @@ public class TypeChecker {
                             return null;
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        System.out.println(e.getMessage());
                         return null;
                     }
 //                }
@@ -440,7 +443,7 @@ public class TypeChecker {
             try {
                 result = runSLC(env.programMap, outputFile.getAbsolutePath(), DEBUG);
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println(e.getMessage());
                 return false;
             }
             if (!result) return false;

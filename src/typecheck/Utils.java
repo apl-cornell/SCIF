@@ -359,8 +359,8 @@ public class Utils {
                 }
             }
             consFile.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
             return false;
         }
         return true;
@@ -422,6 +422,7 @@ public class Utils {
             }
             //consFile.close();
         } catch (Exception e) {
+            System.out.println("Unexpected exception:");
             e.printStackTrace();
             return false;
         }

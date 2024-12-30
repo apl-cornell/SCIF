@@ -56,8 +56,13 @@ parser code {:
             if (astFile != null) {
                 System.setErr(System.err);
             }
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found: " + e.getMessage());
+            return null;
         } catch (Exception e) {
+            System.out.println("Unexpected exception: ");
             e.printStackTrace();
+            return null;
         }
         return rtn;
     }

@@ -2,6 +2,7 @@
 
 import ast.SourceFile;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -86,8 +87,8 @@ public class SCIF implements Callable<Integer> {
         for (File file : m_inputFiles) {
             files.add(file);
         }
-//        System.out.println("Regular Type Checking:");
-        List<SourceFile> roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
+        List<SourceFile> roots;
+        roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
         boolean passNTC = true;
         //if (!Utils.emptyFile(outputFileName))
         //    passNTC = runSLC(outputFileName);
@@ -127,7 +128,7 @@ public class SCIF implements Callable<Integer> {
      * 4. tokenize
      */
     @Override
-    public Integer call() throws Exception {
+    public Integer call() {
 
         logger.trace("SCIF starts");
         if (m_funcRequest == null || m_funcRequest.compile) {
@@ -137,6 +138,10 @@ public class SCIF implements Callable<Integer> {
             } catch (TypeCheckFailure e) {
                 System.out.println(e.explanation());
                 return 0;
+            } catch (Exception e) {
+                System.out.println("Unexpected exception:");
+                e.printStackTrace();
+                return 0;
             }
             logger.debug("finished typecheck, compiling...");
             if (roots == null) {
@@ -145,7 +150,12 @@ public class SCIF implements Callable<Integer> {
             String solFileName;
             File solFile;
             if (m_solFileNames == null) {
-                solFile = File.createTempFile("tmp", "sol");
+                try {
+                    solFile = File.createTempFile("tmp", "sol");
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
+                    return 0;
+                }
                 solFileName = solFile.getAbsolutePath();
                 solFile.deleteOnExit();
             } else {
@@ -166,6 +176,9 @@ public class SCIF implements Callable<Integer> {
                 _typecheck(m_logDir);
             } catch (TypeCheckFailure e) {
                 System.out.println(e.explanation());
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+                return 0;
             }
         } else if (m_funcRequest.parse) {
             File astOutputFile = m_logDir == null ? null : new File(m_logDir[0] + newFileName("parse", "result"));
