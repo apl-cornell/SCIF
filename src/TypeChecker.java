@@ -135,7 +135,7 @@ public class TypeChecker {
             ntcEnv.addSourceFile(root.getSourceFilePath(), root);
 
             root.passScopeContext(null);
-            System.err.println("Global checking " + root.getContractName());
+            System.err.println("Checking contract " + root.getContractName());
             assert root.ntcGlobalInfo(ntcEnv, null): root.getContractName();
         }
 
@@ -421,7 +421,7 @@ public class TypeChecker {
 
         for (String methodName : env.getMethodNameSet()) {
             if (methodName.equals(Utils.CONTRACT_KEYWORD)) continue;
-            System.err.println("checking method: " + methodName);
+            // System.err.println("checking method: " + methodName);
 //            if (!methodName.equals("removeLiquidity")) {
 //                continue;
 //            }
@@ -456,7 +456,7 @@ public class TypeChecker {
         String classDirectoryPath = new File(
                 SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
         sherrloc.diagnostic.DiagnosticConstraintResult result = Utils.runSherrloc(outputFileName);
-        System.err.println("runSLC: " + outputFileName + " " + result.success());
+//      System.err.println("runSLC: " + outputFileName + " " + result.success());
 //        System.err.println(Arrays.toString(Utils.runSLCCMD(classDirectoryPath, outputFileName)));
 //        logger.debug("runSLC: " + result);
         if (result.success()) {

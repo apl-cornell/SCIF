@@ -24,6 +24,8 @@ import java.util.Map;
 
 public class FunctionDef extends FunctionSig {
 
+    private static boolean DEBUG = false;
+
     List<Statement> body;
 
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
@@ -52,7 +54,7 @@ public class FunctionDef extends FunctionSig {
         env.enterNewScope();
         // add args to local sym;
         String funcName = this.name;
-        System.err.println("entering method: " + name + " " + body.size());
+        if (DEBUG) System.err.println("entering method: " + name + " " + body.size());
         FuncSym funcSym = ((FuncSym) env.getCurSym(funcName));
         Map<ExceptionTypeSym, Boolean> exceptionTypeSyms = new HashMap<>();
         for (Map.Entry<ExceptionTypeSym, String> t : funcSym.exceptions.entrySet()) {
@@ -183,7 +185,7 @@ public class FunctionDef extends FunctionSig {
             }
         }
         if (body.size() > 0 && CO.existsNormalPath()) {
-            System.err.println("method: " + funcLocalName);
+            if (DEBUG) System.err.println("method: " + funcLocalName);
             Utils.contextFlow(env, CO.getNormalPath().c(), funcEndContext.c(),
                     body.get(body.size() - 1).location);
         }

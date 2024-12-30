@@ -31,7 +31,7 @@ public class Type extends Node {
         ScopeContext now = new ScopeContext(this, parent);
         TypeSym typeSym = (TypeSym) env.getCurSym(name);
         isContractType = typeSym instanceof InterfaceSym;
-        System.err.println(name + " is contract: " + isContractType);
+        // System.err.println(name + " is contract: " + isContractType);
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
         return now;
     }

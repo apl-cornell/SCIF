@@ -143,7 +143,7 @@ public class Contract extends TopLayerNode {
 
     @Override
     public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        System.err.println("entering contract: " + contractName);
+        // System.err.println("entering contract: " + contractName);
         ScopeContext now = new ScopeContext(this, parent);
         env.setCurContractSym(env.getContract(contractName));
 
@@ -164,7 +164,7 @@ public class Contract extends TopLayerNode {
             fDef.ntcGenCons(env, now);
         }
 
-        System.err.println("exiting contract: " + contractName);
+        // System.err.println("exiting contract: " + contractName);
         return now;
     }
 
