@@ -51,7 +51,7 @@ public class Contract extends TopLayerNode {
             List<StructDef> structDefs,
             List<StateVariableDeclaration> varDeclarations,
             List<ExceptionDef> exceptionDefs,
-            List<FunctionDef> methodDeclarations) {
+            List<FunctionDef> methodDeclarations) throws SemanticException {
         this.contractName = contractName;
         this.implementsContractName = implementsContractName;
         this.extendsContractName = extendsContractName;
@@ -70,7 +70,7 @@ public class Contract extends TopLayerNode {
 //        }
     }
 
-    private void setDefault() {
+    private void setDefault() throws SemanticException {
         if (extendsContractName.isEmpty() && !contractName.equals(Utils.BASE_CONTRACT_IMP_NAME)) {
             extendsContractName = Utils.BASE_CONTRACT_IMP_NAME;
         }
@@ -79,7 +79,9 @@ public class Contract extends TopLayerNode {
             boolean containsConstructor = false;
             for (FunctionDef functionDef : methodDeclarations) {
                 if (functionDef.isConstructor()) {
-                    assert !containsConstructor: "multiple constructor is not allowed in " + contractName;
+                    if (containsConstructor) {
+                        throw new SemanticException("multiple constructors are not allowed in " + contractName, location);
+                    }
                     containsConstructor = true;
                 }
             }
