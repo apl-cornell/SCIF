@@ -15,6 +15,8 @@ import ast.Node;
 import ast.PrimitiveIfLabel;
 import ast.StateVariableDeclaration;
 import ast.Type;
+import typecheck.exceptions.SemanticException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -86,7 +88,7 @@ public class InterfaceSym extends TypeSym {
         Look up a type symbol.
         If there is no such a symbol, create one with the given defining scope.
      */
-    public TypeSym toTypeSym(Type astType, ScopeContext defContext) {
+    public TypeSym toTypeSym(Type astType, ScopeContext defContext) throws SemanticException {
         if (astType == null) {
             return new BuiltinTypeSym("void");
         }
@@ -114,7 +116,7 @@ public class InterfaceSym extends TypeSym {
                 VarSym keyNameVar = newVarSym(depMap.keyName(), depMap.labeledKeyType(),
                         false, true, false,
                         depMap.keyType.getLocation(), depMapScope);
-                addVar(depMap.keyName(), keyNameVar);
+                addVar(depMap.keyName(), keyNameVar, astType.location());
 
                 Label valueLabel = newLabel(depMap.valueLabel());
 
@@ -138,7 +140,7 @@ public class InterfaceSym extends TypeSym {
     }
 
     public VarSym newVarSym(String localName, LabeledType astType, boolean isStatic, boolean isFinal, boolean isBuiltIn,
-            CodeLocation loc, ScopeContext defContext) {
+            CodeLocation loc, ScopeContext defContext) throws SemanticException {
         TypeSym typeSym = toTypeSym(astType.type(), defContext);
         assert typeSym != null;
         Label ifl;
@@ -161,20 +163,40 @@ public class InterfaceSym extends TypeSym {
         }
     }
 
-    public void addVar(String varname, VarSym varSym) {
-        symTab.add(varname, varSym);
+    public void addVar(String varname, VarSym varSym, CodeLocation loc) throws SemanticException {
+        try {
+            symTab.add(varname, varSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Variable already defined: " + varname,
+                    loc);
+        }
     }
 
-    public void addFunc(String funcname, FuncSym funcSym) {
-        symTab.add(funcname, funcSym);
+    public void addFunc(String funcname, FuncSym funcSym, CodeLocation loc) throws SemanticException {
+        try {
+            symTab.add(funcname, funcSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Function already defined: " + funcname,
+                    loc);
+        }
     }
 
-    public void addType(String typename, TypeSym typeSym) {
-        symTab.add(typename, typeSym);
+    public void addType(String typename, TypeSym typeSym, CodeLocation loc) throws SemanticException {
+        try {
+            symTab.add(typename, typeSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Type already defined: " + typename,
+                    loc);
+        }
     }
 
-    public void addInterface(String typename, InterfaceSym typeSym) {
-        symTab.add(typename, typeSym);
+    public void addInterface(String typename, InterfaceSym typeSym, CodeLocation loc) throws SemanticException {
+        try {
+            symTab.add(typename, typeSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Interface already defined: " + typename,
+                    loc);
+        }
     }
 
     public boolean isLValue() {
@@ -212,7 +234,7 @@ public class InterfaceSym extends TypeSym {
         return (Interface) astNode;
     }*/
 
-    public ExceptionTypeSym toExceptionType(String exceptionName, Arguments arguments, ScopeContext defContext) {
+    public ExceptionTypeSym toExceptionType(String exceptionName, Arguments arguments, ScopeContext defContext) throws SemanticException {
 
         ExceptionTypeSym sym = getExceptionSym(exceptionName);
         if (sym != null) {
@@ -246,11 +268,11 @@ public class InterfaceSym extends TypeSym {
         assert thisSym != null;
         return thisSym;
     }
-    public void addContract(String typename, InterfaceSym typeSym) {
+    public void addContract(String typename, InterfaceSym typeSym) throws SymTab.AlreadyDefined {
         symTab.add(typename, typeSym);
     }
 
-    public TypeSym toStructType(String typeName, List<StateVariableDeclaration> members) {
+    public TypeSym toStructType(String typeName, List<StateVariableDeclaration> members) throws SemanticException {
         Sym sym = symTab.lookup(typeName);
         if (sym != null) {
             if (sym instanceof TypeSym) {

@@ -101,7 +101,12 @@ public class NTCEnv {
                 VarSym keyNameVar = newVarSym(depMap.keyName(), depMap.labeledKeyType(),
                         false, true, false,
                         depMap.keyType.getLocation(), depMapScope);
-                addSym(depMap.keyName(), keyNameVar);
+                try {
+                    addSym(depMap.keyName(), keyNameVar);
+                } catch (SymTab.AlreadyDefined e) {
+                    throw new SemanticException("Dependent type key name already defined: " +
+                            depMap.keyName(), astType.location());
+                }
 
                 Label valueLabel = newLabel(depMap.valueLabel());
 
@@ -156,7 +161,7 @@ public class NTCEnv {
         return extST.lookupSym(funcName);
     }
 
-    public void addSym(String name, Sym sym) {
+    public void addSym(String name, Sym sym) throws SymTab.AlreadyDefined {
         curSymTab.add(name, sym);
     }
 
@@ -263,11 +268,20 @@ public class NTCEnv {
         curSymTab = contractSymMap.get(currentSourceFileFullName).symTab;
     }
 
-    public void importContract(String iptContract) {
+    public void importContract(String iptContract,
+                               CodeLocation location) throws SemanticException {
         InterfaceSym sym = contractSymMap.get(iptContract);
-        assert sym != null : "not containing imported contract/interface: " + iptContract;
-        // System.err.println("importing contract/interface " + sym.getName());
-        addSym(sym.getName(), sym);
+        if (sym == null) {
+            throw new SemanticException("not containing imported contract/interface: " + iptContract,
+                    location);
+        }
+        try {
+            // System.err.println("importing contract/interface " + sym.getName());
+            addSym(sym.getName(), sym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("already imported: " + iptContract,
+                    location);
+        }
     }
 
     public java.util.Map<String, ExceptionTypeSym> getExceptionTypeSymMap() {
@@ -297,7 +311,7 @@ public class NTCEnv {
         return inConstructor;
     }
 
-    public StructTypeSym toStructType(String structName, List<StateVariableDeclaration> members) {
+    public StructTypeSym toStructType(String structName, List<StateVariableDeclaration> members) throws SemanticException {
         Sym sym = getCurSym(structName);
         if (sym != null) {
             assert sym instanceof StructTypeSym: "Existing name: " + structName;
@@ -313,7 +327,11 @@ public class NTCEnv {
     }
 
     public void addType(String structName, StructTypeSym toStructType) {
-        addSym(structName, toStructType);
+        try {
+            addSym(structName, toStructType);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void enterAtomic() {

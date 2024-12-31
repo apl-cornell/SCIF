@@ -14,6 +14,10 @@ public class CodeLocation {
         this.fileId = SourceFile.sourceFileNameId(fileName);
     }
 
+    public CodeLocation(String fileName) {
+        this(1, 1, fileName);
+    }
+
     public static CodeLocation builtinCodeLocation() {
         String name ="Builtin";
         return new CodeLocation(0, 0, name);

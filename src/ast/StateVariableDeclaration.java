@@ -6,18 +6,8 @@ import compile.ast.Type;
 import compile.ast.VarDec;
 import java.util.ArrayList;
 import java.util.List;
-import typecheck.CodeLocation;
-import typecheck.Context;
-import typecheck.ContractSym;
-import typecheck.ExpOutcome;
-import typecheck.InterfaceSym;
-import typecheck.NTCEnv;
-import typecheck.PathOutcome;
-import typecheck.PsiUnit;
-import typecheck.ScopeContext;
-import typecheck.Utils;
-import typecheck.VarSym;
-import typecheck.VisitEnv;
+
+import typecheck.*;
 import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
@@ -80,7 +70,11 @@ public class StateVariableDeclaration extends TopLayerNode {
         String vname = name.id;
         VarSym varSym = env.newVarSym(vname, type, isStatic, isFinal, isBuiltin, location, parent, true);
         // assert varSym.ifl != null;
-        env.addSym(vname, varSym);
+        try {
+            env.addSym(vname, varSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new RuntimeException(e); // can't happen?
+        }
         if (type.label() != null) {
             varSym.setLabel(env.newLabel(type.label()));
         }
@@ -105,12 +99,12 @@ public class StateVariableDeclaration extends TopLayerNode {
     }
 
     @Override
-    public void globalInfoVisit(InterfaceSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException {
         String id = name.id;
         CodeLocation loc = location;
-        VarSym varSym =
-                contractSym.newVarSym(id, type, isStatic, isFinal, isBuiltin, loc, contractSym.defContext());
-        contractSym.addVar(id, varSym);
+        VarSym varSym = contractSym.newVarSym(id, type, isStatic, isFinal,
+                                isBuiltin, loc, contractSym.defContext());
+        contractSym.addVar(id, varSym, loc);
         if (type.label() != null) {
             varSym.setLabel(contractSym.newLabel(type.label()));
         }
@@ -262,7 +256,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         return new VarDec(false, varType, varName);
     }
 
-    public VarSym toVarInfo(InterfaceSym interfaceSym) {
+    public VarSym toVarInfo(InterfaceSym interfaceSym) throws SemanticException {
         IfLabel ifl = null;
         if (type != null) {
             ifl = type.label();

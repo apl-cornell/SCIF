@@ -139,7 +139,9 @@ public class TypeChecker {
 
             root.passScopeContext(null);
             System.err.println("Checking contract " + root.getContractName());
-            assert root.ntcGlobalInfo(ntcEnv, null): root.getContractName();
+            if (!root.ntcGlobalInfo(ntcEnv, null)) {
+                assert false : "Must succeed or throw a semantic exception";
+            }
         }
 
         // Generate constraints
@@ -190,7 +192,9 @@ public class TypeChecker {
     }
 
     public static boolean ifcTypecheck(List<SourceFile> roots, File logDir,
-            boolean DEBUG) {
+            boolean DEBUG)
+        throws SemanticException
+    {
 
 //        Map<SourceFile, File> outputFileMap = new HashMap<>();
 //        for (int i = 0; i < roots.size(); ++i) {
@@ -206,27 +210,32 @@ public class TypeChecker {
         //ArrayList<Constraint> cons = new ArrayList<>();
 
         for (SourceFile root : roots) {
+            String contractName = root.getContractName();
+            if (contractNames.contains(contractName)) {
+                throw new SemanticException("Contract name already defined: " + contractName,
+                        new CodeLocation(root.getSourceFilePath()));
+            }
             if (root instanceof ContractFile) {
-                ContractSym contractSym = new ContractSym(root.getContractName(),
-                        ((ContractFile) root).getContract());
-                // contractSym.name = ((SourceFile) root).getContractName();
-                // contractSym.astNode = root;
-                if (contractNames.contains(contractSym.getName())) {
-                    throw new RuntimeException("duplicate contract names");
-                    //TODO: duplicate contract names
+                try {
+                    ContractSym contractSym = new ContractSym(root.getContractName(),
+                            ((ContractFile) root).getContract());
+
+                    contractNames.add(contractSym.getName());
+                    contractMap.add(contractSym.getName(), contractSym);
+                } catch (SymTab.AlreadyDefined e) {
+                    assert false; // cannot happen
                 }
-                contractNames.add(contractSym.getName());
-                contractMap.add(contractSym.getName(), contractSym);
-                //root.findPrincipal(principalSet);
             } else {
-                InterfaceSym interfaceSym = new InterfaceSym(root.getContractName(),
-                        ((InterfaceFile) root).getInterface());
-                if (contractNames.contains(interfaceSym.getName())) {
-                    throw new RuntimeException("duplicate contract names");
-                    //TODO: duplicate contract names
+                try {
+                    InterfaceSym interfaceSym = new InterfaceSym(root.getContractName(),
+                            ((InterfaceFile) root).getInterface());
+
+                    contractNames.add(interfaceSym.getName());
+                    contractMap.add(interfaceSym.getName(), interfaceSym);
+                } catch (SymTab.AlreadyDefined e) {
+                    throw new SemanticException("Contract name already defined: " + contractName,
+                            new CodeLocation(root.getContractName()));
                 }
-                contractNames.add(interfaceSym.getName());
-                contractMap.add(interfaceSym.getName(), interfaceSym);
             }
         }
 
@@ -384,7 +393,7 @@ public class TypeChecker {
     }
 
     private static boolean ifcTypecheck(ContractFile contractFile, VisitEnv env, File logDir,
-            boolean DEBUG) {
+            boolean DEBUG) throws SemanticException {
         String contractName = contractFile.getContractName();//contractNames.get(fileIdx);
         InterfaceSym contractSym = env.getContract(contractName);
         logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n"

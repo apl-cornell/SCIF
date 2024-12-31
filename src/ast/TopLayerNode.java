@@ -7,7 +7,7 @@ import typecheck.exceptions.SemanticException;
 
 public abstract class TopLayerNode extends Node {
 
-    public abstract void globalInfoVisit(InterfaceSym contractSym);
+    public abstract void globalInfoVisit(InterfaceSym contractSym) throws SemanticException;
 
     public abstract boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException;
 

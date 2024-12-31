@@ -43,7 +43,7 @@ public class While extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
                 Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -67,7 +67,7 @@ public class While extends Statement {
         env.inContext = new Context(ifNamePcAfter, beginContext.lambda);
         CodeLocation loc = null;
         PathOutcome ifo = to.psi;
-        Utils.genConsStatments(body, env, ifo, false);
+        Utils.genConsStmts(body, env, ifo, false);
 //        for (Statement stmt : body) {
 //            ifo = stmt.genConsVisit(env, false);
 //

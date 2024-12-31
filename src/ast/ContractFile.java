@@ -56,7 +56,7 @@ public class ContractFile extends SourceFile {
     }
 
     @Override
-    public void codePasteContract(String name, java.util.Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
+    public void codePasteContract(String name, java.util.Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) throws SemanticException {
         Contract contract = findContract(name);
         assert contract != null;
 
@@ -111,7 +111,7 @@ public class ContractFile extends SourceFile {
         env.enterSourceFile(getSourceFilePath());
         env.setNewCurSymTab();
         for (String iptContract : iptContracts) {
-            env.importContract(iptContract);
+            env.importContract(iptContract, location);
         }
         // env.setGlobalSymTab(new SymTab());
         // env.initCurSymTab();
@@ -125,7 +125,7 @@ public class ContractFile extends SourceFile {
     }
 
     @Override
-    public void globalInfoVisit(InterfaceSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException {
         if (contract == null) {
             return;
         }
@@ -135,7 +135,7 @@ public class ContractFile extends SourceFile {
                 + contractSym.symTab.getTypeSet());
         contract.globalInfoVisit(contractSym);
     }
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         contract.genConsVisit(env, tail_position);
         return null;
     }

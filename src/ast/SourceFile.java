@@ -92,7 +92,7 @@ public abstract class SourceFile extends Node {
 
     abstract public boolean containContract(String fullPath);
 
-    abstract public void codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap);
+    abstract public void codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) throws SemanticException;
 
     abstract public boolean ntcAddImportEdges(InheritGraph graph);
 
@@ -102,7 +102,7 @@ public abstract class SourceFile extends Node {
     // abstract public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent);
     abstract public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException;
 
-    abstract public void globalInfoVisit(InterfaceSym contractSym);
+    abstract public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException;
 
 
     public void findPrincipal(HashSet<String> principalSet) {

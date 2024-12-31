@@ -41,7 +41,7 @@ public class GuardBlock extends Statement {
         return now;
     }
 
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context curContext = new Context(beginContext.pc,
                 scopeContext.getSHErrLocName() + "." + "lockin" + location.toString());
@@ -70,7 +70,7 @@ public class GuardBlock extends Statement {
         env.incScopeLayer();
         PathOutcome so = null;
         env.inContext = psi.getNormalPath().c();
-        Utils.genConsStatmentsWithException(body, env, so, psi, tail_position);
+        Utils.genConsStmtsWithException(body, env, so, psi, tail_position);
 //        int index = 0;
 //        for (Statement stmt : body) {
 //            ++index;

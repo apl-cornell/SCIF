@@ -197,7 +197,7 @@ public class Atomic extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
                 Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -220,7 +220,7 @@ public class Atomic extends Statement {
         PathOutcome input = new PathOutcome();
         env.incScopeLayer();
         PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        Utils.genConsStatmentsWithException(body, env, so, psi, tail_position);
+        Utils.genConsStmtsWithException(body, env, so, psi, tail_position);
         env.decScopeLayer();
         for (ExceptHandler h : handlers) {
             ExceptionTypeSym expSym = env.getExp(h.name());

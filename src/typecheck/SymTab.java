@@ -23,20 +23,26 @@ public class SymTab {
         this.parent = parent;
         table = new HashMap<>();
     }
+    public static class AlreadyDefined extends Exception {
+        public final String id;
+        private AlreadyDefined(String id) {
+            this.id = id;
+        }
+        @Override public String getMessage() {
+            return "Identifier not found: " + id;
+        }
+    }
 
     public Sym lookup(String id) {
-        // System.err.println("sym lookup: " + id + " @" + this);
         if (table.get(id) != null) {
-            // System.out.println("SUCC");
-
             return table.get(id);
         }
         return parent == null ? null : parent.lookup(id);
     }
-    public void add(String id, Sym sym) {
-        // System.err.println("sym add: " + id + " @" + this);
+
+    public void add(String id, Sym sym) throws AlreadyDefined {
         if (table.containsKey(id)) {
-            throw new RuntimeException("SymTab adding a symbol that existed: " + id);
+            throw new AlreadyDefined(id);
         }
         table.put(id, sym);
     }

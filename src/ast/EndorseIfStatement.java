@@ -5,16 +5,8 @@ import compile.ast.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import typecheck.CodeLocation;
-import typecheck.Context;
-import typecheck.ExpOutcome;
-import typecheck.Label;
-import typecheck.NTCEnv;
-import typecheck.PathOutcome;
-import typecheck.ScopeContext;
-import typecheck.Utils;
-import typecheck.VarSym;
-import typecheck.VisitEnv;
+
+import typecheck.*;
 import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
@@ -50,7 +42,7 @@ public class EndorseIfStatement extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         // create new same-name variables inside the if-branch
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
@@ -135,14 +127,18 @@ public class EndorseIfStatement extends Statement {
                         "final variable " + newSym.getName() + " may be endorsed incorrectly"
                 ));
             }
-            env.addVar(newSym.getName(), newSym);
+            try {
+                env.addVar(newSym.getName(), newSym);
+            } catch (SymTab.AlreadyDefined e) {
+                throw new SemanticException("Already defined: " + id, location);
+            }
         }
 
         // Context leftContext = new Context(curContext), rightContext = new Context(curContext);
         CodeLocation loc = null;
         PathOutcome ifo = toOutCome.psi;
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        Utils.genConsStatments(ifStatement.body, env, ifo, tail_position);
+        Utils.genConsStmts(ifStatement.body, env, ifo, tail_position);
 
 //        int index = 0;
 //        for (Statement stmt : ifStatement.body) {
@@ -172,7 +168,7 @@ public class EndorseIfStatement extends Statement {
 //        index = 0;
         PathOutcome elseo = toOutCome.psi;
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        Utils.genConsStatments(ifStatement.orelse, env, elseo, tail_position);
+        Utils.genConsStmts(ifStatement.orelse, env, elseo, tail_position);
 //        for (Statement stmt : ifStatement.orelse) {
 //            ++index;
 //            elseo = stmt.genConsVisit(env, index == ifStatement.orelse.size() && tail_position);

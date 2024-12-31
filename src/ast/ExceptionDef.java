@@ -6,6 +6,8 @@ import compile.ast.PrimitiveType;
 import compile.ast.SolNode;
 import compile.ast.StructDef;
 import compile.ast.VarDec;
+
+import java.util.SequencedMap;
 import java.util.stream.Collectors;
 import typecheck.*;
 import typecheck.exceptions.SemanticException;
@@ -35,8 +37,13 @@ public class ExceptionDef extends TopLayerNode {
         throws SemanticException
     {
         // exceptionType.setContractName(env.curContractSym().getName());
-        env.addSym(exceptionName,
-                env.newExceptionType(exceptionName, arguments, parent));
+        try {
+            env.addSym(exceptionName,
+                    env.newExceptionType(exceptionName, arguments, parent));
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Exception already defined: " + exceptionName,
+                    location);
+        }
         return true;
     }
 
@@ -46,12 +53,12 @@ public class ExceptionDef extends TopLayerNode {
      * @param contractSym
      */
     @Override
-    public void globalInfoVisit(InterfaceSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException {
         // exceptionType.setContractName(contractSym.getName());
         contractSym.addType(exceptionName,
-                contractSym.toExceptionType(exceptionName, arguments, contractSym.defContext()));
+                contractSym.toExceptionType(exceptionName, arguments, contractSym.defContext()),
+                location);
         // contractSym.addType(exceptionType, contractSym.toExceptionType(exceptionType, arguments));
-
     }
 
     @Override

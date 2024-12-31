@@ -60,7 +60,7 @@ public class AnnAssign extends Statement {
         this.isStatic = isStatic;
     }
 
-    public VarSym toVarInfo(InterfaceSym contractSym) {
+    public VarSym toVarInfo(InterfaceSym contractSym) throws SemanticException {
         IfLabel ifl = null;
         if (annotation != null) {
             ifl = annotation.label();
@@ -88,11 +88,15 @@ public class AnnAssign extends Statement {
         String name = ((Name) target).id;
         Sym symValue = env.getCurSym(name);
         if (symValue != null && !symValue.isGlobal()) {
-            throw new RuntimeException("local duplicate variable name " + name + " at " + location);
+            throw new SemanticException("local duplicate variable name " + name, location);
         }
         VarSym varSym = new VarSym(env.newVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, now));
 //        isContractType = varSym.typeSym instanceof InterfaceSym;
-        env.addSym(name, varSym);
+        try {
+            env.addSym(name, varSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Already defined: " + name, location);
+        }
         if (annotation.label() != null) {
             varSym.setLabel(env.newLabel(annotation.label()));
         }
@@ -110,7 +114,7 @@ public class AnnAssign extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -127,7 +131,11 @@ public class AnnAssign extends Statement {
 //        }
         varSym = env.curContractSym().newVarSym(id, annotation, isStatic, isFinal, isBuiltIn, loc,
                 scopeContext);
-        env.addVar(id, varSym);
+        try {
+            env.addVar(id, varSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Already defined: " + id, location);
+        }
         if (annotation != null) {
             if (annotation.label() != null) {
                 varSym.setLabel(env.toLabel(annotation.label()));

@@ -1,12 +1,8 @@
 package ast;
 
 import java.util.List;
-import typecheck.DepMapTypeSym;
-import typecheck.NTCEnv;
-import typecheck.ScopeContext;
-import typecheck.TypeSym;
-import typecheck.Utils;
-import typecheck.VarSym;
+
+import typecheck.*;
 import typecheck.exceptions.SemanticException;
 
 public class DepMap extends Map {
@@ -54,7 +50,11 @@ public class DepMap extends Map {
                 true
         );
         env.enterNewScope();
-        env.addSym(keyName, keyVarSym);
+        try {
+            env.addSym(keyName, keyVarSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Identifier " + e.id + "already defined", location);
+        }
         valueType.generateConstraints(env, now);
 
         env.exitNewScope();

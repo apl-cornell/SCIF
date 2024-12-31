@@ -111,7 +111,11 @@ public class Contract extends TopLayerNode {
         // env.initSymTab(curSymTab);
         ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), new ArrayList<>(), this, anySym);
         env.addContractSym(env.currentSourceFileFullName(), contractSym);
-        env.addSym(contractName, contractSym);
+        try {
+            env.addSym(contractName, contractSym);
+        } catch (SymTab.AlreadyDefined e) {
+            assert false; // cannot happen
+        }
         env.setCurContractSym(contractSym);
         // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
 
@@ -171,7 +175,7 @@ public class Contract extends TopLayerNode {
     }
 
     @Override
-    public void globalInfoVisit(InterfaceSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException {
         // contractSym.name = contractName;
 //        contractSym.trustSetting = trustSetting;
         // contractSym.ifl = ifl;
@@ -204,7 +208,7 @@ public class Contract extends TopLayerNode {
         }
     }
 
-    public void genConsVisit(VisitEnv env, boolean tail_position) {
+    public void genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         //env.prevContext = new Context()
         // findPrincipal(env.principalSet);
 
@@ -353,7 +357,7 @@ public class Contract extends TopLayerNode {
 
     }
 
-    public void codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
+    public void codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) throws SemanticException {
         if (!implementsContractName.isEmpty()) {
             // check against the super interface
             checkInterfaceSignature(implementsContractName, interfaceMap);
@@ -389,7 +393,8 @@ public class Contract extends TopLayerNode {
 
             for (StateVariableDeclaration a : varDeclarations) {
                 Name x = a.name();
-                assert !nameSet.contains(x.id) : "duplicate variable: " + x.id;
+                if (nameSet.contains(x.id))
+                    throw new SemanticException("duplicate variable: " + x.id, a.location);
                 varNames.put(x.id, a);
                 nameSet.add(x.id);
             }

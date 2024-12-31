@@ -138,7 +138,7 @@ public class Try extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -161,7 +161,7 @@ public class Try extends Statement {
         PathOutcome input = new PathOutcome();
         env.incScopeLayer();
         PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        Utils.genConsStatmentsWithException(body, env, so, psi, false);
+        Utils.genConsStmtsWithException(body, env, so, psi, false);
 //        for (Statement s : body) {
 //            so = s.genConsVisit(env, false);
 //            psi.joinExe(so);

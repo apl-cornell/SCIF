@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.Map;
 import typecheck.PathOutcome;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 
 public abstract class Statement extends Node {
 
 
-    public abstract PathOutcome genConsVisit(VisitEnv env, boolean tail_position);
+    public abstract PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException;
     public abstract List<compile.ast.Statement> solidityCodeGen(CompileEnv code);
     public String toString() {
         return "";

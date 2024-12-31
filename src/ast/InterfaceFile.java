@@ -120,7 +120,7 @@ public class InterfaceFile extends SourceFile {
         env.enterSourceFile(getSourceFilePath());
         env.setNewCurSymTab();
         for (String iptContract : iptContracts) {
-            env.importContract(iptContract);
+            env.importContract(iptContract, location);
         }
         if (!itrface.ntcGlobalInfo(env, now)) {
             logger.debug("GlobalInfo failed with: " + itrface);
@@ -130,7 +130,7 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public void globalInfoVisit(InterfaceSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException {
         // iptContracts.add(itrface.contractName);
         itrface.globalInfoVisit(contractSym);
     }

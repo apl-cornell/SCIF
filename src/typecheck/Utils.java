@@ -16,6 +16,7 @@ import sherrloc.diagnostic.ErrorDiagnosis;
 import sherrloc.diagnostic.explanation.Entity;
 import sherrloc.diagnostic.explanation.Explanation;
 import sherrloc.graph.Variance;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 
@@ -681,7 +682,11 @@ public class Utils {
         for (BuiltInT t : BuiltInT.values()) {
             String typeName = Utils.BuiltinType2ID(t);
             TypeSym s = new BuiltinTypeSym(typeName);
-            symTab.add(typeName, s);
+            try {
+                symTab.add(typeName, s);
+            } catch (SymTab.AlreadyDefined e) {
+                throw new RuntimeException(e); // cannot happen
+            }
         }
     }
 
@@ -832,7 +837,7 @@ public class Utils {
         return new Context(newPc, c.lambda);
     }
 
-    public static void genConsStatmentsWithException(List<Statement> body, VisitEnv env, PathOutcome so, PathOutcome psi, boolean tail_positon) {
+    public static void genConsStmtsWithException(List<Statement> body, VisitEnv env, PathOutcome so, PathOutcome psi, boolean tail_positon) throws SemanticException {
         int index = 0;
         for (Statement s : body) {
             ++index;
@@ -847,12 +852,12 @@ public class Utils {
 
         }
     }
-    public static void genConsStatments(List<Statement> body, VisitEnv env, PathOutcome so, boolean tail_positon) {
+    public static void genConsStmts(List<Statement> body, VisitEnv env, PathOutcome so, boolean tail_posn) throws SemanticException {
         int index = 0;
         for (Statement s : body) {
             ++index;
             String prevLambda = env.inContext.lambda;
-            boolean isTail = index == body.size() && tail_positon;
+            boolean isTail = index == body.size() && tail_posn;
             so = s.genConsVisit(env, isTail);
             PsiUnit normalUnit = so.getNormalPath();
             if (normalUnit == null) {

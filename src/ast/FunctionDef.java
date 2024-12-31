@@ -69,6 +69,7 @@ public class FunctionDef extends FunctionSig {
 
         // add built-in vars
         addBuiltInVars(env.curSymTab(), now);
+
         if (!returnVoid()) addBuiltInResult(env.curSymTab(), now);
 
         for (Arg arg : this.args.args()) {
@@ -105,12 +106,14 @@ public class FunctionDef extends FunctionSig {
 
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_info) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_info) throws SemanticException {
         if (isBuiltIn() || isNative() || isSuperConstructor()) return null;
         env.incScopeLayer();
         env.enterNewMethod(getName());
         addBuiltInVars(env.curSymTab, scopeContext);
-        if (!returnVoid()) addBuiltInResult(env.curSymTab, scopeContext);
+        if (!returnVoid()) {
+            addBuiltInResult(env.curSymTab, scopeContext);
+        }
 
         for (Entry<String, VarSym> entry: env.curSymTab.getVars().entrySet()) {
             VarSym varSym = entry.getValue();

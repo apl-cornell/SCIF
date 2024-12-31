@@ -70,6 +70,7 @@ public class SCIF implements Callable<Integer> {
      */
     private List<SourceFile> _typecheck(String[] logDirs)
             throws TypeCheckFailure, IOException {
+        try {
         File logDir = new File("./.scif");
         if (logDirs != null) {
             logDir = new File(logDirs[0]);
@@ -90,12 +91,8 @@ public class SCIF implements Callable<Integer> {
             files.add(file);
         }
         List<SourceFile> roots;
-        try {
-            roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
-        } catch (SemanticException e) {
-            System.err.println(e.getMessage());
-            return List.of();
-        }
+        roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
+
         boolean passNTC = true;
         //if (!Utils.emptyFile(outputFileName))
         //    passNTC = runSLC(outputFileName);
@@ -119,12 +116,19 @@ public class SCIF implements Callable<Integer> {
 //        }
 
 //        System.out.println("\nInformation Flow Type Checking:");
-        boolean passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
+        boolean passIFC = false;
+
+        passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
+
         // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
         // logger.debug("running SHErrLoc...");
         // boolean passIFC = runSLC(outputFileName);
 
         return (passNTC && passIFC) ? roots : null;
+        } catch (SemanticException e) {
+            System.err.println(e.getMessage());
+            return List.of();
+        }
     }
 
     /**
