@@ -748,8 +748,6 @@ public class Utils {
             StringBuffer expBuffer = new StringBuffer();
             entity.toConsoleWithExp(locBuffer, expBuffer);
 
-            System.err.println(locBuffer.toString());
-            System.err.println(expBuffer.toString());
             int infoEndIndex = locBuffer.indexOf("\"", 1);
             String infoString = locBuffer.substring(0, infoEndIndex);
             int rowNoEndIndex = locBuffer.indexOf(",", infoEndIndex);
@@ -779,7 +777,7 @@ public class Utils {
             }
             StringBuilder rtn =
                     new StringBuilder(
-                            program.getSourceFilePath() + "(" + row + "," + scol + "): " + "\n"
+                            program.getSourceFileBasename() + ", line " + row + ", column " + scol + ": " + "\n"
                                     + explanation + ".\n");
             rtn.append(program.getSourceCodeLine(row - 1)).append("\n");
             for (int i = 1; i < col; ++i) {

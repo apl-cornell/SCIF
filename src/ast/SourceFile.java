@@ -112,6 +112,10 @@ public abstract class SourceFile extends Node {
         return sourceFilePath.toString();
     }
 
+    public String getSourceFileBasename() {
+        return sourceFilePath.getFileName().toString();
+    }
+
     public String getSourceFileId() {
         return sourceFileNameId;
     }
