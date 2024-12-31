@@ -9,6 +9,7 @@ import typecheck.ArrayTypeSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.Utils;
+import typecheck.exceptions.SemanticException;
 
 public class Array extends Type {
 
@@ -44,7 +45,7 @@ public class Array extends Type {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         valueType.generateConstraints(env, parent);
         ArrayTypeSym typeSym = (ArrayTypeSym) env.toTypeSym(this, scopeContext);

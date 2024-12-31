@@ -101,7 +101,8 @@ public class Contract extends TopLayerNode {
 //        return true;
 //    }
 
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
+            throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         // SymTab curSymTab = new SymTab(env.curSymTab());
         env.enterNewScope();

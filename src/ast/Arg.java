@@ -54,7 +54,9 @@ public class Arg extends Node {
         return varSym;
     }
 
-    public VarSym parseArg(NTCEnv env, ScopeContext parent) {
+    public VarSym parseArg(NTCEnv env, ScopeContext parent)
+            throws SemanticException
+    {
         // ScopeContext now = new ScopeContext(this, parent);
         VarSym varSym = env.newVarSym(name, annotation, isStatic, isFinal, true, location, parent);
         annotation.type().setContractType(varSym.typeSym instanceof InterfaceSym);

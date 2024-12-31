@@ -7,6 +7,7 @@ import typecheck.ScopeContext;
 import typecheck.TypeSym;
 import typecheck.Utils;
 import typecheck.VarSym;
+import typecheck.exceptions.SemanticException;
 
 public class DepMap extends Map {
     final private String keyName;
@@ -37,7 +38,7 @@ public class DepMap extends Map {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         keyType.generateConstraints(env, parent);
 

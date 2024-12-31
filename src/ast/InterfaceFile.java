@@ -15,6 +15,7 @@ import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.Utils;
+import typecheck.exceptions.SemanticException;
 
 public class InterfaceFile extends SourceFile {
     private final Interface itrface;
@@ -114,7 +115,7 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterSourceFile(getSourceFilePath());
         env.setNewCurSymTab();

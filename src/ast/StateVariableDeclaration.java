@@ -71,7 +71,9 @@ public class StateVariableDeclaration extends TopLayerNode {
         this.isStatic = isStatic;
     }
 
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
+        throws SemanticException
+    {
         // ScopeContext now = new ScopeContext(this, parent);
         // ScopeContext tgt = new ScopeContext(name, now);
 

@@ -12,6 +12,7 @@ import typecheck.NTCEnv;
 import typecheck.TypeSym;
 import typecheck.Utils;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 
 public class Type extends Node {
 
@@ -27,7 +28,7 @@ public class Type extends Node {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         TypeSym typeSym = (TypeSym) env.getCurSym(name);
         isContractType = typeSym instanceof InterfaceSym;

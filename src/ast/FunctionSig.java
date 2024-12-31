@@ -154,7 +154,7 @@ public class FunctionSig extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
         SymTab contractSymTab = env.curSymTab();
         env.enterNewScope();
         ScopeContext now = new ScopeContext(this, parent);

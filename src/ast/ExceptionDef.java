@@ -8,6 +8,7 @@ import compile.ast.StructDef;
 import compile.ast.VarDec;
 import java.util.stream.Collectors;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 import java.util.ArrayList;
 
@@ -30,7 +31,9 @@ public class ExceptionDef extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
+        throws SemanticException
+    {
         // exceptionType.setContractName(env.curContractSym().getName());
         env.addSym(exceptionName,
                 env.newExceptionType(exceptionName, arguments, parent));

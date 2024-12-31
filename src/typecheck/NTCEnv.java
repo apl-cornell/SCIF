@@ -4,6 +4,9 @@ import ast.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
+import typecheck.exceptions.SemanticException;
+import typecheck.exceptions.TypeCheckFailure;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 
@@ -61,19 +64,17 @@ public class NTCEnv {
     }
 
     public VarSym newVarSym(String varName, LabeledType labeledType, boolean isConst, boolean isFinal, boolean isBuiltIn,
-            CodeLocation location, ScopeContext context) {
+            CodeLocation location, ScopeContext context) throws SemanticException {
         return newVarSym(varName, labeledType, isConst, isFinal, isBuiltIn, location, context, false);
     }
     public VarSym newVarSym(String varName, LabeledType labeledType, boolean isConst, boolean isFinal, boolean isBuiltIn,
-            CodeLocation location, ScopeContext context, boolean isGlobal) {
+            CodeLocation location, ScopeContext context, boolean isGlobal) throws SemanticException{
         TypeSym typeSym = toTypeSym(labeledType.type(), context);
-        if (typeSym == null) {
-            throw new RuntimeException("Type not found: " + labeledType.type().name());
-        }
+        assert typeSym != null;
         return new VarSym(varName, typeSym, null, location, context, isConst, isFinal, isBuiltIn, isGlobal);
     }
 
-    public TypeSym toTypeSym(ast.Type astType, ScopeContext defContext) {
+    public TypeSym toTypeSym(ast.Type astType, ScopeContext defContext) throws SemanticException {
         TypeSym typeSym = null;
         if (astType == null) {
             return new BuiltinTypeSym(Utils.BuiltinType2ID(BuiltInT.VOID));
@@ -117,8 +118,8 @@ public class NTCEnv {
             } else if (astType instanceof Array array) {
                 typeSym = new ArrayTypeSym(array.size, toTypeSym(array.valueType, defContext), defContext);
             } else {
-                assert false: astType.name();
-                // return null;
+                throw new TypeCheckFailure("Not a type: " + astType.name(),
+                        astType.location());
                 // typeSym = new BuiltinTypeSym(lt.x);
             }
         }
@@ -183,7 +184,9 @@ public class NTCEnv {
         return getContract(iptContract) != null;
     }
 
-    public ExceptionTypeSym newExceptionType(String exceptionName, Arguments arguments, ScopeContext parent) {
+    public ExceptionTypeSym newExceptionType(String exceptionName, Arguments arguments, ScopeContext parent)
+            throws SemanticException
+    {
         Sym sym = curSymTab.lookup(exceptionName);
         if (sym != null) {
             if (sym instanceof ExceptionTypeSym) {

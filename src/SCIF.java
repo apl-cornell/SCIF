@@ -143,7 +143,7 @@ public class SCIF implements Callable<Integer> {
             try {
                 roots = _typecheck(null);
             } catch (TypeCheckFailure e) {
-                System.out.println(e.explanation());
+                System.out.println(e.getMessage());
                 return 0;
             } catch (Exception e) {
                 System.out.println("Unexpected exception:");
@@ -182,7 +182,7 @@ public class SCIF implements Callable<Integer> {
             try {
                 _typecheck(m_logDir);
             } catch (TypeCheckFailure e) {
-                System.out.println(e.explanation());
+                System.out.println(e.getMessage());
             } catch (IOException e) {
                 System.out.println(e.getMessage());
                 return 0;

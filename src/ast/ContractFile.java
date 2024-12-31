@@ -105,7 +105,8 @@ public class ContractFile extends SourceFile {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
+            throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterSourceFile(getSourceFilePath());
         env.setNewCurSymTab();

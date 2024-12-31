@@ -6,6 +6,7 @@ import compile.ast.SolNode;
 import java.util.List;
 import java.util.stream.Collectors;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 import java.util.ArrayList;
 
@@ -35,7 +36,9 @@ public class Arguments extends Node {
         }
     }
 
-    public ArrayList<VarSym> parseArgs(NTCEnv env, ScopeContext parent) {
+    public ArrayList<VarSym> parseArgs(NTCEnv env, ScopeContext parent)
+            throws SemanticException
+    {
         // ScopeContext now = new ScopeContext(this, parent);
         ArrayList<VarSym> rnt = new ArrayList<>();
         for (Arg arg : args) {

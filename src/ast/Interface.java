@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import typecheck.Utils;
 import typecheck.VarSym;
+import typecheck.exceptions.SemanticException;
 
 public class Interface extends TopLayerNode {
 
@@ -46,7 +47,8 @@ public class Interface extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
+            throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         // SymTab curSymTab = new SymTab(env.curSymTab());
         env.enterNewScope();

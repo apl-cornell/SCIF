@@ -7,6 +7,7 @@ import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 import java.util.*;
 import java.util.Map;
@@ -99,7 +100,7 @@ public abstract class SourceFile extends Node {
      *  Generate constraints for regular typechecking in the current source file.
      */
     // abstract public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent);
-    abstract public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent);
+    abstract public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException;
 
     abstract public void globalInfoVisit(InterfaceSym contractSym);
 

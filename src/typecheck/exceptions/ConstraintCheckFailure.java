@@ -8,9 +8,4 @@ public class ConstraintCheckFailure extends TypeCheckFailure {
         super(log, loc);
         this.log = log;
     }
-
-    @Override
-    public String explanation() {
-        return log;
-    }
 }
