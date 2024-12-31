@@ -38,7 +38,7 @@ public class StructDef extends TopLayerNode {
         return true;
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
 //        assert false;
         return null;
     }

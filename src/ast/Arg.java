@@ -2,9 +2,10 @@ package ast;
 
 import compile.CompileEnv;
 import compile.ast.Argument;
-import compile.ast.SolNode;
 import compile.ast.Type;
 import java.util.List;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -69,7 +70,7 @@ public class Arg extends Node {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         VarSym varSym = env.newVarSym(name, annotation, isStatic, isFinal, true, location, now);
 
@@ -77,7 +78,7 @@ public class Arg extends Node {
         if (annotation.label() != null) {
             varSym.setLabel(env.newLabel(annotation.label()));
         }
-        ScopeContext type = annotation.ntcGenCons(env, now);
+        ScopeContext type = annotation.generateConstraints(env, now);
 
         env.addCons(type.genCons(now, Relation.EQ, env, location));
 

@@ -3,10 +3,9 @@ package ast;
 import compile.CompileEnv;
 import compile.ast.ArrayType;
 import compile.ast.FixedArrayType;
-import compile.ast.MapType;
+
 import java.util.ArrayList;
 import typecheck.ArrayTypeSym;
-import typecheck.MapTypeSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.Utils;
@@ -45,9 +44,9 @@ public class Array extends Type {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        valueType.ntcGenCons(env, parent);
+        valueType.generateConstraints(env, parent);
         ArrayTypeSym typeSym = (ArrayTypeSym) env.toTypeSym(this, scopeContext);
         assert typeSym != null : name;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));

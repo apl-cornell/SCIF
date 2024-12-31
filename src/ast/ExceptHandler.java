@@ -4,7 +4,6 @@ import compile.CompileEnv;
 import compile.ast.Assign;
 import compile.ast.Expression;
 import compile.ast.IfStatement;
-import compile.ast.PrimitiveType;
 import compile.ast.SingleVar;
 import compile.ast.StructType;
 import compile.ast.VarDec;
@@ -14,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 public class ExceptHandler extends Node {
 
@@ -42,7 +42,7 @@ public class ExceptHandler extends Node {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterNewScope();
 
@@ -53,7 +53,7 @@ public class ExceptHandler extends Node {
         }
 
         for (Statement s : body) {
-            ScopeContext tmp = s.ntcGenCons(env, now);
+            ScopeContext tmp = s.generateConstraints(env, now);
         }
         env.exitNewScope();
         return now;

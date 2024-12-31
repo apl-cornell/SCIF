@@ -6,6 +6,8 @@ import compile.ast.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -31,25 +33,23 @@ public class If extends Statement {
         this.orelse = new ArrayList<>();
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = scopeContext;
-        ScopeContext rtn = null;
-
-        rtn = test.ntcGenCons(env, now);
+        ScopeContext rtn = test.generateConstraints(env, now);
         Constraint testCon = rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
         env.addCons(testCon);
 
         env.enterNewScope();
         for (Statement s : body) {
             assert !now.getSHErrLocName().startsWith("null"): now.getSHErrLocName();
-            rtn = s.ntcGenCons(env, now);
+            rtn = s.generateConstraints(env, now);
         }
         env.exitNewScope();
         env.enterNewScope();
         for (Statement s : orelse) {
-            rtn = s.ntcGenCons(env, now);
+            rtn = s.generateConstraints(env, now);
         }
         env.exitNewScope();
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));

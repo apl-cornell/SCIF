@@ -2,7 +2,7 @@ package ast;
 
 import compile.CompileEnv;
 import compile.ast.Import;
-import compile.ast.SolNode;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -18,6 +18,7 @@ import typecheck.PathOutcome;
 import typecheck.ScopeContext;
 import typecheck.Utils;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 
 public class ContractFile extends SourceFile {
     private final Contract contract;
@@ -93,13 +94,13 @@ public class ContractFile extends SourceFile {
         // return contract.ntcInherit(graph);
     }
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterSourceFile(getSourceFilePath());
         logger.debug("contract: " + contract.contractName + "\n" + env.getContract(
                 contract.contractName));
         env.setCurSymTab(env.currentSourceFileFullName());
-        contract.ntcGenCons(env, now);
+        contract.generateConstraints(env, now);
         return now;
     }
 

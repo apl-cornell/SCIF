@@ -12,11 +12,13 @@ import compile.ast.Revert;
 import compile.ast.SingleVar;
 import compile.ast.Type;
 import compile.ast.VarDec;
-import java.util.Arrays;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
@@ -39,7 +41,7 @@ public class Try extends Statement {
     }
 
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
@@ -57,12 +59,12 @@ public class Try extends Statement {
         }
 
         for (Statement s : body) {
-            tmp = s.ntcGenCons(env, now);
+            tmp = s.generateConstraints(env, now);
         }
         env.exitNewScope();
 
         for (ExceptHandler h : handlers) {
-            tmp = h.ntcGenCons(env, parent);
+            tmp = h.generateConstraints(env, parent);
         }
         return now;
     }

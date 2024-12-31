@@ -2,14 +2,13 @@ package ast;
 
 import compile.CompileEnv;
 import compile.ast.Statement;
-import java.nio.file.Path;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
+
 import typecheck.BuiltInT;
 import typecheck.Context;
 import typecheck.ExpOutcome;
@@ -18,6 +17,7 @@ import typecheck.PathOutcome;
 import typecheck.ScopeContext;
 import typecheck.Utils;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -35,12 +35,12 @@ public class CallSpec extends Node {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // all expressions should be of uint;
 
         ScopeContext now = new ScopeContext(this, parent);
         for (Entry<String, Expression> entry: specs.entrySet()) {
-            ScopeContext value = entry.getValue().ntcGenCons(env, now);
+            ScopeContext value = entry.getValue().generateConstraints(env, now);
             env.addCons(
                     new Constraint(new Inequality(env.getSymName(BuiltInT.UINT), Relation.LEQ, value.getSHErrLocName()),
                     env.globalHypothesis(), location, ""));

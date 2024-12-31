@@ -3,7 +3,6 @@ package ast;
 import compile.CompileEnv;
 import compile.ast.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import typecheck.CodeLocation;
@@ -12,11 +11,11 @@ import typecheck.ExpOutcome;
 import typecheck.Label;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
-import typecheck.PsiUnit;
 import typecheck.ScopeContext;
 import typecheck.Utils;
 import typecheck.VarSym;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -35,13 +34,13 @@ public class EndorseIfStatement extends Statement {
         this.ifStatement = ifStatement;
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         for (Name name: expressionList) {
-            name.ntcGenCons(env, parent);
+            name.generateConstraints(env, parent);
         }
-        from.ntcGenCons(env, parent);
-        to.ntcGenCons(env, parent);
-        return ifStatement.ntcGenCons(env, parent);
+        from.generateConstraints(env, parent);
+        to.generateConstraints(env, parent);
+        return ifStatement.generateConstraints(env, parent);
     }
 
     @Override

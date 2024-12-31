@@ -8,8 +8,7 @@ import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.VisitEnv;
-
-import java.util.HashSet;
+import typecheck.exceptions.SemanticException;
 
 public class ComplexIfLabel extends IfLabel {
 
@@ -135,9 +134,9 @@ public class ComplexIfLabel extends IfLabel {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        left.ntcGenCons(env, parent);
-        right.ntcGenCons(env, parent);
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        left.generateConstraints(env, parent);
+        right.generateConstraints(env, parent);
         return parent;
     }
     @Override

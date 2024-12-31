@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -48,7 +50,7 @@ public class FunctionDef extends FunctionSig {
 
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
 //        if (isSuperConstructor()) return null;
         //env.setCurSymTab(new SymTab(env.curSymTab()));
         env.enterNewScope();
@@ -70,9 +72,9 @@ public class FunctionDef extends FunctionSig {
         if (!returnVoid()) addBuiltInResult(env.curSymTab(), now);
 
         for (Arg arg : this.args.args()) {
-            arg.ntcGenCons(env, now);
+            arg.generateConstraints(env, now);
         }
-        funcLabels.ntcGenCons(env, now);
+        funcLabels.generateConstraints(env, now);
         if (funcSym.returnType != null) {
             env.addCons(new Constraint(new Inequality(funcSym.returnTypeSLC(), Relation.EQ,
                     funcSym.returnType.toSHErrLocFmt()), env.globalHypothesis(), location,
@@ -88,7 +90,7 @@ public class FunctionDef extends FunctionSig {
             // TODO: add support for signatures
             for (Statement stmt : body) {
                 // logger.debug("stmt: " + stmt);
-                stmt.ntcGenCons(env, now);
+                stmt.generateConstraints(env, now);
             }
         if (isConstructor()) {
             assert env.superCalled() : "constructor of super contract is not called in the constructor of " + env.currentSourceFileFullName();

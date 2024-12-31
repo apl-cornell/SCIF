@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -142,26 +143,26 @@ public class Contract extends TopLayerNode {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // System.err.println("entering contract: " + contractName);
         ScopeContext now = new ScopeContext(this, parent);
         env.setCurContractSym(env.getContract(contractName));
 
         for (StructDef def: structDefs) {
-            def.ntcGenCons(env, now);
+            def.generateConstraints(env, now);
         }
         for (StateVariableDeclaration dec : varDeclarations) {
-            dec.ntcGenCons(env, now);
+            dec.generateConstraints(env, now);
         }
 
-        trustSetting.ntcGenCons(env, now);
+        trustSetting.generateConstraints(env, now);
 
         for (ExceptionDef def : exceptionDefs) {
-            def.ntcGenCons(env, now);
+            def.generateConstraints(env, now);
         }
 
         for (FunctionDef fDef : methodDeclarations) {
-            fDef.ntcGenCons(env, now);
+            fDef.generateConstraints(env, now);
         }
 
         // System.err.println("exiting contract: " + contractName);

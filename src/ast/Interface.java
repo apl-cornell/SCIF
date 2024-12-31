@@ -130,7 +130,7 @@ public class Interface extends TopLayerNode {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         return null;
     }
 

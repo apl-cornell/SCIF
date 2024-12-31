@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import java_cup.runtime.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 import typecheck.sherrlocUtils.Inequality;
@@ -33,7 +34,7 @@ public class TypeChecker {
         error info.
      */
     public static List<SourceFile> regularTypecheck(List<File> inputFiles, File logDir,
-            boolean DEBUG) throws IOException {
+            boolean DEBUG) throws IOException, SemanticException {
 
         File outputFile = new File(logDir, SCIF.newFileName("ntc", "cons"));
         logger.trace("typecheck starts...");
@@ -86,7 +87,6 @@ public class TypeChecker {
                 }
             }
         }
-
 
         // Code-paste superclasses' methods and data fields
         Map<String, Contract> contractMap = new HashMap<>();
@@ -146,7 +146,7 @@ public class TypeChecker {
         for (SourceFile root : roots) {
             if (!root.isBuiltIn() && root instanceof ContractFile) {
 //                ntcEnv.enterFile(root.getSourceFilePath());
-                root.ntcGenCons(ntcEnv, null);
+                root.generateConstraints(ntcEnv, null);
             }
         }
 
@@ -468,9 +468,9 @@ public class TypeChecker {
             System.out.println(Utils.TYPECHECK_ERROR_MSG);
             double best = Double.MAX_VALUE;
             boolean seced = false;
-            System.out.println("Places most likely to be wrong:");
+            System.out.println("Code locations most likely to be wrong:");
             if (DEBUG) {
-                System.out.println("No of places: " + result.getSuggestions().size());
+                System.out.println("Number of places: " + result.getSuggestions().size());
             }
             int idx = 0;
             Set<String> expSet = new HashSet<>();
@@ -491,7 +491,7 @@ public class TypeChecker {
                         if (!expSet.contains(exp)) {
                             expSet.add(exp);
                             idx += 1;
-                            System.out.println(idx + ":" + exp + "\n");
+                            System.out.println(idx + ". " + exp + "\n");
                         }
                     }
 //                    System.out.println(idx + ":");

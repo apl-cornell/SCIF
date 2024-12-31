@@ -28,7 +28,7 @@ public class Attribute extends TrailerExpr {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         VarSym varSym = getVarInfo(env);
         assert varSym != null: "attribute value not found: " + location.errString();
         ScopeContext now = new ScopeContext(this, parent);

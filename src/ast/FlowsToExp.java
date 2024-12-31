@@ -87,7 +87,7 @@ public class FlowsToExp extends Expression {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         if (lhs != null && rhs != null) {
             ScopeContext now = new ScopeContext(this, parent);
             Name left = (Name) lhs, right = (Name) rhs;

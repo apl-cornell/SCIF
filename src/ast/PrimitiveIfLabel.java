@@ -156,7 +156,7 @@ public class PrimitiveIfLabel extends IfLabel {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
 //        if (value.id.equals(Utils.LABEL_BOTTOM) || value.id.equals(Utils.LABEL_TOP) || value.id.equals(Utils.LABEL_SENDER) || value.id.equals(Utils.LABEL_THIS)) {
 //            return null;
 //        }

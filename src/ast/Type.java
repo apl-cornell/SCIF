@@ -27,7 +27,7 @@ public class Type extends Node {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         TypeSym typeSym = (TypeSym) env.getCurSym(name);
         isContractType = typeSym instanceof InterfaceSym;

@@ -16,6 +16,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.exceptions.TypeCheckFailure;
 
 /**
@@ -88,7 +90,12 @@ public class SCIF implements Callable<Integer> {
             files.add(file);
         }
         List<SourceFile> roots;
-        roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
+        try {
+            roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
+        } catch (SemanticException e) {
+            System.err.println(e.getMessage());
+            return List.of();
+        }
         boolean passNTC = true;
         //if (!Utils.emptyFile(outputFileName))
         //    passNTC = runSLC(outputFileName);
@@ -168,7 +175,7 @@ public class SCIF implements Callable<Integer> {
             }
             for (File f: m_inputFiles) {
                 SourceFile r = rootMap.get(f.getAbsolutePath());
-                assert r != null: f.getAbsolutePath();
+                if (r == null) return 0;
                 SolCompiler.compile(r, solFile);
             }
         } else if (m_funcRequest.typecheck) {

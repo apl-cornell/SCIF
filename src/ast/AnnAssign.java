@@ -1,14 +1,12 @@
 package ast;
 
 import compile.CompileEnv;
-import compile.ast.ContractType;
-import compile.ast.SingleVar;
-import compile.ast.PrimitiveType;
 import compile.ast.Type;
 import compile.ast.VarDec;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -85,7 +83,7 @@ public class AnnAssign extends Statement {
 //    }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         String name = ((Name) target).id;
         Sym symValue = env.getCurSym(name);
@@ -98,12 +96,12 @@ public class AnnAssign extends Statement {
         if (annotation.label() != null) {
             varSym.setLabel(env.newLabel(annotation.label()));
         }
-        ScopeContext type = annotation.ntcGenCons(env, now);
-        ScopeContext tgt = target.ntcGenCons(env, now);
+        ScopeContext type = annotation.generateConstraints(env, now);
+        ScopeContext tgt = target.generateConstraints(env, now);
 
         env.addCons(type.genCons(tgt, Relation.EQ, env, location));
         if (value != null) {
-            ScopeContext v = value.ntcGenCons(env, now);
+            ScopeContext v = value.generateConstraints(env, now);
             env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
         } else if (isFinal) {
             throw new RuntimeException("final variable " + name + " not initialized at " + location);

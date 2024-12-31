@@ -7,6 +7,7 @@ import compile.ast.Type;
 import java.util.List;
 import java.util.Map.Entry;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -247,7 +248,7 @@ public class FunctionSig extends TopLayerNode {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         return null;
     }
 

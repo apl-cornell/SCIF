@@ -8,10 +8,8 @@ import java.util.List;
 import java.util.Map;
 import typecheck.Context;
 import typecheck.ContractSym;
-import typecheck.ExceptionTypeSym;
 import typecheck.ExpOutcome;
 import typecheck.FuncSym;
-import typecheck.InterfaceSym;
 import typecheck.Label;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
@@ -23,6 +21,7 @@ import typecheck.TypeSym;
 import typecheck.Utils;
 import typecheck.VarSym;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -37,7 +36,7 @@ public class New extends Expression {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         // check constructor_call to be a valid contract constructor call
         assert constructor_call.value instanceof Name : "Contract name must be in the current namespace: " + location.errString();
@@ -56,13 +55,13 @@ public class New extends Expression {
                             + contractName + " at " + location.toString();
             this.constructor_call.funcSym = constructorSym;
             if (constructor_call.callSpec != null) {
-                constructor_call.callSpec.ntcGenCons(env, now);
+                constructor_call.callSpec.generateConstraints(env, now);
             }
             // typecheck arguments
             for (int i = 0; i < constructor_call.args.size(); ++i) {
                 Expression arg = constructor_call.args.get(i);
                 TypeSym paraInfo = constructorSym.parameters.get(i).typeSym;
-                ScopeContext argContext = arg.ntcGenCons(env, now);
+                ScopeContext argContext = arg.generateConstraints(env, now);
                 String typeName = paraInfo.toSHErrLocFmt();
                 env.addCons(argContext.genCons(typeName, Relation.GEQ, env, arg.location));
             }
@@ -81,7 +80,7 @@ public class New extends Expression {
             for (int i = 0; i < constructor_call.args.size(); ++i) {
                 Expression arg = constructor_call.args.get(i);
                 TypeSym paraInfo = structTypeSym.getMemberVarInfo(structName, i).typeSym;
-                ScopeContext argContext = arg.ntcGenCons(env, now);
+                ScopeContext argContext = arg.generateConstraints(env, now);
                 String typeName = paraInfo.toSHErrLocFmt();
                 env.addCons(argContext.genCons(typeName, Relation.GEQ, env, arg.location));
             }

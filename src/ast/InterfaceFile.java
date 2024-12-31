@@ -36,12 +36,12 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         // env.setGlobalSymTab(env.getContract(contractName).symTab);
         // env.initCurSymTab();
         env.setCurSymTab(env.currentSourceFileFullName());
-        itrface.ntcGenCons(env, now);
+        itrface.generateConstraints(env, now);
         return now;
     }
 

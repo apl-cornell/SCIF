@@ -2,12 +2,11 @@ package ast;
 
 import compile.CompileEnv;
 import compile.ast.Assert;
-import compile.ast.Assign;
-import compile.ast.Call;
-import compile.ast.SingleVar;
 import compile.ast.Type;
 import java.util.List;
 import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
@@ -27,7 +26,7 @@ public class GuardBlock extends Statement {
         this.target = target;
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
@@ -35,7 +34,7 @@ public class GuardBlock extends Statement {
         env.enterNewScope();
         ScopeContext rtn = null;
         for (Statement s : body) {
-            rtn = s.ntcGenCons(env, now);
+            rtn = s.generateConstraints(env, now);
         }
         env.exitNewScope();
 

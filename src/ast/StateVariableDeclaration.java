@@ -1,7 +1,6 @@
 package ast;
 
 import compile.CompileEnv;
-import compile.ast.PrimitiveType;
 import compile.ast.Statement;
 import compile.ast.Type;
 import compile.ast.VarDec;
@@ -19,6 +18,7 @@ import typecheck.ScopeContext;
 import typecheck.Utils;
 import typecheck.VarSym;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -86,15 +86,15 @@ public class StateVariableDeclaration extends TopLayerNode {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
 
-        ScopeContext vtype = type.ntcGenCons(env, now);
-        ScopeContext tgt = name.ntcGenCons(env, now);
+        ScopeContext vtype = type.generateConstraints(env, now);
+        ScopeContext tgt = name.generateConstraints(env, now);
 
         env.addCons(vtype.genCons(tgt, Relation.EQ, env, location));
         if (value != null) {
-            ScopeContext v = value.ntcGenCons(env, now);
+            ScopeContext v = value.generateConstraints(env, now);
             env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
         } else if (isFinal && !isBuiltin) {
             throw new RuntimeException("final variable " + name.id + " not initialized");

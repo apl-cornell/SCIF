@@ -37,9 +37,9 @@ public class DepMap extends Map {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
-        keyType.ntcGenCons(env, parent);
+        keyType.generateConstraints(env, parent);
 
         TypeSym keyTypeSym = env.toTypeSym(keyType, now);
         VarSym keyVarSym = new VarSym(
@@ -54,7 +54,7 @@ public class DepMap extends Map {
         );
         env.enterNewScope();
         env.addSym(keyName, keyVarSym);
-        valueType.ntcGenCons(env, now);
+        valueType.generateConstraints(env, now);
 
         env.exitNewScope();
         DepMapTypeSym typeSym = (DepMapTypeSym) env.toTypeSym(this, scopeContext);

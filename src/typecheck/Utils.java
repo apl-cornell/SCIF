@@ -44,7 +44,7 @@ public class Utils {
     public static final String SHERRLOC_PASS_INDICATOR = "No errors";
     public static final String SHERRLOC_ERROR_INDICATOR = "wrong";
     public static final String TYPECHECK_PASS_MSG = "The program type-checks.";
-    public static final String TYPECHECK_ERROR_MSG = "The program doesn't type-check.";
+    public static final String TYPECHECK_ERROR_MSG = "Static type error.";
     public static final String TYPECHECK_NORESULT_MSG = "No result from SHErrLoc.";
 
 
@@ -742,7 +742,7 @@ public class Utils {
         List<String> result = new ArrayList<>();
         int index = 0;
 
-        for (Entity entity: entities) {
+        for (Entity entity : entities) {
             ++index;
             StringBuffer locBuffer = new StringBuffer();
             StringBuffer expBuffer = new StringBuffer();

@@ -4,12 +4,10 @@ import compile.CompileEnv;
 import compile.CompileEnv.ScopeType;
 import compile.ast.Assign;
 import compile.ast.BinaryExpression;
-import compile.ast.Call;
 import compile.ast.Function;
 import compile.ast.IfStatement;
 import compile.ast.Literal;
 import compile.ast.LowLevelCall;
-import compile.ast.PrimitiveType;
 import compile.ast.Revert;
 import compile.ast.SingleVar;
 import compile.ast.Type;
@@ -27,6 +25,7 @@ import typecheck.PsiUnit;
 import typecheck.ScopeContext;
 import typecheck.Utils;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 
@@ -46,7 +45,7 @@ public class Atomic extends Statement {
     }
 
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
@@ -67,13 +66,13 @@ public class Atomic extends Statement {
 
         for (Statement s : body) {
 //            assert !now.getSHErrLocName().startsWith("null");
-            tmp = s.ntcGenCons(env, atomicScope);
+            tmp = s.generateConstraints(env, atomicScope);
         }
         env.exitNewScope();
         env.exitAtomic();
 
         for (ExceptHandler h : handlers) {
-            tmp = h.ntcGenCons(env, parent);
+            tmp = h.generateConstraints(env, parent);
         }
         return atomicScope;
     }

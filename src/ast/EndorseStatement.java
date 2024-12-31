@@ -29,7 +29,7 @@ public class EndorseStatement extends Statement {
         this.body = body;
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         // TODO
         return parent;
     }

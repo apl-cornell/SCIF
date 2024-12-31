@@ -2,10 +2,10 @@ package ast;
 
 import compile.CompileEnv;
 import compile.ast.Statement;
-import compile.ast.Type;
-import java.util.HashMap;
+
 import java.util.List;
-import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
@@ -23,8 +23,8 @@ public class Endorse extends Expression {
         this.to = to;
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        return value.ntcGenCons(env, parent);
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        return value.generateConstraints(env, parent);
     }
 
     @Override

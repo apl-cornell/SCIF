@@ -20,7 +20,7 @@ public abstract class Literal extends Expression {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         // con: tgt should be a supertype of v
         if (this instanceof Num) {

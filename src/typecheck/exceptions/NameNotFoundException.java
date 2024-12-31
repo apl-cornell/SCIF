@@ -1,8 +1,9 @@
 package typecheck.exceptions;
 
-public class NameNotFoundException extends Exception {
-    public NameNotFoundException(String name) {
-        super(name);
-    }
+import typecheck.CodeLocation;
 
+public class NameNotFoundException extends SemanticException {
+    public NameNotFoundException(String name, CodeLocation location) {
+        super("Unrecognized name: " + name, location);
+    }
 }

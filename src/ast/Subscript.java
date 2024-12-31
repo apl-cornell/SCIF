@@ -6,6 +6,8 @@ import compile.ast.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -58,11 +60,11 @@ public class Subscript extends TrailerExpr {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         VarSym valueVarSym = value.getVarInfo(env);
-        ScopeContext idx = index.ntcGenCons(env, now);
-        value.ntcGenCons(env, now);
+        ScopeContext idx = index.generateConstraints(env, now);
+        value.generateConstraints(env, now);
 
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
             // index must match, and must be a final address/contract or a principal

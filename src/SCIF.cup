@@ -16,8 +16,8 @@ parser code {:
     public static String filename;
 
     public void syntax_error(Symbol cur_token) {
-        logger.error("Syntax error at (" + cur_token.left + ", " + cur_token.right + ")", cur_token);
-        report_error("Syntax error ", cur_token);
+        logger.error(filename + ": line " + cur_token.left + ", column " + cur_token.right, cur_token);
+        report_error("Syntax error", cur_token);
     }
 
     public void debuglog(String s) {
@@ -60,8 +60,8 @@ parser code {:
             System.out.println("File not found: " + e.getMessage());
             return null;
         } catch (Exception e) {
-            System.out.println("Unexpected exception: ");
-            e.printStackTrace();
+            System.out.println(e.getMessage());
+            // e.printStackTrace();
             return null;
         }
         return rtn;
@@ -240,7 +240,7 @@ sourceFile ::=
         logger.debug(RESULT);
     :}
     | error:err {:
-        report_fatal_error("Syntax error when parsing source file " + filename + "\n", err);
+        report_fatal_error("Syntax error in source file " + filename + "\n", err);
     :};
 
 ipt_stmts ::=
