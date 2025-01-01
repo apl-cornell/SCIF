@@ -3,6 +3,7 @@
 import ast.SourceFile;
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -158,20 +159,19 @@ public class SCIF implements Callable<Integer> {
             if (roots == null) {
                 return 1;
             }
-            String solFileName;
             File solFile;
             if (m_solFileNames == null) {
-                try {
-                    solFile = File.createTempFile("tmp", "sol");
-                } catch (IOException e) {
-                    System.out.println(e.getMessage());
-                    return 0;
-                }
-                solFileName = solFile.getAbsolutePath();
-                solFile.deleteOnExit();
+                Path input0 = m_inputFiles[0].toPath();
+                String basename = input0.getFileName().toString();
+                int dotIndex = basename.lastIndexOf('.');
+                solFile = new File((dotIndex == -1)
+                        ? basename + ".sol"
+                        : basename.substring(0, dotIndex) + ".sol");
+                // solFile = File.createTempFile("scif_", ".sol");
+                if (m_debug) System.err.println("Output to file: " + solFile);
+                // solFile.deleteOnExit();
             } else {
-                solFileName = m_solFileNames[0];
-                solFile = new File(solFileName);
+                solFile = new File(m_solFileNames[0]);
             }
             Map<String, SourceFile> rootMap = new HashMap<>();
             for (SourceFile r: roots) {

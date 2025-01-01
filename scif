@@ -13,7 +13,7 @@ ARGUMENTS="$*"
 
 if [[ -n "$ARGUMENTS" ]]
 then
-    # echo ${GRADLE} run -x test --args=\""$*"\"
+    # ${GRADLE} run -x test --args=\""$*"\"
     ${GRADLE} run -x test --args="$*"
 else
     ${GRADLE} run -x test
