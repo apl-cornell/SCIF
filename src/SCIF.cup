@@ -17,7 +17,7 @@ parser code {:
 
     public void syntax_error(Symbol cur_token) {
         logger.error(filename + ": line " + cur_token.left + ", column " + cur_token.right, cur_token);
-        report_error("Syntax error", cur_token);
+        // report_error("Syntax error", cur_token);
     }
 
     public void debuglog(String s) {

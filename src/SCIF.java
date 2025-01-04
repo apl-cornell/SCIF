@@ -78,15 +78,6 @@ public class SCIF implements Callable<Integer> {
         }
         logDir.mkdirs();
 
-//        File NTCConsFile;
-//        if (logDirs == null || logDirs.length <= 0) {
-//            NTCConsFile = new File(logDir, "ntc.cons");
-            // outputFile.deleteOnExit();
-//        } else {
-//            NTCConsFile = new File(logDirs[0]);
-//        }
-
-        //List<File> files = ImmutableList.copyOf(m_inputFiles);
         List<File> files = new ArrayList<>();
         for (File file : m_inputFiles) {
             files.add(file);

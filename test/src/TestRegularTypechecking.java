@@ -64,6 +64,7 @@ public class TestRegularTypechecking {
     @ParameterizedTest
     @ValueSource(strings = {
             "basic/StructEx_W01",
+            "basic/Assignment_W01",
             "regularTypechecking/ExceptionThrowAndCatch_W01",
             "regularTypechecking/ExceptionThrowAndCatch_W02",
             "regularTypechecking/ExceptionThrowAndCatch_W03",
