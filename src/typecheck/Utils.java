@@ -655,11 +655,11 @@ public class Utils {
             CodeLocation location) {
         env.addTrustConstraint(new Constraint(new Inequality(outContext.lambda, endContext.lambda),
                 env.hypothesis(), location, env.curContractSym().getName(),
-                "actually-maintained lock of the last sub-statement flows to parent-statement's one"));
+                "actually maintained lock of final sub-statement must flow to that of parent statement"));
         env.addTrustConstraint(
                 new Constraint(new Inequality(outContext.pc, endContext.pc), env.hypothesis(),
                         location, env.curContractSym().getName(),
-                        "normal termination control flow of the last sub-statement flows to parent-statement's one"));
+                        "normal-termination control flow of final sub-statement must flow to that of parent statement"));
     }
 
     public static ExceptionTypeSym getNormalPathException() {
