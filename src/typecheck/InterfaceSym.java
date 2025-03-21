@@ -212,7 +212,8 @@ public class InterfaceSym extends TypeSym {
         return (Interface) astNode;
     }*/
 
-    public ExceptionTypeSym toExceptionType(String exceptionName, Arguments arguments, ScopeContext defContext) {
+    public ExceptionTypeSym toExceptionType(String namespace, String exceptionName, Arguments arguments, ScopeContext defContext) {
+        // TODO: record namespace
 
         ExceptionTypeSym sym = getExceptionSym(exceptionName);
         if (sym != null) {

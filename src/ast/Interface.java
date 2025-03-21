@@ -40,6 +40,10 @@ public class Interface extends TopLayerNode {
 
         varDeclarations = new ArrayList<>();
         trustSetting = new TrustSetting();
+
+        for (ExceptionDef exceptionDef: exceptionDefs) {
+            exceptionDef.setNamespace(contractName);
+        }
         /*for (FunctionSig f: funcSigs) {
             f.setPublic();
         }*/
@@ -201,19 +205,19 @@ public class Interface extends TopLayerNode {
         for (StructDef structDef: superContract.structDefs) {
             if (structDef.isBuiltIn()) continue;
             if (nameSet.contains(structDef.structName)) {
-                assert false: structDef.structName;
+                assert false: "duplicate struct: " + structDef.structName;
             }
         }
         for (ExceptionDef exp: superContract.exceptionDefs) {
             if (exp.isBuiltIn()) continue;
             if (nameSet.contains(exp.exceptionName)) {
-                assert false: exp.exceptionName;
+                assert false: "duplicate exception: " + exp.exceptionName;
             }
         }
         for (FunctionSig f: superContract.funcSigs) {
             if (f.isBuiltIn()) continue;
             if (nameSet.contains(f.name)) {
-                assert false: f.name + " from " + contractName;
+                assert false: "duplicate method: " + f.name + " from " + contractName;
             }
         }
 

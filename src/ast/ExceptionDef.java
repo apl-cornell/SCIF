@@ -14,6 +14,7 @@ import java.util.ArrayList;
 public class ExceptionDef extends TopLayerNode {
 
     String exceptionName;
+    String namespace;
     Arguments arguments;
     boolean isBuiltIn = false;
 
@@ -33,7 +34,7 @@ public class ExceptionDef extends TopLayerNode {
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         // exceptionType.setContractName(env.curContractSym().getName());
         env.addSym(exceptionName,
-                env.newExceptionType(exceptionName, arguments, parent));
+                env.newExceptionType(namespace, exceptionName, arguments, parent));
         return true;
     }
 
@@ -46,7 +47,7 @@ public class ExceptionDef extends TopLayerNode {
     public void globalInfoVisit(InterfaceSym contractSym) {
         // exceptionType.setContractName(contractSym.getName());
         contractSym.addType(exceptionName,
-                contractSym.toExceptionType(exceptionName, arguments, contractSym.defContext()));
+                contractSym.toExceptionType(namespace, exceptionName, arguments, contractSym.defContext()));
         // contractSym.addType(exceptionType, contractSym.toExceptionType(exceptionType, arguments));
 
     }
@@ -91,5 +92,9 @@ public class ExceptionDef extends TopLayerNode {
     public boolean typeMatch(ExceptionDef exceptionDef) {
         return exceptionName.equals(exceptionDef.exceptionName) &&
                 arguments.typeMatch(exceptionDef.arguments);
+    }
+
+    public void setNamespace(String name) {
+        namespace = name;
     }
 }

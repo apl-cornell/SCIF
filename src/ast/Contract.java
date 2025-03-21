@@ -61,6 +61,10 @@ public class Contract extends TopLayerNode {
         this.exceptionDefs = exceptionDefs;
         this.methodDeclarations = methodDeclarations;
         setDefault();
+        // set namespace for exception defs
+        for (ExceptionDef exceptionDef : exceptionDefs) {
+            exceptionDef.setNamespace(contractName);
+        }
 //        if (contractName.equals(Utils.BASE_CONTRACT_IMP_NAME)) {
 //            System.err.println("debug: show methods in " + contractName);
 //            for (FunctionDef functionDef : methodDeclarations) {

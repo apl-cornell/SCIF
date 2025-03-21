@@ -183,7 +183,8 @@ public class NTCEnv {
         return getContract(iptContract) != null;
     }
 
-    public ExceptionTypeSym newExceptionType(String exceptionName, Arguments arguments, ScopeContext parent) {
+    public ExceptionTypeSym newExceptionType(String namespace, String exceptionName, Arguments arguments, ScopeContext parent) {
+        // TODO: record namespace
         Sym sym = curSymTab.lookup(exceptionName);
         if (sym != null) {
             if (sym instanceof ExceptionTypeSym) {
