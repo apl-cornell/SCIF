@@ -93,7 +93,7 @@ terminal CONSTRUCTOR;//, PERCENTEQUAL;
 terminal ASSUME;
 terminal REVERT;
 terminal WHILE, FOR;
-terminal NEW, STRUCT;
+terminal NEW, STRUCT, UNCHECKED;
 
 nonterminal SourceFile sourceCode;
 nonterminal Interface interface;
@@ -128,6 +128,7 @@ nonterminal Statement assert_stmt;
 nonterminal CallStatement call_stmt;
 nonterminal If if_stmt;
 nonterminal Statement try_stmt, atomic_stmt;
+nonterminal Statement unchecked_stmt;
 nonterminal Statement while_stmt; //, for_stmt;
 //nonterminal List<Statement> iter_stmts;
 //nonterminal Statement iter_stmt, inc_stmt;
@@ -966,6 +967,7 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
 //    | excborder_stmt:a {: RESULT = a; :}
     | try_stmt:a {: RESULT = a; :}
     | atomic_stmt:a {: RESULT = a; :}
+    | unchecked_stmt:a {: RESULT = a; :}
     | throw_stmt:a {: RESULT = a;:}
     | revert_stmt:a {: RESULT = a;:}
 //    | endorse_stmt:a {:
@@ -1218,6 +1220,11 @@ call_stmt ::=
 guard_block ::=
     GUARD:x LPAR primitiveIfLabel:l RPAR suite:body {:
         RESULT = new GuardBlock(l, body, null);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :};
+unchecked_stmt ::=
+    UNCHECKED:x suite:body {:
+        RESULT = new UncheckedBlock(body);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 if_stmt ::= 

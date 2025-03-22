@@ -49,8 +49,10 @@ contract ERC20 implements IERC20 {
     @public void transfer{from -> this}(final address from, address to, uint val) {
         endorse([from, to, val], from -> this)
         if (_balances[from] >= val) {
-            _balances[from] -= val;
-            _balances[to] += val;
+            unchecked {
+                _balances[from] -= val;
+                _balances[to] += val;
+            }
         } else {
             assert false;
         }
@@ -64,7 +66,9 @@ contract ERC20 implements IERC20 {
         endorse([from, to, val], sender -> from)
         if (_allowances[from][sender] >= val) {
             transfer(from, to, val);
-            _allowances[from][sender] -= val;
+            unchecked {
+                _allowances[from][sender] -= val;
+            }
         } else {
             assert false;
         }
@@ -77,7 +81,9 @@ contract ERC20 implements IERC20 {
             if (currentAllowance < val) {
                 assert false;
             }
-            _allowances[owner][spender] = currentAllowance - val;
+            unchecked {
+                _allowances[owner][spender] = currentAllowance - val;
+            }
         }
     }
 }

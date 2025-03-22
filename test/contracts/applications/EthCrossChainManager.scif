@@ -2,29 +2,7 @@ import "./IPolyCallee.scif";
 import "./IECCUtils.scif";
 import "./IEthCrossChainData.scif";
 contract EthCrossChainManager {
-//    struct Header {
-//        uint version;
-//        uint chainId;
-//        uint timestamp;
-//        uint height;
-//        uint consensusData;
-//        uint prevBlockHash;
-//        uint transactionsRoot;
-//        uint crossStatesRoot;
-//        uint blockRoot;
-//        bytes consensusPayload;
-//        address nextBookkeeper;
-//    }
-//
-//    struct ToMerkleValue {
-//        uint  txHash;  // cross chain txhash
-//        uint fromChainID;
-//        uint crossChainId;
-//        bytes fromContract;
-//        uint toChainId;
-//        address toContract;
-//        bytes args;
-//    }
+
     address EthCrossChainDataAddress;
     address EthECCUtilsAddress;
 

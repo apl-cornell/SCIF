@@ -55,9 +55,10 @@ contract KoET {
         u_finney = u_szabo * 1000;
         u_ether = u_finney * 1000;
         startingClaimPrice = 100 * u_finney;
-        claimPriceAdjustNum = 3;
+        claimPriceAdjustNum = 2;
         claimPriceAdjustDen = 2;
         wizardCommissionFractionNum = 1;
+        wizardCommissionFractionDen = 100;
         wizardAddress = sender;
         currentClaimPrice = startingClaimPrice;
         currentMonarch = endorse(new Monarch(
@@ -88,7 +89,9 @@ contract KoET {
                 lock(this) {
                     send(sender, excessPaid);
                 }
-                valuePaid = valuePaid - excessPaid;
+                unchecked {
+                    valuePaid = valuePaid - excessPaid;
+                }
             }
 
             // The claim price payment goes to the current monarch as compensation
@@ -123,22 +126,22 @@ contract KoET {
                 currentClaimPrice = rawNewClaimPrice;
             } else {
                 if (rawNewClaimPrice < 100 * u_finney) {
-                    currentClaimPrice = 100 * u_szabo * (rawNewClaimPrice / 100 * u_szabo);
+                    currentClaimPrice = 100 * u_szabo * (rawNewClaimPrice / (100 * u_szabo));
                 } else {
                     if (rawNewClaimPrice < 1 * u_ether) {
-                        currentClaimPrice = 1 * u_finney * (rawNewClaimPrice / 1 * u_finney);
+                        currentClaimPrice = 1 * u_finney * (rawNewClaimPrice / (1 * u_finney));
                     } else {
                         if (rawNewClaimPrice < 10 * u_ether) {
-                            currentClaimPrice = 10 * u_finney * (rawNewClaimPrice / 10 * u_finney);
+                            currentClaimPrice = 10 * u_finney * (rawNewClaimPrice / (10 * u_finney));
                         } else {
                             if (rawNewClaimPrice < 100 * u_ether) {
-                                currentClaimPrice = 100 * u_finney * (rawNewClaimPrice / 100 * u_finney);
+                                currentClaimPrice = 100 * u_finney * (rawNewClaimPrice / (100 * u_finney));
                             } else {
                                 if (rawNewClaimPrice < 1000 * u_ether) {
-                                    currentClaimPrice = 1 * u_ether * (rawNewClaimPrice / 1 * u_ether);
+                                    currentClaimPrice = 1 * u_ether * (rawNewClaimPrice / (1 * u_ether));
                                 } else {
                                     if (rawNewClaimPrice < 10000 * u_ether) {
-                                        currentClaimPrice = 10 * u_ether * (rawNewClaimPrice / 10 * u_ether);
+                                        currentClaimPrice = 10 * u_ether * (rawNewClaimPrice / (10 * u_ether));
                                     } else {
                                         currentClaimPrice = rawNewClaimPrice;
                                     }

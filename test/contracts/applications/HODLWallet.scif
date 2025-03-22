@@ -14,10 +14,11 @@ contract HODLWallet {
     @public void doWithdraw{from -> this}(final address from, address to, uint amount) {
         endorse([from, to, amount], from -> this)
         if (amount <= MAX_WITHDRAWAL && balances[from] >= amount && withdrawalCount[from] < 3) {
-            balances[from] = balances[from] - amount;
+            unchecked {
+                balances[from] = balances[from] - amount;
 
-            withdrawalCount[from] = withdrawalCount[from] + 1; // move counter update before the call
-            
+                withdrawalCount[from] = withdrawalCount[from] + 1; // move counter update before the call
+            }
             send(to, amount);
 
         } else {
@@ -28,7 +29,9 @@ contract HODLWallet {
     @public void doDeposit(address to) {
         endorse([to, value], sender -> this)
         if (value > 0) {
-            balances[to] = balances[to] + value;
+            unchecked {
+                balances[to] = balances[to] + value;
+            }
         } else {
             assert false;
         }

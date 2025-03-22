@@ -69,8 +69,12 @@ contract SysEscrow {
         assert(currentEscrow.exists);
         assert(currentEscrow.buyerCanCancelAfter<now);
 
-        uint arbitratorValue = currentEscrow.summ*ARBITRATOR_PERCENT/100;
-        uint buyerValue =  currentEscrow.summ - arbitratorValue;
+        uint arbitratorValue;
+        uint buyerValue;
+        unchecked {
+            arbitratorValue = currentEscrow.summ*ARBITRATOR_PERCENT/100;
+            buyerValue = currentEscrow.summ - arbitratorValue;
+        }
 
         lock(this) {
             send(currentEscrow.buyer, buyerValue);
@@ -111,8 +115,12 @@ contract SysEscrow {
         assert(currentEscrow.buyerApprovedTheTransaction);
 
 
-        uint arbitratorValue = currentEscrow.summ*ARBITRATOR_PERCENT/100;
-        uint buyerValue =  currentEscrow.summ - arbitratorValue;
+        uint arbitratorValue;
+        uint buyerValue;
+        unchecked {
+            arbitratorValue = currentEscrow.summ*ARBITRATOR_PERCENT/100;
+            buyerValue = currentEscrow.summ - arbitratorValue;
+        }
 
         lock(this) {
             send(currentEscrow.buyer, buyerValue);

@@ -1,4 +1,4 @@
-import "./IERC20.scif";
+import "./IERC20_noe.scif";
 import "./IDODOApprove.scif";
 
 contract DODOV2Proxy01 {
@@ -10,13 +10,13 @@ contract DODOV2Proxy01 {
 
     constructor(IDODOApprove dodoApprove, address ethAddress) {
         super();
-        ETH_ADDRESS = ethAddress;
-        DODO_APPROVE = dodoApprove;
+        ETH_ADDRESS = endorse(ethAddress, sender->this);
+        DODO_APPROVE = endorse(dodoApprove, sender->this);
     }
 
-    @public uint externalSwap{sender}(
-        IERC20{sender} fromToken,
-        IERC20{sender} toToken,
+    @public uint{sender} externalSwap{sender}(
+        final IERC20{sender} fromToken,
+        final IERC20{sender} toToken,
         address{sender} approveTarget,
         address{sender} to,
         uint{sender} fromTokenAmount,
@@ -25,12 +25,16 @@ contract DODOV2Proxy01 {
     // throws (SwapFailedException)
     {
             // Record the original balance of toToken
-            uint{sender} toTokenOriginBalance = toToken.balanceOf(sender);
+//            assert sender => this;
+//            assert toToken => sender;
+//            assert fromToken => sender;
+            uint{sender} toTokenOriginBalance = endorse(toToken.balanceOf(sender), any->sender);
+//            }
 
             // If fromToken is not ETH, approve the transfer
-            if (fromToken != ETH_ADDRESS) {
-                DODO_APPROVE.claimTokens(fromToken, sender, address(this), fromTokenAmount);
-                fromToken.approve(approveTarget, fromTokenAmount);
+            if (address(fromToken) != ETH_ADDRESS) {
+//                DODO_APPROVE.claimTokens(fromToken, sender, address(this), fromTokenAmount);
+                fromToken.approveFrom(sender, approveTarget, fromTokenAmount);
             }
 
             // Perform the external call
@@ -40,16 +44,17 @@ contract DODOV2Proxy01 {
             // }
 
             // Transfer any remaining fromToken and toToken back to the sender
-            IERC20 fromTokenEndorsed = endorse(fromToken, sender -> this);
-            IERC20 toTokenEndorsed = endorse(toToken, sender -> this);
-            fromToken.transfer(address(this), sender, fromTokenEndorsed.balanceOf(address(this)));
-            toToken.transfer(address(this), sender, toTokenEndorsed.balanceOf(address(this)));
+            IERC20{sender} fromTokenLeft = endorse(fromToken.balanceOf(address(this)), any -> sender);
+            IERC20{sender} toTokenLeft = endorse(toToken.balanceOf(address(this)), any -> sender);
+            fromToken.transfer(address(this), sender, fromTokenLeft);
+            toToken.transfer(address(this), sender, toTokenLeft);
 
             // Calculate the return amount
-            uint{sender} returnAmount = toToken.balanceOf(sender) - toTokenOriginBalance;
+//            uint{sender} returnAmount = 0;
+            uint{sender} returnAmount = endorse(toToken.balanceOf(sender), any->sender) - toTokenOriginBalance;
 
             // Ensure the return amount meets the minimum requirement
-            assert(returnAmount >= minReturnAmount);
+//            assert(returnAmount >= minReturnAmount);
 
             // Return the amount received
             return returnAmount;
