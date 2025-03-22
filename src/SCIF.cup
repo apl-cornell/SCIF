@@ -93,7 +93,7 @@ terminal CONSTRUCTOR;//, PERCENTEQUAL;
 terminal ASSUME;
 terminal REVERT;
 terminal WHILE, FOR;
-terminal NEW, STRUCT, UNCHECKED;
+terminal NEW, STRUCT, UNCHECKED, TRANSIENT;
 
 nonterminal SourceFile sourceCode;
 nonterminal Interface interface;
@@ -424,14 +424,21 @@ state_var_dec ::=
     FINAL maybeLabeledType:t NAME:a SEMI {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
-        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, true);
+        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, true, false);
+        RESULT = rnt;
+        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    :}
+    | TRANSIENT maybeLabeledType:t NAME:a SEMI {:
+        Name name = new Name((String)a);
+        name.setLoc(new CodeLocation(aleft, aright, filename));
+        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, false, true);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | maybeLabeledType:t NAME:a SEMI {:
           Name name = new Name((String)a);
           name.setLoc(new CodeLocation(aleft, aright, filename));
-          StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, false);
+          StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, false, false);
           RESULT = rnt;
           RESULT.setLoc(new CodeLocation(aleft, aright, filename));
       :}
@@ -527,7 +534,7 @@ plain_var_dec ::=
     type:t NAME:a SEMI {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
-        StateVariableDeclaration rnt = new StateVariableDeclaration(name, new LabeledType(t, null), null, false, false);
+        StateVariableDeclaration rnt = new StateVariableDeclaration(name, new LabeledType(t, null), null, false, false, false);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};

@@ -33,27 +33,29 @@ public class StateVariableDeclaration extends TopLayerNode {
     private LabeledType type;
     private Expression value;
     private boolean isStatic;
-    private boolean isFinal;
+    private boolean isFinal, isTransient;
     private boolean isBuiltin = false;
 
     public StateVariableDeclaration(Name name, LabeledType type, Expression value,
-            boolean isConst, boolean isFinal) {
+            boolean isConst, boolean isFinal, boolean isTransient) {
         this.name = name;
         this.type = type;
         this.value = value;
         this.isStatic = isConst;
         this.isFinal = isFinal;
+        this.isTransient = isTransient;
         this.location = Utils.BUILTIN_LOCATION;
         this.type.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
 
     public StateVariableDeclaration(Name name, LabeledType type, Expression value,
-            boolean isConst, boolean isFinal, boolean isBuiltIn) {
+            boolean isConst, boolean isFinal, boolean isTransient, boolean isBuiltIn) {
         this.name = name;
         this.type = type;
         this.value = value;
         this.isStatic = isConst;
         this.isFinal = isFinal;
+        this.isTransient = isTransient;
         this.location = Utils.BUILTIN_LOCATION;
         this.isBuiltin = isBuiltIn;
         this.type.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
@@ -63,13 +65,13 @@ public class StateVariableDeclaration extends TopLayerNode {
         type.setToDefault(lbl);
     }
 
-    public void setFinal(boolean isFinal) {
-        this.isFinal = isFinal;
-    }
+//    public void setFinal(boolean isFinal) {
+//        this.isFinal = isFinal;
+//    }
 
-    public void setStatic(boolean isStatic) {
-        this.isStatic = isStatic;
-    }
+//    public void setStatic(boolean isStatic) {
+//        this.isStatic = isStatic;
+//    }
 
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
         // ScopeContext now = new ScopeContext(this, parent);
@@ -218,9 +220,9 @@ public class StateVariableDeclaration extends TopLayerNode {
             List<Statement> result = new ArrayList<>();
             compile.ast.Expression valueExp = value.solidityCodeGen(result, code);
             assert result.size() == 0;
-            return new VarDec(false, varType, varName, valueExp);
+            return new VarDec(false, isTransient, varType, varName, valueExp);
         } else {
-            return new VarDec(false, varType, varName);
+            return new VarDec(false, isTransient, varType, varName);
         }
     }
 
@@ -257,7 +259,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         assert value == null;
         Type varType = type.type().solidityCodeGen(code);
         String varName = name.id;
-        return new VarDec(false, varType, varName);
+        return new VarDec(varType, varName);
     }
 
     public VarSym toVarInfo(InterfaceSym interfaceSym) {

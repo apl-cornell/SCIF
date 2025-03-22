@@ -12,6 +12,9 @@ public class StructDef extends Type {
     public StructDef(String name, List<VarDec> members) {
         super(name);
         this.members = members;
+        for (VarDec member: members) {
+            member.isLocal = false;
+        }
     }
 
     public List<String> toSolCode(int indentLevel) {

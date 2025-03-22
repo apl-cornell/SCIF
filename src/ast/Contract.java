@@ -643,6 +643,7 @@ public class Contract extends TopLayerNode {
                 null,
                 true,
                 true,
+                false,
                 true
         );
         thisDec.name().setLoc(CodeLocation.builtinCodeLocation(0, 0));
@@ -653,6 +654,7 @@ public class Contract extends TopLayerNode {
                 null,
                 true,
                 true,
+                false,
                 true
         );
         topDec.name().setLoc(CodeLocation.builtinCodeLocation(1, 0));
@@ -663,6 +665,7 @@ public class Contract extends TopLayerNode {
                 null,
                 true,
                 true,
+                false,
                 true
         );
         botDec.name().setLoc(CodeLocation.builtinCodeLocation(2, 0));
@@ -673,6 +676,7 @@ public class Contract extends TopLayerNode {
                 null,
                 true,
                 true,
+                false,
                 true
         );
         uintmaxDec.name().setLoc(CodeLocation.builtinCodeLocation(3, 0));

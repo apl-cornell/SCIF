@@ -82,6 +82,7 @@ import java.util.HashMap;
         keywords.put("constructor", Integer.valueOf(sym.CONSTRUCTOR));
         keywords.put("assume", Integer.valueOf(sym.ASSUME));
         keywords.put("unchecked", Integer.valueOf(sym.UNCHECKED));
+        keywords.put("transient", Integer.valueOf(sym.TRANSIENT));
     }
 
 
