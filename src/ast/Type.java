@@ -12,6 +12,7 @@ import typecheck.NTCEnv;
 import typecheck.TypeSym;
 import typecheck.Utils;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 
 public class Type extends Node {
 
@@ -27,11 +28,11 @@ public class Type extends Node {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         TypeSym typeSym = (TypeSym) env.getCurSym(name);
         isContractType = typeSym instanceof InterfaceSym;
-        System.err.println(name + " is contract: " + isContractType);
+        // System.err.println(name + " is contract: " + isContractType);
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
         return now;
     }

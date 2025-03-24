@@ -6,8 +6,11 @@ import compile.ast.PrimitiveType;
 import compile.ast.SolNode;
 import compile.ast.StructDef;
 import compile.ast.VarDec;
+
+import java.util.SequencedMap;
 import java.util.stream.Collectors;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 import java.util.ArrayList;
 
@@ -31,10 +34,17 @@ public class ExceptionDef extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
+        throws SemanticException
+    {
         // exceptionType.setContractName(env.curContractSym().getName());
-        env.addSym(exceptionName,
-                env.newExceptionType(namespace, exceptionName, arguments, parent));
+        try {
+            env.addSym(exceptionName,
+                    env.newExceptionType(namespace, exceptionName, arguments, parent));
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Exception already defined: " + exceptionName,
+                    location);
+        }
         return true;
     }
 
@@ -44,16 +54,16 @@ public class ExceptionDef extends TopLayerNode {
      * @param contractSym
      */
     @Override
-    public void globalInfoVisit(InterfaceSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException {
         // exceptionType.setContractName(contractSym.getName());
         contractSym.addType(exceptionName,
-                contractSym.toExceptionType(namespace, exceptionName, arguments, contractSym.defContext()));
+                contractSym.toExceptionType(namespace, exceptionName, arguments, contractSym.defContext()),
+                location);
         // contractSym.addType(exceptionType, contractSym.toExceptionType(exceptionType, arguments));
-
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
 
         // ExceptionTypeSym expSym = env.newExceptionType(exceptionName, arguments, parent);

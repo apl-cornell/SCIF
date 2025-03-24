@@ -1,0 +1,4 @@
+interface AmIOnTheFork {
+	@public
+	bool forked();
+}

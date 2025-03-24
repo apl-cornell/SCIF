@@ -1,0 +1,25 @@
+contract TestToken {
+	map(address, uint) _balances;
+	uint totalTokens;
+	uint tokenCreationRate;
+
+	constructor() { super(); }
+
+	@public
+	void refund() {
+		uint tokenValue = _balances[sender];
+		
+		if (tokenValue != 0) {
+			_balances[sender] = 0;
+			
+			totalTokens -= tokenValue;
+			
+			uint ethValue = tokenValue / tokenCreationRate;
+
+			lock(this) {
+				send(sender, ethValue);
+			}
+		}
+		
+	}
+}

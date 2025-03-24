@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -23,6 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FunctionDef extends FunctionSig {
+
+    private static boolean DEBUG = false;
 
     List<Statement> body;
 
@@ -46,13 +50,13 @@ public class FunctionDef extends FunctionSig {
 
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
 //        if (isSuperConstructor()) return null;
         //env.setCurSymTab(new SymTab(env.curSymTab()));
         env.enterNewScope();
         // add args to local sym;
         String funcName = this.name;
-        System.err.println("entering method: " + name + " " + body.size());
+        if (DEBUG) System.err.println("entering method: " + name + " " + body.size());
         FuncSym funcSym = ((FuncSym) env.getCurSym(funcName));
         Map<ExceptionTypeSym, Boolean> exceptionTypeSyms = new HashMap<>();
         for (Map.Entry<ExceptionTypeSym, String> t : funcSym.exceptions.entrySet()) {
@@ -65,12 +69,13 @@ public class FunctionDef extends FunctionSig {
 
         // add built-in vars
         addBuiltInVars(env.curSymTab(), now);
+
         if (!returnVoid()) addBuiltInResult(env.curSymTab(), now);
 
         for (Arg arg : this.args.args()) {
-            arg.ntcGenCons(env, now);
+            arg.generateConstraints(env, now);
         }
-        funcLabels.ntcGenCons(env, now);
+        funcLabels.generateConstraints(env, now);
         if (funcSym.returnType != null) {
             env.addCons(new Constraint(new Inequality(funcSym.returnTypeSLC(), Relation.EQ,
                     funcSym.returnType.toSHErrLocFmt()), env.globalHypothesis(), location,
@@ -86,7 +91,7 @@ public class FunctionDef extends FunctionSig {
             // TODO: add support for signatures
             for (Statement stmt : body) {
                 // logger.debug("stmt: " + stmt);
-                stmt.ntcGenCons(env, now);
+                stmt.generateConstraints(env, now);
             }
         if (isConstructor()) {
             assert env.superCalled() : "constructor of super contract is not called in the constructor of " + env.currentSourceFileFullName();
@@ -101,12 +106,14 @@ public class FunctionDef extends FunctionSig {
 
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_info) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_info) throws SemanticException {
         if (isBuiltIn() || isNative() || isSuperConstructor()) return null;
         env.incScopeLayer();
         env.enterNewMethod(getName());
         addBuiltInVars(env.curSymTab, scopeContext);
-        if (!returnVoid()) addBuiltInResult(env.curSymTab, scopeContext);
+        if (!returnVoid()) {
+            addBuiltInResult(env.curSymTab, scopeContext);
+        }
 
         for (Entry<String, VarSym> entry: env.curSymTab.getVars().entrySet()) {
             VarSym varSym = entry.getValue();
@@ -183,7 +190,7 @@ public class FunctionDef extends FunctionSig {
             }
         }
         if (body.size() > 0 && CO.existsNormalPath()) {
-            System.err.println("method: " + funcLocalName);
+            if (DEBUG) System.err.println("method: " + funcLocalName);
             Utils.contextFlow(env, CO.getNormalPath().c(), funcEndContext.c(),
                     body.get(body.size() - 1).location);
         }

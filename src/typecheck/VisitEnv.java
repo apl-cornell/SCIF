@@ -78,7 +78,7 @@ public class VisitEnv {
         return hypothesis;
     }
 
-    public void addVar(String id, VarSym varSym) {
+    public void addVar(String id, VarSym varSym) throws SymTab.AlreadyDefined {
         curSymTab.add(id, varSym);
     }
 

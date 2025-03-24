@@ -1,15 +1,15 @@
 package ast;
 
 import compile.CompileEnv;
-import compile.ast.SingleVar;
 import compile.ast.Type;
-import java.beans.PersistenceDelegate;
-import java.util.HashMap;
+
 import java.util.List;
 import java.util.Map;
 import typecheck.*;
 
 import java.util.ArrayList;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -46,10 +46,10 @@ public class Assert extends Statement {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = scopeContext;
         ScopeContext rtn = null;
-        rtn = test.ntcGenCons(env, now);
+        rtn = test.generateConstraints(env, now);
         Constraint testCon = rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
         env.addCons(testCon);
         return now;

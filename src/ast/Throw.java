@@ -7,9 +7,9 @@ import compile.ast.Return;
 import compile.ast.Revert;
 import compile.ast.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
@@ -23,7 +23,7 @@ public class Throw extends Statement {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
 
         String exceptionName;
@@ -73,7 +73,7 @@ public class Throw extends Statement {
             Expression arg = exception.args.get(i);
             TypeSym paraInfo = exceptionSym.parameters().get(i).typeSym;
             assert !now.getSHErrLocName().startsWith("null");
-            ScopeContext argContext = arg.ntcGenCons(env, now);
+            ScopeContext argContext = arg.generateConstraints(env, now);
             String typeNameSLC = paraInfo.toSHErrLocFmt();
             Constraint argCon = argContext.genCons(typeNameSLC, Relation.GEQ, env, arg.location);
             env.addCons(argCon);

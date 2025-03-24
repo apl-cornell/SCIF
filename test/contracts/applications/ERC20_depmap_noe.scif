@@ -78,9 +78,7 @@ contract ERC20 implements IERC20 {
         uint{owner} currentAllowance;
         currentAllowance = allowance(owner, spender);
         if (currentAllowance != UINT_MAX) {
-            if (currentAllowance < val) {
-                assert false;
-            }
+            assert (currentAllowance >= val);
             unchecked {
                 _allowances[owner][spender] = currentAllowance - val;
             }

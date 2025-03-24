@@ -1,0 +1,8 @@
+import "./IERC20.scif";
+
+interface IExchange {
+    @public void exchange{user -> this}(
+        final address user,
+        IERC20{user} tokenIn, IERC20{user} tokenOut, uint{user} amount
+        );
+}

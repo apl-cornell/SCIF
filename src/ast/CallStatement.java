@@ -3,13 +3,13 @@ package ast;
 import compile.CompileEnv;
 import compile.ast.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.ScopeContext;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 
 public class CallStatement extends Statement {
 
@@ -24,8 +24,8 @@ public class CallStatement extends Statement {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        return call.ntcGenCons(env, parent);
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        return call.generateConstraints(env, parent);
     }
 
     @Override

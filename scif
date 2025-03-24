@@ -1,13 +1,20 @@
 #!/bin/bash
 
 ROOT=`dirname $0`
-GRADLEW_NAME="gradlew"
-GRADLEW=${ROOT}/$GRADLEW_NAME
+
+if [[ -z "$GRADLE" ]]
+then
+    GRADLE=${ROOT}/gradlew
+fi
+
 ARGUMENTS="$*"
-#echo $ARGUMENTS
+
 #${GRADLEW} run --args="$*" -x slc-sherrloc --quiet 2> /dev/null
-${GRADLEW} run -x test --args="$*" 
 
-# echo ${COMMAND}
-
-#${COMMAND}
+if [[ -n "$ARGUMENTS" ]]
+then
+    # ${GRADLE} run -x test --args=\""$*"\"
+    ${GRADLE} run -x test --args="$*"
+else
+    ${GRADLE} run -x test
+fi

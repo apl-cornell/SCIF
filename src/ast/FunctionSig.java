@@ -7,6 +7,7 @@ import compile.ast.Type;
 import java.util.List;
 import java.util.Map.Entry;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -153,7 +154,7 @@ public class FunctionSig extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
         SymTab contractSymTab = env.curSymTab();
         env.enterNewScope();
         ScopeContext now = new ScopeContext(this, parent);
@@ -181,22 +182,26 @@ public class FunctionSig extends TopLayerNode {
         if (!returnVoid()) {
             addBuiltInResult(env.curSymTab(), now);
         }
-        contractSymTab.add(name, funcSym);
+        try {
+            contractSymTab.add(name, funcSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new RuntimeException("Already defined: " + name); // can't happen?
+        }
         env.exitNewScope();
         return true;
-
     }
 
     @Override
-    public void globalInfoVisit(InterfaceSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException {
         SymTab realContractSymTab = contractSym.symTab;
         contractSym.symTab = new SymTab(contractSym.symTab);
         addBuiltInVars(contractSym.symTab, scopeContext);
         VarSym sender = (VarSym) contractSym.symTab.lookup(typecheck.Utils.LABEL_SENDER);
         List<VarSym> argsInfo = args.parseArgs(contractSym);
+
         Label ifl = null;
         if (rtn != null) {
-            ifl = contractSym.newLabel(((LabeledType) rtn).label());
+            ifl = contractSym.newLabel(rtn.label());
         }
         Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
         for (LabeledType t : exceptionList) {
@@ -223,7 +228,11 @@ public class FunctionSig extends TopLayerNode {
         if (!returnVoid()) {
             addBuiltInResult(contractSym.symTab, scopeContext);
         }
-        realContractSymTab.add(name, funcSym);
+        try {
+            realContractSymTab.add(name, funcSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new RuntimeException(e);
+        }
         contractSym.symTab = contractSym.symTab.getParent();
     }
 
@@ -247,7 +256,7 @@ public class FunctionSig extends TopLayerNode {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         return null;
     }
 
@@ -281,7 +290,7 @@ public class FunctionSig extends TopLayerNode {
         }
     }
 
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
 
         assert false;
         return null;
@@ -340,59 +349,66 @@ public class FunctionSig extends TopLayerNode {
 
     protected void addBuiltInVars(SymTab curSymTab, ScopeContext now) {
         // final address{this} sender;
-        VarSym varSender =
-                new VarSym(
-                        typecheck.Utils.LABEL_SENDER,
-                        (TypeSym) curSymTab.lookup(typecheck.Utils.ADDRESS_TYPE),
-                        null,
-                        typecheck.Utils.BUILTIN_LOCATION,
-                        now,
-                        true,
-                        true,
-                        true
-                );
-        PrimitiveLabel labelSender = new PrimitiveLabel(varSender, typecheck.Utils.BUILTIN_LOCATION);
-        varSender.setLabel(labelSender);
-        curSymTab.add(typecheck.Utils.LABEL_SENDER, varSender);
+        try {
+            VarSym varSender =
+                    new VarSym(
+                            typecheck.Utils.LABEL_SENDER,
+                            (TypeSym) curSymTab.lookup(typecheck.Utils.ADDRESS_TYPE),
+                            null,
+                            typecheck.Utils.BUILTIN_LOCATION,
+                            now,
+                            true,
+                            true,
+                            true
+                    );
+            PrimitiveLabel labelSender = new PrimitiveLabel(varSender, typecheck.Utils.BUILTIN_LOCATION);
+            varSender.setLabel(labelSender);
+            curSymTab.add(typecheck.Utils.LABEL_SENDER, varSender);
 
-        // final uint{sender} value;
-        curSymTab.add(typecheck.Utils.LABEL_PAYVALUE,
-                new VarSym(
-                        typecheck.Utils.LABEL_PAYVALUE,
-                        (TypeSym) curSymTab.lookup(typecheck.Utils.BuiltinType2ID(BuiltInT.UINT)),
-                        labelSender,
-                        typecheck.Utils.BUILTIN_LOCATION,
-                        now,
-                        true,
-                        true,
-                        true
-                ));
-        // final uint{sender} value;
+            // final uint{sender} value;
+            curSymTab.add(typecheck.Utils.LABEL_PAYVALUE,
+                    new VarSym(
+                            typecheck.Utils.LABEL_PAYVALUE,
+                            (TypeSym) curSymTab.lookup(typecheck.Utils.BuiltinType2ID(BuiltInT.UINT)),
+                            labelSender,
+                            typecheck.Utils.BUILTIN_LOCATION,
+                            now,
+                            true,
+                            true,
+                            true
+                    ));
+            // final uint{sender} value;
 
-        // other built-in vars
-        for (Entry<String, String> entry: typecheck.Utils.BUILTIN_INMETHOD_VARS.entrySet()) {
-            String varName = entry.getKey();
-            String typeName = entry.getValue();
-            VarSym varSym = new VarSym(varName, (TypeSym) curSymTab.lookup(typeName), labelSender,
-                    typecheck.Utils.BUILTIN_LOCATION, now, true, true, true);
-            curSymTab.add(varName, varSym);
+            // other built-in vars
+            for (Entry<String, String> entry : typecheck.Utils.BUILTIN_INMETHOD_VARS.entrySet()) {
+                String varName = entry.getKey();
+                String typeName = entry.getValue();
+                VarSym varSym = new VarSym(varName, (TypeSym) curSymTab.lookup(typeName), labelSender,
+                        typecheck.Utils.BUILTIN_LOCATION, now, true, true, true);
+                curSymTab.add(varName, varSym);
+            }
+        } catch (SymTab.AlreadyDefined e) {
+            throw new RuntimeException(e); // should not be possible
         }
     }
 
     protected void addBuiltInResult(SymTab curSymTab, ScopeContext now) {
         assert !returnVoid();
-        curSymTab.add(typecheck.Utils.RESULT_VARNAME,
-                new VarSym(
-                        typecheck.Utils.RESULT_VARNAME,
-                        funcSym.returnType,
-                        funcSym.rtn,
-                        typecheck.Utils.BUILTIN_LOCATION,
-                        now,
-                        false,
-                        false,
-                        true
-                ));
-
+        try {
+            curSymTab.add(typecheck.Utils.RESULT_VARNAME,
+                    new VarSym(
+                            typecheck.Utils.RESULT_VARNAME,
+                            funcSym.returnType,
+                            funcSym.rtn,
+                            typecheck.Utils.BUILTIN_LOCATION,
+                            now,
+                            false,
+                            false,
+                            true
+                    ));
+        } catch (SymTab.AlreadyDefined e) {
+            throw new RuntimeException(e); // cannot happen
+        }
     }
 
     public void setPublic() {

@@ -1,14 +1,12 @@
 package ast;
 
 import compile.CompileEnv;
-import compile.ast.ContractType;
-import compile.ast.SingleVar;
-import compile.ast.PrimitiveType;
 import compile.ast.Type;
 import compile.ast.VarDec;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -62,7 +60,7 @@ public class AnnAssign extends Statement {
         this.isStatic = isStatic;
     }
 
-    public VarSym toVarInfo(InterfaceSym contractSym) {
+    public VarSym toVarInfo(InterfaceSym contractSym) throws SemanticException {
         IfLabel ifl = null;
         if (annotation != null) {
             ifl = annotation.label();
@@ -85,25 +83,29 @@ public class AnnAssign extends Statement {
 //    }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         String name = ((Name) target).id;
         Sym symValue = env.getCurSym(name);
         if (symValue != null && !symValue.isGlobal()) {
-            throw new RuntimeException("local duplicate variable name " + name + " at " + location);
+            throw new SemanticException("local duplicate variable name " + name, location);
         }
         VarSym varSym = new VarSym(env.newVarSym(name, annotation, isStatic, isFinal, isBuiltIn, location, now));
 //        isContractType = varSym.typeSym instanceof InterfaceSym;
-        env.addSym(name, varSym);
+        try {
+            env.addSym(name, varSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Already defined: " + name, location);
+        }
         if (annotation.label() != null) {
             varSym.setLabel(env.newLabel(annotation.label()));
         }
-        ScopeContext type = annotation.ntcGenCons(env, now);
-        ScopeContext tgt = target.ntcGenCons(env, now);
+        ScopeContext type = annotation.generateConstraints(env, now);
+        ScopeContext tgt = target.generateConstraints(env, now);
 
         env.addCons(type.genCons(tgt, Relation.EQ, env, location));
         if (value != null) {
-            ScopeContext v = value.ntcGenCons(env, now);
+            ScopeContext v = value.generateConstraints(env, now);
             env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
         } else if (isFinal) {
             throw new RuntimeException("final variable " + name + " not initialized at " + location);
@@ -112,7 +114,7 @@ public class AnnAssign extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -129,7 +131,11 @@ public class AnnAssign extends Statement {
 //        }
         varSym = env.curContractSym().newVarSym(id, annotation, isStatic, isFinal, isBuiltIn, loc,
                 scopeContext);
-        env.addVar(id, varSym);
+        try {
+            env.addVar(id, varSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Already defined: " + id, location);
+        }
         if (annotation != null) {
             if (annotation.label() != null) {
                 varSym.setLabel(env.toLabel(annotation.label()));

@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import java_cup.runtime.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
 import typecheck.sherrlocUtils.Inequality;
@@ -27,11 +28,13 @@ public class TypeChecker {
     }
 
     /*
-        Given a list of SCIF source files, this method typechecks all code ignoring information flow control.
-        It generates constraints in SHErrLoc format and put them in outputFile, then runs ShErrLoc to get error info.
+        Given a list of SCIF source files, this method type-checks all code,
+        ignoring information flow control.  It generates constraints in
+        SHErrLoc format and put them in outputFile, then runs SHErrLoc to get
+        error info.
      */
     public static List<SourceFile> regularTypecheck(List<File> inputFiles, File logDir,
-            boolean DEBUG) throws IOException {
+            boolean DEBUG) throws IOException, SemanticException {
 
         File outputFile = new File(logDir, SCIF.newFileName("ntc", "cons"));
         logger.trace("typecheck starts...");
@@ -66,6 +69,7 @@ public class TypeChecker {
         while (!mentionedFiles.isEmpty()) {
             File file = mentionedFiles.poll();
             Symbol result = Parser.parse(file, null);
+            if (result == null) return null;
             SourceFile root = (SourceFile) result.value;
             fileMap.put(root.getSourceFilePath(), root);
             // TODO root.setName(inputFile.name());
@@ -76,14 +80,13 @@ public class TypeChecker {
             roots.add(root);
             assert root.ntcAddImportEdges(graph);
 
-            for (String filePath: root.importPaths()) {
+            for (String filePath : root.importPaths()) {
                 if (!includedFilePaths.contains(filePath)) {
                     mentionedFiles.add(new File(filePath));
                     includedFilePaths.add(filePath);
                 }
             }
         }
-
 
         // Code-paste superclasses' methods and data fields
         Map<String, Contract> contractMap = new HashMap<>();
@@ -135,15 +138,17 @@ public class TypeChecker {
             ntcEnv.addSourceFile(root.getSourceFilePath(), root);
 
             root.passScopeContext(null);
-            System.err.println("Global checking " + root.getContractName());
-            assert root.ntcGlobalInfo(ntcEnv, null): root.getContractName();
+            System.err.println("Checking contract " + root.getContractName());
+            if (!root.ntcGlobalInfo(ntcEnv, null)) {
+                assert false : "Must succeed or throw a semantic exception";
+            }
         }
 
         // Generate constraints
         for (SourceFile root : roots) {
             if (!root.isBuiltIn() && root instanceof ContractFile) {
 //                ntcEnv.enterFile(root.getSourceFilePath());
-                root.ntcGenCons(ntcEnv, null);
+                root.generateConstraints(ntcEnv, null);
             }
         }
 
@@ -176,7 +181,7 @@ public class TypeChecker {
                             return null;
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        System.out.println(e.getMessage());
                         return null;
                     }
 //                }
@@ -187,7 +192,9 @@ public class TypeChecker {
     }
 
     public static boolean ifcTypecheck(List<SourceFile> roots, File logDir,
-            boolean DEBUG) {
+            boolean DEBUG)
+        throws SemanticException
+    {
 
 //        Map<SourceFile, File> outputFileMap = new HashMap<>();
 //        for (int i = 0; i < roots.size(); ++i) {
@@ -203,27 +210,32 @@ public class TypeChecker {
         //ArrayList<Constraint> cons = new ArrayList<>();
 
         for (SourceFile root : roots) {
+            String contractName = root.getContractName();
+            if (contractNames.contains(contractName)) {
+                throw new SemanticException("Contract name already defined: " + contractName,
+                        new CodeLocation(root.getSourceFilePath()));
+            }
             if (root instanceof ContractFile) {
-                ContractSym contractSym = new ContractSym(root.getContractName(),
-                        ((ContractFile) root).getContract());
-                // contractSym.name = ((SourceFile) root).getContractName();
-                // contractSym.astNode = root;
-                if (contractNames.contains(contractSym.getName())) {
-                    throw new RuntimeException("duplicate contract names");
-                    //TODO: duplicate contract names
+                try {
+                    ContractSym contractSym = new ContractSym(root.getContractName(),
+                            ((ContractFile) root).getContract());
+
+                    contractNames.add(contractSym.getName());
+                    contractMap.add(contractSym.getName(), contractSym);
+                } catch (SymTab.AlreadyDefined e) {
+                    assert false; // cannot happen
                 }
-                contractNames.add(contractSym.getName());
-                contractMap.add(contractSym.getName(), contractSym);
-                //root.findPrincipal(principalSet);
             } else {
-                InterfaceSym interfaceSym = new InterfaceSym(root.getContractName(),
-                        ((InterfaceFile) root).getInterface());
-                if (contractNames.contains(interfaceSym.getName())) {
-                    throw new RuntimeException("duplicate contract names");
-                    //TODO: duplicate contract names
+                try {
+                    InterfaceSym interfaceSym = new InterfaceSym(root.getContractName(),
+                            ((InterfaceFile) root).getInterface());
+
+                    contractNames.add(interfaceSym.getName());
+                    contractMap.add(interfaceSym.getName(), interfaceSym);
+                } catch (SymTab.AlreadyDefined e) {
+                    throw new SemanticException("Contract name already defined: " + contractName,
+                            new CodeLocation(root.getContractName()));
                 }
-                contractNames.add(interfaceSym.getName());
-                contractMap.add(interfaceSym.getName(), interfaceSym);
             }
         }
 
@@ -381,7 +393,7 @@ public class TypeChecker {
     }
 
     private static boolean ifcTypecheck(ContractFile contractFile, VisitEnv env, File logDir,
-            boolean DEBUG) {
+            boolean DEBUG) throws SemanticException {
         String contractName = contractFile.getContractName();//contractNames.get(fileIdx);
         InterfaceSym contractSym = env.getContract(contractName);
         logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n"
@@ -421,7 +433,7 @@ public class TypeChecker {
 
         for (String methodName : env.getMethodNameSet()) {
             if (methodName.equals(Utils.CONTRACT_KEYWORD)) continue;
-            System.err.println("checking method: " + methodName);
+            // System.err.println("checking method: " + methodName);
 //            if (!methodName.equals("removeLiquidity")) {
 //                continue;
 //            }
@@ -440,7 +452,7 @@ public class TypeChecker {
             try {
                 result = runSLC(env.programMap, outputFile.getAbsolutePath(), DEBUG);
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println(e.getMessage());
                 return false;
             }
             if (!result) return false;
@@ -456,7 +468,7 @@ public class TypeChecker {
         String classDirectoryPath = new File(
                 SCIF.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
         sherrloc.diagnostic.DiagnosticConstraintResult result = Utils.runSherrloc(outputFileName);
-        System.err.println("runSLC: " + outputFileName + " " + result.success());
+//      System.err.println("runSLC: " + outputFileName + " " + result.success());
 //        System.err.println(Arrays.toString(Utils.runSLCCMD(classDirectoryPath, outputFileName)));
 //        logger.debug("runSLC: " + result);
         if (result.success()) {
@@ -465,9 +477,9 @@ public class TypeChecker {
             System.out.println(Utils.TYPECHECK_ERROR_MSG);
             double best = Double.MAX_VALUE;
             boolean seced = false;
-            System.out.println("Places most likely to be wrong:");
+            System.out.println("Code locations most likely to be wrong:");
             if (DEBUG) {
-                System.out.println("No of places: " + result.getSuggestions().size());
+                System.out.println("Number of places: " + result.getSuggestions().size());
             }
             int idx = 0;
             Set<String> expSet = new HashSet<>();
@@ -488,7 +500,7 @@ public class TypeChecker {
                         if (!expSet.contains(exp)) {
                             expSet.add(exp);
                             idx += 1;
-                            System.out.println(idx + ":" + exp + "\n");
+                            System.out.println(idx + ". " + exp + "\n");
                         }
                     }
 //                    System.out.println(idx + ":");

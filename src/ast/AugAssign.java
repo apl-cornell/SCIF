@@ -26,7 +26,7 @@ public class AugAssign extends Statement {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         return null;
     }
 

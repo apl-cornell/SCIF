@@ -1,0 +1,21 @@
+contract Lotto {
+	uint ticketPrice;
+
+	constructor() { super(); }
+
+	@public
+	@payable
+	void receive() {
+		uint _value = value - (value % ticketPrice)
+		if (_value != 0) {
+			if (_value < value) {
+				lock(this) {
+					send(sender, value - _value);
+				}
+			}
+
+			uint ticketsCount = _value / ticketPrice;
+			// ...
+		}
+	}
+}

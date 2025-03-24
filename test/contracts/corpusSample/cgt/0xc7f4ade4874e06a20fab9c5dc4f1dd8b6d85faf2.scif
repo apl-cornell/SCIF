@@ -1,0 +1,39 @@
+import "./IUser.scif";
+
+contract Pie {
+
+	address Owner;
+
+	constructor() { super(); }
+
+	@public
+	@payable
+	void Get() {
+		if (value > 1) {
+			lock(this) {
+				send(Owner, balance(address(this)));
+				send(sender, balance(address(this)));
+			}
+		}
+	}
+
+	@public
+	@payable
+	void withdraw() {
+		if (sender == Owner) {
+			lock(this) {
+				send(Owner, balance(address(this)));
+			}
+		}
+	}
+
+	@public
+	@payable
+	void Command(IUser adr, bytes data) {
+		if (sender == Owner) {
+			lock(this) {
+				assert adr.callback(adr, value, data);
+			}
+		}
+	}
+}

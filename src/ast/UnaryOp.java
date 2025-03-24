@@ -2,10 +2,10 @@ package ast;
 
 import compile.CompileEnv;
 import compile.ast.Statement;
-import compile.ast.Type;
 import compile.ast.UnaryOperation;
 import java.util.List;
-import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -21,9 +21,9 @@ public class UnaryOp extends Expression {
         operand = y;
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext rtn = operand.ntcGenCons(env, now);
+        ScopeContext rtn = operand.generateConstraints(env, now);
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         if (op == UnaryOperator.USub || op == UnaryOperator.UAdd) {
             env.addCons(

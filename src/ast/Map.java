@@ -2,13 +2,14 @@ package ast;
 
 import compile.CompileEnv;
 import compile.ast.MapType;
-import compile.ast.PrimitiveType;
+
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.MapTypeSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.Utils;
+import typecheck.exceptions.SemanticException;
 
 public class Map extends Type {
 
@@ -55,10 +56,12 @@ public class Map extends Type {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent)
+        throws SemanticException
+    {
         ScopeContext now = new ScopeContext(this, parent);
-        keyType.ntcGenCons(env, parent);
-        valueType.ntcGenCons(env, parent);
+        keyType.generateConstraints(env, parent);
+        valueType.generateConstraints(env, parent);
         MapTypeSym typeSym = (MapTypeSym) env.toTypeSym(this, scopeContext);
         assert typeSym != null : name;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));

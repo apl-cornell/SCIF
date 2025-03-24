@@ -7,6 +7,8 @@ import compile.ast.WhileStatement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -24,16 +26,16 @@ public class While extends Statement {
         this.body = body;
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
         env.enterNewScope();
-        ScopeContext rtn = test.ntcGenCons(env, now);
+        ScopeContext rtn = test.generateConstraints(env, now);
         env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
 
         for (Statement s : body) {
-            ScopeContext tmp = s.ntcGenCons(env, now);
+            ScopeContext tmp = s.generateConstraints(env, now);
         }
         env.exitNewScope();
         env.addCons(now.genCons(rtn, Relation.EQ, env, location));
@@ -41,7 +43,7 @@ public class While extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
                 Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -65,7 +67,7 @@ public class While extends Statement {
         env.inContext = new Context(ifNamePcAfter, beginContext.lambda);
         CodeLocation loc = null;
         PathOutcome ifo = to.psi;
-        Utils.genConsStatments(body, env, ifo, false);
+        Utils.genConsStmts(body, env, ifo, false);
 //        for (Statement stmt : body) {
 //            ifo = stmt.genConsVisit(env, false);
 //

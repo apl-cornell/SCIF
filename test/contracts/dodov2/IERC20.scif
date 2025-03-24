@@ -1,0 +1,7 @@
+interface IERC20 {
+    @public uint balanceOf(address account);
+    @public void approve{sender}(address allowed, uint amount);
+    @public void approveFrom{from}(final address from, address spender, uint val);
+    @public void transfer{from -> this}(final address from, address to, uint amount);
+    @public void transferFrom{sender -> from; sender}(final address from, address to, uint amount);
+}

@@ -1,7 +1,7 @@
 import "./Contract.scif";
 
 contract ContractImp implements Contract {
-    bool m_lock;
+    transient bool m_lock;
 
     constructor() {}
 

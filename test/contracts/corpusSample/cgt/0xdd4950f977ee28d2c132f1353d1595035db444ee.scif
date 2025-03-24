@@ -1,0 +1,25 @@
+import "./JIincInterfaceForForwarder.scif";
+
+contract JIincForwarder {
+	JIincInterfaceForForwarder currentCorpBank_;
+	bool needsBank_;
+	constructor() { super(); }
+
+	@public
+	@payable
+	void receive() {
+		lock(this) {
+			currentCorpBank_.deposit(currentCorpBank_);
+		}
+	}
+
+	@public
+	@payable
+	void deposit() {
+		if (value > 0 && needsBank_ == false) {
+			lock(this) {
+				assert currentCorpBank_.deposit(sender);
+			}
+		}
+	}
+}

@@ -4,7 +4,8 @@ import compile.CompileEnv;
 import compile.ast.Type;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -24,11 +25,11 @@ public class Return extends Statement {
         this.value = null;
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         FuncSym funcSym = Utils.getCurrentFuncInfo(env, now);
         if (value != null) {
-            ScopeContext rtn = value.ntcGenCons(env, now);
+            ScopeContext rtn = value.generateConstraints(env, now);
             env.addCons(now.genCons(rtn, Relation.EQ, env, location));
         }
 

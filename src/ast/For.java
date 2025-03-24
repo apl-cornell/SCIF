@@ -13,6 +13,7 @@ import typecheck.PsiUnit;
 import typecheck.ScopeContext;
 import typecheck.Utils;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -30,22 +31,22 @@ public class For extends Statement {
         this.body = body;
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
 
         // create a new scope
         env.enterNewScope();
 
-        newVars.ntcGenCons(env, now);
-        ScopeContext rtn = test.ntcGenCons(env, now);
+        newVars.generateConstraints(env, now);
+        ScopeContext rtn = test.generateConstraints(env, now);
         // the test condition must be boolean
         env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
 
         for (Statement s: body) {
-            s.ntcGenCons(env, now);
+            s.generateConstraints(env, now);
         }
         for (Statement s: iter) {
-            s.ntcGenCons(env, now);
+            s.generateConstraints(env, now);
         }
 
         env.exitNewScope();
@@ -54,7 +55,7 @@ public class For extends Statement {
         return now;
     }
 
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
                 Utils.getLabelNameLock(toSHErrLocFmt()));

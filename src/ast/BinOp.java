@@ -7,6 +7,8 @@ import compile.ast.Statement;
 import compile.ast.Type;
 import java.util.List;
 import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -27,13 +29,13 @@ public class BinOp extends Expression {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         logger.debug("binOp:");
         ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext l = left.ntcGenCons(env, now);
+        ScopeContext l = left.generateConstraints(env, now);
         // logger.debug("binOp/left:");
         // logger.debug(l.toString());
-        ScopeContext r = right.ntcGenCons(env, now);
+        ScopeContext r = right.generateConstraints(env, now);
         // logger.debug("binOp/right:");
         // logger.debug(r.toString());
         env.addCons(now.genCons(l, Relation.LEQ, env, location));

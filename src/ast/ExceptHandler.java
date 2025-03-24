@@ -4,7 +4,6 @@ import compile.CompileEnv;
 import compile.ast.Assign;
 import compile.ast.Expression;
 import compile.ast.IfStatement;
-import compile.ast.PrimitiveType;
 import compile.ast.SingleVar;
 import compile.ast.StructType;
 import compile.ast.VarDec;
@@ -14,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 public class ExceptHandler extends Node {
 
@@ -42,18 +42,25 @@ public class ExceptHandler extends Node {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterNewScope();
 
         if (!acceptall) {
             VarSym var = env.newVarSym(name, labeledType, true, true, true, location, now);
-            assert var != null : "Exception type " + labeledType.type().name() + " not found";
-            env.addSym(name, var);
+            if (var == null) {
+                throw new SemanticException("Exception type " + labeledType.type().name() + " not found",
+                        location);
+            }
+            try {
+                env.addSym(name, var);
+            } catch (SymTab.AlreadyDefined e) {
+                throw new SemanticException("Already have handler for " + name, location);
+            }
         }
 
         for (Statement s : body) {
-            ScopeContext tmp = s.ntcGenCons(env, now);
+            ScopeContext tmp = s.generateConstraints(env, now);
         }
         env.exitNewScope();
         return now;
@@ -118,13 +125,13 @@ public class ExceptHandler extends Node {
         return scopeContext.getSHErrLocName() + "." + "handlerLockLabelName" + location.toString();
     }
 
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         int index = 0;
         PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        Utils.genConsStatments(body, env, so, tail_position);
+        Utils.genConsStmts(body, env, so, tail_position);
 //        for (Statement stmt : body) {
 //            ++index;
 //            so = stmt.genConsVisit(env, index == body.size() && tail_position);

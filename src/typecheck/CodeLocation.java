@@ -7,7 +7,6 @@ public class CodeLocation {
     public final String fileName;
     String fileId;
 
-
     public CodeLocation(int lineNo, int columnNo, String fileName) {
         this.lineNo = lineNo;
         this.columnNo = columnNo;
@@ -15,12 +14,9 @@ public class CodeLocation {
         this.fileId = SourceFile.sourceFileNameId(fileName);
     }
 
-    /*public CodeLocation() {
-        lineNo = 0;
-        columnNo = 0;
-        fileName = "Builtin";
-        fileId = SourceFile.sourceFileNameId(fileName);
-    }*/
+    public CodeLocation(String fileName) {
+        this(1, 1, fileName);
+    }
 
     public static CodeLocation builtinCodeLocation() {
         String name ="Builtin";
@@ -45,6 +41,6 @@ public class CodeLocation {
     }
 
     public String errString() {
-        return "(" + lineNo + ", " + columnNo + ") in " + fileName;
+        return fileName + ", line " + lineNo + ", column " + columnNo;
     }
 }

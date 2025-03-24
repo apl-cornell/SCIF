@@ -3,7 +3,7 @@
 ## Prerequisite
 
 * [JFlex](https://jflex.de/)
-* Java 17
+* Java 21
 * Ant
 * Gradle
 

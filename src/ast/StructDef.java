@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
+import typecheck.exceptions.SemanticException;
 
 import java.util.ArrayList;
 
@@ -24,21 +25,21 @@ public class StructDef extends TopLayerNode {
     //TODO: struct def NTCgenCons
 
     @Override
-    public void globalInfoVisit(InterfaceSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException {
         // assuming there is no double declaration
 
-        contractSym.addType(structName, contractSym.toStructType(structName, members));
-
+        contractSym.addType(structName, contractSym.toStructType(structName, members),
+                location);
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
         assert members.size() > 0: "struct should have at least one member: " + structName + " at " + location.errString();
         env.addType(structName, env.toStructType(structName, members));
         return true;
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
 //        assert false;
         return null;
     }

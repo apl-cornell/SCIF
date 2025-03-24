@@ -19,7 +19,7 @@ public class ConstantExpr extends Expression {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         //TODO: Constant are boolean
         ScopeContext now = new ScopeContext(this, parent);
         env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));

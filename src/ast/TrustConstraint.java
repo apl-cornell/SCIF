@@ -1,7 +1,5 @@
 package ast;
 
-import compile.CompileEnv;
-import compile.ast.SolNode;
 import typecheck.Assumption;
 import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
@@ -38,9 +36,9 @@ public class TrustConstraint extends TopLayerNode {
 //    }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        lhs.ntcGenCons(env, parent);
-        rhs.ntcGenCons(env, parent);
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+        lhs.generateConstraints(env, parent);
+        rhs.generateConstraints(env, parent);
         return parent;
     }
 //

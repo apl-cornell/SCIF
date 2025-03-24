@@ -12,11 +12,13 @@ import compile.ast.Revert;
 import compile.ast.SingleVar;
 import compile.ast.Type;
 import compile.ast.VarDec;
-import java.util.Arrays;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
@@ -39,7 +41,7 @@ public class Try extends Statement {
     }
 
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
@@ -57,12 +59,12 @@ public class Try extends Statement {
         }
 
         for (Statement s : body) {
-            tmp = s.ntcGenCons(env, now);
+            tmp = s.generateConstraints(env, now);
         }
         env.exitNewScope();
 
         for (ExceptHandler h : handlers) {
-            tmp = h.ntcGenCons(env, parent);
+            tmp = h.generateConstraints(env, parent);
         }
         return now;
     }
@@ -136,7 +138,7 @@ public class Try extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -159,7 +161,7 @@ public class Try extends Statement {
         PathOutcome input = new PathOutcome();
         env.incScopeLayer();
         PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        Utils.genConsStatmentsWithException(body, env, so, psi, false);
+        Utils.genConsStmtsWithException(body, env, so, psi, false);
 //        for (Statement s : body) {
 //            so = s.genConsVisit(env, false);
 //            psi.joinExe(so);

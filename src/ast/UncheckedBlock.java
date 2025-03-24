@@ -17,6 +17,7 @@ import typecheck.PsiUnit;
 import typecheck.ScopeContext;
 import typecheck.Utils;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 
@@ -28,15 +29,15 @@ public class UncheckedBlock extends Statement {
         this.body = body;
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         for (Statement s : body) {
-            s.ntcGenCons(env, parent);
+            s.generateConstraints(env, parent);
         }
 
         return parent;
     }
 
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException  {
 
         int index = 0;
         PathOutcome ifo = null;

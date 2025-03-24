@@ -15,6 +15,7 @@ import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.Utils;
+import typecheck.exceptions.SemanticException;
 
 public class InterfaceFile extends SourceFile {
     private final Interface itrface;
@@ -36,12 +37,12 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         // env.setGlobalSymTab(env.getContract(contractName).symTab);
         // env.initCurSymTab();
         env.setCurSymTab(env.currentSourceFileFullName());
-        itrface.ntcGenCons(env, now);
+        itrface.generateConstraints(env, now);
         return now;
     }
 
@@ -114,12 +115,12 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterSourceFile(getSourceFilePath());
         env.setNewCurSymTab();
         for (String iptContract : iptContracts) {
-            env.importContract(iptContract);
+            env.importContract(iptContract, location);
         }
         if (!itrface.ntcGlobalInfo(env, now)) {
             logger.debug("GlobalInfo failed with: " + itrface);
@@ -129,7 +130,7 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public void globalInfoVisit(InterfaceSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException {
         // iptContracts.add(itrface.contractName);
         itrface.globalInfoVisit(contractSym);
     }

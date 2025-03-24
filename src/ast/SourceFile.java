@@ -7,6 +7,7 @@ import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 import java.util.*;
 import java.util.Map;
@@ -91,7 +92,7 @@ public abstract class SourceFile extends Node {
 
     abstract public boolean containContract(String fullPath);
 
-    abstract public void codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap);
+    abstract public void codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) throws SemanticException;
 
     abstract public boolean ntcAddImportEdges(InheritGraph graph);
 
@@ -99,9 +100,9 @@ public abstract class SourceFile extends Node {
      *  Generate constraints for regular typechecking in the current source file.
      */
     // abstract public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent);
-    abstract public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent);
+    abstract public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException;
 
-    abstract public void globalInfoVisit(InterfaceSym contractSym);
+    abstract public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException;
 
 
     public void findPrincipal(HashSet<String> principalSet) {
@@ -110,6 +111,10 @@ public abstract class SourceFile extends Node {
 
     public String getSourceFilePath() {
         return sourceFilePath.toString();
+    }
+
+    public String getSourceFileBasename() {
+        return sourceFilePath.getFileName().toString();
     }
 
     public String getSourceFileId() {

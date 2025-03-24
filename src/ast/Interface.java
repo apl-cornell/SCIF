@@ -5,16 +5,13 @@ import compile.ast.SolNode;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import typecheck.BuiltInT;
-import typecheck.CodeLocation;
-import typecheck.InterfaceSym;
-import typecheck.ScopeContext;
-import typecheck.NTCEnv;
+
+import typecheck.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import typecheck.Utils;
-import typecheck.VarSym;
+
+import typecheck.exceptions.SemanticException;
 
 public class Interface extends TopLayerNode {
 
@@ -50,7 +47,8 @@ public class Interface extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
+    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
+            throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         // SymTab curSymTab = new SymTab(env.curSymTab());
         env.enterNewScope();
@@ -58,7 +56,11 @@ public class Interface extends TopLayerNode {
         VarSym anySym = (VarSym) env.getCurSym(Utils.LABEL_BOTTOM);
         InterfaceSym interfaceSym = new InterfaceSym(contractName, env.curSymTab(), new ArrayList<>(), this, anySym);
         env.addContractSym(env.currentSourceFileFullName(), interfaceSym);
-        env.addSym(contractName, interfaceSym);
+        try {
+            env.addSym(contractName, interfaceSym);
+        } catch (SymTab.AlreadyDefined e) {
+            assert false; // cannot happen
+        }
         env.setCurContractSym(interfaceSym);
         // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
 
@@ -91,7 +93,7 @@ public class Interface extends TopLayerNode {
     }
 
 
-    public void globalInfoVisit(InterfaceSym contractSym) {
+    public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException {
         // contractSym.addContract(contractName, contractSym);
         Utils.addBuiltInTypes(contractSym.symTab);
 
@@ -134,7 +136,7 @@ public class Interface extends TopLayerNode {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         return null;
     }
 

@@ -6,6 +6,7 @@ import compile.ast.SolNode;
 import java.util.List;
 import java.util.stream.Collectors;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 import java.util.ArrayList;
 
@@ -35,7 +36,9 @@ public class Arguments extends Node {
         }
     }
 
-    public ArrayList<VarSym> parseArgs(NTCEnv env, ScopeContext parent) {
+    public ArrayList<VarSym> parseArgs(NTCEnv env, ScopeContext parent)
+            throws SemanticException
+    {
         // ScopeContext now = new ScopeContext(this, parent);
         ArrayList<VarSym> rnt = new ArrayList<>();
         for (Arg arg : args) {
@@ -44,7 +47,7 @@ public class Arguments extends Node {
         return rnt;
     }
 
-    public List<VarSym> parseArgs(InterfaceSym interfaceSym) {
+    public List<VarSym> parseArgs(InterfaceSym interfaceSym) throws SemanticException {
         List<VarSym> rnt = new ArrayList<>();
         for (Arg arg : args) {
             rnt.add(arg.parseArg(interfaceSym));
@@ -52,7 +55,7 @@ public class Arguments extends Node {
         return rnt;
     }
 
-    public void genConsVisit(VisitEnv env, boolean tail_position) {
+    public void genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         int index = 0;
         for (Arg arg : args) {
             ++index;
@@ -69,7 +72,7 @@ public class Arguments extends Node {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
         return null;
     }
 

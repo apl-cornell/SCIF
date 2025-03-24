@@ -1,6 +1,9 @@
 package typecheck.exceptions;
 
-abstract public class TypeCheckFailure extends Exception {
-    abstract public String explanation();
+import typecheck.CodeLocation;
 
+public class TypeCheckFailure extends SemanticException {
+    public TypeCheckFailure(String message, CodeLocation loc) {
+        super(message, loc);
+    }
 }

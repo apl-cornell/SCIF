@@ -16,6 +16,7 @@ import sherrloc.diagnostic.ErrorDiagnosis;
 import sherrloc.diagnostic.explanation.Entity;
 import sherrloc.diagnostic.explanation.Explanation;
 import sherrloc.graph.Variance;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 
@@ -44,7 +45,7 @@ public class Utils {
     public static final String SHERRLOC_PASS_INDICATOR = "No errors";
     public static final String SHERRLOC_ERROR_INDICATOR = "wrong";
     public static final String TYPECHECK_PASS_MSG = "The program type-checks.";
-    public static final String TYPECHECK_ERROR_MSG = "The program doesn't type-check.";
+    public static final String TYPECHECK_ERROR_MSG = "Static type error.";
     public static final String TYPECHECK_NORESULT_MSG = "No result from SHErrLoc.";
 
 
@@ -359,8 +360,8 @@ public class Utils {
                 }
             }
             consFile.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
             return false;
         }
         return true;
@@ -422,6 +423,7 @@ public class Utils {
             }
             //consFile.close();
         } catch (Exception e) {
+            System.out.println("Unexpected exception:");
             e.printStackTrace();
             return false;
         }
@@ -653,11 +655,11 @@ public class Utils {
             CodeLocation location) {
         env.addTrustConstraint(new Constraint(new Inequality(outContext.lambda, endContext.lambda),
                 env.hypothesis(), location, env.curContractSym().getName(),
-                "actually-maintained lock of the last sub-statement flows to parent-statement's one"));
+                "actually maintained lock of final sub-statement must flow to that of parent statement"));
         env.addTrustConstraint(
                 new Constraint(new Inequality(outContext.pc, endContext.pc), env.hypothesis(),
                         location, env.curContractSym().getName(),
-                        "normal termination control flow of the last sub-statement flows to parent-statement's one"));
+                        "normal-termination control flow of final sub-statement must flow to that of parent statement"));
     }
 
     public static ExceptionTypeSym getNormalPathException() {
@@ -680,7 +682,11 @@ public class Utils {
         for (BuiltInT t : BuiltInT.values()) {
             String typeName = Utils.BuiltinType2ID(t);
             TypeSym s = new BuiltinTypeSym(typeName);
-            symTab.add(typeName, s);
+            try {
+                symTab.add(typeName, s);
+            } catch (SymTab.AlreadyDefined e) {
+                throw new RuntimeException(e); // cannot happen
+            }
         }
     }
 
@@ -741,14 +747,12 @@ public class Utils {
         List<String> result = new ArrayList<>();
         int index = 0;
 
-        for (Entity entity: entities) {
+        for (Entity entity : entities) {
             ++index;
             StringBuffer locBuffer = new StringBuffer();
             StringBuffer expBuffer = new StringBuffer();
             entity.toConsoleWithExp(locBuffer, expBuffer);
 
-            System.err.println(locBuffer.toString());
-            System.err.println(expBuffer.toString());
             int infoEndIndex = locBuffer.indexOf("\"", 1);
             String infoString = locBuffer.substring(0, infoEndIndex);
             int rowNoEndIndex = locBuffer.indexOf(",", infoEndIndex);
@@ -778,7 +782,7 @@ public class Utils {
             }
             StringBuilder rtn =
                     new StringBuilder(
-                            program.getSourceFilePath() + "(" + row + "," + scol + "): " + "\n"
+                            program.getSourceFileBasename() + ", line " + row + ", column " + scol + ": " + "\n"
                                     + explanation + ".\n");
             rtn.append(program.getSourceCodeLine(row - 1)).append("\n");
             for (int i = 1; i < col; ++i) {
@@ -833,7 +837,7 @@ public class Utils {
         return new Context(newPc, c.lambda);
     }
 
-    public static void genConsStatmentsWithException(List<Statement> body, VisitEnv env, PathOutcome so, PathOutcome psi, boolean tail_positon) {
+    public static void genConsStmtsWithException(List<Statement> body, VisitEnv env, PathOutcome so, PathOutcome psi, boolean tail_positon) throws SemanticException {
         int index = 0;
         for (Statement s : body) {
             ++index;
@@ -848,12 +852,12 @@ public class Utils {
 
         }
     }
-    public static void genConsStatments(List<Statement> body, VisitEnv env, PathOutcome so, boolean tail_positon) {
+    public static void genConsStmts(List<Statement> body, VisitEnv env, PathOutcome so, boolean tail_posn) throws SemanticException {
         int index = 0;
         for (Statement s : body) {
             ++index;
             String prevLambda = env.inContext.lambda;
-            boolean isTail = index == body.size() && tail_positon;
+            boolean isTail = index == body.size() && tail_posn;
             so = s.genConsVisit(env, isTail);
             PsiUnit normalUnit = so.getNormalPath();
             if (normalUnit == null) {

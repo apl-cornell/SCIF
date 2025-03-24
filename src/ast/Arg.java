@@ -2,9 +2,10 @@ package ast;
 
 import compile.CompileEnv;
 import compile.ast.Argument;
-import compile.ast.SolNode;
 import compile.ast.Type;
 import java.util.List;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -35,32 +36,29 @@ public class Arg extends Node {
         annotation.setToDefault(ifl);
     }
 
-    public VarSym parseArg(ContractSym contractSym) {
-        VarSym varSym = contractSym.newVarSym(name, annotation, isStatic, isFinal, true, location, scopeContext);
-        contractSym.symTab.add(name, varSym);
-        if (annotation.label() != null) {
-            varSym.setLabel(contractSym.newLabel(annotation.label()));
-        }
-        return varSym;
-    }
-
-    public VarSym parseArg(InterfaceSym interfaceSym) {
+    public VarSym parseArg(InterfaceSym interfaceSym) throws SemanticException {
         VarSym varSym = interfaceSym.newVarSym(name, annotation, isStatic, isFinal, true, location, scopeContext);
-        interfaceSym.symTab.add(name, varSym);
+        try {
+            interfaceSym.symTab.add(name, varSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new RuntimeException(e); // can't happen?
+        }
         if (annotation.label() != null) {
             varSym.setLabel(interfaceSym.newLabel(annotation.label()));
         }
         return varSym;
     }
 
-    public VarSym parseArg(NTCEnv env, ScopeContext parent) {
+    public VarSym parseArg(NTCEnv env, ScopeContext parent)
+            throws SemanticException
+    {
         // ScopeContext now = new ScopeContext(this, parent);
         VarSym varSym = env.newVarSym(name, annotation, isStatic, isFinal, true, location, parent);
         annotation.type().setContractType(varSym.typeSym instanceof InterfaceSym);
         try {
             env.addSym(name, varSym);
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e.getMessage() + " at " + location.errString());
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException(e.id, location);
         }
         if (annotation.label() != null) {
             varSym.setLabel(env.newLabel(annotation.label()));
@@ -69,15 +67,18 @@ public class Arg extends Node {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         VarSym varSym = env.newVarSym(name, annotation, isStatic, isFinal, true, location, now);
-
-        env.addSym(name, varSym);
+        try {
+            env.addSym(name, varSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new RuntimeException(e); // can't happen?
+        }
         if (annotation.label() != null) {
             varSym.setLabel(env.newLabel(annotation.label()));
         }
-        ScopeContext type = annotation.ntcGenCons(env, now);
+        ScopeContext type = annotation.generateConstraints(env, now);
 
         env.addCons(type.genCons(now, Relation.EQ, env, location));
 
@@ -90,11 +91,15 @@ public class Arg extends Node {
         return new Argument(varType, name);
     }
 
-    public void genConsVisit(VisitEnv env, boolean tail_position) {
+    public void genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
 
         VarSym varSym = env.curContractSym().newVarSym(name, annotation, isStatic, isFinal, true, location,
                 scopeContext);
-        env.addVar(name, varSym);
+        try {
+            env.addVar(name, varSym);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Already defined: " + name, location);
+        }
         if (annotation.label() != null) {
             varSym.setLabel(env.toLabel(annotation.label()));
         }
@@ -102,7 +107,6 @@ public class Arg extends Node {
         if (varSym.isFinal && varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)) {
             env.addPrincipal(varSym);
         }
-
     }
 
     public String toSolCode() {

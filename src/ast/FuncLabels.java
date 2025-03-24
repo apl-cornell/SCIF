@@ -1,12 +1,11 @@
 package ast;
 
-import compile.CompileEnv;
-import compile.ast.SolNode;
 import java.util.List;
 import typecheck.CodeLocation;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.Utils;
+import typecheck.exceptions.SemanticException;
 
 import java.util.ArrayList;
 
@@ -45,12 +44,12 @@ public class FuncLabels extends Node {
 //    }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        begin_pc.ntcGenCons(env, parent);
-        to_pc.ntcGenCons(env, parent);
-        gamma_label.ntcGenCons(env, parent);
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        begin_pc.generateConstraints(env, parent);
+        to_pc.generateConstraints(env, parent);
+        gamma_label.generateConstraints(env, parent);
         // TODO: set end pc
-        if (end_pc != null) end_pc.ntcGenCons(env, parent);
+        if (end_pc != null) end_pc.generateConstraints(env, parent);
         return parent;
     }
 //

@@ -2,6 +2,8 @@
 
 import ast.SourceFile;
 import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -15,6 +17,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.exceptions.TypeCheckFailure;
 
 /**
@@ -67,27 +71,20 @@ public class SCIF implements Callable<Integer> {
      */
     private List<SourceFile> _typecheck(String[] logDirs)
             throws TypeCheckFailure, IOException {
+        try {
         File logDir = new File("./.scif");
         if (logDirs != null) {
             logDir = new File(logDirs[0]);
         }
         logDir.mkdirs();
 
-//        File NTCConsFile;
-//        if (logDirs == null || logDirs.length <= 0) {
-//            NTCConsFile = new File(logDir, "ntc.cons");
-            // outputFile.deleteOnExit();
-//        } else {
-//            NTCConsFile = new File(logDirs[0]);
-//        }
-
-        //List<File> files = ImmutableList.copyOf(m_inputFiles);
         List<File> files = new ArrayList<>();
         for (File file : m_inputFiles) {
             files.add(file);
         }
-//        System.out.println("Regular Type Checking:");
-        List<SourceFile> roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
+        List<SourceFile> roots;
+        roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
+
         boolean passNTC = true;
         //if (!Utils.emptyFile(outputFileName))
         //    passNTC = runSLC(outputFileName);
@@ -111,12 +108,19 @@ public class SCIF implements Callable<Integer> {
 //        }
 
 //        System.out.println("\nInformation Flow Type Checking:");
-        boolean passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
+        boolean passIFC = false;
+
+        passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
+
         // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
         // logger.debug("running SHErrLoc...");
         // boolean passIFC = runSLC(outputFileName);
 
         return (passNTC && passIFC) ? roots : null;
+        } catch (SemanticException e) {
+            System.err.println(e.getMessage());
+            return List.of();
+        }
     }
 
     /**
@@ -127,7 +131,7 @@ public class SCIF implements Callable<Integer> {
      * 4. tokenize
      */
     @Override
-    public Integer call() throws Exception {
+    public Integer call() {
 
         logger.trace("SCIF starts");
         if (m_funcRequest == null || m_funcRequest.compile) {
@@ -135,22 +139,30 @@ public class SCIF implements Callable<Integer> {
             try {
                 roots = _typecheck(null);
             } catch (TypeCheckFailure e) {
-                System.out.println(e.explanation());
+                System.out.println(e.getMessage());
+                return 0;
+            } catch (Exception e) {
+                System.out.println("Unexpected exception:");
+                e.printStackTrace();
                 return 0;
             }
             logger.debug("finished typecheck, compiling...");
             if (roots == null) {
                 return 1;
             }
-            String solFileName;
             File solFile;
             if (m_solFileNames == null) {
-                solFile = File.createTempFile("tmp", "sol");
-                solFileName = solFile.getAbsolutePath();
-                solFile.deleteOnExit();
+                Path input0 = m_inputFiles[0].toPath();
+                String basename = input0.getFileName().toString();
+                int dotIndex = basename.lastIndexOf('.');
+                solFile = new File((dotIndex == -1)
+                        ? basename + ".sol"
+                        : basename.substring(0, dotIndex) + ".sol");
+                // solFile = File.createTempFile("scif_", ".sol");
+                if (m_debug) System.err.println("Output to file: " + solFile);
+                // solFile.deleteOnExit();
             } else {
-                solFileName = m_solFileNames[0];
-                solFile = new File(solFileName);
+                solFile = new File(m_solFileNames[0]);
             }
             Map<String, SourceFile> rootMap = new HashMap<>();
             for (SourceFile r: roots) {
@@ -158,14 +170,17 @@ public class SCIF implements Callable<Integer> {
             }
             for (File f: m_inputFiles) {
                 SourceFile r = rootMap.get(f.getAbsolutePath());
-                assert r != null: f.getAbsolutePath();
+                if (r == null) return 0;
                 SolCompiler.compile(r, solFile);
             }
         } else if (m_funcRequest.typecheck) {
             try {
                 _typecheck(m_logDir);
             } catch (TypeCheckFailure e) {
-                System.out.println(e.explanation());
+                System.out.println(e.getMessage());
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+                return 0;
             }
         } else if (m_funcRequest.parse) {
             File astOutputFile = m_logDir == null ? null : new File(m_logDir[0] + newFileName("parse", "result"));

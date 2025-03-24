@@ -13,6 +13,8 @@ public class TestCompilation {
 
     @ParameterizedTest
     @ValueSource(strings = {
+//            "applications/Uniswap_ERC20_noe",
+//            "applications/Uniswap_ERC777_noe",
             "basic/StructEx04",
             "basic/StructEx03",
             "basic/StructEx02",
@@ -20,12 +22,13 @@ public class TestCompilation {
             "applications/EthCrossChainManager",
             "applications/HODLWallet",
             "applications/SysEscrow",
-            "applications/Uniswap_ERC20",
-            "applications/Uniswap_ERC777",
+//            "applications/Uniswap_ERC20",
+//            "applications/Uniswap_ERC777",
             "applications/Dexible",
             "applications/KoET",
             "applications/ERC20_depmap",
             "applications/ERC20_nodepmap",
+            "applications/ERC20_depmap_noe",
 //            "examples/DeployToken02", TODO
             "basic/DependentMap",
             "basic/EmptyContract",

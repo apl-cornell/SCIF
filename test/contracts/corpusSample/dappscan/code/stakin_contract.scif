@@ -1,0 +1,15 @@
+import "./IERC20.scif";
+
+contract stakin_contract {
+	IERC20 avsAddress;
+	uint{this} allAVSTokens;
+
+	constructor() { super(); }
+
+	@public
+	void AVSTokenDonation (uint amount) {
+		avsAddress.transferFrom(sender, address(this), endorse(amount, any -> sender));
+
+		allAVSTokens += endorse(amount, any -> this);
+	}
+}

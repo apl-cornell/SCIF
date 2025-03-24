@@ -12,13 +12,14 @@ import compile.ast.PrimitiveType;
 import compile.ast.Return;
 import compile.ast.SingleVar;
 import compile.ast.Statement;
-import compile.ast.Subscript;
 import compile.ast.Type;
 import compile.ast.VarDec;
-import java.nio.file.Path;
+
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -72,7 +73,7 @@ public class Call extends TrailerExpr {
         return args.get(index);
     }
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         this.ntced = true;
         ScopeContext now = new ScopeContext(this, parent);
         String funcName;
@@ -109,7 +110,7 @@ public class Call extends TrailerExpr {
                             // require one T, return void
                             assert args.size() == 1: "type error";
                             Expression arg = args.get(0);
-                            ScopeContext argContext = arg.ntcGenCons(env, now);
+                            ScopeContext argContext = arg.generateConstraints(env, now);
                             env.addCons(argContext.genCons(arrayTName, Relation.GEQ, env, arg.location));
                             TypeSym rtnTypeSym = (TypeSym) env.getSym(BuiltInT.VOID);
                             env.addCons(now.genCons(rtnTypeSym.toSHErrLocFmt(), Relation.EQ, env, location));
@@ -175,13 +176,13 @@ public class Call extends TrailerExpr {
         this.funcSym = funcSym;
 
         if (extern && callSpec != null) {
-            callSpec.ntcGenCons(env, now);
+            callSpec.generateConstraints(env, now);
         }
         // typecheck arguments
         for (int i = 0; i < args.size(); ++i) {
             Expression arg = args.get(i);
             TypeSym paraInfo = funcSym.parameters.get(i).typeSym;
-            ScopeContext argContext = arg.ntcGenCons(env, now);
+            ScopeContext argContext = arg.generateConstraints(env, now);
             String typeName = paraInfo.toSHErrLocFmt();
             env.addCons(argContext.genCons(typeName, Relation.GEQ, env, arg.location));
         }
@@ -397,7 +398,6 @@ public class Call extends TrailerExpr {
                         externalContractSym.thisSym().toSHErrLocFmt(),
                         externalTargetSym.toSHErrLocFmt());
             } else {
-                System.err.println("call " + funcName + " with this as " + ifContRtn);
                 dependentLabelMapping.put(
                         externalContractSym.thisSym().toSHErrLocFmt(),
                         ifContRtn);

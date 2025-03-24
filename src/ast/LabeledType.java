@@ -7,6 +7,7 @@ import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 
 public class LabeledType extends Node {
 
@@ -54,9 +55,9 @@ public class LabeledType extends Node {
         type.setToDefault(this.ifl);
     }
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
-        ScopeContext rtn = type.ntcGenCons(env, parent);
-        if (ifl != null) ifl.ntcGenCons(env, parent);
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        ScopeContext rtn = type.generateConstraints(env, parent);
+        if (ifl != null) ifl.generateConstraints(env, parent);
         return rtn;
     }
 

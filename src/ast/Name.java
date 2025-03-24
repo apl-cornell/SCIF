@@ -9,8 +9,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
+import typecheck.exceptions.NameNotFoundException;
 
 public class Name extends Variable {
 
@@ -29,7 +32,7 @@ public class Name extends Variable {
     }*/
 
 
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         Sym s = env.getCurSym(id);
         logger.debug("Name: " + id);
         // logger.debug(s.toString());
@@ -40,15 +43,14 @@ public class Name extends Variable {
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
             logger.debug(s.getName());
-            env.addCons(now.genEqualCons(typeSym, env, location, "The variable is of improper type"));
+            env.addCons(now.genEqualCons(typeSym, env, location, "Variable `" + id + "` has the wrong type"));
             logger.debug(now.toString());
             return now;
         } else if (s instanceof TypeSym) {
             assert false;
             return null;
         }
-        assert false : "variable not found: " + id + " at " + location.errString();
-        return null;
+        throw new NameNotFoundException(id, location);
     }
 
     @Override

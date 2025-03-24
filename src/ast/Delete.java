@@ -2,7 +2,7 @@ package ast;
 
 import compile.CompileEnv;
 import compile.ast.Type;
-import java.nio.file.Path;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +17,8 @@ import typecheck.VarSym;
 import typecheck.VisitEnv;
 
 import java.util.ArrayList;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 
@@ -73,11 +75,11 @@ public class Delete extends Statement {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // making sure that the variable to be deleted is global
         boolean deletable = true;
         if (target instanceof Name) {
-            ScopeContext rtn = target.ntcGenCons(env, parent);
+            ScopeContext rtn = target.generateConstraints(env, parent);
             VarSym varSym = target.getVarInfo(env);
             if (varSym.isGlobal()) {
                 return rtn;
@@ -85,7 +87,7 @@ public class Delete extends Statement {
                 deletable = false;
             }
         } else if (target instanceof Attribute) {
-            ScopeContext rtn = target.ntcGenCons(env, parent);
+            ScopeContext rtn = target.generateConstraints(env, parent);
             if (((Attribute) target).isGlobalStruct(env)) {
                 return rtn;
             } else {

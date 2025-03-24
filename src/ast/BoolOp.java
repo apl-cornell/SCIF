@@ -7,6 +7,8 @@ import compile.ast.Statement;
 import compile.ast.Type;
 import java.util.List;
 import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -26,9 +28,9 @@ public class BoolOp extends Expression {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext l = left.ntcGenCons(env, now), r = right.ntcGenCons(env, now);
+        ScopeContext l = left.generateConstraints(env, now), r = right.generateConstraints(env, now);
         env.addCons(now.genCons(l, Relation.LEQ, env, location));
         env.addCons(now.genCons(r, Relation.LEQ, env, location));
         env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));

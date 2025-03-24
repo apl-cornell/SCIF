@@ -1,7 +1,5 @@
 package ast;
 
-import compile.CompileEnv;
-import compile.ast.SolNode;
 import java.util.Collections;
 import java.util.List;
 import typecheck.Assumption;
@@ -50,9 +48,9 @@ public class TrustSetting extends Node {
     }
 
     @Override
-    public ScopeContext ntcGenCons(NTCEnv env, ScopeContext context) {
+    public ScopeContext generateConstraints(NTCEnv env, ScopeContext context) {
         for (TrustConstraint trustConstraint : trust_list) {
-            trustConstraint.ntcGenCons(env, context);
+            trustConstraint.generateConstraints(env, context);
         }
         return context;
     }
