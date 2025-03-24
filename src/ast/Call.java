@@ -532,7 +532,7 @@ public class Call extends TrailerExpr {
             funcName = value instanceof Name ? ((Name) value).id : ((Attribute) value).attr.id;
         } else {
             assert funcSym != null;
-            if (!(value instanceof Name) || funcSym.isPublic()) {
+            if (!(value instanceof Name))  {// || funcSym.isPublic()) {
                 // external call
                 funcName = Utils.methodNameHash(funcSym.funcName, funcSym.plainSignature());
             } else {
