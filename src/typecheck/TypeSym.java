@@ -1,5 +1,7 @@
 package typecheck;
 
+import compile.ast.Type;
+
 public abstract class TypeSym extends Sym {
 
     public TypeSym(String name, ScopeContext defContext) {
@@ -13,4 +15,6 @@ public abstract class TypeSym extends Sym {
     public boolean isVoid() {
         return false;
     }
+
+    public abstract Type getType();
 }

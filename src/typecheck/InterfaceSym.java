@@ -16,6 +16,7 @@ import ast.PrimitiveIfLabel;
 import ast.StateVariableDeclaration;
 import ast.Type;
 import typecheck.exceptions.SemanticException;
+import compile.ast.PrimitiveType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -201,6 +202,11 @@ public class InterfaceSym extends TypeSym {
 
     public boolean isLValue() {
         return false;
+    }
+
+    @Override
+    public compile.ast.Type getType() {
+        return new PrimitiveType(this.getName());
     }
 
     public Sym lookupSym(String funcName) {

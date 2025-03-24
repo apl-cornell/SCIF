@@ -7,7 +7,6 @@ import compile.ast.SolNode;
 import compile.ast.StructDef;
 import compile.ast.VarDec;
 
-import java.util.SequencedMap;
 import java.util.stream.Collectors;
 import typecheck.*;
 import typecheck.exceptions.SemanticException;

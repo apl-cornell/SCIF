@@ -96,6 +96,7 @@ public class Call extends TrailerExpr {
                         assert s != null: "func in " + varName + "." + funcName + "() not found";
 
                         funcSym = (FuncSym) s;
+
                     } else if (varSym.typeSym instanceof ArrayTypeSym arrayTypeSym) {
                         // TODO: change the hard-code style
                         TypeSym arrayTSym = arrayTypeSym.valueType;
@@ -692,6 +693,10 @@ public class Call extends TrailerExpr {
         } else {
             return false;
         }
+    }
+
+    public boolean isExternal() {
+        return value instanceof Attribute;
     }
 
     @Override

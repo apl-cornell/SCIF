@@ -1,5 +1,7 @@
 package typecheck;
 
+import compile.ast.Type;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -51,5 +53,10 @@ public class ExceptionTypeSym extends TypeSym {
             }
         }
         return null;
+    }
+
+    @Override
+    public Type getType() {
+        throw new RuntimeException("Unable to interpret an exception type");
     }
 }
