@@ -1,0 +1,66 @@
+import "ERC20/IERC20_noe.scif";
+
+contract AllCoinsYieldCapital {
+    // taxes and fees
+    uint _currentTaxForReflections; // modified depending on context of tx
+    uint _currentTaxForTreasury; // modified depending on context of tx
+    uint _fixedTaxForReflections; // unchanged save by owner transaction
+    uint _fixedTaxForTreasury; // unchanged save by owner transaction
+
+    map(address, bool) _isExcludedFromTaxes;
+
+    constructor() {
+        super();
+    }
+
+    // perhapsss it's possible for the reentrant attack to come in and remove the fees then abort so a txn that should have fees doesn't? e.g. give tiny money to excluded but use that to do free transfers
+    @public void transfer(
+        address recipient,
+        uint amountOfTokens
+    ) {
+        // if either side of transfer account belongs to _isExcludedFromTaxes
+        // account then remove the fee
+        bool takeFee = true;
+        if (_isExcludedFromTaxes[sender] || _isExcludedFromTaxes[recipient]) {
+            takeFee = false;
+        }
+
+        // check if we're buy side or sell side in a swap; if buy side apply
+        // buy side taxes; if sell side then apply those taxes; duh
+        bool buySide = false;
+        //if (sender == address(uniswapV2Pair)) {
+        //    buySide = true;
+        //}
+
+        // based on context set the correct fee structure
+        if (!takeFee) {
+            _currentTaxForReflections = 0;
+            _currentTaxForTreasury = 0;
+        }
+
+        amountOfTokens -= _currentTaxForReflections;
+        amountOfTokens -= _currentTaxForTreasury;
+
+        lock(this) {
+            notify(recipient); //trying to simulate uniswap. in theory it should be trusted, but this is if for some reason it's a bad implementation
+            /*
+            Calling acyc._transfer() might trigger function
+            uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTok
+            ens() , which is implemented by third party at uniswapV2Router . If there
+            are vulnerable external calls in uniswapV2Router , reentrancy attacks
+            could be conducted because these two functions have state updates
+            and event emits after external calls.
+            */
+        }
+
+        // conduct the transfer
+        //_tokenTransfer(sender, recipient, amountOfTokens);
+
+        // reset the fees for the next go around
+        _currentTaxForReflections = _fixedTaxForReflections;
+        uint _currentTaxForTreasury = _fixedTaxForTreasury;
+    }
+
+    @private void notify { this; any } (address { any } c) {
+    }
+}

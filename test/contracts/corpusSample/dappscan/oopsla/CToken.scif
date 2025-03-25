@@ -1,0 +1,24 @@
+import "ComptrollerInterface.scif";
+
+contract CToken {
+    address admin;
+    ComptrollerInterface comptroller;
+    constructor() { super(); }
+
+    @public void _setComptroller{admin}(ComptrollerInterface newComptroller) {
+        ComptrollerInterface oldComptroller = comptroller;
+        // Ensure invoke comptroller.isComptroller() returns true
+        assert newComptroller.isComptroller();
+
+        // Set market's comptroller to newComptroller
+        comptroller = newComptroller;
+    }
+}
+
+---------------------------------------
+ComptrollerInterface.scif
+
+interface ComptrollerInterface {
+    /// @notice Indicator that this is a Comptroller contract (for inspection)
+    bool isComptroller();
+}

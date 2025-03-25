@@ -1,0 +1,83 @@
+import "./IERC20.scif";
+
+contract ERC20 implements IERC20 {
+    map(address, uint) _balances;
+    map(address owner, map(address, uint{owner}){owner}) _allowances;
+    uint _burnt;
+    uint _totalSupply;
+    bytes _name;
+    bytes _symbol;
+
+    constructor(bytes name_, bytes symbol_) {
+        _name = endorse(name_, sender -> this);
+        _symbol = endorse(symbol_, sender -> this);
+        super();
+    }
+
+    @public bytes name() {
+        return _name;
+    }
+
+    @public bytes symbol() {
+        return _symbol;
+    }
+
+    @public uint decimals() {
+        return 18;
+    }
+
+    @public uint totalSupply() {
+        return _totalSupply;
+    }
+
+    @public uint balanceOf(address account) {
+        return _balances[account];
+    }
+
+    @public uint burnt() {
+        return _burnt;
+    }
+
+    @public void approve{sender}(address spender, uint val) {
+        _allowances[sender][spender] = val;
+    }
+
+    @public void approveFrom{from}(final address from, address spender, uint val) {
+        _allowances[from][spender] = val;
+    }
+
+    @public void transfer{from -> this}(final address from, address to, uint val) {
+        endorse([from, to, val], from -> this)
+        if (_balances[from] >= val) {
+            _balances[from] -= val;
+            _balances[to] += val;
+        } else {
+            assert false;
+        }
+    }
+
+    @public uint{owner} allowance(final address owner, final address spender) {
+        return _allowances[owner][spender];
+    }
+
+    @public void transferFrom{sender -> from; sender}(final address from, address to, uint val) {
+        endorse([from, to, val], sender -> from)
+        if (_allowances[from][sender] >= val) {
+            transfer(from, to, val);
+            _allowances[from][sender] -= val;
+        } else {
+            assert false;
+        }
+    }
+
+    void _spendAllowance{owner}(final address owner, address spender, uint val) {
+        uint{owner} currentAllowance;
+        currentAllowance = allowance(owner, spender);
+        if (currentAllowance != UINT_MAX) {
+            if (currentAllowance < val) {
+                assert false;
+            }
+            _allowances[owner][spender] = currentAllowance - val;
+        }
+    }
+}

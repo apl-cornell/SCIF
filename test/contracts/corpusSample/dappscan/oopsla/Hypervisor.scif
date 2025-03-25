@@ -1,0 +1,25 @@
+contract Hypervisor  {
+
+    uint poolSupply;
+
+    constructor() { super(); }
+
+    @public void withdraw(address to) {
+        // from is sender
+        lock(this) {
+        burnLiquidity(to);
+        }
+    }
+
+    @public void deposit(address to) {
+        if (poolSupply > 0) {
+            // In  theory,  the  contracts of  token0,1  may  hijack  the  execution  call-flow  causing  a  reentrant  call  to  deposit,  which will  use the  stale  value  for  totalSupply()  to  evaluate  the  number  of  shares  to  be  minted.  Since  this  value  will  be  greater  than  what it  should  be,  the  attacker  will  be  able  to  mint  depositors.
+        }
+    }
+
+    @private void burnLiquidity{this; any} (address{any} to) {
+        poolSupply -= 1;
+        // call to
+    }
+
+}

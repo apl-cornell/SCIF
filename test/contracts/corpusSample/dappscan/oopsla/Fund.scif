@@ -1,0 +1,48 @@
+import "./ERC20/IERC20_noe.scif";
+import "./Uniswap/IERC777.scif";
+
+// This has a reentrancy bug, but it's fundamentally insecure.
+// You need to explicitly endorse things you shouldn't to reveal the reentrancy.
+contract Fund {
+    struct Grant {
+        string description;
+        uint value;
+        address recipient;
+        bool complete;
+    }
+
+    Grant[] grants;
+
+    constructor() {
+        super();
+    }
+
+    // In theory, we should trust admin and adjust labels, but the contract doesn't seem to do that.
+    @public void finalizeGrant(final address admin, uint index, IERC777 token) {
+        // assert admin => this; // We need to validate choice of admin
+        address _admin = endorse(admin, sender -> this); // So we do this (but this is bad!)
+
+        // A fundamental issue with the contract. We must endorse because we are sending from us.
+        IERC777 t = endorse(token, sender -> this);
+        // The original contract wants this to be IERC20, but endorsing forces us to trust the type as well.
+        // IERC20 has a high reentrancy lock label, so we now are trusting there is no reentrancy.
+        // We use IERC777 to "undo" trusting the lock label since its label is {any} and "reveal" reentrancy.
+
+        Grant grant = grants[index];
+        assert(grant.complete == false);
+
+        uint fee = (grant.value) / 100;
+        uint finalGrant = (grant.value * 99) / 100;
+
+        // Note that locks are not used if it's a trusted IERC20.
+        lock(this) {
+            t.transfer(address(this), _admin, 10);
+        }
+
+        lock(this) {
+            t.transfer(address(this), grant.recipient, finalGrant);
+        }
+
+        grant.complete = true;
+    }
+}

@@ -1,0 +1,38 @@
+import "Uniswap/IERC777.scif";
+import "IERC223Recipient.scif";
+
+contract SpaceMonkey {
+  map(address , uint) _owned;
+  map(address , bool) _isBlacklisted;
+  map(address , bool) _isSwap;
+  map(address , bool) _isExcludedFromFee;
+  map(address , bool) _isExcluded;
+    constructor() { super(); }
+
+  @public bool transfer(IERC223Recipient recipient, uint amount, bytes data) {
+      // _transfer(_msgSender(), recipient, amount);
+      assert !_isBlacklisted[sender];
+        if(_isExcludedFromFee[sender] || _isExcludedFromFee[recipient]) {
+            _owned[address(recipient)] += endorse(amount,sender->this);
+          }
+          lock(this){
+          recipient.tokenFallback(sender, amount, data);
+          }
+      return true;
+  }
+}
+
+
+-------------------------------------------
+IERC223Recipient.scif
+
+interface IERC223Recipient {
+/**
+ * @dev Standard ERC223 function that will handle incoming token transfers.
+ *
+ * @param _from  Token sender address.
+ * @param _value Amount of tokens.
+ * @param _data  Transaction metadata.
+ */
+    @public void tokenFallback{_from}(address _from, uint _value, bytes _data);
+}

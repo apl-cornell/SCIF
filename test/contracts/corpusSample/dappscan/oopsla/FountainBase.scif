@@ -1,0 +1,25 @@
+import "./IERC20.scif";
+import "./IAngel.scif";
+
+contract FountainBase {
+	struct AngelInfo {
+        bool isSet;
+        uint pid;
+        uint totalBalance;
+    }
+	
+	map(IAngel, AngelInfo) _angelInfos;
+
+	constructor() {
+		super();
+	}
+
+	@private
+	void _depositAngel(address user, IAngel angel, uint amount) {
+		AngelInfo info = _angelInfos[angel];
+		lock(this) {
+			angel.deposit(info.pid, amount, user);
+		}
+		info.totalBalance += amount;
+	}
+}

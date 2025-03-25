@@ -1,0 +1,58 @@
+import "Uniswap/IERC777.scif";
+
+//reentrancy in UniswapFeature isn't relevant, focus on bug in audit report
+
+contract MetaTransactionsFeature {
+    address ETH_TOKEN_ADDRESS;
+    constructor() { super(); }
+
+/*
+The full steps to exploit this vulnerability are as follows:
+1. A maker/attacker signs a trade where one of the tokens will invoke a
+callback during the trade.
+2. A taker signs a metatransaction to take this trade.
+3. A relayer sends in the metatransaction, providing more ether than is
+necessary to pay the protocol fee. (It’s unclear how likely this situation
+is.)
+4. During the token callback, the attacker invokes
+LiquidityProviderFeature.sellToLiquidityProvider() to transfer the excess ether
+to their account.
+5. The metatransaction feature returns the remaining ether balance, which
+is now zero.
+*/
+
+    //heavy approximation because original uses assembly
+    @payable @public void executeMetaTransaction(
+        IERC777 token, uint fee
+    ) {
+        lock(this){
+        IERC777 t = endorse(token,sender->this);
+        // bug - can't inline endorse
+        t.transfer(address(this), sender, endorse(fee,sender->this));
+
+        uint remainingBalance = endorse(value, sender->this);
+        if (remainingBalance > balance(address(this))) {
+            remainingBalance = balance(address(this));
+        }
+        if (remainingBalance > 0) {
+            send(sender, remainingBalance);
+        }
+        }
+    }
+
+     @payable @public void sellToLiquidityProvider(
+            address inputToken,
+            address outputToken,
+            address provider,
+            address recipient,
+            uint sellAmount
+        )
+        {
+            if (inputToken == ETH_TOKEN_ADDRESS) {
+                lock(this) {
+                send(endorse(provider,sender->this), endorse(sellAmount, sender->this));
+                }
+            }
+            //...
+        }
+}

@@ -1,0 +1,35 @@
+contract MSiG  {
+    struct Request {
+        address destination;
+        uint value;
+        bytes data;
+    }
+    struct VoteProgress {
+        uint requestId;
+        uint timestamp;
+        uint currentVote;
+        uint requiredVote;
+    }
+
+    Request request;
+    VoteProgress progress;
+    map(address, uint) _votePowers;
+
+    constructor() { super(); }
+
+    @public void vote() {
+        progress.currentVote += _votePowers[sender];
+        if (progress.currentVote >= progress.requiredVote) {
+            lock(this) {
+            notify(request.destination);
+            }
+            delete request;
+            delete progress;
+        }
+    }
+
+    @private void notify{this; any} (address c) {
+        //simulate low level call
+    }
+
+}

@@ -1,0 +1,29 @@
+import "ERC20/IERC20_noe.scif";
+
+contract Exchange {
+
+    constructor() {
+        super();
+    }
+
+    @public uint convertFundsFromInput(IERC20 _from, IERC20 _to, uint _inputAmount, uint _minOutputAmount) {
+        // uint inputAmount = endorse(_inputAmount, sender -> this);
+        // uint minOutputAmount = endorse(_minOutputAmount, sender -> this);
+
+        lock(this) {
+            _from.transfer(sender, address(this), _inputAmount);
+        }
+
+        uint{sender} outputAmount;
+
+        lock(this) {
+            outputAmount = 10; // uniswap.exchangeXForY(inputAmount, minOutputAmount, 1, 999, to);
+        }
+
+        lock(this) {
+            _to.transfer(address(this), sender, outputAmount);
+        }
+
+        return outputAmount;
+    }
+}

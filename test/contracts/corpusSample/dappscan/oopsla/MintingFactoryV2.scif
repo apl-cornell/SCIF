@@ -1,0 +1,148 @@
+import "IKODAV3Minter.scif";
+import "ICollabRoyaltiesRegistry.scif";
+import "IKODAV3PrimarySaleMarketplace.scif";
+
+contract MintingFactoryV2 {
+    struct MintingPeriod {
+        uint mints;
+        uint firstMintInPeriod;
+    }
+
+    map(address, MintingPeriod) mintingPeriodConfig;
+    uint mintingPeriod;
+
+    //trusted contracts
+    ICollabRoyaltiesRegistry royaltiesRegistry;
+    IKODAV3PrimarySaleMarketplace marketplace;
+    IKODAV3Minter koda;
+
+    constructor() {
+        super();
+    }
+
+    //////////////////////////////////////////
+    /// Mint & setup on primary marketplace //
+    //////////////////////////////////////////
+
+    @public void mintBatchEdition(
+        uint _saleType,
+        uint _editionSize,
+        uint _startDate,
+        uint _basePrice,
+        uint _stepPrice,
+        bytes _uri,
+        uint _merkleIndex,
+        address _deployedRoyaltiesHandler
+    ) {
+        assert isVerifiedArtist(_merkleIndex, sender);
+
+        address deployedRoyaltiesHandler = endorse(_deployedRoyaltiesHandler, sender -> this);
+        //uint saleType = (_saleType, sender -> this);
+       // uint startDate = endorse(_startDate, sender -> this);
+        //uint basePrice = endorse(_basePrice, sender -> this);
+        //uint stepPrice = endorse(_stepPrice, sender -> this);
+
+        uint editionId = koda.mintBatchEdition(sender, _editionSize, _uri);
+
+        _setupSalesMechanic(sender, editionId, _saleType, _startDate, _basePrice, _stepPrice);
+        _recordSuccessfulMint(sender);
+        _setupRoyalties(editionId, deployedRoyaltiesHandler);
+    }
+
+    ///////////////////////
+    /// Internal helpers //
+    ///////////////////////
+
+    @private void _setupSalesMechanic(
+        final address realSender,
+        uint{realSender} _editionId,
+        uint{realSender} _saleType,
+        uint{realSender} _startDate,
+        uint{realSender} _basePrice,
+        uint{realSender} _stepPrice
+    ) {
+        uint saleType = endorse(_saleType, realSender -> this);
+        if (0 == saleType) {
+            marketplace.listForBuyNow(realSender, _editionId, _basePrice, _startDate);
+        } else {
+            if (1 == saleType) {
+                marketplace.listSteppedEditionAuction(realSender, _editionId, _basePrice, _stepPrice, _startDate);
+            } else {
+                if (2 == saleType) {
+                    marketplace.enableEditionOffers(_editionId, _startDate);
+                } else {
+                    if (3 == saleType) {
+                        marketplace.listForReserveAuction(realSender, _editionId, _basePrice, _startDate);
+                    }
+                }
+            }
+        }
+    }
+
+    @private void _recordSuccessfulMint(address _account) {
+        MintingPeriod period = mintingPeriodConfig[_account];
+        uint endOfCurrentMintingPeriodLimit = period.firstMintInPeriod + mintingPeriod;
+        period.mints += 1;
+    }
+
+    @private void _setupRoyalties(uint _editionId, address _deployedHandler) {
+        royaltiesRegistry.useRoyaltiesRecipient(_editionId, _deployedHandler);
+    }
+
+    @private bool isVerifiedArtist(uint{any} _index, address{any} _account) {
+        return true;
+    }
+}
+
+-------------------------------------------------------------------------------
+IKODAV3Minter.scif
+
+interface IKODAV3Minter {
+    // doesn't make external calls
+    // we select the edition number with generateNextEditionNumber() so we trust it
+    @public uint{this} mintBatchEdition(final address to, uint{to} _editionSize, bytes{to} _uri);
+}
+
+-------------------------------------------------------------------------------
+ICollabRoyaltiesRegistry.scif
+
+interface ICollabRoyaltiesRegistry {
+    // doesn't make external calls
+    /// @notice Sets up the provided edition to use the provided _recipient
+    @public void useRoyaltiesRecipient(uint _editionId, address _deployedHandler);
+}
+
+-------------------------------------------------------------------------------
+IKODAV3PrimarySaleMarketplace.scif
+
+interface IKODAV3PrimarySaleMarketplace {
+
+    // none have external calls, and all index into and write to mappings
+
+    @public void listForBuyNow(
+        final address creator,
+        uint{creator} _id,
+        uint{creator} _listingPrice,
+        uint{creator} _startDate
+    );
+
+    @public void listSteppedEditionAuction(
+        final address creator,
+        uint{creator} _editionId,
+        uint{creator} _basePrice,
+        uint{creator} _stepPrice,
+        uint{creator} _startDate
+    );
+
+    @public void enableEditionOffers(
+        uint{any} _editionId,
+        uint{any} _startDate
+    );
+
+    @public void listForReserveAuction(
+        final address creator,
+        uint{creator} _id,
+        uint{creator} _reservePrice,
+        uint{creator} _startDate
+    );
+}

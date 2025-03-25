@@ -1,0 +1,26 @@
+import "ERC20/IERC20_noe.scif";
+
+contract WOOPStake {
+
+    map(address, map(address, uint)) _rewards;
+    address currentAccount; //simplification
+    address _remainder;
+
+    constructor() { super(); }
+
+    @public void processReward(IERC20 _token, uint amount)
+    {
+        //_processReward_1
+        lock(this){
+            _token.transfer(sender, address(this), amount);
+        }
+
+        //_processReward_2
+        //_increaseRewards(sc, p.account, slot.woopsRewards);
+        _rewards[address(_token)][currentAccount] += 1;
+
+        lock(this) {
+        _token.transfer(address(this), _remainder, amount - 10);
+        }
+    }
+}

@@ -1,0 +1,26 @@
+import "Uniswap/IERC777.scif";
+
+contract BankingNode {
+    uint unbondingAmount;
+    map(address, uint) unbondingShares;
+    uint totalUnbondingShares;
+    IERC777 BNPL;
+    constructor() { super(); }
+
+    @public void unstake() {
+        uint userAmount = unbondingShares[sender];
+        assert userAmount != 0;
+
+        uint what = (userAmount * unbondingAmount) / totalUnbondingShares;
+
+        //transfer the tokens to user
+        lock(this) {
+        BNPL.transfer(address(this), sender, what);
+        }
+
+        //update the balances
+        unbondingShares[sender] = 0;
+        unbondingAmount -= what;
+    }
+
+}

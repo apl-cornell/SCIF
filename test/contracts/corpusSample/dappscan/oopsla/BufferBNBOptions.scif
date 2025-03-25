@@ -1,0 +1,32 @@
+contract BufferBNBOptions  {
+
+    struct Option {
+        uint amount;
+        uint strike;
+    }
+    Option[] options;
+    uint nextTokenId;
+
+    constructor() { super(); }
+
+    @public void create() {
+        uint idx;
+        lock(this)
+        {
+        idx = createOptionFor(sender);
+        }
+        options[idx] = new Option(0,0);
+    }
+
+    @private uint createOptionFor{this; any}(address holder) {
+         uint id = nextTokenId;
+         nextTokenId += 1;
+         notify(holder);
+         return id;
+    }
+
+    @private void notify{this; any} (address contr) {
+        //simulate _safeMint
+    }
+
+}

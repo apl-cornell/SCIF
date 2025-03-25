@@ -1,0 +1,19 @@
+import "Uniswap/IERC777.scif";
+
+contract TokensRelayer {
+    constructor() { super(); }
+
+    @private void _relayTokens(
+        IERC777 token,
+        address _receiver,
+        uint _value
+    ) {
+        uint balanceBefore = token.balanceOf(address(this));
+        lock(this){
+            token.transfer(sender, address(this), _value);
+        }
+        uint balanceDiff = token.balanceOf(address(this)) - balanceBefore;
+        assert balanceDiff <= _value;
+        // internal virtual function: bridgeSpecificActionsOnTokenTransfer(address(token), msg.sender, _receiver, balanceDiff, _data);
+    }
+}

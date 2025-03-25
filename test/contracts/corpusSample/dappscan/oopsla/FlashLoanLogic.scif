@@ -1,0 +1,86 @@
+import "Uniswap/IERC777.scif";
+import "ERC20/IERC20_noe.scif";
+import "IFlashLoanSimpleReceiver.scif";
+
+contract SpaceMonkey {
+
+    struct ReserveData {
+        uint configuration;                    // stores the reserve configuration
+        uint liquidityIndex;                   // the liquidity index. Expressed in ray
+        uint currentLiquidityRate;             // the current supply rate. Expressed in ray
+        uint variableBorrowIndex;              // variable borrow index. Expressed in ray
+        uint currentVariableBorrowRate;        // the current variable borrow rate. Expressed in ray
+        uint currentStableBorrowRate;          // the current stable borrow rate. Expressed in ray
+        uint lastUpdateTimestamp;
+        address aTokenAddress;                 // tokens addresses
+        address stableDebtTokenAddress;
+        address variableDebtTokenAddress;
+        address interestRateStrategyAddress;   // address of the interest rate strategy
+        uint id;                               // the id of the reserve. Represents the position in the list of the active reserves
+        uint accruedToTreasury;                // the current treasury balance, scaled
+        uint unbacked;                         // the quickwithdraw balance waiting for underlying to be backed
+        uint isolationModeTotalDebt;
+    }
+
+    ReserveData reserve;
+
+    constructor() {
+        super();
+    }
+
+    @public
+    void executeFlashLoanSimple(
+        IFlashLoanSimpleReceiver receiver,
+        IERC20 asset,
+        uint amount,
+        uint totalPremium,
+        bytes params
+    ) {
+        IFlashLoanSimpleReceiver r = endorse(receiver, sender -> this);
+
+        lock(this) {
+            r.executeOperation(
+                sender,
+                asset,
+                amount,
+                totalPremium,
+                params
+            );
+        }
+
+        reserve.accruedToTreasury += 1; // other updates...
+
+        lock(this) {
+            asset.transfer(
+                address(r),
+                reserve.aTokenAddress,
+                10
+            );
+        }
+    }
+}
+
+------------------------------------------------------------------------------------
+IFlashLoanSimpleReceiver.scif
+
+interface IFlashLoanSimpleReceiver {
+  /**
+   * @notice Executes an operation after receiving the flash-borrowed asset
+   * @dev Ensure that the contract can return the debt + premium, e.g., has
+   *      enough funds to repay and has approved the Pool to pull the total amount
+   * @param asset The address of the flash-borrowed asset
+   * @param amount The amount of the flash-borrowed asset
+   * @param premium The fee of the flash-borrowed asset
+   * @param initiator The address of the flashloan initiator
+   * @param params The byte-encoded params passed when initiating the flashloan
+   * @return True if the execution of the operation succeds, false otherwise
+   */
+  @public bool{sender} executeOperation{initiator}(
+    final address initiator,
+    address asset,
+    uint amount,
+    uint premium,
+    bytes params
+  );
+}
+    
