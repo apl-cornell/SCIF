@@ -1,6 +1,7 @@
 package ast;
 
 import compile.CompileEnv;
+import compile.ast.StructType;
 import compile.ast.Type;
 import compile.ast.VarDec;
 import java.util.HashMap;
@@ -229,6 +230,9 @@ public class AnnAssign extends Statement {
     public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
         Type varType =
                 annotation.type().solidityCodeGen(code);
+        if (varType instanceof StructType) {
+            ((StructType) varType).setStorage();
+        }
 //            isContractType ? new ContractType(annotation.type().name) :
 //                new PrimitiveType(annotation.type().name);
         String varName = target.id;
