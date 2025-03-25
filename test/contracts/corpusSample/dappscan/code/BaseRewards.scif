@@ -1,0 +1,35 @@
+import "./IERC20.scif";
+
+contract BaseRewards {
+	struct TokenRewards {
+        IERC20 gift;
+        uint duration;
+        address rewardDistribution;
+
+        uint periodFinish;
+        uint rewardRate;
+        uint lastUpdateTime;
+        uint rewardPerTokenStored;
+        map(address, uint) userRewardPerTokenPaid;
+        map(address, uint) rewards;
+    }
+
+	TokenRewards[] tokenRewards;
+
+	constructor() {
+		super();
+	}
+
+	@public
+	void getReward(uint i) {
+		TokenRewards tr = tokenRewards[i];
+		IERC20 token = tr.gift;
+		uint reward = tr.rewards[sender];
+		if (reward > 0) {
+			tr.rewards[sender] = 0;
+			lock(this) {
+				token.transfer(address(this), sender, reward);
+			}
+		}
+	}
+}

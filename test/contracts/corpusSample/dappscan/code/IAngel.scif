@@ -1,0 +1,3 @@
+interface IAngel {
+     @public void deposit{sender}(uint pid, uint amount, address to);
+ }
