@@ -1,1 +1,0 @@
-import{_ as e,c as t,o as r,a}from"./app.dd2a2f01.js";const h=JSON.parse('{"title":"SCIF Reference Manual","description":"","frontmatter":{},"headers":[],"relativePath":"index.md","lastUpdated":1742845744000}'),n={name:"index.md"},s=a("",3),o=[s];function i(c,d,l,p,m,f){return r(),t("div",null,o)}const _=e(n,[["render",i]]);export{h as __pageData,_ as default};
