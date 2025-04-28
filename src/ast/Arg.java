@@ -103,7 +103,7 @@ public class Arg extends Node {
         if (annotation.label() != null) {
             varSym.setLabel(env.toLabel(annotation.label()));
         }
-        if (varSym.isFinal && (varSym.typeSym instanceof InterfaceSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE))) {
+        if (varSym.typeSym instanceof InterfaceSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)) {
             env.addPrincipal(varSym);
         }
     }
