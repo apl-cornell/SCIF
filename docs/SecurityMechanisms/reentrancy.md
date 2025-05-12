@@ -63,14 +63,7 @@ combining static and dynamic _reentrancy locks_
 to prevent reentrant endorsement, so that reentrant
 calls do not enable new attacks.
 
-SeRIF requires any untrusted call made without dynamic locks to be in tail position,
-forbidding any subsequent operations.
-This approach prevents dangerous reentrancy, but it also enforces two limiting constraints:
-  * Trusted values computed before an untrusted call cannot be returned afterward.
-  * In auto-endorse functions, untrusted operations cannot execute after an untrusted call returns,
-    even though they inherently cannot create reentrancy concerns.
-
-SCIF maintains the security of SeRIF's reentrancy protection,
+SCIF maintains the security of previous reentrancy protection mechanisms,
 while improving precision to allow useful code patterns.
 First, methods define their return values by assigning to a special `result` variable.
 A method must assign to this variable on every return path.
@@ -136,8 +129,8 @@ type system.  We could remove this lock if we changed the `IERC20`
 methods to maintain high-integrity locks, but that would preclude
 notifying untrusted parties during transfers.
 
-To see the value of SCIF's improved flexibility over SeRIF, consider
-the following implementation of the IERC20 `transfer` method.
+To see how SCIF improves flexibility over prior approaches, consider the
+following implementation of the IERC20 `transfer` method.
 
 ```
 @public
@@ -154,8 +147,5 @@ returns a trusted boolean through early assignment to `result` before
 executing two untrusted calls.  Because neither `confirmSent` nor
 `confirmReceived` requires high integrity to invoke, these calls can
 safely execute in sequence, even though the first does not maintain
-reentrancy locks.  SeRIF allows neither pattern.  Instead `transfer`
-must be split across multiple methods, and there is no way to return a
-high-integrity boolean without dynamic locks.
-
+reentrancy locks.
 
