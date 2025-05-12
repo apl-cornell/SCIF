@@ -32,20 +32,51 @@ contract Uniswap {
 
   function sellXForY(uint xSold)
       returns uint {
-    uint prod = tX.getBal(this) *
-                tY.getBal(this);
-    uint yKept = prod /
-          (tX.getBal(this) + xSold);
+    uint prod = tX.getBal(this) * tY.getBal(this);
+    uint yKept = prod / (tX.getBal(this) + xSold);
     uint yBought = tY.getBal(this) - yKept;
 
-    assert tX.transferFrom(msg.sender,
-                           this, xSold);(*\label{lst:li:uniswap-sol-trans-allowed}*)
-    assert tY.transfer(this, msg.sender,
-                       yBought);(*\label{lst:li:uniswap-sol-trans-disallowed}*)
+    assert tX.transferFrom(msg.sender, this, xSold);
+    assert tY.transfer(this, msg.sender, yBought);
     return yBought;
   }
 }
 ```
 
-* More formally define reentrancy and reentrancy security.
-* How SCIF enforses enentrancy security.
+Reentrancy vulnerabilities arise because in general, smart-contract state
+must obey some invariants for the contract to be
+correct, but those invariants may be temporarily broken while a method executes.
+If an attacker gains control of execution while the contract
+is in this inconsistent state (such as through a callback),
+they can engineer a reentrant call into a public method.
+Though the call comes from attacker integrity, the public method endorses and accepts the call.
+Because contract invariants are temporarily broken, the contract might behave improperly.
+
+
+## Defining reentrancy and reentrancy security
+
+## How SCIF enforses reentrancy security.
+
+SCIF uses an mechanism based on information flow
+to prevent reentrancy attacks,
+combining static and dynamic _reentrancy locks_
+to prevent reentrant endorsement, so that reentrant
+calls do not enable new attacks.
+
+SeRIF requires any untrusted call made without dynamic locks to be in tail position,
+forbidding any subsequent operations.
+This approach prevents dangerous reentrancy, but it also enforces two limiting constraints:
+  * Trusted values computed before an untrusted call cannot be returned afterward.
+  * In auto-endorse functions, untrusted operations cannot execute after an untrusted call returns,
+    even though they inherently cannot create reentrancy concerns.
+
+SCIF maintains the security of SeRIF's reentrancy protection,
+while improving precision to allow useful code patterns.
+First, methods define their return values by assigning to a special `result` variable.
+A method must assign to this variable on every return path.
+The usual syntax `return` _e_ is just syntactic
+sugar for assigning `result =` _e_ and then returning.
+Second, after an untrusted call, the control-flow integrity (the `pc` label)
+is modified, restricting future operations to only those that cannot
+violate high-integrity invariants.
+Neither of these changes can introduce reentrancy concerns, and both simplify programs.
