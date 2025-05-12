@@ -100,9 +100,10 @@ terminal REVERT;
 terminal WHILE, FOR;
 terminal NEW, STRUCT, UNCHECKED, TRANSIENT;
 
-nonterminal SourceFile sourceCode;
+nonterminal List<SourceFile> sourceCode;
 nonterminal Interface interface;
-nonterminal SourceFile sourceFile;
+nonterminal List<SourceFile> sourceFile;
+nonterminal List<SourceFile> sourceFilesNoImport;
 nonterminal Set<String> ipt_stmts;
 // nonterminal List<Contract> contracts;
 nonterminal Contract contract;
@@ -220,24 +221,48 @@ sourceCode ::= sourceFile:a {: RESULT = a; :}
     ;:};
 
 sourceFile ::=
-    ipt_stmts:a contract:b {:
-        RESULT = new ContractFile(filename, a, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    ipt_stmts:a sourceFilesNoImport:b {:
+        b.forEach(file -> {
+            file.setIptContracts(a);
+        });
+        RESULT = b;
         logger.debug(RESULT);
     :}
-    | contract:a {:
-        RESULT = new ContractFile(filename, a);
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    | sourceFilesNoImport:b {:
+        RESULT = b;
         logger.debug(RESULT);
     :}
-    | ipt_stmts:a interface:b {:
-        RESULT = new InterfaceFile(filename, a, b);
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    | error:err {:
+        report_fatal_error("Syntax error in source file " + filename + "\n", err);
+    :};
+
+sourceFilesNoImport ::=
+    sourceFilesNoImport:a contract:b {:
+        ContractFile parsed = new ContractFile(filename, b);
+        parsed.setLoc(new CodeLocation(bleft, bright, filename));
+        a.add(parsed);
+        RESULT = a;
         logger.debug(RESULT);
     :}
-    | interface:a {:
-        RESULT = new InterfaceFile(filename, a);
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+    | sourceFilesNoImport:a interface:b {:
+        InterfaceFile parsed = new InterfaceFile(filename, b);
+        parsed.setLoc(new CodeLocation(bleft, bright, filename));
+        a.add(parsed);
+        RESULT = a;
+        logger.debug(RESULT);
+    :}
+    | contract:b {:
+        ContractFile parsed = new ContractFile(filename, b);
+        parsed.setLoc(new CodeLocation(bleft, bright, filename));
+        RESULT = new ArrayList<SourceFile>();
+        RESULT.add(parsed);
+        logger.debug(RESULT);
+    :}
+    | interface:b {:
+        InterfaceFile parsed = new InterfaceFile(filename, b);
+        parsed.setLoc(new CodeLocation(bleft, bright, filename));
+        RESULT = new ArrayList<SourceFile>();
+        RESULT.add(parsed);
         logger.debug(RESULT);
     :}
     | error:err {:
@@ -275,6 +300,7 @@ ipt_name ::= IMPORT:x STRING_LITERAL:a {:
 //        RESULT = (String) a;//new Name((String)a); //TODO
 //        //RESULT.setLoc(new CodeLocation(aleft, aright, filename));
 //    :};
+
 
 contract ::=
     CONTRACT NAME: name contract_extends: c_extends
