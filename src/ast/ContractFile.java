@@ -73,7 +73,7 @@ public class ContractFile extends SourceFile {
                 importedInterfaceMap.put(interfaceMap.get(path).getContractName(), interfaceMap.get(path));
             }
         }
-        contract.codePasteContract(importedContractMap, importedInterfaceMap);
+        contract.codePasteContract(importedContractMap, importedInterfaceMap); // have effects only if the contracts extends/implements smth
     }
 
     @Override
@@ -111,7 +111,7 @@ public class ContractFile extends SourceFile {
         env.enterSourceFile(getSourceFilePath());
         env.setNewCurSymTab();
         for (String iptContract : iptContracts) {
-            env.importContract(iptContract, location);
+            env.importContract(iptContract, location); // TODO steph: might need to change this
         }
         // env.setGlobalSymTab(new SymTab());
         // env.initCurSymTab();

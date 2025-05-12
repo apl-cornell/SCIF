@@ -120,7 +120,7 @@ public class InterfaceFile extends SourceFile {
         env.enterSourceFile(getSourceFilePath());
         env.setNewCurSymTab();
         for (String iptContract : iptContracts) {
-            env.importContract(iptContract, location);
+            env.importContract(iptContract, location); // TODO steph
         }
         if (!itrface.ntcGlobalInfo(env, now)) {
             logger.debug("GlobalInfo failed with: " + itrface);

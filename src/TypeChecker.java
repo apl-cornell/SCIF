@@ -35,7 +35,7 @@ public class TypeChecker {
 
         Queue<File> mentionedFiles = new ArrayDeque<>(inputFiles);
         InheritGraph graph = new InheritGraph();
-        Map<String, SourceFile> fileMap = new HashMap<>();
+        Map<String, List<SourceFile>> fileMap = new HashMap<>();
         Set<String> includedFilePaths = inputFiles.stream().flatMap(file -> Stream.of(file.getAbsolutePath())).collect(
                 Collectors.toSet());
         // add all built-in source files
@@ -47,36 +47,42 @@ public class TypeChecker {
             }
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(builtinFile.getAbsolutePath()),
-                    StandardCharsets.UTF_8);
+                    StandardCharsets.UTF_8); 
+                    // sourceCode is only used to show error msgs for SLC - should save all lines from the file path anyway
             root.setSourceCode(sourceCode);
             root.addBuiltIns();
             roots.add(root);
             assert root.ntcAddImportEdges(graph);
             includedFilePaths.add(builtinFile.getAbsolutePath());
-            fileMap.put(builtinFile.getAbsolutePath(), root);
+            fileMap.put(builtinFile.getAbsolutePath(), new ArrayList<>(List.of(root)));
         }
         while (!mentionedFiles.isEmpty()) {
             File file = mentionedFiles.poll();
-            // FIX CUP FILE
             Symbol result = Parser.parse(file, null);
             if (result == null) return null;
             
-            List<SourceFile> root = (List<SourceFile>) result.value;
+            List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
 
-            fileMap.put(root.getSourceFilePath(), root);
+            // TODO steph don't execute following code if rootsFile is empty
+            fileMap.put(rootsFiles[0].getSourceFilePath(), rootsFiles);
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(file.getAbsolutePath()),
                     StandardCharsets.UTF_8);
-            root.setSourceCode(sourceCode);
-            root.addBuiltIns();
-            roots.add(root);
-            assert root.ntcAddImportEdges(graph);
+                    // sourceCode is only used to show error msgs for SLC - should save all lines from the file path anyway
+            for (SourceFile root : rootsFile) {
+                root.setSourceCode(sourceCode);
+                root.addBuiltIns();
+                roots.add(root);
+                assert root.ntcAddImportEdges(graph);
 
-            for (String filePath : root.importPaths()) {
-                if (!includedFilePaths.contains(filePath)) {
-                    mentionedFiles.add(new File(filePath));
-                    includedFilePaths.add(filePath);
+                for (String filePath : root.importPaths()) {
+                    // only those imported file paths != current file path
+                    if (!includedFilePaths.contains(filePath)) {
+                        mentionedFiles.add(new File(filePath));
+                        includedFilePaths.add(filePath);
+                    }
                 }
+                
             }
         }
 
@@ -84,9 +90,9 @@ public class TypeChecker {
         Map<String, Contract> contractMap = new HashMap<>();
         Map<String, Interface> interfaceMap = new HashMap<>();
         for (SourceFile root : roots) {
-//            fileMap.put(root.getSourceFilePath(), root);
+            //            fileMap.put(root.getSourceFilePath(), root);
             // assert root.ntcAddImportEdges(graph);
-//            System.err.println("sourcefile: " + root.getSourceFilePath());
+            //            System.err.println("sourcefile: " + root.getSourceFilePath());
             if (root instanceof ContractFile) {
                 contractMap.put(root.getSourceFilePath(), ((ContractFile) root).getContract());
             } else if (root instanceof InterfaceFile) {
@@ -95,7 +101,8 @@ public class TypeChecker {
                 assert false: root.getContractName();
             }
         }
-
+        
+        // TODO steph: I don't understand why this check is needed, and not fixed yet
         logger.debug(
                 " check if there is any non-existent contract name: " + contractMap.keySet() + " "
                         + graph.getAllNodes());
@@ -112,6 +119,17 @@ public class TypeChecker {
         List<SourceFile> toporder = new ArrayList<>();
         // code-paste in a topological order
         for (String x : graph.getTopologicalQueue()) {
+            List<SourceFile> rootsFile = fileMap.get(x);
+            if (rootsFile.isEmpty()) {
+                assert false;
+                return null;
+            }
+
+            for (SourceFile rt : rootsFile) {
+                toporder.add(rt);
+                rt.updateImports(fileMap);
+            }
+
             SourceFile rt = fileMap.get(x);
             if (rt == null) {
                 // TODO: contract not found

@@ -29,12 +29,22 @@ public abstract class SourceFile extends Node {
     protected Set<String> iptContracts;
     protected Map<String, String> originalImportPaths = new HashMap<>();
     protected final String contractName;
+    protected final int lineStart;
+    protected final int lineEnd;
 
     /*
         @sourceCode represents the source code in lines
      */
     private List<String> sourceCode;
     private final boolean builtIn;
+
+    /**
+     * @param iptContracts
+     * @return
+     */
+    public static void setIptContracts(Set<String> iptContracts) {
+        this.iptContracts = iptContracts;
+    }
 
     /**
      * return s + id
