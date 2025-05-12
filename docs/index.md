@@ -4,4 +4,4 @@ SCIF (**S**mart **C**ontract **I**nformation **F**low) is a secure high-level la
 
 Unlike other smart contract languages such as Solidity, SCIF allows annotating code with *integrity labels* that express security requirements and trust. The programmer specifies which data and code are important and should be protected from adversarial parties. A SCIF program that type-checks is protected against integrity failures.
 
-
+The <a href="https://www.cs.cornell.edu/projects/scif/">SCIF project website</a> has links to academic papers about the language.
