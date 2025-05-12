@@ -27,18 +27,7 @@ public class TypeChecker {
         //typecheck(inputFile, outputFile);
     }
 
-    /*
-        Given a list of SCIF source files, this method type-checks all code,
-        ignoring information flow control.  It generates constraints in
-        SHErrLoc format and put them in outputFile, then runs SHErrLoc to get
-        error info.
-     */
-    public static List<SourceFile> regularTypecheck(List<File> inputFiles, File logDir,
-            boolean DEBUG) throws IOException, SemanticException {
-
-        File outputFile = new File(logDir, SCIF.newFileName("ntc", "cons"));
-        logger.trace("typecheck starts...");
-
+    public static List<SourceFile> buildRoots(List<File> inputFiles) throws IOException, SemanticException {
         /*
             parse all SCIF source files and store AST roots in roots.
          */
@@ -68,9 +57,12 @@ public class TypeChecker {
         }
         while (!mentionedFiles.isEmpty()) {
             File file = mentionedFiles.poll();
+            // FIX CUP FILE
             Symbol result = Parser.parse(file, null);
             if (result == null) return null;
-            SourceFile root = (SourceFile) result.value;
+            
+            List<SourceFile> root = (List<SourceFile>) result.value;
+
             fileMap.put(root.getSourceFilePath(), root);
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(file.getAbsolutePath()),
@@ -130,7 +122,23 @@ public class TypeChecker {
             rt.updateImports(fileMap);
             rt.codePasteContract(x, contractMap, interfaceMap);
         }
-        roots = toporder;
+        
+        return toporder;
+    }
+
+    /*
+        Given a list of SCIF source files, this method type-checks all code,
+        ignoring information flow control.  It generates constraints in
+        SHErrLoc format and put them in outputFile, then runs SHErrLoc to get
+        error info.
+     */
+    public static List<SourceFile> regularTypecheck(List<File> inputFiles, File logDir,
+            boolean DEBUG) throws IOException, SemanticException {
+        File outputFile = new File(logDir, SCIF.newFileName("ntc", "cons"));
+        logger.trace("typecheck starts...");
+        
+        // roots = toporder;
+        List<SourceFile> roots = buildRoots(inputFiles);
 
         // Add built-ins and Collect global info
         NTCEnv ntcEnv = new NTCEnv(null);
