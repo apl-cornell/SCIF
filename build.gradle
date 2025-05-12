@@ -7,6 +7,7 @@ plugins {
 }
 
 version '0.5.0'
+group 'apl'
 
 java {
     toolchain {
@@ -23,18 +24,6 @@ repositories {
     flatDir {
         dirs "build/libs"
     }
-}
-
-def compileSlcJar = tasks.register("compileSlcJar", Copy) {
-    from(ant.lib) {
-        include "SHErrLoc.jar"
-        rename "SHErrLoc.jar", "sherrloc.jar"
-    }
-    into "build/libs"
-}
-
-compileSlcJar.configure {
-    dependsOn("slc-jar")
 }
 
 sourceSets {
@@ -71,7 +60,7 @@ idea {
 }
 
 compileJava.configure {
-    dependsOn("compileSlcJar")
+    dependsOn("slc-jar")
 }
 
 def fatJar = tasks.register("fatJar", Jar) {
@@ -111,13 +100,13 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
     priority "de.jflex:jflex:1.8.2"
     priority 'de.jflex:cup-parent:11b-20160615'
     implementation 'org.apache.logging.log4j:log4j-core:2.12.1'
     implementation 'com.owlike:genson:1.5'
     implementation "info.picocli:picocli:4.0.0"
-    implementation files("build/libs/sherrloc.jar")
+    implementation files("sherrloc/GenErrorDiagnostic/lib/SHErrLoc.jar")
+    implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.9.0"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.9.0"
 }
