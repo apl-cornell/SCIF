@@ -80,3 +80,82 @@ Second, after an untrusted call, the control-flow integrity (the `pc` label)
 is modified, restricting future operations to only those that cannot
 violate high-integrity invariants.
 Neither of these changes can introduce reentrancy concerns, and both simplify programs.
+
+Below is shows how we might use SCIF to implement the `sellXForY` method and
+to specify the standard ERC-20 token interface.
+
+```
+contract Uniswap {
+  IERC20 tX, tY;
+
+  @public uint sellXForY(final address buyer, uint xSold) {
+    uint prod = tX.getBal(this) * tY.getBal(this);
+    uint yKept = prod / (tX.getBal(this) + xSold);
+    uint yBought = endorse(tY.getBal(this) - yKept, sender -> this);
+    lock (this) {(*\label{lst:uniswap:li:lock}*)
+      assert tX.transferFrom(buyer, this, xSold);
+      assert tY.transfer(this, buyer, yBought);
+    }
+    return yBought;
+  }
+}
+
+interface IERC20 {
+  @public bool{this} transfer{from -> this; any}(final address from,
+    address to, uint amount);
+  @public bool{from} transferFrom{sender -> from; any}(final address from,
+    address to, uint amount);
+}
+```
+
+Following the ERC-20 standard, interface `IERC20` includes a
+`transfer` method to directly transfer tokens owned by the caller and
+a `transferFrom` method to transfer tokens whose owner has previously
+authorized the caller to move them.  To reflect these expectations,
+`transfer` requires the integrity of `from`, the user whose tokens are
+moving, and auto-endorses the control flow to `this`, the integrity
+of the token contract, which is necessary to modify token balances.
+However, `transferFrom` allows any caller, but only auto-endorses to
+`from`, enabling adjustments to the allowances of tokens owned by
+`from` and proving sufficient integrity to call `transfer` and actually
+move the tokens.  Since both methods may invoke untrusted confirmation
+methods provided by contracts `from` and `to`, the reentrancy lock label
+for both methods is `any`.
+
+In Uniswap, `sellXForY` is meant to be a publicly-accessible method
+that must modify trusted state, so we annotate it as `@public`
+and the default labels for public methods: `{sender -> this; this}`.
+That is, `sellXForY` is an entry point anyone can call that auto-endorses to `this`,
+and it promises not to call untrusted code without a dynamic lock
+(reentrancy lock label `this`).
+
+Because `transferFrom` respects no reentrancy locks but `transfer`
+requires high integrity and is called after `transferFrom` returns, a
+dynamic lock is necessary for security and correctly required by the
+type system.  We could remove this lock if we changed the `IERC20`
+methods to maintain high-integrity locks, but that would preclude
+notifying untrusted parties during transfers.
+
+To see the value of SCIF's improved flexibility over SeRIF, consider
+the following implementation of the IERC20 `transfer` method.
+
+```
+@public
+bool transfer{from -> this; any}(final address from, final address to, uint amount) {
+  ... // check and update balances
+  result = true;
+  assert from.confirmSent(to, amount);
+  assert to.confirmReceived(from, amount);
+}
+```
+
+Without resorting to expensive dynamic locks, this method securely
+returns a trusted boolean through early assignment to `result` before
+executing two untrusted calls.  Because neither `confirmSent` nor
+`confirmReceived` requires high integrity to invoke, these calls can
+safely execute in sequence, even though the first does not maintain
+reentrancy locks.  SeRIF allows neither pattern.  Instead `transfer`
+must be split across multiple methods, and there is no way to return a
+high-integrity boolean without dynamic locks.
+
+
