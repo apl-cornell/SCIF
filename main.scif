@@ -1,9 +1,0 @@
-//import "B.scif";
-
-contract A {
-    constructor() { super(); }
-
-    @public void foo() {
-       // addr.foo();
-    }
-}

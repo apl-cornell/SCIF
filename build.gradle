@@ -14,7 +14,7 @@ java {
     }
 }
 
-ant.importBuild("sherrloc/GenErrorDiagnostic/build.xml") {
+ant.importBuild("sherrloc/build.xml") {
     antTargetName -> "slc-" + antTargetName
 }
 

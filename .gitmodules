@@ -1,4 +1,3 @@
-[submodule "sherrloc"]
-	path = sherrloc
-	url = https://github.com/andrewcmyers/sherrloc.git
-	branch = scif
+[submodule "modules/sherrloc"]
+	path = modules/sherrloc
+	url = git@github.com:andrewcmyers/sherrloc
