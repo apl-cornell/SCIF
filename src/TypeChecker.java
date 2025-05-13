@@ -27,10 +27,10 @@ public class TypeChecker {
         //typecheck(inputFile, outputFile);
     }
 
+    /*
+        parse all SCIF source files and store AST roots in roots.
+    */
     public static List<SourceFile> buildRoots(List<File> inputFiles) throws IOException, SemanticException {
-        /*
-            parse all SCIF source files and store AST roots in roots.
-         */
         List<SourceFile> roots = new ArrayList<>();
 
         Queue<File> mentionedFiles = new ArrayDeque<>(inputFiles);
@@ -62,8 +62,8 @@ public class TypeChecker {
             if (result == null) return null;
             
             List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
+            assert !rootsFile.isEmpty();
 
-            // TODO steph don't execute following code if rootsFile is empty
             fileMap.put(rootsFiles[0].getSourceFilePath(), rootsFiles);
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(file.getAbsolutePath()),
@@ -85,10 +85,10 @@ public class TypeChecker {
                 
             }
         }
-
+/*
         // Code-paste superclasses' methods and data fields
-        Map<String, Contract> contractMap = new HashMap<>();
-        Map<String, Interface> interfaceMap = new HashMap<>();
+        Map<String, Contract> contractMap = new HashMap<>(); // file path -> AST contract
+        Map<String, Interface> interfaceMap = new HashMap<>(); // file path -> AST Interface
         for (SourceFile root : roots) {
             //            fileMap.put(root.getSourceFilePath(), root);
             // assert root.ntcAddImportEdges(graph);
@@ -109,18 +109,31 @@ public class TypeChecker {
         // check if there is any non-existent contract name
         for (String contractPath : graph.getAllNodes()) {
             assert contractMap.containsKey(contractPath) || interfaceMap.containsKey(contractPath) : contractPath;
-            /*if (!contractMap.containsKey(contractName)) {
-                // TODO: mentioning non-existent contract
-                return null;
-            }*/
+            // if (!contractMap.containsKey(contractName)) {
+                // // TODO: mentioning non-existent contract
+                // return null;
+            //}
         }
+*/
+        Map<String, List<TopLayerNode>> sourceFileMap = new HashMap<>(); // file path -> list of AST contract/interface
+
+        for(SourceFile root: roots) {
+            if (root instanceof ContractFile) {
+                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(root.getContract());
+            } else if (root instanceof InterfaceFile) {
+                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(root.getInterface());
+            } else {
+                assert false: root.getContractName();
+            }
+        }
+
 
         logger.debug(" code-paste in a topological order");
         List<SourceFile> toporder = new ArrayList<>();
         // code-paste in a topological order
         for (String x : graph.getTopologicalQueue()) {
             List<SourceFile> rootsFile = fileMap.get(x);
-            if (rootsFile.isEmpty()) {
+            if (rootsFile == null || rootsFile.isEmpty()) {
                 assert false;
                 return null;
             }
@@ -128,17 +141,8 @@ public class TypeChecker {
             for (SourceFile rt : rootsFile) {
                 toporder.add(rt);
                 rt.updateImports(fileMap);
+                rt.codePasteContract(x, sourceFileMap);
             }
-
-            SourceFile rt = fileMap.get(x);
-            if (rt == null) {
-                // TODO: contract not found
-                assert false;
-                return null;
-            }
-            toporder.add(rt);
-            rt.updateImports(fileMap);
-            rt.codePasteContract(x, contractMap, interfaceMap);
         }
         
         return toporder;
@@ -161,7 +165,7 @@ public class TypeChecker {
         // Add built-ins and Collect global info
         NTCEnv ntcEnv = new NTCEnv(null);
         for (SourceFile root : roots) {
-            ntcEnv.addSourceFile(root.getSourceFilePath(), root);
+            ntcEnv.addSourceFile(root. (), root);
 
             root.passScopeContext(null);
             System.err.println("Checking contract " + root.getContractName());

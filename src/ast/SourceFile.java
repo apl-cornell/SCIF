@@ -158,12 +158,14 @@ public abstract class SourceFile extends Node {
         }
     }
 
-    public void updateImports(Map<String, SourceFile> fileMap) {
+    public void updateImports(Map<String, List<SourceFile>> fileMap) {
         Set<String> newIptContracts = new HashSet<>(iptContracts);
         for (String x: iptContracts) {
-            SourceFile file = fileMap.get(x);
-            assert file != null: x;
-            newIptContracts.addAll(file.iptContracts);
+            List<SourceFile> sourceList = fileMap.get(x);
+            if (sourceList == null || sourceList.isEmpty()) {
+                assert false;
+            }
+            newIptContracts.addAll(sourceList[0].iptContracts);
         }
         iptContracts = newIptContracts;
     }

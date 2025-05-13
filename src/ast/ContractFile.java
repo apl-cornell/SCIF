@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import ast.TopLayerNode;
 import typecheck.InheritGraph;
 import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
@@ -56,21 +58,42 @@ public class ContractFile extends SourceFile {
     }
 
     @Override
-    public void codePasteContract(String name, java.util.Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) throws SemanticException {
+    public void codePasteContract(String name, java.util.Map<String, List<TopLayerNode>> sourceFileMap) throws SemanticException {
         Contract contract = findContract(name);
         assert contract != null;
 
         // construct contract table and interface table this contract imported
         // mapping from local names to the object
-        Map<String, Contract> importedContractMap = new HashMap<>();
+        Map<String, Contract> importedContractMap = new HashMap<>(); // contract name -> AST contract
         Map<String, Interface> importedInterfaceMap = new HashMap<>();
 
-        for (String path : iptContracts) {
-            assert contractMap.containsKey(path) || interfaceMap.containsKey(path) : path;
-            if (contractMap.containsKey(path)) {
-                importedContractMap.put(contractMap.get(path).getContractName(), contractMap.get(path));
-            } else if (interfaceMap.containsKey(path)) {
-                importedInterfaceMap.put(interfaceMap.get(path).getContractName(), interfaceMap.get(path));
+        for (String path: iptContracts) {
+            assert sourceFileMap.containsKey(path) : path;
+            List<TopLayerNode> sources = sourceFileMap.get(path);
+            for (TopLayerNode source : sources) {
+                if (source instanceof Contract) {
+                    importedContractMap.put(((Contract) source).getContractName(), (Contract) source);
+                } else if (source instanceof Interface) {
+                    importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
+                } else {
+                    assert false;
+                }
+            }    
+        }
+        // adding contracts and interfaces under the same file and above the current contract
+        String path = getSourceFilePath();
+        assert sourceFileMap.containsKey(path) : path;
+        List<TopLayerNode> sources = sourceFileMap.get(path);
+        for (TopLayerNode source : sources) {
+            if (source instanceof Contract) {
+                if (contract == source) {
+                    break;
+                }
+                importedContractMap.put(((Contract) source).getContractName(), (Contract) source);
+            } else if (source instanceof Interface) {
+                importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
+            } else {
+                assert false;
             }
         }
         contract.codePasteContract(importedContractMap, importedInterfaceMap); // have effects only if the contracts extends/implements smth

@@ -77,7 +77,7 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public void codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
+    public void codePasteContract(String name, java.util.Map<String, List<TopLayerNode>> sourceFileMap) {
         assert sourceFilePath.toString().equals(name);
 
         // construct contract table and interface table this contract imported
@@ -85,14 +85,36 @@ public class InterfaceFile extends SourceFile {
         Map<String, Contract> importedContractMap = new HashMap<>();
         Map<String, Interface> importedInterfaceMap = new HashMap<>();
 
-        for (String path : iptContracts) {
-            assert contractMap.containsKey(path) || interfaceMap.containsKey(path) : path;
-            if (contractMap.containsKey(path)) {
-                importedContractMap.put(contractMap.get(path).getContractName(), contractMap.get(path));
-            } else if (interfaceMap.containsKey(path)) {
-                importedInterfaceMap.put(interfaceMap.get(path).getContractName(), interfaceMap.get(path));
+        for (String path: iptContracts) {
+            assert sourceFileMap.containsKey(path) : path;
+            List<TopLayerNode> sources = sourceFileMap.get(path);
+            for (TopLayerNode source : sources) {
+                if (source instanceof Contract) {
+                    importedContractMap.put(((Contract) source).getContractName(), (Contract) source);
+                } else if (source instanceof Interface) {
+                    importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
+                } else {
+                    assert false;
+                }
             }
         }
+        // adding contracts and interfaces under the same file and above the current interface
+        String path = getSourceFilePath();
+        assert sourceFileMap.containsKey(path) : path;
+        List<TopLayerNode> sources = sourceFileMap.get(path);
+        for (TopLayerNode source : sources) {
+            if (source instanceof Contract) {
+                importedContractMap.put(((Contract) source).getContractName(), (Contract) source);
+            } else if (source instanceof Interface) {
+                if (itrface == source) {
+                    break;
+                }
+                importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
+            } else {
+                assert false;
+            }
+        }
+        
         itrface.codePasteContract(importedContractMap, importedInterfaceMap);
     }
 
