@@ -20,7 +20,7 @@ To build a SCIF compiler, the following packages are required:
 SCIF project is hosted at [github](https://github.com/Neroysq/SCIF) and can be built with the help of gradle. The following instructions clone the SCIF project and build it using gradle.
 
 ```shell
-git clone --recurse-submodules  https://github.com/Neroysq/SCIF.git
+git clone --recurse-submodules  https://github.com/apl-cornell/SCIF.git
 cd SCIF
 ./gradlew build
 ```

@@ -1,0 +1,8 @@
+The compiler does static checking in two phases:
+ 1. regular type checking
+ 2. label checking
+
+Both of these are done using the SHErrLoc system, by writing out
+constraints to files that are handed to SHErrLoc. SHErrLoc does type
+checking, type inference, and error localization. Static errors reported
+to the user come from the constraints passed to SHErrLoc.
