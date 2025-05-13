@@ -41,7 +41,9 @@ public class TypeChecker {
         // add all built-in source files
         for (File builtinFile: Utils.BUILTIN_FILES) {
             Symbol result = Parser.parse(builtinFile, null);//p.parse();
-            SourceFile root = ((SourceFile) result.value).makeBuiltIn();
+            List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
+            SourceFile root = (rootsFiles.get(0)).makeBuiltIn();
+            // SourceFile root = ((SourceFile) result.value).makeBuiltIn();
             if (root instanceof ContractFile) {
                 ((ContractFile) root).getContract().clearExtends();
             }
@@ -62,14 +64,14 @@ public class TypeChecker {
             if (result == null) return null;
             
             List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
-            assert !rootsFile.isEmpty();
+            assert !rootsFiles.isEmpty();
 
-            fileMap.put(rootsFiles[0].getSourceFilePath(), rootsFiles);
+            fileMap.put((rootsFiles.get(0)).getSourceFilePath(), rootsFiles);
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(file.getAbsolutePath()),
                     StandardCharsets.UTF_8);
                     // sourceCode is only used to show error msgs for SLC - should save all lines from the file path anyway
-            for (SourceFile root : rootsFile) {
+            for (SourceFile root : rootsFiles) {
                 root.setSourceCode(sourceCode);
                 root.addBuiltIns();
                 roots.add(root);
@@ -119,9 +121,9 @@ public class TypeChecker {
 
         for(SourceFile root: roots) {
             if (root instanceof ContractFile) {
-                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(root.getContract());
+                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(((ContractFile) root).getContract());
             } else if (root instanceof InterfaceFile) {
-                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(root.getInterface());
+                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(((InterfaceFile) root).getInterface());
             } else {
                 assert false: root.getContractName();
             }
@@ -165,7 +167,7 @@ public class TypeChecker {
         // Add built-ins and Collect global info
         NTCEnv ntcEnv = new NTCEnv(null);
         for (SourceFile root : roots) {
-            ntcEnv.addSourceFile(root. (), root);
+            ntcEnv.addSourceFile(root.getSourceFilePath(), root);
 
             root.passScopeContext(null);
             System.err.println("Checking contract " + root.getContractName());

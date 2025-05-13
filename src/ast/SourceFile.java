@@ -29,8 +29,8 @@ public abstract class SourceFile extends Node {
     protected Set<String> iptContracts;
     protected Map<String, String> originalImportPaths = new HashMap<>();
     protected final String contractName;
-    protected final int lineStart;
-    protected final int lineEnd;
+    // protected final int lineStart;
+    // protected final int lineEnd;
 
     /*
         @sourceCode represents the source code in lines
@@ -42,7 +42,7 @@ public abstract class SourceFile extends Node {
      * @param iptContracts
      * @return
      */
-    public static void setIptContracts(Set<String> iptContracts) {
+    public void setIptContracts(Set<String> iptContracts) {
         this.iptContracts = iptContracts;
     }
 
@@ -102,7 +102,7 @@ public abstract class SourceFile extends Node {
 
     abstract public boolean containContract(String fullPath);
 
-    abstract public void codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) throws SemanticException;
+    abstract public void codePasteContract(String name, Map<String, List<TopLayerNode>> sourceFileMap) throws SemanticException;
 
     abstract public boolean ntcAddImportEdges(InheritGraph graph);
 
@@ -165,7 +165,7 @@ public abstract class SourceFile extends Node {
             if (sourceList == null || sourceList.isEmpty()) {
                 assert false;
             }
-            newIptContracts.addAll(sourceList[0].iptContracts);
+            newIptContracts.addAll((sourceList.get(0)).iptContracts);
         }
         iptContracts = newIptContracts;
     }
