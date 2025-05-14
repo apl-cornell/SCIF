@@ -297,7 +297,7 @@ public class Utils {
     }
 
     public static boolean writeCons2File(Set<? extends Sym> constructors, List<Constraint> assumptions,
-            List<Constraint> constraints, File outputFile, boolean isIFC, InterfaceSym contractSym) {
+                                         List<Constraint> constraints, File outputFile, boolean isIFC, InterfaceSym contractSym) {
         try {
             // transform every "this" to "contractName.this"
             BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
@@ -368,7 +368,7 @@ public class Utils {
     }
 
     public static boolean SLCinput(HashSet<String> constructors, ArrayList<Constraint> assumptions,
-            ArrayList<Constraint> constraints, boolean isIFC) {
+                                   ArrayList<Constraint> constraints, boolean isIFC) {
         try {
             sherrloc.constraint.ast.Hypothesis hypothesis = new Hypothesis();
             ArrayList<sherrloc.constraint.ast.Axiom> axioms = new ArrayList<>();
@@ -481,7 +481,7 @@ public class Utils {
     }
 
     public static boolean arrayExpressionTypeMatch(ArrayList<Expression> x,
-            ArrayList<Expression> y) {
+                                                   ArrayList<Expression> y) {
 
         if (!(x == null && y == null)) {
             if (x == null || y == null || x.size() != y.size()) {
@@ -514,8 +514,8 @@ public class Utils {
         //TODO error report
     }
 
-    public static String translateSLCSuggestion(HashMap<String, SourceFile> programMap, String s,
-            boolean DEBUG) {
+    public static String translateSLCSuggestion(HashMap<String, List<SourceFile>> programMap, String s,
+                                                boolean DEBUG) {
         if (s.charAt(0) != '-') {
             return null;
         }
@@ -555,7 +555,10 @@ public class Utils {
         String contractName = explanation.substring(p + 1);
         explanation = explanation.substring(0, p);
         //System.out.println("position of @:" + p + " " + contractName);
-        SourceFile program = programMap.get(contractName);
+        // SourceFile program = programMap.get(contractName);
+        List<SourceFile> programList = programMap.get(contractName);
+        SourceFile program = programList.get(0);
+        // TODO steph: I don't think this method has ever been used - so I won't fix the programMap mismatch.
 
         String rtn =
                 program.getSourceFileId() + "(" + slin + "," + scol + "): " + explanation + ".\n";
@@ -568,8 +571,8 @@ public class Utils {
         return rtn;
     }
 
-    public static String SLCSuggestionToString(Map<String, SourceFile> programMap,
-            sherrloc.diagnostic.explanation.Explanation exp, boolean DEBUG) {
+    public static String SLCSuggestionToString(Map<String, List<SourceFile>> programMap,
+                                               sherrloc.diagnostic.explanation.Explanation exp, boolean DEBUG) {
         String s = exp.toConsoleStringWithExp();
         if (DEBUG) {
             System.err.println(s + "#" + exp.getWeight());
@@ -613,9 +616,14 @@ public class Utils {
         explanation = new StringBuilder(explanation.substring(0, p));
         // if (DEBUG) System.out.println("position of #:" + p + " " + contractName);
         SourceFile program = null; //= programMap.get(contractName);
-        for (SourceFile sourceFile: programMap.values()) {
-            if (sourceFile.getSourceFilePath().equals(contractName)) {
-                program = sourceFile;
+        for (List<SourceFile> sourceFileList: programMap.values()) {
+            for (SourceFile sourceFile: sourceFileList) {
+                if (sourceFile.getSourceFilePath().equals(contractName)) {
+                    program = sourceFile;
+                    break;
+                }
+            }
+            if (program != null) {
                 break;
             }
         }
@@ -652,7 +660,7 @@ public class Utils {
     }
 
     public static void contextFlow(VisitEnv env, Context outContext, Context endContext,
-            CodeLocation location) {
+                                   CodeLocation location) {
         env.addTrustConstraint(new Constraint(new Inequality(outContext.lambda, endContext.lambda),
                 env.hypothesis(), location, env.curContractSym().getName(),
                 "actually maintained lock of final sub-statement must flow to that of parent statement"));
@@ -738,7 +746,7 @@ public class Utils {
         return name.startsWith(SUPER_PREFIX);
     }
 
-    public static List<String> SLCEntitiesToStrings(Map<String, SourceFile> programMap, Explanation exp, boolean debug) {
+    public static List<String> SLCEntitiesToStrings(Map<String, List<SourceFile>> programMap, Explanation exp, boolean debug) {
         if (debug) {
             System.err.println("#" + exp.getWeight());
         }
@@ -766,9 +774,14 @@ public class Utils {
             StringBuilder explanation = new StringBuilder(locBuffer.substring(1, fileLoc));
             // if (DEBUG) System.out.println("position of #:" + p + " " + contractName);
             SourceFile program = null; //= programMap.get(contractName);
-            for (SourceFile sourceFile: programMap.values()) {
-                if (sourceFile.getSourceFilePath().equals(contractName)) {
-                    program = sourceFile;
+            for (List<SourceFile> sourceFileList: programMap.values()) {
+                for (SourceFile sourceFile: sourceFileList) {
+                    if (sourceFile.getSourceFilePath().equals(contractName)) {
+                        program = sourceFile;
+                        break;
+                    }
+                }
+                if (program != null) {
                     break;
                 }
             }
@@ -877,4 +890,3 @@ public class Utils {
         return new PrimitiveIfLabel(new Name("__inferredLabel" + inferredLabelCount));
     }
 }
-

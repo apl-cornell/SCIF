@@ -37,7 +37,7 @@ public class VisitEnv {
     // public HashMap<String, ContractInfo> contractMap;
     //public HashMap<String, SigCons> sigConsMap;
     public Map<String, String> sigReq = new HashMap<>();
-    public Map<String, SourceFile> programMap;
+    public Map<String, List<SourceFile>> programMap;
     //public HashMap<ExceptionTypeSym, PsiUnit> psi;
 
 
@@ -52,10 +52,10 @@ public class VisitEnv {
                     Hypothesis hypothesis,
                     Set<VarSym> principalSet,
                     InterfaceSym curContractSym,
-                    HashMap<String, SourceFile> programMap
+                    HashMap<String, List<SourceFile>> programMap
                     // HashMap<ExceptionTypeSym, PsiUnit> psi
                     //HashMap<String, SigCons> sigConsMap
-                    /*HashMap<String, ContractInfo> contractMap*/) {
+            /*HashMap<String, ContractInfo> contractMap*/) {
         // this.ctxt = ctxt;
         this.inContext = inContext;
         // this.outContext = outContext;
@@ -120,7 +120,7 @@ public class VisitEnv {
         return getContract(funcName) != null;
     }
 
-//    public static int counter = 0;
+    //    public static int counter = 0;
     public void incScopeLayer() {
 //        counter++;
         curSymTab = new SymTab(curSymTab);
@@ -163,7 +163,7 @@ public class VisitEnv {
 
     public ExceptionTypeSym toExceptionTypeSym(ast.Type t) {
 //        if (t.isLocal(curContractSym.getName())) {
-            return (ExceptionTypeSym) getCurSym(t.name());
+        return (ExceptionTypeSym) getCurSym(t.name());
 //        } else {
 //            return (ExceptionTypeSym) getExtSym(t.getContractName(), t.name());
 //        }

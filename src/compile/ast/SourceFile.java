@@ -6,4 +6,5 @@ import java.util.List;
 public interface SourceFile extends SolNode {
 
     void addStats(CompileEnv env);
+    boolean firstInFile();
 }

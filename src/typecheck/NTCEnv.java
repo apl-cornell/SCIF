@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import jflex.base.Pair;
 import typecheck.exceptions.SemanticException;
 import typecheck.exceptions.TypeCheckFailure;
 import typecheck.sherrlocUtils.Constraint;
@@ -15,7 +16,7 @@ import java.util.HashMap;
 
 public class NTCEnv {
 
-    private java.util.Map<String, InterfaceSym> contractSymMap; // full filename -> ContractSym
+    private java.util.Map<Pair<String, String>, InterfaceSym> contractSymMap; // full filename -> ContractSym
     private SymTab curSymTab;
     private List<Constraint> cons;
     private java.util.Map<String, java.util.Map<String, List<Constraint>>> conMap;
@@ -23,7 +24,8 @@ public class NTCEnv {
     private Hypothesis globalHypothesis;
     private InterfaceSym curContractSym;
     private String currentSourceFileFullName;
-    private java.util.Map<String, SourceFile> programMap; // full filename -> SourceFile
+    private String currentContractName;
+    private java.util.Map<String, List<SourceFile>> programMap; // full filename -> SourceFile
 
     // info about constructor
     boolean inConstructor, calledSuper;
@@ -39,18 +41,22 @@ public class NTCEnv {
         programMap = new HashMap<>();
     }
 
-    public void addContractSym(String fullFileName, InterfaceSym contractSym) {
-        contractSymMap.put(fullFileName, contractSym);
+    public void addContractSym(String fullFileName, String contractName, InterfaceSym contractSym) {
+        contractSymMap.put(new Pair(fullFileName, contractName), contractSym);
     }
 
     public void setNewCurSymTab() {
         this.curSymTab = new SymTab();
     }
-    public void enterSourceFile(String fullFileName) {
+    public void enterSourceFile(String fullFileName, String contractName) {
         currentSourceFileFullName = fullFileName;
+        currentContractName = contractName;
     }
     public String currentSourceFileFullName() {
         return currentSourceFileFullName;
+    }
+    public String currentContractName() {
+        return currentContractName;
     }
     public void enterNewScope() {
         curSymTab = new SymTab(curSymTab);
@@ -64,11 +70,11 @@ public class NTCEnv {
     }
 
     public VarSym newVarSym(String varName, LabeledType labeledType, boolean isConst, boolean isFinal, boolean isBuiltIn,
-            CodeLocation location, ScopeContext context) throws SemanticException {
+                            CodeLocation location, ScopeContext context) throws SemanticException {
         return newVarSym(varName, labeledType, isConst, isFinal, isBuiltIn, location, context, false);
     }
     public VarSym newVarSym(String varName, LabeledType labeledType, boolean isConst, boolean isFinal, boolean isBuiltIn,
-            CodeLocation location, ScopeContext context, boolean isGlobal) throws SemanticException{
+                            CodeLocation location, ScopeContext context, boolean isGlobal) throws SemanticException{
         TypeSym typeSym = toTypeSym(labeledType.type(), context);
         assert typeSym != null;
         return new VarSym(varName, typeSym, null, location, context, isConst, isFinal, isBuiltIn, isGlobal);
@@ -123,6 +129,7 @@ public class NTCEnv {
             } else if (astType instanceof Array array) {
                 typeSym = new ArrayTypeSym(array.size, toTypeSym(array.valueType, defContext), defContext);
             } else {
+                // System.out.println(astType.getClass().getName());
                 throw new TypeCheckFailure("Not a type: " + astType.name(),
                         astType.location());
                 // typeSym = new BuiltinTypeSym(lt.x);
@@ -212,14 +219,15 @@ public class NTCEnv {
     }
 
     public void addSourceFile(String contractName, SourceFile root) {
-        programMap.put(contractName, root);
+        // programMap.put(contractName, root);
+        programMap.computeIfAbsent(contractName, k -> new ArrayList<>()).add(root);
     }
 
     public List<Constraint> cons() {
         return cons;
     }
 
-    public java.util.Map<String, SourceFile> programMap() {
+    public java.util.Map<String, List<SourceFile>> programMap() {
         return programMap;
     }
 
@@ -263,14 +271,14 @@ public class NTCEnv {
         return null;
     }
 
-    public void setCurSymTab(String currentSourceFileFullName) {
-        assert contractSymMap.containsKey(currentSourceFileFullName);
-        curSymTab = contractSymMap.get(currentSourceFileFullName).symTab;
+    public void setCurSymTab(String currentSourceFileFullName, String currentContractName) {
+        assert contractSymMap.containsKey(new Pair(currentSourceFileFullName, currentContractName));
+        curSymTab = contractSymMap.get(new Pair(currentSourceFileFullName, currentContractName)).symTab;
     }
 
-    public void importContract(String iptContract,
+    public void importContract(String iptContract, String contractName,
                                CodeLocation location) throws SemanticException {
-        InterfaceSym sym = contractSymMap.get(iptContract);
+        InterfaceSym sym = contractSymMap.get(new Pair (iptContract, contractName));
         if (sym == null) {
             throw new SemanticException("not containing imported contract/interface: " + iptContract,
                     location);

@@ -25,10 +25,10 @@ public class Interface extends TopLayerNode {
     List<FunctionSig> funcSigs;
 
     public Interface(String contractName,
-            String superContractName,
-            List<StructDef> structDefs,
-            List<ExceptionDef> exceptionDefs,
-            List<FunctionSig> funcSigs) {
+                     String superContractName,
+                     List<StructDef> structDefs,
+                     List<ExceptionDef> exceptionDefs,
+                     List<FunctionSig> funcSigs) {
         this.contractName = contractName;
         this.superContractName = superContractName;
         this.structDefs = structDefs;
@@ -55,7 +55,7 @@ public class Interface extends TopLayerNode {
         Utils.addBuiltInTypes(env.curSymTab());
         VarSym anySym = (VarSym) env.getCurSym(Utils.LABEL_BOTTOM);
         InterfaceSym interfaceSym = new InterfaceSym(contractName, env.curSymTab(), new ArrayList<>(), this, anySym);
-        env.addContractSym(env.currentSourceFileFullName(), interfaceSym);
+        env.addContractSym(env.currentSourceFileFullName(), env.currentContractName(), interfaceSym);
         try {
             env.addSym(contractName, interfaceSym);
         } catch (SymTab.AlreadyDefined e) {

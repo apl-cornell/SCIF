@@ -1,9 +1,10 @@
-//import "B.scif";
+// import "./implB.scif";
 
 contract A {
+    A[] addr;
     constructor() { super(); }
 
     @public void foo() {
-       // addr.foo();
+        addr.pop();
     }
 }

@@ -41,14 +41,16 @@ public class TypeChecker {
         // add all built-in source files
         for (File builtinFile: Utils.BUILTIN_FILES) {
             Symbol result = Parser.parse(builtinFile, null);//p.parse();
-            SourceFile root = ((SourceFile) result.value).makeBuiltIn();
+            List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
+            SourceFile root = (rootsFiles.get(0)).makeBuiltIn();
+            // SourceFile root = ((SourceFile) result.value).makeBuiltIn();
             if (root instanceof ContractFile) {
                 ((ContractFile) root).getContract().clearExtends();
             }
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(builtinFile.getAbsolutePath()),
-                    StandardCharsets.UTF_8); 
-                    // sourceCode is only used to show error msgs for SLC - should save all lines from the file path anyway
+                    StandardCharsets.UTF_8);
+            // sourceCode is only used to show error msgs for SLC - should save all lines from the file path anyway
             root.setSourceCode(sourceCode);
             root.addBuiltIns();
             roots.add(root);
@@ -60,16 +62,16 @@ public class TypeChecker {
             File file = mentionedFiles.poll();
             Symbol result = Parser.parse(file, null);
             if (result == null) return null;
-            
-            List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
-            assert !rootsFile.isEmpty();
 
-            fileMap.put(rootsFiles[0].getSourceFilePath(), rootsFiles);
+            List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
+            assert !rootsFiles.isEmpty();
+
+            fileMap.put((rootsFiles.get(0)).getSourceFilePath(), rootsFiles);
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(file.getAbsolutePath()),
                     StandardCharsets.UTF_8);
-                    // sourceCode is only used to show error msgs for SLC - should save all lines from the file path anyway
-            for (SourceFile root : rootsFile) {
+            // sourceCode is only used to show error msgs for SLC - should save all lines from the file path anyway
+            for (SourceFile root : rootsFiles) {
                 root.setSourceCode(sourceCode);
                 root.addBuiltIns();
                 roots.add(root);
@@ -82,7 +84,7 @@ public class TypeChecker {
                         includedFilePaths.add(filePath);
                     }
                 }
-                
+
             }
         }
 /*
@@ -119,9 +121,9 @@ public class TypeChecker {
 
         for(SourceFile root: roots) {
             if (root instanceof ContractFile) {
-                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(root.getContract());
+                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(((ContractFile) root).getContract());
             } else if (root instanceof InterfaceFile) {
-                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(root.getInterface());
+                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(((InterfaceFile) root).getInterface());
             } else {
                 assert false: root.getContractName();
             }
@@ -144,7 +146,7 @@ public class TypeChecker {
                 rt.codePasteContract(x, sourceFileMap);
             }
         }
-        
+
         return toporder;
     }
 
@@ -155,17 +157,17 @@ public class TypeChecker {
         error info.
      */
     public static List<SourceFile> regularTypecheck(List<File> inputFiles, File logDir,
-            boolean DEBUG) throws IOException, SemanticException {
+                                                    boolean DEBUG) throws IOException, SemanticException {
         File outputFile = new File(logDir, SCIF.newFileName("ntc", "cons"));
         logger.trace("typecheck starts...");
-        
+
         // roots = toporder;
         List<SourceFile> roots = buildRoots(inputFiles);
 
         // Add built-ins and Collect global info
         NTCEnv ntcEnv = new NTCEnv(null);
         for (SourceFile root : roots) {
-            ntcEnv.addSourceFile(root. (), root);
+            ntcEnv.addSourceFile(root.getSourceFilePath(), root);
 
             root.passScopeContext(null);
             System.err.println("Checking contract " + root.getContractName());
@@ -192,28 +194,28 @@ public class TypeChecker {
 //            if (!root.isBuiltIn() && root instanceof ContractFile) {
 //                String filename = root.getContractName();
 //                for (String methodname : ntcEnv.getMethodnames(root.getSourceFilePath())) {
-                    List<Constraint> cons = ntcEnv.cons();
+        List<Constraint> cons = ntcEnv.cons();
 //                    List<Constraint> cons = new ArrayList<>();
 //                    cons.addAll(contractCons);
 //                    cons.addAll(ntcEnv.methodCons(root.getSourceFilePath(), methodname));
 //                    File outputFile = new File(logDir,
 //                            SCIF.newFileName(filename + "." + methodname, "ntc"));
-                    if (!Utils.writeCons2File(ntcEnv.getTypeSet(), ntcEnv.getTypeRelationCons(),
-                            cons,
-                            outputFile, false, null)) {
-                        return roots;
-                    }
-                    try {
-                        if (DEBUG) {
-                            System.err.println("regular type-checking using SLC...");
-                        }
-                        if (!runSLC(ntcEnv.programMap(), outputFile.getAbsolutePath(), DEBUG)) {
-                            return null;
-                        }
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                        return null;
-                    }
+        if (!Utils.writeCons2File(ntcEnv.getTypeSet(), ntcEnv.getTypeRelationCons(),
+                cons,
+                outputFile, false, null)) {
+            return roots;
+        }
+        try {
+            if (DEBUG) {
+                System.err.println("regular type-checking using SLC...");
+            }
+            if (!runSLC(ntcEnv.programMap(), outputFile.getAbsolutePath(), DEBUG)) {
+                return null;
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
 //                }
 //            }
 //        }
@@ -222,8 +224,8 @@ public class TypeChecker {
     }
 
     public static boolean ifcTypecheck(List<SourceFile> roots, File logDir,
-            boolean DEBUG)
-        throws SemanticException
+                                       boolean DEBUG)
+            throws SemanticException
     {
 
 //        Map<SourceFile, File> outputFileMap = new HashMap<>();
@@ -304,7 +306,8 @@ public class TypeChecker {
 
         for (SourceFile root : roots)
             if (root instanceof ContractFile) {
-                env.programMap.put(root.getContractName(), root);
+                // env.programMap.put(root.getContractName(), root);
+                env.programMap.computeIfAbsent(root.getContractName(), k -> new ArrayList<SourceFile>()).add(root);
                 if (root.isBuiltIn()) continue;
                 env.sigReq.clear();
                 if (!ifcTypecheck((ContractFile) root, env, logDir, DEBUG)) {
@@ -321,7 +324,7 @@ public class TypeChecker {
      * TODO: more detailed doc
      */
     private static void buildSignatureConstraints(String contractName, VisitEnv env,
-            String namespace, String curContractName) {
+                                                  String namespace, String curContractName) {
         List<Constraint> cons = env.cons;
         // List<Constraint> trustCons = env.trustCons;
         // String contractName = root.getContractName();//contractNames.get(fileIdx);
@@ -423,7 +426,7 @@ public class TypeChecker {
     }
 
     private static boolean ifcTypecheck(ContractFile contractFile, VisitEnv env, File logDir,
-            boolean DEBUG) throws SemanticException {
+                                        boolean DEBUG) throws SemanticException {
         String contractName = contractFile.getContractName();//contractNames.get(fileIdx);
         InterfaceSym contractSym = env.getContract(contractName);
         logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n"
@@ -490,8 +493,8 @@ public class TypeChecker {
         return true;
     }
 
-    static boolean runSLC(Map<String, SourceFile> programMap, String outputFileName,
-            boolean DEBUG) throws Exception {
+    static boolean runSLC(Map<String, List<SourceFile>> programMap, String outputFileName,
+                          boolean DEBUG) throws Exception {
 //        logger.trace("running SLC");
 
 

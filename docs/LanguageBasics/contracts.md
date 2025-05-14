@@ -115,4 +115,19 @@ Like in Java, contract `B` will inherit all state variables, exceptions, and met
 
 ## Interface
 
+SCIF programs can declare contract interfaces. These specify signatures of
+methods. They are useful for describing other contracts that a given contract
+must interact with. An interface declaration looks like a contract definition,
+but only includes declarations of methods and exceptions. It does not contain
+any implementation. For example, the following declares an interface to a contract
+that implements IERC20.
+
+```
+interface IERC20 {
+    void approve{sender}(address allowed, uint amount);
+    bool{this} transfer{from -> this}(final address from, address to, uint amount);
+    bool{from} transferAllowed{sender -> from; any}(final address from, address to, uint amount);
+}
+```
+
 <!-- TODO -->

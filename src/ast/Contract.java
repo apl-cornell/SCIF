@@ -18,7 +18,7 @@ public class Contract extends TopLayerNode {
     String contractName;
     String implementsContractName = "";
     String extendsContractName = "";
-//    final boolean extendsContract;
+    //    final boolean extendsContract;
     TrustSetting trustSetting;
     List<StructDef> structDefs;
     List<StateVariableDeclaration> varDeclarations;
@@ -46,12 +46,12 @@ public class Contract extends TopLayerNode {
 //    }
 
     public Contract(String contractName,
-            String implementsContractName, String extendsContractName,
-            TrustSetting trustSetting,
-            List<StructDef> structDefs,
-            List<StateVariableDeclaration> varDeclarations,
-            List<ExceptionDef> exceptionDefs,
-            List<FunctionDef> methodDeclarations) throws SemanticException {
+                    String implementsContractName, String extendsContractName,
+                    TrustSetting trustSetting,
+                    List<StructDef> structDefs,
+                    List<StateVariableDeclaration> varDeclarations,
+                    List<ExceptionDef> exceptionDefs,
+                    List<FunctionDef> methodDeclarations) throws SemanticException {
         this.contractName = contractName;
         this.implementsContractName = implementsContractName;
         this.extendsContractName = extendsContractName;
@@ -116,7 +116,7 @@ public class Contract extends TopLayerNode {
         VarSym anySym = (VarSym) env.getCurSym(Utils.LABEL_BOTTOM);
         // env.initSymTab(curSymTab);
         ContractSym contractSym = new ContractSym(contractName, env.curSymTab(), new ArrayList<>(), this, anySym);
-        env.addContractSym(env.currentSourceFileFullName(), contractSym);
+        env.addContractSym(env.currentSourceFileFullName(), env.currentContractName(), contractSym);
         try {
             env.addSym(contractName, contractSym);
         } catch (SymTab.AlreadyDefined e) {

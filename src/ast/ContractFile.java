@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import ast.Interface;
 import ast.TopLayerNode;
 import typecheck.InheritGraph;
 import typecheck.InterfaceSym;
@@ -73,12 +74,14 @@ public class ContractFile extends SourceFile {
             for (TopLayerNode source : sources) {
                 if (source instanceof Contract) {
                     importedContractMap.put(((Contract) source).getContractName(), (Contract) source);
+                    iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Contract) source).getContractName());
                 } else if (source instanceof Interface) {
                     importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
+                    iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Interface) source).getContractName());
                 } else {
                     assert false;
                 }
-            }    
+            }
         }
         // adding contracts and interfaces under the same file and above the current contract
         String path = getSourceFilePath();
@@ -90,8 +93,10 @@ public class ContractFile extends SourceFile {
                     break;
                 }
                 importedContractMap.put(((Contract) source).getContractName(), (Contract) source);
+                iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Contract) source).getContractName());
             } else if (source instanceof Interface) {
                 importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
+                iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Interface) source).getContractName());
             } else {
                 assert false;
             }
@@ -119,10 +124,10 @@ public class ContractFile extends SourceFile {
     @Override
     public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-        env.enterSourceFile(getSourceFilePath());
+        env.enterSourceFile(getSourceFilePath(), getContractName());
         logger.debug("contract: " + contract.contractName + "\n" + env.getContract(
                 contract.contractName));
-        env.setCurSymTab(env.currentSourceFileFullName());
+        env.setCurSymTab(env.currentSourceFileFullName(), env.currentContractName());
         contract.generateConstraints(env, now);
         return now;
     }
@@ -131,11 +136,24 @@ public class ContractFile extends SourceFile {
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
             throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-        env.enterSourceFile(getSourceFilePath());
+        env.enterSourceFile(getSourceFilePath(), getContractName());
         env.setNewCurSymTab();
         for (String iptContract : iptContracts) {
-            env.importContract(iptContract, location); // TODO steph: might need to change this
+            for (String contractName : iptContractNames.get(iptContract)) {
+                env.importContract(iptContract, contractName, location);
+            }
+            // env.importContract(iptContract, location); // TODO steph: might need to change this
         }
+
+        // for all other contracts in the same file that's above self
+        String path = getSourceFilePath();
+        if (iptContractNames.containsKey(path)) {
+            for (String contractName : iptContractNames.get(path)) {
+                env.importContract(path, contractName, location);
+            }
+        }
+
+
         // env.setGlobalSymTab(new SymTab());
         // env.initCurSymTab();
         // Utils.addBuiltInASTNode(env.globalSymTab, contract.trustSetting);
@@ -152,7 +170,7 @@ public class ContractFile extends SourceFile {
         if (contract == null) {
             return;
         }
-        // iptContracts.add(contract.contractName);
+        // ntcGlobalInfos.add(contract.contractName);
         // contractSym.iptContracts = iptContracts;
         logger.debug("visit Contract: " + contract.contractName + "\n"
                 + contractSym.symTab.getTypeSet());
@@ -169,12 +187,12 @@ public class ContractFile extends SourceFile {
 
         for (String contractName : originalImportPaths.keySet()) {
             if (!contract.contractName.equals(contractName) &&
-                !Utils.isBuiltInContractName(contractName)) {
+                    !Utils.isBuiltInContractName(contractName)) {
                 imports.add(
                         new Import(originalImportPaths.getOrDefault(contractName, contractName)));
             }
         }
-        return new compile.ast.ContractFile(imports, contract.solidityCodeGen(code));
+        return new compile.ast.ContractFile(imports, contract.solidityCodeGen(code), firstInFile);
     }
     @Override
     public List<Node> children() {
