@@ -23,8 +23,8 @@ public class InterfaceFile implements SourceFile {
     @Override
     public List<String> toSolCode(int indentLevel) {
         List<String> result = new ArrayList<>();
-        addLine(result, Utils.version(Utils.DEFAULT_SOLITIDY_VERSION), indentLevel);
         if (firstInFile) {
+            addLine(result, Utils.version(Utils.DEFAULT_SOLITIDY_VERSION), indentLevel);
             for (Import imp: imports) {
                 result.addAll(imp.toSolCode(indentLevel));
             }
