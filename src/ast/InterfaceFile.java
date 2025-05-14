@@ -56,7 +56,7 @@ public class InterfaceFile extends SourceFile {
                         new Import(originalImportPaths.getOrDefault(contractName, contractName)));
             }
         }
-        return new compile.ast.InterfaceFile(imports, itrface.solidityCodeGen(code));
+        return new compile.ast.InterfaceFile(imports, itrface.solidityCodeGen(code), firstInFile);
     }
 
     @Override

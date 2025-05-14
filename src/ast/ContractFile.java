@@ -192,7 +192,7 @@ public class ContractFile extends SourceFile {
                         new Import(originalImportPaths.getOrDefault(contractName, contractName)));
             }
         }
-        return new compile.ast.ContractFile(imports, contract.solidityCodeGen(code));
+        return new compile.ast.ContractFile(imports, contract.solidityCodeGen(code), firstInFile);
     }
     @Override
     public List<Node> children() {

@@ -175,7 +175,7 @@ public class Utils {
 
     public static void writeToFile(SolNode node, File outputFile) {
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
             for (String line: node.toSolCode(0)) {
                 writer.write(line + "\n");
             }

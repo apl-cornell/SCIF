@@ -20,6 +20,7 @@ public abstract class SourceFile extends Node {
     final Path sourceFilePath;
     // final String sourceFileFullName; // e.g., "A.scif"
     final String sourceFileNameId;
+    protected boolean firstInFile = false;
 
     /*
         imported files;
@@ -99,6 +100,10 @@ public abstract class SourceFile extends Node {
 
     public void setSourceCode(List<String> sourceCode) {
         this.sourceCode = sourceCode;
+    }
+
+    public void markSourceFirstInFile(boolean firstInFile) {
+        this.firstInFile = firstInFile;
     }
 
     abstract public boolean containContract(String fullPath);
