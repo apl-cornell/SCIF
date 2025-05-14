@@ -17,7 +17,7 @@ name = "Stephanie Ma"
 
 ## Background
 
-Our project focuses on improving and adding new features to the compiler for [Scif](https://arxiv.org/pdf/2407.01204) – a language for representing smart contracts with secure control flow. SCIF as a programmming language uses information flow and its type system to help to prevent control-flow attacks and improve improve secure smart contracts.
+Our project focuses on improving and adding new features to the compiler for [SCIF: Smart Contract Information Flow](https://www.cs.cornell.edu/projects/scif/) (see [technical report](https://arxiv.org/pdf/2407.01204)) – a language for representing smart contracts with secure control flow. SCIF as a programmming language uses information flow and its type system to help to prevent control-flow attacks and improve improve secure smart contracts.
 
 As both a language design and implementation paper, the [SCIF technical report](https://arxiv.org/abs/2407.01204) extensively discusses the SCIF compiler and the correctness and performance of the Solidity code it generates for SCIF programs. As such, its authors hope to eventually publish the compiler as a research artifact similar to what is required for a [PLDI Research Artifact](https://pldi25.sigplan.org/track/pldi-2025-pldi-research-artifacts) or [OOPSLA Artifact](https://2025.splashcon.org/track/splash-2025-oopsla-artifacts). The [ACM discusses different badges](https://www.acm.org/publications/policies/artifact-review-and-badging-current) an artifact can be awarded. The goal for SCIF is that the compiler can be easily setup and run by any open source contributor and that the compiler can easily validate results described in papers.
 
