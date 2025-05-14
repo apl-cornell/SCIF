@@ -13,6 +13,7 @@ import sherrloc.constraint.ast.Constructor;
 import sherrloc.constraint.ast.Hypothesis;
 import sherrloc.diagnostic.DiagnosticOptions;
 import sherrloc.diagnostic.ErrorDiagnosis;
+import sherrloc.diagnostic.explanation.ConstraintEntity;
 import sherrloc.diagnostic.explanation.Entity;
 import sherrloc.diagnostic.explanation.Explanation;
 import sherrloc.graph.Variance;
@@ -797,6 +798,9 @@ public class Utils {
                     new StringBuilder(
                             program.getSourceFileBasename() + ", line " + row + ", column " + scol + ": " + "\n"
                                     + explanation + ".\n");
+
+            rtn.append("Constraint violated: " + expBuffer.substring(0, expBuffer.length() - 2) + ".\n");
+
             rtn.append(program.getSourceCodeLine(row - 1)).append("\n");
             for (int i = 1; i < col; ++i) {
                 rtn.append(" ");

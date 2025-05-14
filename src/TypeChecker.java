@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import java_cup.runtime.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sherrloc.diagnostic.explanation.Explanation;
 import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
@@ -518,6 +519,7 @@ public class TypeChecker {
             Set<String> expSet = new HashSet<>();
             for (int i = 0; i < result.getSuggestions().size(); ++i) {
                 // if (i > 0) continue; // only output the first suggestion
+                Explanation explanation = result.getSuggestions().get(i);
                 double weight = result.getSuggestions().get(i).getWeight();
                 if (best > weight) {
                     best = weight;
