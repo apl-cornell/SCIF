@@ -28,7 +28,7 @@ public class Constraint {
         this.hypothesis = new Hypothesis(hypothesis);
         this.position = new Position(location);
         this.contractName = position.fileName;
-        this.explanation = explanation + "@" + this.contractName + "\n Failed constraint: " + inequality.lhs + "=>" + inequality.rhs;
+        this.explanation = explanation + ". Failed constraint: " + inequality.lhs + "=>" + inequality.rhs+ "@" + this.contractName ;
         if (explanation.equals(Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION)) {
             this.weight = WEIGHT1;
         } else {
@@ -41,7 +41,7 @@ public class Constraint {
         this.hypothesis = new Hypothesis(hypothesis);
         this.position = new Position(location);
         this.contractName = position.fileName;
-        this.explanation = explanation + "@" + contractName + "\n Failed constraint: " + inequality.lhs + "=>" + inequality.rhs;
+        this.explanation = explanation + ". Failed constraint: " + inequality.lhs + "=>" + inequality.rhs+ "@" + this.contractName ;
         if (explanation.equals(Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION)) {
             this.weight = WEIGHT1;
         } else {
@@ -53,7 +53,7 @@ public class Constraint {
         this.hypothesis = new Hypothesis(hypothesis);
         this.position = location == null ? null : new Position(location);
         this.contractName = position.fileName;
-        this.explanation = explanation + "@" + contractName + "\n Failed constraint: " + inequality.lhs + "=>" + inequality.rhs;
+        this.explanation = explanation + ". Failed constraint: " + inequality.lhs + "=>" + inequality.rhs+ "@" + this.contractName ;
         this.weight = weight;
     }
 
@@ -69,7 +69,7 @@ public class Constraint {
         this.hypothesis = new Hypothesis();
         this.position = location == null ? null : new Position(location);
         this.contractName = position.fileName;
-        this.explanation = explanation + "@" + contractName + "\n Failed constraint: " + inequality.lhs + "=>" + inequality.rhs;
+        this.explanation = explanation + ". Failed constraint: " + inequality.lhs + "=>" + inequality.rhs+ "@" + this.contractName ;
         if (explanation.equals(Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION)) {
             this.weight = WEIGHT1;
         } else {
@@ -81,7 +81,7 @@ public class Constraint {
         this.hypothesis = new Hypothesis();
         this.position = location == null ? null : new Position(location);
         this.contractName = position.fileName;
-        this.explanation = explanation + "@" + this.contractName + "\n Failed constraint: " + inequality.lhs + "=>" + inequality.rhs;
+        this.explanation = explanation + ". Failed constraint: " + inequality.lhs + "=>" + inequality.rhs+ "@" + this.contractName ;
         if (explanation.equals(Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION)) {
             this.weight = WEIGHT1;
         } else {
