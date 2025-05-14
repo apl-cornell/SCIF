@@ -204,8 +204,8 @@ public class Call extends TrailerExpr {
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
         //TODO: Assuming value is a Name for now
         Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
-                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
+        Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
+                Utils.getLabelNameLock(toSHErrLocFmt()));
         Map<String, String> dependentLabelMapping = new HashMap<>();
 
         List<String> argValueLabelNames = new ArrayList<>();
@@ -218,7 +218,7 @@ public class Call extends TrailerExpr {
             psi.joinExe(ao.psi);
             argValueLabelNames.add(ao.valueLabelName);
 
-            env.inContext = typecheck.Utils.genNewContextAndConstraints(env, false, ao.psi.getNormalPath().c, beginContext.lambda, arg.nextPcSHL(), arg.location);
+            env.inContext = Utils.genNewContextAndConstraints(env, false, ao.psi.getNormalPath().c, beginContext.lambda, arg.nextPcSHL(), arg.location);
 //            env.inContext = new Context(
 //                    Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
 //                    beginContext.lambda);
@@ -269,7 +269,7 @@ public class Call extends TrailerExpr {
                             env.cons.add(new Constraint(
                                     new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
                                     env.hypothesis(), location,
-                                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
                         }
                         return new ExpOutcome(ifNamePc, psi);
                     } else if (funcName.equals("push")) {
@@ -295,7 +295,7 @@ public class Call extends TrailerExpr {
                             env.cons.add(new Constraint(
                                     new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
                                     env.hypothesis(), location, env.curContractSym().getName(),
-                                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
                         }
                         return new ExpOutcome(ifNamePc, psi);
                     } else if (funcName.equals("length")) {
@@ -306,7 +306,7 @@ public class Call extends TrailerExpr {
                             env.cons.add(new Constraint(
                                     new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
                                     env.hypothesis(), location, env.curContractSym().getName(),
-                                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
                         }
                         return new ExpOutcome(var.ifl.toSHErrLocFmt(), psi);
                     } else {
@@ -350,14 +350,14 @@ public class Call extends TrailerExpr {
                         return null;
                     }
                     String ifNameArgValue = argValueLabelNames.get(0);
-                    typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext,
+                    Utils.contextFlow(env, psi.getNormalPath().c, endContext,
                             args.get(0).location);
                     // env.outContext = endContext;
                     if (!tail_position) {
                         env.cons.add(new Constraint(
                                 new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
                                 env.hypothesis(), location, env.curContractSym().getName(),
-                                typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
                     }
                     return new ExpOutcome(ifNameArgValue, psi);
                 } else {
@@ -390,7 +390,7 @@ public class Call extends TrailerExpr {
 
             PathOutcome co = callSpec.genConsVisit(env, false);
             psi.joinExe(co);
-            env.inContext = typecheck.Utils.genNewContextAndConstraints(env, false, co.getNormalPath().c, beginContext.lambda, callSpec.nextPcSHL(), callSpec.location);
+            env.inContext = Utils.genNewContextAndConstraints(env, false, co.getNormalPath().c, beginContext.lambda, callSpec.nextPcSHL(), callSpec.location);
 
         }
 
@@ -450,6 +450,7 @@ public class Call extends TrailerExpr {
         }
 
         if (externalCall) {
+//            String tem = ((Attribute) value).value.toSHErrLocFmt();
             env.cons.add(
                     new Constraint(
                             new Inequality(ifContRtn, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping)),
@@ -464,7 +465,7 @@ public class Call extends TrailerExpr {
                 ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)
         )));
 
-        for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
+        for (Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
             ExceptionTypeSym curSym = exp.getKey();
             String expLabelName = exp.getValue();
             expPsi.set(curSym, new PsiUnit(
@@ -516,7 +517,7 @@ public class Call extends TrailerExpr {
 //        System.err.println("return label: " + ifNameFuncRtnValue);
         // String ifNameFuncRtnLock = funcSym.getLabelNameRtnLock();
         psi.joinExe(expPsi);
-        typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
+        Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
         psi.setNormalPath(endContext);
 
         return new ExpOutcome(ifNameFuncRtnValue, psi);
