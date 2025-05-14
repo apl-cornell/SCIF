@@ -1,0 +1,30 @@
+import "file2.scif";
+import "file3.scif";
+
+interface B {
+    @public void bar{sender->sender;this}();
+}
+
+contract A {
+    B addr;
+	C cddr;
+	D dddr;
+	E eddr;
+    constructor() { super(); }
+
+    @public void fooB() {
+        addr.bar();
+    }
+
+	@public void fooC() {
+    	cddr.car();
+    }
+
+	@public void fooD() {
+    	dddr.dar();
+    }
+
+	@public void fooE() {
+    	eddr.ear();
+    }
+}

@@ -1,0 +1,3 @@
+interface E {
+    @public void ear{sender->sender;this}();
+}
