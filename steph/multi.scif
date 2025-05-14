@@ -1,0 +1,12 @@
+interface B {
+    @public void bar{sender->sender;this}();
+}
+
+contract A {
+    B addr;
+    constructor() { super(); }
+
+    @public void foo() {
+        addr.bar();
+    }
+}
