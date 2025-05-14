@@ -225,7 +225,7 @@ public class Call extends TrailerExpr {
         }
 
         String funcName;
-        String ifNamePc;
+        String ifNamePc; // currentMethod.PC
         FuncSym funcSym;
         String namespace = "";
         Label ifFuncCallPcBefore, ifFuncCallPcAfter, ifFuncGammaLock;
@@ -245,7 +245,7 @@ public class Call extends TrailerExpr {
                 Attribute att = (Attribute) value;
                 vo = att.value.genConsVisit(env, false);
                 psi.joinExe(vo.psi);
-                ifContRtn = vo.valueLabelName;
+                ifContRtn = vo.valueLabelName; // a..lbl
 
                 //TODO: assuming a's depth is 1
                 funcName = (att.attr).id;
@@ -264,6 +264,7 @@ public class Call extends TrailerExpr {
                                 new Constraint(new Inequality(ifNamePc, ifContRtn), env.hypothesis(),
                                         location,
                                         "Current control flow must be trusted to call this method"));
+                        // pc => l
                         if (!tail_position) {
                             env.cons.add(new Constraint(
                                     new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
@@ -285,6 +286,7 @@ public class Call extends TrailerExpr {
                                 new Constraint(new Inequality(ifNamePc, var.ifl.toSHErrLocFmt()), env.hypothesis(),
                                         location, env.curContractSym().getName(),
                                         "Current control flow must be trusted to call this method"));
+                        // pc => ?
                         env.cons.add(
                                 new Constraint(new Inequality(argLabel, var.ifl.toSHErrLocFmt()), env.hypothesis(),
                                         location, env.curContractSym().getName(),

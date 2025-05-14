@@ -28,6 +28,7 @@ public abstract class SourceFile extends Node {
      */
     protected Set<String> iptContracts;
     protected Map<String, String> originalImportPaths = new HashMap<>();
+    protected Map<String, List<String>> iptContractNames = new HashMap<>();
     protected final String contractName;
     // protected final int lineStart;
     // protected final int lineEnd;
