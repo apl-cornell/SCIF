@@ -10,12 +10,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
 
     steps:
     - uses: actions/checkout@v4
       with:
-        submodules: recursive
+        submodules: true
         
     - uses: actions/setup-java@v4
       with:
@@ -26,3 +26,16 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: ./gradlew fatJar
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: SCIF.jar
+        path: build/libs/*.jar
+    
+    - name: Upload JAR to Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: latest
+        files: build/libs/*.jar
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

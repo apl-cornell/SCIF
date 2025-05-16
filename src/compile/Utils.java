@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Utils {
-    public static final String DEFAULT_SOLITIDY_VERSION = "0.8.3";
+    public static final String DEFAULT_SOLITIDY_VERSION = "0.8.27";
     public static final String PUBLIC_DECORATOR = "public";
     public static final String PAYABLE_DECORATOR = "payable";
     public static final String PRIVATE_DECORATOR = "private";
