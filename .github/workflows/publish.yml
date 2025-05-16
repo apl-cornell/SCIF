@@ -1,0 +1,29 @@
+name: Release JAR
+
+on: # only pushes to master
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    uses: ./.github/workflows/gradle.yml # build first
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: SCIF.jar
+
+    - name: Display structure of downloaded files
+      run: ls -R
+      
+    - name: Upload JAR to Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: latest
+        files: ./*.jar
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
