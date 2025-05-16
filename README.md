@@ -1,18 +1,11 @@
 # SCIF
 
-## Prerequisite
+You can download a prebuilt Jar at https://github.com/apl-cornell/SCIF/releases/download/latest/SCIF-full-0.5.0.jar. This is automatically updated on every push to the master branch, so this is equivalent to checking out the repository and building the Jar yourself.
 
-* [JFlex](https://jflex.de/)
-* Java 21
-* Ant
-* Gradle
+Run the Jar with:
 
-## Installation
-
-```console
-git clone --recurse-submodules git@github.com:Neroysq/SCIF.git
-cd SCIF
-./gradlew build
+```
+java -ea -jar SCIF-full-0.5.0.jar <args>
 ```
 
 ## Usage
@@ -35,18 +28,23 @@ SCIF.
   -V, --version             Print version information and exit.
 ```
 
+
+## Build Dependencies
+
+* [JFlex](https://jflex.de/)
+* Java 21
+* Ant
+* Gradle
+
 Compile a Wallet example to `./tmp.sol`:
 
 ```console
-./scif -c test/contracts/ifcTypechecking/Wallet_lock_exception.scif -o ./tmp.sol
+java -ea -jar SCIF-full-0.5.0.jar -c test/contracts/ifcTypechecking/Wallet_lock_exception.scif -o ./tmp.sol
 ```
 
 ## Documentation
 
-### Prerequisite
-
-* yarn
-* node.js 18
+The SCIF Reference Manual is published automatically at https://apl-cornell.github.io/SCIF/.
 
 ### Run locally
 
