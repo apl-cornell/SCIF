@@ -72,31 +72,31 @@ public class SCIF implements Callable<Integer> {
     private List<SourceFile> _typecheck(String[] logDirs)
             throws TypeCheckFailure, IOException {
         try {
-        File logDir = new File("./.scif");
-        if (logDirs != null) {
-            logDir = new File(logDirs[0]);
-        }
-        logDir.mkdirs();
+            File logDir = new File("./.scif");
+            if (logDirs != null) {
+                logDir = new File(logDirs[0]);
+            }
+            logDir.mkdirs();
 
-        List<File> files = new ArrayList<>();
-        for (File file : m_inputFiles) {
-            files.add(file);
-        }
-        List<SourceFile> roots;
-        roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
+            List<File> files = new ArrayList<>();
+            for (File file : m_inputFiles) {
+                files.add(file);
+            }
+            List<SourceFile> roots;
+            roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
 
-        boolean passNTC = true;
-        //if (!Utils.emptyFile(outputFileName))
-        //    passNTC = runSLC(outputFileName);
-        if (roots == null) {
-            passNTC = false;
-        }
+            boolean passNTC = true;
+            //if (!Utils.emptyFile(outputFileName))
+            //    passNTC = runSLC(outputFileName);
+            if (roots == null) {
+                passNTC = false;
+            }
 
-        if (!passNTC) {
-            return null;
-        }
-        // System.out.println("["+ outputFileName + "]");
-        List<File> IFCConsFiles = new ArrayList<>();
+            if (!passNTC) {
+                return null;
+            }
+            // System.out.println("["+ outputFileName + "]");
+            List<File> IFCConsFiles = new ArrayList<>();
 //        for (int i = 0; i < roots.size(); ++i) {
 //            File IFCConsFile;
 //            if (outputFileNames == null || outputFileNames.length <= i + 1) {
@@ -108,15 +108,15 @@ public class SCIF implements Callable<Integer> {
 //        }
 
 //        System.out.println("\nInformation Flow Type Checking:");
-        boolean passIFC = false;
+            boolean passIFC = false;
 
-        passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
+            passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
 
-        // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
-        // logger.debug("running SHErrLoc...");
-        // boolean passIFC = runSLC(outputFileName);
+            // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
+            // logger.debug("running SHErrLoc...");
+            // boolean passIFC = runSLC(outputFileName);
 
-        return (passNTC && passIFC) ? roots : null;
+            return (passNTC && passIFC) ? roots : null;
         } catch (SemanticException e) {
             System.err.println(e.getMessage());
             return List.of();
@@ -164,14 +164,16 @@ public class SCIF implements Callable<Integer> {
             } else {
                 solFile = new File(m_solFileNames[0]);
             }
-            Map<String, SourceFile> rootMap = new HashMap<>();
+            Map<String, List<SourceFile>> rootMap = new HashMap<>();
             for (SourceFile r: roots) {
-                rootMap.put(r.getSourceFilePath(), r);
+                // rootMap.put(r.getSourceFilePath(), r);
+                rootMap.computeIfAbsent(r.getSourceFilePath(), k -> new ArrayList<>()).add(r);
             }
             for (File f: m_inputFiles) {
-                SourceFile r = rootMap.get(f.getAbsolutePath());
-                if (r == null) return 0;
-                SolCompiler.compile(r, solFile);
+                // SourceFile r = rootMap.get(f.getAbsolutePath());
+                List<SourceFile> rs = rootMap.get(f.getAbsolutePath());
+                if (rs == null) return 0;
+                SolCompiler.compile(rs, solFile);
             }
         } else if (m_funcRequest.typecheck) {
             try {

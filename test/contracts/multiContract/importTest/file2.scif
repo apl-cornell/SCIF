@@ -1,0 +1,6 @@
+import "file4.scif";
+
+interface C {
+    @public void car{sender->sender;this}();
+	@public void care{sender->sender;this}(E e);
+}

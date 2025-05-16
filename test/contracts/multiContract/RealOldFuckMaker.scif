@@ -1,0 +1,21 @@
+interface IReward {
+	@public bool giveBlockReward();
+}
+
+contract RealOldFuckMaker {
+	IReward fuck;
+
+	constructor() { super(); }
+
+	@public 
+	void makeOldFucks(uint _number) {
+		uint number = endorse(_number, any -> this);
+		uint i;
+		while (i < number) {
+			i += 1;
+			lock (this) {
+				fuck.giveBlockReward();
+			}
+		}
+	}
+}

@@ -12,10 +12,12 @@ public class ContractFile implements SourceFile {
 
     Contract contract;
     List<String> stats;
+    boolean firstInFile;
 
-    public ContractFile(List<Import> imports, Contract contract) {
+    public ContractFile(List<Import> imports, Contract contract, boolean firstInFile) {
         this.imports = imports;
         this.contract = contract;
+        this.firstInFile = firstInFile;
     }
 
     @Override
@@ -24,9 +26,11 @@ public class ContractFile implements SourceFile {
         if (stats != null) {
             result.addAll(stats);
         }
-        addLine(result, Utils.version(Utils.DEFAULT_SOLITIDY_VERSION), indentLevel);
-        for (Import imp: imports) {
-            result.addAll(imp.toSolCode(indentLevel));
+        if (firstInFile) {
+            addLine(result, Utils.version(Utils.DEFAULT_SOLITIDY_VERSION), indentLevel);
+            for (Import imp: imports) {
+                result.addAll(imp.toSolCode(indentLevel));
+            }
         }
         result.addAll(contract.toSolCode(indentLevel));
         return result;
@@ -35,5 +39,10 @@ public class ContractFile implements SourceFile {
     @Override
     public void addStats(CompileEnv env) {
         stats = Utils.genStatsLines(env);
+    }
+
+    @Override
+    public boolean firstInFile() {
+        return firstInFile;
     }
 }

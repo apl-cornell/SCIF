@@ -21,7 +21,7 @@ public class InterfaceFile extends SourceFile {
     private final Interface itrface;
 
     public InterfaceFile(String sourceFileName, Set<String> iptContracts,
-            Interface itrface) {
+                         Interface itrface) {
         super(sourceFileName, iptContracts, itrface.contractName);
         this.itrface = itrface;
     }
@@ -41,7 +41,7 @@ public class InterfaceFile extends SourceFile {
         ScopeContext now = new ScopeContext(this, parent);
         // env.setGlobalSymTab(env.getContract(contractName).symTab);
         // env.initCurSymTab();
-        env.setCurSymTab(env.currentSourceFileFullName());
+        env.setCurSymTab(env.currentSourceFileFullName(), env.currentContractName());
         itrface.generateConstraints(env, now);
         return now;
     }
@@ -51,12 +51,12 @@ public class InterfaceFile extends SourceFile {
         List<Import> imports = new ArrayList<>();
         for (String contractName : originalImportPaths.keySet()) {
             if (!itrface.contractName.equals(contractName) &&
-                !Utils.isBuiltInContractName(contractName))  {
+                    !Utils.isBuiltInContractName(contractName))  {
                 imports.add(
                         new Import(originalImportPaths.getOrDefault(contractName, contractName)));
             }
         }
-        return new compile.ast.InterfaceFile(imports, itrface.solidityCodeGen(code));
+        return new compile.ast.InterfaceFile(imports, itrface.solidityCodeGen(code), firstInFile);
     }
 
     @Override
@@ -77,7 +77,7 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public void codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
+    public void codePasteContract(String name, java.util.Map<String, List<TopLayerNode>> sourceFileMap) {
         assert sourceFilePath.toString().equals(name);
 
         // construct contract table and interface table this contract imported
@@ -85,14 +85,40 @@ public class InterfaceFile extends SourceFile {
         Map<String, Contract> importedContractMap = new HashMap<>();
         Map<String, Interface> importedInterfaceMap = new HashMap<>();
 
-        for (String path : iptContracts) {
-            assert contractMap.containsKey(path) || interfaceMap.containsKey(path) : path;
-            if (contractMap.containsKey(path)) {
-                importedContractMap.put(contractMap.get(path).getContractName(), contractMap.get(path));
-            } else if (interfaceMap.containsKey(path)) {
-                importedInterfaceMap.put(interfaceMap.get(path).getContractName(), interfaceMap.get(path));
+        for (String path: iptContracts) {
+            assert sourceFileMap.containsKey(path) : path;
+            List<TopLayerNode> sources = sourceFileMap.get(path);
+            for (TopLayerNode source : sources) {
+                if (source instanceof Contract) {
+                    importedContractMap.put(((Contract) source).getContractName(), (Contract) source);
+                    iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Contract) source).getContractName());
+                } else if (source instanceof Interface) {
+                    importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
+                    iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Interface) source).getContractName());
+                } else {
+                    assert false;
+                }
             }
         }
+        // adding contracts and interfaces under the same file and above the current interface
+        String path = getSourceFilePath();
+        assert sourceFileMap.containsKey(path) : path;
+        List<TopLayerNode> sources = sourceFileMap.get(path);
+        for (TopLayerNode source : sources) {
+            if (source instanceof Contract) {
+                importedContractMap.put(((Contract) source).getContractName(), (Contract) source);
+                iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Contract) source).getContractName());
+            } else if (source instanceof Interface) {
+                if (itrface == source) {
+                    break;
+                }
+                importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
+                iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Interface) source).getContractName());
+            } else {
+                assert false;
+            }
+        }
+
         itrface.codePasteContract(importedContractMap, importedInterfaceMap);
     }
 
@@ -117,11 +143,23 @@ public class InterfaceFile extends SourceFile {
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-        env.enterSourceFile(getSourceFilePath());
+        env.enterSourceFile(getSourceFilePath(), getContractName());
         env.setNewCurSymTab();
         for (String iptContract : iptContracts) {
-            env.importContract(iptContract, location);
+            for (String contractName : iptContractNames.get(iptContract)) {
+                env.importContract(iptContract, contractName, location);
+            }
+            // env.importContract(iptContract, location); // TODO steph
         }
+
+        // for all other contracts in the same file that's above self
+        String path = getSourceFilePath();
+        if (iptContractNames.containsKey(path)) {
+            for (String contractName : iptContractNames.get(path)) {
+                env.importContract(path, contractName, location);
+            }
+        }
+
         if (!itrface.ntcGlobalInfo(env, now)) {
             logger.debug("GlobalInfo failed with: " + itrface);
             return false;

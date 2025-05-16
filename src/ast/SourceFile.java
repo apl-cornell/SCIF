@@ -20,6 +20,7 @@ public abstract class SourceFile extends Node {
     final Path sourceFilePath;
     // final String sourceFileFullName; // e.g., "A.scif"
     final String sourceFileNameId;
+    protected boolean firstInFile = false;
 
     /*
         imported files;
@@ -28,13 +29,24 @@ public abstract class SourceFile extends Node {
      */
     protected Set<String> iptContracts;
     protected Map<String, String> originalImportPaths = new HashMap<>();
+    protected Map<String, List<String>> iptContractNames = new HashMap<>();
     protected final String contractName;
+    // protected final int lineStart;
+    // protected final int lineEnd;
 
     /*
         @sourceCode represents the source code in lines
      */
     private List<String> sourceCode;
     private final boolean builtIn;
+
+    /**
+     * @param iptContracts
+     * @return
+     */
+    public void setIptContracts(Set<String> iptContracts) {
+        this.iptContracts = iptContracts;
+    }
 
     /**
      * return s + id
@@ -90,9 +102,13 @@ public abstract class SourceFile extends Node {
         this.sourceCode = sourceCode;
     }
 
+    public void markSourceFirstInFile(boolean firstInFile) {
+        this.firstInFile = firstInFile;
+    }
+
     abstract public boolean containContract(String fullPath);
 
-    abstract public void codePasteContract(String name, Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) throws SemanticException;
+    abstract public void codePasteContract(String name, Map<String, List<TopLayerNode>> sourceFileMap) throws SemanticException;
 
     abstract public boolean ntcAddImportEdges(InheritGraph graph);
 
@@ -148,12 +164,14 @@ public abstract class SourceFile extends Node {
         }
     }
 
-    public void updateImports(Map<String, SourceFile> fileMap) {
+    public void updateImports(Map<String, List<SourceFile>> fileMap) {
         Set<String> newIptContracts = new HashSet<>(iptContracts);
         for (String x: iptContracts) {
-            SourceFile file = fileMap.get(x);
-            assert file != null: x;
-            newIptContracts.addAll(file.iptContracts);
+            List<SourceFile> sourceList = fileMap.get(x);
+            if (sourceList == null || sourceList.isEmpty()) {
+                assert false;
+            }
+            newIptContracts.addAll((sourceList.get(0)).iptContracts);
         }
         iptContracts = newIptContracts;
     }

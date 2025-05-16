@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import java_cup.runtime.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sherrloc.diagnostic.explanation.Explanation;
 import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
@@ -28,73 +29,73 @@ public class TypeChecker {
     }
 
     /*
-        Given a list of SCIF source files, this method type-checks all code,
-        ignoring information flow control.  It generates constraints in
-        SHErrLoc format and put them in outputFile, then runs SHErrLoc to get
-        error info.
-     */
-    public static List<SourceFile> regularTypecheck(List<File> inputFiles, File logDir,
-            boolean DEBUG) throws IOException, SemanticException {
-
-        File outputFile = new File(logDir, SCIF.newFileName("ntc", "cons"));
-        logger.trace("typecheck starts...");
-
-        /*
-            parse all SCIF source files and store AST roots in roots.
-         */
+        parse all SCIF source files and store AST roots in roots.
+    */
+    public static List<SourceFile> buildRoots(List<File> inputFiles) throws IOException, SemanticException {
         List<SourceFile> roots = new ArrayList<>();
 
         Queue<File> mentionedFiles = new ArrayDeque<>(inputFiles);
         InheritGraph graph = new InheritGraph();
-        Map<String, SourceFile> fileMap = new HashMap<>();
+        Map<String, List<SourceFile>> fileMap = new HashMap<>();
         Set<String> includedFilePaths = inputFiles.stream().flatMap(file -> Stream.of(file.getAbsolutePath())).collect(
                 Collectors.toSet());
         // add all built-in source files
         for (File builtinFile: Utils.BUILTIN_FILES) {
             Symbol result = Parser.parse(builtinFile, null);//p.parse();
-            SourceFile root = ((SourceFile) result.value).makeBuiltIn();
+            List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
+            SourceFile root = (rootsFiles.get(0)).makeBuiltIn();
+            // SourceFile root = ((SourceFile) result.value).makeBuiltIn();
             if (root instanceof ContractFile) {
                 ((ContractFile) root).getContract().clearExtends();
             }
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(builtinFile.getAbsolutePath()),
                     StandardCharsets.UTF_8);
+            // sourceCode is only used to show error msgs for SLC - should save all lines from the file path anyway
             root.setSourceCode(sourceCode);
             root.addBuiltIns();
             roots.add(root);
             assert root.ntcAddImportEdges(graph);
             includedFilePaths.add(builtinFile.getAbsolutePath());
-            fileMap.put(builtinFile.getAbsolutePath(), root);
+            fileMap.put(builtinFile.getAbsolutePath(), new ArrayList<>(List.of(root)));
         }
         while (!mentionedFiles.isEmpty()) {
             File file = mentionedFiles.poll();
             Symbol result = Parser.parse(file, null);
             if (result == null) return null;
-            SourceFile root = (SourceFile) result.value;
-            fileMap.put(root.getSourceFilePath(), root);
+
+            List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
+            assert !rootsFiles.isEmpty();
+
+            fileMap.put((rootsFiles.get(0)).getSourceFilePath(), rootsFiles);
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(file.getAbsolutePath()),
                     StandardCharsets.UTF_8);
-            root.setSourceCode(sourceCode);
-            root.addBuiltIns();
-            roots.add(root);
-            assert root.ntcAddImportEdges(graph);
+            // sourceCode is only used to show error msgs for SLC - should save all lines from the file path anyway
+            for (SourceFile root : rootsFiles) {
+                root.setSourceCode(sourceCode);
+                root.addBuiltIns();
+                roots.add(root);
+                assert root.ntcAddImportEdges(graph);
 
-            for (String filePath : root.importPaths()) {
-                if (!includedFilePaths.contains(filePath)) {
-                    mentionedFiles.add(new File(filePath));
-                    includedFilePaths.add(filePath);
+                for (String filePath : root.importPaths()) {
+                    // only those imported file paths != current file path
+                    if (!includedFilePaths.contains(filePath)) {
+                        mentionedFiles.add(new File(filePath));
+                        includedFilePaths.add(filePath);
+                    }
                 }
+
             }
         }
-
+/*
         // Code-paste superclasses' methods and data fields
-        Map<String, Contract> contractMap = new HashMap<>();
-        Map<String, Interface> interfaceMap = new HashMap<>();
+        Map<String, Contract> contractMap = new HashMap<>(); // file path -> AST contract
+        Map<String, Interface> interfaceMap = new HashMap<>(); // file path -> AST Interface
         for (SourceFile root : roots) {
-//            fileMap.put(root.getSourceFilePath(), root);
+            //            fileMap.put(root.getSourceFilePath(), root);
             // assert root.ntcAddImportEdges(graph);
-//            System.err.println("sourcefile: " + root.getSourceFilePath());
+            //            System.err.println("sourcefile: " + root.getSourceFilePath());
             if (root instanceof ContractFile) {
                 contractMap.put(root.getSourceFilePath(), ((ContractFile) root).getContract());
             } else if (root instanceof InterfaceFile) {
@@ -103,34 +104,66 @@ public class TypeChecker {
                 assert false: root.getContractName();
             }
         }
-
+        
+        // TODO steph: I don't understand why this check is needed, and not fixed yet
         logger.debug(
                 " check if there is any non-existent contract name: " + contractMap.keySet() + " "
                         + graph.getAllNodes());
         // check if there is any non-existent contract name
         for (String contractPath : graph.getAllNodes()) {
             assert contractMap.containsKey(contractPath) || interfaceMap.containsKey(contractPath) : contractPath;
-            /*if (!contractMap.containsKey(contractName)) {
-                // TODO: mentioning non-existent contract
-                return null;
-            }*/
+            // if (!contractMap.containsKey(contractName)) {
+                // // TODO: mentioning non-existent contract
+                // return null;
+            //}
         }
+*/
+        Map<String, List<TopLayerNode>> sourceFileMap = new HashMap<>(); // file path -> list of AST contract/interface
+
+        for(SourceFile root: roots) {
+            if (root instanceof ContractFile) {
+                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(((ContractFile) root).getContract());
+            } else if (root instanceof InterfaceFile) {
+                sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(((InterfaceFile) root).getInterface());
+            } else {
+                assert false: root.getContractName();
+            }
+        }
+
 
         logger.debug(" code-paste in a topological order");
         List<SourceFile> toporder = new ArrayList<>();
         // code-paste in a topological order
         for (String x : graph.getTopologicalQueue()) {
-            SourceFile rt = fileMap.get(x);
-            if (rt == null) {
-                // TODO: contract not found
+            List<SourceFile> rootsFile = fileMap.get(x);
+            if (rootsFile == null || rootsFile.isEmpty()) {
                 assert false;
                 return null;
             }
-            toporder.add(rt);
-            rt.updateImports(fileMap);
-            rt.codePasteContract(x, contractMap, interfaceMap);
+
+            for (SourceFile rt : rootsFile) {
+                toporder.add(rt);
+                rt.updateImports(fileMap);
+                rt.codePasteContract(x, sourceFileMap);
+            }
         }
-        roots = toporder;
+
+        return toporder;
+    }
+
+    /*
+        Given a list of SCIF source files, this method type-checks all code,
+        ignoring information flow control.  It generates constraints in
+        SHErrLoc format and put them in outputFile, then runs SHErrLoc to get
+        error info.
+     */
+    public static List<SourceFile> regularTypecheck(List<File> inputFiles, File logDir,
+                                                    boolean DEBUG) throws IOException, SemanticException {
+        File outputFile = new File(logDir, SCIF.newFileName("ntc", "cons"));
+        logger.trace("typecheck starts...");
+
+        // roots = toporder;
+        List<SourceFile> roots = buildRoots(inputFiles);
 
         // Add built-ins and Collect global info
         NTCEnv ntcEnv = new NTCEnv(null);
@@ -162,28 +195,28 @@ public class TypeChecker {
 //            if (!root.isBuiltIn() && root instanceof ContractFile) {
 //                String filename = root.getContractName();
 //                for (String methodname : ntcEnv.getMethodnames(root.getSourceFilePath())) {
-                    List<Constraint> cons = ntcEnv.cons();
+        List<Constraint> cons = ntcEnv.cons();
 //                    List<Constraint> cons = new ArrayList<>();
 //                    cons.addAll(contractCons);
 //                    cons.addAll(ntcEnv.methodCons(root.getSourceFilePath(), methodname));
 //                    File outputFile = new File(logDir,
 //                            SCIF.newFileName(filename + "." + methodname, "ntc"));
-                    if (!Utils.writeCons2File(ntcEnv.getTypeSet(), ntcEnv.getTypeRelationCons(),
-                            cons,
-                            outputFile, false, null)) {
-                        return roots;
-                    }
-                    try {
-                        if (DEBUG) {
-                            System.err.println("regular type-checking using SLC...");
-                        }
-                        if (!runSLC(ntcEnv.programMap(), outputFile.getAbsolutePath(), DEBUG)) {
-                            return null;
-                        }
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                        return null;
-                    }
+        if (!Utils.writeCons2File(ntcEnv.getTypeSet(), ntcEnv.getTypeRelationCons(),
+                cons,
+                outputFile, false, null)) {
+            return roots;
+        }
+        try {
+            if (DEBUG) {
+                System.err.println("regular type-checking using SLC...");
+            }
+            if (!runSLC(ntcEnv.programMap(), outputFile.getAbsolutePath(), DEBUG)) {
+                return null;
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
 //                }
 //            }
 //        }
@@ -192,8 +225,8 @@ public class TypeChecker {
     }
 
     public static boolean ifcTypecheck(List<SourceFile> roots, File logDir,
-            boolean DEBUG)
-        throws SemanticException
+                                       boolean DEBUG)
+            throws SemanticException
     {
 
 //        Map<SourceFile, File> outputFileMap = new HashMap<>();
@@ -274,7 +307,8 @@ public class TypeChecker {
 
         for (SourceFile root : roots)
             if (root instanceof ContractFile) {
-                env.programMap.put(root.getContractName(), root);
+                // env.programMap.put(root.getContractName(), root);
+                env.programMap.computeIfAbsent(root.getContractName(), k -> new ArrayList<SourceFile>()).add(root);
                 if (root.isBuiltIn()) continue;
                 env.sigReq.clear();
                 if (!ifcTypecheck((ContractFile) root, env, logDir, DEBUG)) {
@@ -291,7 +325,7 @@ public class TypeChecker {
      * TODO: more detailed doc
      */
     private static void buildSignatureConstraints(String contractName, VisitEnv env,
-            String namespace, String curContractName) {
+                                                  String namespace, String curContractName) {
         List<Constraint> cons = env.cons;
         // List<Constraint> trustCons = env.trustCons;
         // String contractName = root.getContractName();//contractNames.get(fileIdx);
@@ -393,7 +427,7 @@ public class TypeChecker {
     }
 
     private static boolean ifcTypecheck(ContractFile contractFile, VisitEnv env, File logDir,
-            boolean DEBUG) throws SemanticException {
+                                        boolean DEBUG) throws SemanticException {
         String contractName = contractFile.getContractName();//contractNames.get(fileIdx);
         InterfaceSym contractSym = env.getContract(contractName);
         logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n"
@@ -460,8 +494,8 @@ public class TypeChecker {
         return true;
     }
 
-    static boolean runSLC(Map<String, SourceFile> programMap, String outputFileName,
-            boolean DEBUG) throws Exception {
+    static boolean runSLC(Map<String, List<SourceFile>> programMap, String outputFileName,
+                          boolean DEBUG) throws Exception {
 //        logger.trace("running SLC");
 
 
@@ -485,6 +519,7 @@ public class TypeChecker {
             Set<String> expSet = new HashSet<>();
             for (int i = 0; i < result.getSuggestions().size(); ++i) {
                 // if (i > 0) continue; // only output the first suggestion
+                Explanation explanation = result.getSuggestions().get(i);
                 double weight = result.getSuggestions().get(i).getWeight();
                 if (best > weight) {
                     best = weight;
