@@ -4,6 +4,8 @@ import ast.*;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
@@ -120,14 +122,35 @@ public class Utils {
     public static final String UINT_TYPE = "uint";
     private static final String SUPER_PREFIX = "$super";
 
+    /**
+     * Create and return actual temporary File objects from the Gradle resources directory
+     * Gradle resources are not available as regular files when run in a JAR or outside the repository
+     * We create temporary files because downstream code relies heavily on real files and filepaths.
+     */
     private static Iterable<? extends File> generateBuiltInFiles() {
-        List<File> builtin_files = new ArrayList<>();
-        for (String filename : BUILTIN_FILENAMES) {
-            URL input = ClassLoader.getSystemResource(filename);
-            File inputFile = new File((input.getFile()));
-            builtin_files.add(inputFile);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        List<File> files = new ArrayList<>();
+
+        try {
+            File tempDir = Files.createTempDirectory("builtin-files").toFile();
+            tempDir.deleteOnExit();
+            for (String resourcePath : BUILTIN_FILENAMES) {
+                Path destPath = tempDir.toPath().resolve(resourcePath);
+                Files.createDirectories(destPath.getParent()); // create parent directories if needed
+                try (InputStream in = cl.getResourceAsStream(resourcePath)) {
+                    if (in == null) throw new IllegalStateException("Missing resource: " + resourcePath);
+                    Files.copy(in, destPath);
+                }
+
+                File destFile = destPath.toFile();
+                destFile.deleteOnExit();
+                files.add(destFile);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate built in files.", e);
         }
-        return builtin_files;
+
+        return files;
     }
 
     public static boolean isPrimitiveType(String x) {
@@ -219,6 +242,7 @@ public class Utils {
 
     public static sherrloc.diagnostic.DiagnosticConstraintResult runSherrloc(String consFilePath)
             throws Exception {
+        System.out.println("RUNNING SHERRLOC");
 //        logger.debug("runSherrloc()...");
         String[] args = new String[]{"-c", consFilePath};
         DiagnosticOptions options = new DiagnosticOptions(args);
@@ -764,6 +788,8 @@ public class Utils {
             int fileLoc = locBuffer.indexOf("@");
             String contractName = locBuffer.substring(fileLoc + 1, infoEndIndex);
             StringBuilder explanation = new StringBuilder(locBuffer.substring(1, fileLoc));
+
+
             // if (DEBUG) System.out.println("position of #:" + p + " " + contractName);
             SourceFile program = null; //= programMap.get(contractName);
             for (SourceFile sourceFile: programMap.values()) {

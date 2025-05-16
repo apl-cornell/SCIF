@@ -21,9 +21,6 @@ ant.importBuild("sherrloc/GenErrorDiagnostic/build.xml") {
 
 repositories {
     mavenCentral()
-    flatDir {
-        dirs "build/libs"
-    }
 }
 
 sourceSets {
@@ -71,7 +68,7 @@ def fatJar = tasks.register("fatJar", Jar) {
 
     archiveBaseName = "SCIF-full"
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
