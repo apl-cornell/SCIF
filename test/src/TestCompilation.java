@@ -91,7 +91,7 @@ public class TestCompilation {
         try {
             File outputFile = File.createTempFile("tmp", "sol");
             outputFile.deleteOnExit();
-            SolCompiler.compile(root, outputFile);
+            SolCompiler.compile(List.of(root), outputFile);
         } catch (Exception exp) {
             exp.printStackTrace();
             assert false;
