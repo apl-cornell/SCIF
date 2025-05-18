@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import ast.Interface;
-import ast.TopLayerNode;
 import typecheck.InheritGraph;
 import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
@@ -122,13 +120,13 @@ public class ContractFile extends SourceFile {
         // return contract.ntcInherit(graph);
     }
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterSourceFile(getSourceFilePath(), getContractName());
         logger.debug("contract: " + contract.contractName + "\n" + env.getContract(
                 contract.contractName));
         env.setCurSymTab(env.currentSourceFileFullName(), env.currentContractName());
-        contract.generateConstraints(env, now);
+        contract.genTypeConstraints(env, now);
         return now;
     }
 

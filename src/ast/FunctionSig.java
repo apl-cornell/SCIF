@@ -256,7 +256,7 @@ public class FunctionSig extends TopLayerNode {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         return null;
     }
 

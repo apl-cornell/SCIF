@@ -17,61 +17,41 @@ import java.util.Set;
 import java.util.List;
 
 /**
- * The environment for information flow typechecking.
+ * The environment for information-flow type-checking.
  * Mutable.
  */
 public class VisitEnv {
     public Context inContext;
-    // public PathOutcome outContext;
-    // public HashMap<String, FuncInfo> funcMap;
     private Map<String, List<Constraint>> conMap, trustConMap;
     public List<Constraint> cons;
     private List<Constraint> trustCons;
-    // public LookupMaps varNameMap;
     public SymTab globalSymTab;
     public SymTab curSymTab;
     private Hypothesis hypothesis;
     private final Set<VarSym> principalSet;
     private InterfaceSym curContractSym;
     private FuncSym curFuncSym;
-    // public HashMap<String, ContractInfo> contractMap;
-    //public HashMap<String, SigCons> sigConsMap;
     public Map<String, String> sigReq = new HashMap<>();
     public Map<String, List<SourceFile>> programMap;
-    //public HashMap<ExceptionTypeSym, PsiUnit> psi;
-
 
     public VisitEnv(Context inContext,
-                    // PathOutcome outContext,
-                    // HashMap<String, FuncInfo> funcMap,
                     List<Constraint> cons,
                     List<Constraint> trustCons,
-                    // LookupMaps varNameMap,
                     SymTab globalSymTab,
                     SymTab curSymTab,
                     Hypothesis hypothesis,
                     Set<VarSym> principalSet,
                     InterfaceSym curContractSym,
-                    HashMap<String, List<SourceFile>> programMap
-                    // HashMap<ExceptionTypeSym, PsiUnit> psi
-                    //HashMap<String, SigCons> sigConsMap
-            /*HashMap<String, ContractInfo> contractMap*/) {
-        // this.ctxt = ctxt;
+                    HashMap<String, List<SourceFile>> programMap) {
         this.inContext = inContext;
-        // this.outContext = outContext;
-        // this.funcMap = funcMap;
         this.cons = cons;
         this.trustCons = trustCons;
-        // this.varNameMap = varNameMap;
         this.globalSymTab = globalSymTab;
         this.curSymTab = curSymTab;
         this.hypothesis = hypothesis;
         this.principalSet = principalSet;
         this.curContractSym = curContractSym;
         this.programMap = programMap;
-        // this.psi = psi;
-        // this.contractMap = contractMap;
-        // this.sigConsMap = sigConsMap;
     }
 
     public Hypothesis hypothesis() {
@@ -138,15 +118,6 @@ public class VisitEnv {
         return getVar(id) != null;
     }
 
-    /*public void addSigCons(String contractName, ArrayList<Constraint> trustCons, ArrayList<Constraint> cons) {
-        SigCons sigCons = new SigCons(contractName, trustCons, cons);
-        sigConsMap.put(contractName, sigCons);
-    }*/
-
-    /*public SigCons getSigCons(String contractName) {
-        return sigConsMap.get(contractName);
-    }*/
-
     public void addSigReq(String namespace, String name) {
         sigReq.put(namespace, name);
     }
@@ -162,11 +133,7 @@ public class VisitEnv {
     }
 
     public ExceptionTypeSym toExceptionTypeSym(ast.Type t) {
-//        if (t.isLocal(curContractSym.getName())) {
         return (ExceptionTypeSym) getCurSym(t.name());
-//        } else {
-//            return (ExceptionTypeSym) getExtSym(t.getContractName(), t.name());
-//        }
     }
 
     public ExceptionTypeSym getExp(String name) {

@@ -36,7 +36,7 @@ public class New extends Expression {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         // check constructor_call to be a valid contract constructor call
         assert constructor_call.value instanceof Name : "Contract name must be in the current namespace: " + location.errString();
@@ -55,18 +55,18 @@ public class New extends Expression {
                             + contractName + " at " + location.toString();
             this.constructor_call.funcSym = constructorSym;
             if (constructor_call.callSpec != null) {
-                constructor_call.callSpec.generateConstraints(env, now);
+                constructor_call.callSpec.genTypeConstraints(env, now);
             }
             // typecheck arguments
             for (int i = 0; i < constructor_call.args.size(); ++i) {
                 Expression arg = constructor_call.args.get(i);
                 TypeSym paraInfo = constructorSym.parameters.get(i).typeSym;
-                ScopeContext argContext = arg.generateConstraints(env, now);
+                ScopeContext argContext = arg.genTypeConstraints(env, now);
                 String typeName = paraInfo.toSHErrLocFmt();
-                env.addCons(argContext.genCons(typeName, Relation.GEQ, env, arg.location));
+                env.addCons(argContext.genTypeConstraints(typeName, Relation.GEQ, env, arg.location));
             }
             String rtnTypeName = sym.toSHErrLocFmt();
-            env.addCons(now.genCons(rtnTypeName, Relation.EQ, env, location));
+            env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location));
 
             return now;
         } else {
@@ -80,19 +80,19 @@ public class New extends Expression {
             for (int i = 0; i < constructor_call.args.size(); ++i) {
                 Expression arg = constructor_call.args.get(i);
                 TypeSym paraInfo = structTypeSym.getMemberVarInfo(structName, i).typeSym;
-                ScopeContext argContext = arg.generateConstraints(env, now);
+                ScopeContext argContext = arg.genTypeConstraints(env, now);
                 String typeName = paraInfo.toSHErrLocFmt();
-                env.addCons(argContext.genCons(typeName, Relation.GEQ, env, arg.location));
+                env.addCons(argContext.genTypeConstraints(typeName, Relation.GEQ, env, arg.location));
             }
             String rtnTypeName = structTypeSym.toSHErrLocFmt();
-            env.addCons(now.genCons(rtnTypeName, Relation.EQ, env, location));
+            env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location));
 
             return now;
         }
     }
 
     @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
         if (!isConstructor) {
             // creating a struct var returns a join of its arg values
             Context beginContext = env.inContext;
@@ -106,7 +106,7 @@ public class New extends Expression {
             ExpOutcome ao = null;
 
             for (Expression arg : constructor_call.args) {
-                ao = arg.genConsVisit(env, false);
+                ao = arg.genIFConstraints(env, false);
                 psi.joinExe(ao.psi);
                 argValueLabelNames.add(ao.valueLabelName);
                 env.inContext = new Context(
@@ -131,7 +131,7 @@ public class New extends Expression {
             ExpOutcome ao = null;
 
             for (Expression arg : constructor_call.args) {
-                ao = arg.genConsVisit(env, false);
+                ao = arg.genIFConstraints(env, false);
                 psi.joinExe(ao.psi);
                 argValueLabelNames.add(ao.valueLabelName);
                 env.inContext = new Context(

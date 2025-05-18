@@ -73,7 +73,7 @@ public class Call extends TrailerExpr {
         return args.get(index);
     }
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         this.ntced = true;
         ScopeContext now = new ScopeContext(this, parent);
         String funcName;
@@ -107,17 +107,17 @@ public class Call extends TrailerExpr {
                             // return T
                             if (!args.isEmpty()) throw new SemanticException("pop expects 0 arguments",
                                     this.location);
-                            env.addCons(now.genCons(arrayTName, Relation.EQ, env, location));
+                            env.addCons(now.genTypeConstraints(arrayTName, Relation.EQ, env, location));
                             return now;
                         } else if (funcName.equals("push")) {
                             // require one T, return void
                             if (args.size() != 1) throw new SemanticException("push expects 1 argument",
                                     this.location);
                             Expression arg = args.get(0);
-                            ScopeContext argContext = arg.generateConstraints(env, now);
-                            env.addCons(argContext.genCons(arrayTName, Relation.GEQ, env, arg.location));
+                            ScopeContext argContext = arg.genTypeConstraints(env, now);
+                            env.addCons(argContext.genTypeConstraints(arrayTName, Relation.GEQ, env, arg.location));
                             TypeSym rtnTypeSym = (TypeSym) env.getSym(BuiltInT.VOID);
-                            env.addCons(now.genCons(rtnTypeSym.toSHErrLocFmt(), Relation.EQ, env, location));
+                            env.addCons(now.genTypeConstraints(rtnTypeSym.toSHErrLocFmt(), Relation.EQ, env, location));
                             return now;
                         } else if (funcName.equals("length")) {
                             // return uint
@@ -126,7 +126,7 @@ public class Call extends TrailerExpr {
                                         this.location);
                             }
                             TypeSym rtnTypeSym = (TypeSym) env.getSym(BuiltInT.UINT);
-                            env.addCons(now.genCons(rtnTypeSym.toSHErrLocFmt(), Relation.EQ, env, location));
+                            env.addCons(now.genTypeConstraints(rtnTypeSym.toSHErrLocFmt(), Relation.EQ, env, location));
                             return now;
                         } else {
                             throw new SemanticException("type error: unknown operator", this.location);
@@ -168,7 +168,7 @@ public class Call extends TrailerExpr {
             }
             if (!(s instanceof FuncSym)) {
                 if (s instanceof InterfaceSym || s instanceof BuiltinTypeSym) {
-                    env.addCons(now.genCons(s.getName(), Relation.EQ, env, location));
+                    env.addCons(now.genTypeConstraints(s.getName(), Relation.EQ, env, location));
                     isCast = true;
                     return now;
                 }
@@ -189,18 +189,18 @@ public class Call extends TrailerExpr {
         this.funcSym = funcSym;
 
         if (extern && callSpec != null) {
-            callSpec.generateConstraints(env, now);
+            callSpec.genTypeConstraints(env, now);
         }
         // typecheck arguments
         for (int i = 0; i < args.size(); ++i) {
             Expression arg = args.get(i);
             TypeSym paraInfo = funcSym.parameters.get(i).typeSym;
-            ScopeContext argContext = arg.generateConstraints(env, now);
+            ScopeContext argContext = arg.genTypeConstraints(env, now);
             String typeName = paraInfo.toSHErrLocFmt();
-            env.addCons(argContext.genCons(typeName, Relation.GEQ, env, arg.location));
+            env.addCons(argContext.genTypeConstraints(typeName, Relation.GEQ, env, arg.location));
         }
         String rtnTypeName = funcSym.returnType.toSHErrLocFmt();
-        env.addCons(now.genCons(rtnTypeName, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location));
 
         for (Map.Entry<ExceptionTypeSym, String> tl : funcSym.exceptions.entrySet()) {
             if (!parent.isCheckedException(tl.getKey(), extern)) {
@@ -212,7 +212,7 @@ public class Call extends TrailerExpr {
     }
 
     @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
         //TODO: Assuming value is a Name for now
         Context beginContext = env.inContext;
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
@@ -225,7 +225,7 @@ public class Call extends TrailerExpr {
         ExpOutcome ao = null;
 
         for (Expression arg : args) {
-            ao = arg.genConsVisit(env, false);
+            ao = arg.genIFConstraints(env, false);
             psi.joinExe(ao.psi);
             argValueLabelNames.add(ao.valueLabelName);
 
@@ -254,7 +254,7 @@ public class Call extends TrailerExpr {
 
                 externalCall = true;
                 Attribute att = (Attribute) value;
-                vo = att.value.genConsVisit(env, false);
+                vo = att.value.genIFConstraints(env, false);
                 psi.joinExe(vo.psi);
                 ifContRtn = vo.valueLabelName; // a..lbl
 
@@ -288,7 +288,7 @@ public class Call extends TrailerExpr {
                         // requires pc => integrity of the array var
                         // require the element => integrity of the array var
                         Expression arg = args.get(0);
-                        ExpOutcome argOutcome = arg.genConsVisit(env, false);
+                        ExpOutcome argOutcome = arg.genIFConstraints(env, false);
                         psi.join(argOutcome.psi);
                         String argLabel = argOutcome.valueLabelName;
                         Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);

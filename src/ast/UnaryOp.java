@@ -21,23 +21,23 @@ public class UnaryOp extends Expression {
         operand = y;
     }
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext rtn = operand.generateConstraints(env, now);
-        env.addCons(now.genCons(rtn, Relation.EQ, env, location));
+        ScopeContext rtn = operand.genTypeConstraints(env, now);
+        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
         if (op == UnaryOperator.USub || op == UnaryOperator.UAdd) {
             env.addCons(
-                    rtn.genCons(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.EQ, env, location));
+                    rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.EQ, env, location));
         } else if (op == UnaryOperator.Not || op == UnaryOperator.Invert) {
             env.addCons(
-                    rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
+                    rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
         }
         return now;
     }
 
     @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        return operand.genConsVisit(env, tail_position);
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+        return operand.genIFConstraints(env, tail_position);
     }
 
     @Override

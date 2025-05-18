@@ -3,7 +3,7 @@ package ast;
 import compile.CompileEnv;
 import compile.ast.Statement;
 import compile.ast.Type;
-import java.util.Collection;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +26,7 @@ public abstract class Expression extends Node {
 //        return "unknown";
 //    }
 
-    public abstract ExpOutcome genConsVisit(VisitEnv env, boolean tail_position);
+    public abstract ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position);
 
     /*
         Check whether there are non-exception-free calls inside the expression.

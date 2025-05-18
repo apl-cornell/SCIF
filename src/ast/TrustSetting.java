@@ -48,9 +48,9 @@ public class TrustSetting extends Node {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext context) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext context) {
         for (TrustConstraint trustConstraint : trust_list) {
-            trustConstraint.generateConstraints(env, context);
+            trustConstraint.genTypeConstraints(env, context);
         }
         return context;
     }

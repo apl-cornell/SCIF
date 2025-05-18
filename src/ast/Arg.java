@@ -67,7 +67,7 @@ public class Arg extends Node {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         VarSym varSym = env.newVarSym(name, annotation, isStatic, isFinal, true, location, now);
         try {
@@ -78,9 +78,9 @@ public class Arg extends Node {
         if (annotation.label() != null) {
             varSym.setLabel(env.newLabel(annotation.label()));
         }
-        ScopeContext type = annotation.generateConstraints(env, now);
+        ScopeContext type = annotation.genTypeConstraints(env, now);
 
-        env.addCons(type.genCons(now, Relation.EQ, env, location));
+        env.addCons(type.genTypeConstraints(now, Relation.EQ, env, location));
 
         return now;
     }

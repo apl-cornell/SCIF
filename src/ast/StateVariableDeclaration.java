@@ -84,16 +84,16 @@ public class StateVariableDeclaration extends TopLayerNode {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
 
-        ScopeContext vtype = type.generateConstraints(env, now);
-        ScopeContext tgt = name.generateConstraints(env, now);
+        ScopeContext vtype = type.genTypeConstraints(env, now);
+        ScopeContext tgt = name.genTypeConstraints(env, now);
 
-        env.addCons(vtype.genCons(tgt, Relation.EQ, env, location));
+        env.addCons(vtype.genTypeConstraints(tgt, Relation.EQ, env, location));
         if (value != null) {
-            ScopeContext v = value.generateConstraints(env, now);
-            env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
+            ScopeContext v = value.genTypeConstraints(env, now);
+            env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location));
         } else if (isFinal && !isBuiltin) {
             throw new RuntimeException("final variable " + name.id + " not initialized");
         }
@@ -194,7 +194,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         }
         if (value != null) {
             env.inContext = beginContext;
-            ExpOutcome valueOutcome = value.genConsVisit(env, scopeContext.isContractLevel());
+            ExpOutcome valueOutcome = value.genIFConstraints(env, scopeContext.isContractLevel());
             env.cons.add(new Constraint(new Inequality(valueOutcome.valueLabelName, SLCNameVarLbl),
                     env.hypothesis(), value.location,
                     "Integrity of the value being assigned must be trusted to allow this assignment"));

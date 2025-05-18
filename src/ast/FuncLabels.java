@@ -44,12 +44,12 @@ public class FuncLabels extends Node {
 //    }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
-        begin_pc.generateConstraints(env, parent);
-        to_pc.generateConstraints(env, parent);
-        gamma_label.generateConstraints(env, parent);
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        begin_pc.genTypeConstraints(env, parent);
+        to_pc.genTypeConstraints(env, parent);
+        gamma_label.genTypeConstraints(env, parent);
         // TODO: set end pc
-        if (end_pc != null) end_pc.generateConstraints(env, parent);
+        if (end_pc != null) end_pc.genTypeConstraints(env, parent);
         return parent;
     }
 //

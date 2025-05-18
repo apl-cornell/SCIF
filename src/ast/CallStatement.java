@@ -24,8 +24,8 @@ public class CallStatement extends Statement {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
-        return call.generateConstraints(env, parent);
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        return call.genTypeConstraints(env, parent);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class CallStatement extends Statement {
 
     @Override
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        return call.genConsVisit(env, tail_position).psi;
+        return call.genIFConstraints(env, tail_position).psi;
     }
 
     @Override

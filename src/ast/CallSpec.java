@@ -35,12 +35,12 @@ public class CallSpec extends Node {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // all expressions should be of uint;
 
         ScopeContext now = new ScopeContext(this, parent);
         for (Entry<String, Expression> entry: specs.entrySet()) {
-            ScopeContext value = entry.getValue().generateConstraints(env, now);
+            ScopeContext value = entry.getValue().genTypeConstraints(env, now);
             env.addCons(
                     new Constraint(new Inequality(env.getSymName(BuiltInT.UINT), Relation.LEQ, value.getSHErrLocName()),
                     env.globalHypothesis(), location, ""));
@@ -60,7 +60,7 @@ public class CallSpec extends Node {
         String ifNameTgt = env.thisSym().labelNameSLC();
         for (Entry<String, Expression> entry: specs.entrySet()) {
             Expression value = entry.getValue();
-            ExpOutcome vo = value.genConsVisit(env, false);
+            ExpOutcome vo = value.genIFConstraints(env, false);
             String ifNameValue = vo.valueLabelName;
 
             env.cons.add(

@@ -26,7 +26,7 @@ public class Import extends TopLayerNode {
 //    }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         return null;
     }
 

@@ -36,9 +36,9 @@ public class TrustConstraint extends TopLayerNode {
 //    }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
-        lhs.generateConstraints(env, parent);
-        rhs.generateConstraints(env, parent);
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
+        lhs.genTypeConstraints(env, parent);
+        rhs.genTypeConstraints(env, parent);
         return parent;
     }
 //

@@ -19,15 +19,15 @@ public class ConstantExpr extends Expression {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         //TODO: Constant are boolean
         ScopeContext now = new ScopeContext(this, parent);
-        env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
         return now;
     }
 
     @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
 
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),

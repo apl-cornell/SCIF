@@ -19,7 +19,6 @@ import typecheck.*;
 import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
-import typecheck.sherrlocUtils.Relation;
 
 public class Atomic extends Statement {
 
@@ -37,7 +36,7 @@ public class Atomic extends Statement {
     }
 
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
@@ -58,13 +57,13 @@ public class Atomic extends Statement {
 
         for (Statement s : body) {
 //            assert !now.getSHErrLocName().startsWith("null");
-            tmp = s.generateConstraints(env, atomicScope);
+            tmp = s.genTypeConstraints(env, atomicScope);
         }
         env.exitNewScope();
         env.exitAtomic();
 
         for (ExceptHandler h : handlers) {
-            tmp = h.generateConstraints(env, parent);
+            tmp = h.genTypeConstraints(env, parent);
         }
         return atomicScope;
     }

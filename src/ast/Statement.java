@@ -12,7 +12,9 @@ import typecheck.exceptions.SemanticException;
 public abstract class Statement extends Node {
 
 
+    /** Generate SHErrLoc information-flow constraints for this statement. */
     public abstract PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException;
+
     public abstract List<compile.ast.Statement> solidityCodeGen(CompileEnv code);
     public String toString() {
         return "";

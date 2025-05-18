@@ -100,7 +100,7 @@ public class ComplexIfLabel extends IfLabel {
 //        return rnt;
 //    }
 
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
 
         // TODO: deal with dynamic labels
         return null;
@@ -134,9 +134,9 @@ public class ComplexIfLabel extends IfLabel {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
-        left.generateConstraints(env, parent);
-        right.generateConstraints(env, parent);
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        left.genTypeConstraints(env, parent);
+        right.genTypeConstraints(env, parent);
         return parent;
     }
     @Override

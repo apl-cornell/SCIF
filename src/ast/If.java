@@ -33,26 +33,26 @@ public class If extends Statement {
         this.orelse = new ArrayList<>();
     }
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = scopeContext;
-        ScopeContext rtn = test.generateConstraints(env, now);
-        Constraint testCon = rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
+        ScopeContext rtn = test.genTypeConstraints(env, now);
+        Constraint testCon = rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
         env.addCons(testCon);
 
         env.enterNewScope();
         for (Statement s : body) {
             assert !now.getSHErrLocName().startsWith("null"): now.getSHErrLocName();
-            rtn = s.generateConstraints(env, now);
+            rtn = s.genTypeConstraints(env, now);
         }
         env.exitNewScope();
         env.enterNewScope();
         for (Statement s : orelse) {
-            rtn = s.generateConstraints(env, now);
+            rtn = s.genTypeConstraints(env, now);
         }
         env.exitNewScope();
-        env.addCons(now.genCons(rtn, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
         return now;
     }
 
@@ -66,7 +66,7 @@ public class If extends Statement {
         // curContext.lambda = env.prevContext.lambda;
         String rtnValueLabel;
 
-        ExpOutcome to = test.genConsVisit(env,
+        ExpOutcome to = test.genIFConstraints(env,
                 body.size() == 0 && orelse.size() == 0 && tail_position);
         //Context condContext = to.psi
         rtnValueLabel = to.valueLabelName;

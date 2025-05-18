@@ -23,17 +23,17 @@ public class Endorse extends Expression {
         this.to = to;
     }
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
-        return value.generateConstraints(env, parent);
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        return value.genTypeConstraints(env, parent);
     }
 
     @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
         //TODO: change to conditioned form
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
-        ExpOutcome vo = value.genConsVisit(env, tail_position);
+        ExpOutcome vo = value.genIFConstraints(env, tail_position);
         String ifNameValue = vo.valueLabelName;
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "endorse" + location.toString();
 

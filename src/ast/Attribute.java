@@ -4,7 +4,7 @@ import compile.CompileEnv;
 import compile.ast.Attr;
 import compile.ast.Statement;
 import compile.ast.Type;
-import java.util.HashMap;
+
 import java.util.List;
 import java.util.Map;
 import typecheck.sherrlocUtils.Constraint;
@@ -28,11 +28,11 @@ public class Attribute extends TrailerExpr {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         VarSym varSym = getVarInfo(env);
         assert varSym != null: "attribute value not found: " + location.errString();
         ScopeContext now = new ScopeContext(this, parent);
-        env.addCons(now.genCons(varSym.typeSym.getName(), Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(varSym.typeSym.getName(), Relation.EQ, env, location));
         return now;
     }
 
@@ -54,7 +54,7 @@ public class Attribute extends TrailerExpr {
     }
 
     @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
         //TODO: assuming only one-level attribute access
         // to add support to multi-level access
         String varName = ((Name) value).id;
@@ -67,7 +67,7 @@ public class Attribute extends TrailerExpr {
         }
 
         //String prevLockName = env.prevContext.lambda;
-        ExpOutcome vo = value.genConsVisit(env, tail_position);
+        ExpOutcome vo = value.genIFConstraints(env, tail_position);
         String attrValueLabel = vo.valueLabelName;
 //        String ifAttLabel = structType.getMemberLabel(attr.id);
         String ifNameRnt = scopeContext.getSHErrLocName() + ".struct" + location.toString();

@@ -56,12 +56,12 @@ public class Map extends Type {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent)
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent)
         throws SemanticException
     {
         ScopeContext now = new ScopeContext(this, parent);
-        keyType.generateConstraints(env, parent);
-        valueType.generateConstraints(env, parent);
+        keyType.genTypeConstraints(env, parent);
+        valueType.genTypeConstraints(env, parent);
         MapTypeSym typeSym = (MapTypeSym) env.toTypeSym(this, scopeContext);
         assert typeSym != null : name;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));

@@ -60,11 +60,11 @@ public class Subscript extends TrailerExpr {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         VarSym valueVarSym = value.getVarInfo(env);
-        ScopeContext idx = index.generateConstraints(env, now);
-        value.generateConstraints(env, now);
+        ScopeContext idx = index.genTypeConstraints(env, now);
+        value.genTypeConstraints(env, now);
 
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
             // index must match, and must be a final address/contract or a principal
@@ -84,14 +84,14 @@ public class Subscript extends TrailerExpr {
         } else if (valueVarSym.typeSym instanceof MapTypeSym) {
             MapTypeSym typeInfo = (MapTypeSym) valueVarSym.typeSym;
             // index matches the keytype
-            env.addCons(idx.genCons(typeInfo.keyType.getName(), Relation.LEQ, env, location));
+            env.addCons(idx.genTypeConstraints(typeInfo.keyType.getName(), Relation.LEQ, env, location));
             // valueType matches the result exp
-            env.addCons(now.genCons(typeInfo.valueType.getName(), Relation.EQ, env, location));
+            env.addCons(now.genTypeConstraints(typeInfo.valueType.getName(), Relation.EQ, env, location));
             return now;
         } else if (valueVarSym.typeSym instanceof ArrayTypeSym) {
             ArrayTypeSym typeInfo = (ArrayTypeSym) valueVarSym.typeSym;
-            env.addCons(idx.genCons(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.LEQ, env, location));
-            env.addCons(now.genCons(typeInfo.valueType.getName(), Relation.EQ, env, location));
+            env.addCons(idx.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.LEQ, env, location));
+            env.addCons(now.genTypeConstraints(typeInfo.valueType.getName(), Relation.EQ, env, location));
             return now;
         } else {
             throw new RuntimeException("Subscript: value type not found: " + value);
@@ -99,7 +99,7 @@ public class Subscript extends TrailerExpr {
     }
 
     @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -110,7 +110,7 @@ public class Subscript extends TrailerExpr {
         String ifNameValue = valueVarSym.labelNameSLC();
         // String ifNameRtnValue = ifNameValue + "." + "Subscript" + location.toString();
         String ifNameRtnValue = toSHErrLocFmt();
-        ExpOutcome io = index.genConsVisit(env, tail_position);
+        ExpOutcome io = index.genIFConstraints(env, tail_position);
 
 
         // String ifNameRtnLock = "";
@@ -205,7 +205,7 @@ public class Subscript extends TrailerExpr {
                 return null;
             }
         } else {
-            String ifNameIndex = index.genConsVisit(env, tail_position).valueLabelName;
+            String ifNameIndex = index.genIFConstraints(env, tail_position).valueLabelName;
 
             TypeSym rtnTypeSym = new BuiltinTypeSym(ifNameRtn);
             rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,

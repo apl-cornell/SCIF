@@ -155,7 +155,7 @@ public class TypeChecker {
         for (SourceFile root : roots) {
             if (!root.isBuiltIn() && root instanceof ContractFile) {
 //                ntcEnv.enterFile(root.getSourceFilePath());
-                root.generateConstraints(ntcEnv, null);
+                root.genTypeConstraints(ntcEnv, null);
             }
         }
 

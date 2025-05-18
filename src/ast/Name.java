@@ -32,7 +32,7 @@ public class Name extends Variable {
     }*/
 
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         Sym s = env.getCurSym(id);
         logger.debug("Name: " + id);
         // logger.debug(s.toString());
@@ -59,7 +59,7 @@ public class Name extends Variable {
     }
 
     @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
         // assuming the name would be a variable name
         logger.debug("Name: " + id);
         String ifNameRtn = env.getVar(id).labelNameSLC();

@@ -42,7 +42,7 @@ public class ExceptHandler extends Node {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterNewScope();
 
@@ -60,7 +60,7 @@ public class ExceptHandler extends Node {
         }
 
         for (Statement s : body) {
-            ScopeContext tmp = s.generateConstraints(env, now);
+            ScopeContext tmp = s.genTypeConstraints(env, now);
         }
         env.exitNewScope();
         return now;

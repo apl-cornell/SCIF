@@ -31,27 +31,27 @@ public class For extends Statement {
         this.body = body;
     }
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
 
         // create a new scope
         env.enterNewScope();
 
-        newVars.generateConstraints(env, now);
-        ScopeContext rtn = test.generateConstraints(env, now);
+        newVars.genTypeConstraints(env, now);
+        ScopeContext rtn = test.genTypeConstraints(env, now);
         // the test condition must be boolean
-        env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
+        env.addCons(rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
 
         for (Statement s: body) {
-            s.generateConstraints(env, now);
+            s.genTypeConstraints(env, now);
         }
         for (Statement s: iter) {
-            s.generateConstraints(env, now);
+            s.genTypeConstraints(env, now);
         }
 
         env.exitNewScope();
 
-        env.addCons(now.genCons(rtn, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
         return now;
     }
 
@@ -63,7 +63,7 @@ public class For extends Statement {
         env.incScopeLayer();
         PathOutcome newVarOut = newVars.genConsVisit(env, false);
         beginContext = newVarOut.getNormalPath().c;
-        ExpOutcome to = test.genConsVisit(env, false);
+        ExpOutcome to = test.genIFConstraints(env, false);
 
         String ifNameTest = to.valueLabelName;
         String ifNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());

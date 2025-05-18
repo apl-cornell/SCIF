@@ -84,7 +84,7 @@ public class AnnAssign extends Statement {
 //    }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         String name = ((Name) target).id;
         Sym symValue = env.getCurSym(name);
@@ -101,13 +101,13 @@ public class AnnAssign extends Statement {
         if (annotation.label() != null) {
             varSym.setLabel(env.newLabel(annotation.label()));
         }
-        ScopeContext type = annotation.generateConstraints(env, now);
-        ScopeContext tgt = target.generateConstraints(env, now);
+        ScopeContext type = annotation.genTypeConstraints(env, now);
+        ScopeContext tgt = target.genTypeConstraints(env, now);
 
-        env.addCons(type.genCons(tgt, Relation.EQ, env, location));
+        env.addCons(type.genTypeConstraints(tgt, Relation.EQ, env, location));
         if (value != null) {
-            ScopeContext v = value.generateConstraints(env, now);
-            env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
+            ScopeContext v = value.genTypeConstraints(env, now);
+            env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location));
         } else if (isFinal) {
             throw new RuntimeException("final variable " + name + " not initialized at " + location);
         }
@@ -207,7 +207,7 @@ public class AnnAssign extends Statement {
         }
         if (value != null) {
             env.inContext = beginContext;
-            ExpOutcome valueOutcome = value.genConsVisit(env, scopeContext.isContractLevel());
+            ExpOutcome valueOutcome = value.genIFConstraints(env, scopeContext.isContractLevel());
             env.cons.add(new Constraint(new Inequality(valueOutcome.valueLabelName, SLCNameVarLbl),
                     env.hypothesis(), value.location,
                     "Integrity of the value being assigned must be trusted to allow this assignment"));

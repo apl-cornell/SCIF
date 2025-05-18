@@ -42,15 +42,15 @@ public class Assert extends Statement {
             }
 
         }
-        return test.genConsVisit(env, tail_position).psi;
+        return test.genIFConstraints(env, tail_position).psi;
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = scopeContext;
         ScopeContext rtn = null;
-        rtn = test.generateConstraints(env, now);
-        Constraint testCon = rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
+        rtn = test.genTypeConstraints(env, now);
+        Constraint testCon = rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
         env.addCons(testCon);
         return now;
     }

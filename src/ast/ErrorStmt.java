@@ -10,7 +10,7 @@ import typecheck.VisitEnv;
 public class ErrorStmt extends Statement {
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         return null;
     }
 

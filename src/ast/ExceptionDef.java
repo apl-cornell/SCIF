@@ -62,7 +62,7 @@ public class ExceptionDef extends TopLayerNode {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
 
         // ExceptionTypeSym expSym = env.newExceptionType(exceptionName, arguments, parent);

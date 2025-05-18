@@ -55,9 +55,9 @@ public class LabeledType extends Node {
         type.setToDefault(this.ifl);
     }
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
-        ScopeContext rtn = type.generateConstraints(env, parent);
-        if (ifl != null) ifl.generateConstraints(env, parent);
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        ScopeContext rtn = type.genTypeConstraints(env, parent);
+        if (ifl != null) ifl.genTypeConstraints(env, parent);
         return rtn;
     }
 

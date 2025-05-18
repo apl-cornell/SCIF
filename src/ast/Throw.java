@@ -23,7 +23,7 @@ public class Throw extends Statement {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
 
         String exceptionName;
@@ -73,9 +73,9 @@ public class Throw extends Statement {
             Expression arg = exception.args.get(i);
             TypeSym paraInfo = exceptionSym.parameters().get(i).typeSym;
             assert !now.getSHErrLocName().startsWith("null");
-            ScopeContext argContext = arg.generateConstraints(env, now);
+            ScopeContext argContext = arg.genTypeConstraints(env, now);
             String typeNameSLC = paraInfo.toSHErrLocFmt();
-            Constraint argCon = argContext.genCons(typeNameSLC, Relation.GEQ, env, arg.location);
+            Constraint argCon = argContext.genTypeConstraints(typeNameSLC, Relation.GEQ, env, arg.location);
             env.addCons(argCon);
         }
         // String rtnTypeName = exceptionSym.returnType.name;
@@ -147,7 +147,7 @@ public class Throw extends Statement {
 
         for (int i = 0; i < exception.args.size(); ++i) {
             Expression arg = exception.args.get(i);
-            ao = arg.genConsVisit(env, false);
+            ao = arg.genIFConstraints(env, false);
             psi.joinExe(ao.psi);
             env.inContext = new Context(
                     Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),

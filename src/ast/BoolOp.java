@@ -28,28 +28,28 @@ public class BoolOp extends Expression {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext l = left.generateConstraints(env, now), r = right.generateConstraints(env, now);
-        env.addCons(now.genCons(l, Relation.LEQ, env, location));
-        env.addCons(now.genCons(r, Relation.LEQ, env, location));
-        env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        ScopeContext l = left.genTypeConstraints(env, now), r = right.genTypeConstraints(env, now);
+        env.addCons(now.genTypeConstraints(l, Relation.LEQ, env, location));
+        env.addCons(now.genTypeConstraints(r, Relation.LEQ, env, location));
+        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
         return now;
     }
 
     @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         env.inContext = beginContext;
-        ExpOutcome lo = left.genConsVisit(env, false);
+        ExpOutcome lo = left.genIFConstraints(env, false);
         String ifNameLeft = lo.valueLabelName;
 
         // env.inContext = new Context(lo.psi.getNormalPath().c.pc, beginContext.lambda);
         env.inContext = typecheck.Utils.genNewContextAndConstraints(env, false, lo.psi.getNormalPath().c, beginContext.lambda, left.nextPcSHL(), left.location);
-        ExpOutcome ro = right.genConsVisit(env, false);
+        ExpOutcome ro = right.genIFConstraints(env, false);
         String ifNameRight = ro.valueLabelName;
 
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bool" + location.toString();

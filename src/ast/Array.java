@@ -45,9 +45,9 @@ public class Array extends Type {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-        valueType.generateConstraints(env, parent);
+        valueType.genTypeConstraints(env, parent);
         ArrayTypeSym typeSym = (ArrayTypeSym) env.toTypeSym(this, scopeContext);
         assert typeSym != null : name;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));

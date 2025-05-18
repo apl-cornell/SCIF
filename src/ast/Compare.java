@@ -29,35 +29,35 @@ public class Compare extends Expression {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         //TODO: not included: Is, NotIs, In, NotIn
         ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext l = left.generateConstraints(env, now), r = right.generateConstraints(env, now);
+        ScopeContext l = left.genTypeConstraints(env, now), r = right.genTypeConstraints(env, now);
 
-        env.addCons(l.genCons(r, Relation.EQ, env, location));
+        env.addCons(l.genTypeConstraints(r, Relation.EQ, env, location));
         if (op == CompareOperator.Eq || op == CompareOperator.NotEq) {
             //env.addCons(l.genCons(r, Relation.EQ, env, location));
         } else if (op == CompareOperator.Lt || op == CompareOperator.LtE
                 || op == CompareOperator.Gt || op == CompareOperator.GtE) {
-            env.addCons(l.genCons(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
+            env.addCons(l.genTypeConstraints(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
         }
-        env.addCons(now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
         return now;
     }
 
     @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         env.inContext = beginContext;
-        ExpOutcome lo = left.genConsVisit(env, false);
+        ExpOutcome lo = left.genIFConstraints(env, false);
         String ifNameLeft = lo.valueLabelName;
 
         env.inContext = typecheck.Utils.genNewContextAndConstraints(env, false, lo.psi.getNormalPath().c, beginContext.lambda, left.nextPcSHL(), left.location);
 //        env.inContext = new Context(lo.psi.getNormalPath().c.pc, beginContext.lambda);
-        ExpOutcome ro = right.genConsVisit(env, false);
+        ExpOutcome ro = right.genIFConstraints(env, false);
         String ifNameRight = ro.valueLabelName;
 
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "cmp" + location.toString();

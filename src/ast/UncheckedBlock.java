@@ -1,16 +1,13 @@
 package ast;
 
 import compile.CompileEnv;
-import compile.ast.Assert;
 import compile.ast.Type;
 import compile.ast.UncheckedStatement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import typecheck.Context;
-import typecheck.ExceptionTypeSym;
-import typecheck.Label;
+
 import typecheck.NTCEnv;
 import typecheck.PathOutcome;
 import typecheck.PsiUnit;
@@ -18,8 +15,6 @@ import typecheck.ScopeContext;
 import typecheck.Utils;
 import typecheck.VisitEnv;
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 
 public class UncheckedBlock extends Statement {
 
@@ -29,9 +24,9 @@ public class UncheckedBlock extends Statement {
         this.body = body;
     }
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         for (Statement s : body) {
-            s.generateConstraints(env, parent);
+            s.genTypeConstraints(env, parent);
         }
 
         return parent;

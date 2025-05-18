@@ -26,19 +26,19 @@ public class While extends Statement {
         this.body = body;
     }
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
         env.enterNewScope();
-        ScopeContext rtn = test.generateConstraints(env, now);
-        env.addCons(rtn.genCons(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
+        ScopeContext rtn = test.genTypeConstraints(env, now);
+        env.addCons(rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
 
         for (Statement s : body) {
-            ScopeContext tmp = s.generateConstraints(env, now);
+            ScopeContext tmp = s.genTypeConstraints(env, now);
         }
         env.exitNewScope();
-        env.addCons(now.genCons(rtn, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
         return now;
     }
 
@@ -48,7 +48,7 @@ public class While extends Statement {
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
                 Utils.getLabelNameLock(toSHErrLocFmt()));
 
-        ExpOutcome to = test.genConsVisit(env, false);
+        ExpOutcome to = test.genIFConstraints(env, false);
 
         String ifNameTest = to.valueLabelName;
         String ifNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());

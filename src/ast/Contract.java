@@ -154,26 +154,26 @@ public class Contract extends TopLayerNode {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // System.err.println("entering contract: " + contractName);
         ScopeContext now = new ScopeContext(this, parent);
         env.setCurContractSym(env.getContract(contractName));
 
         for (StructDef def: structDefs) {
-            def.generateConstraints(env, now);
+            def.genTypeConstraints(env, now);
         }
         for (StateVariableDeclaration dec : varDeclarations) {
-            dec.generateConstraints(env, now);
+            dec.genTypeConstraints(env, now);
         }
 
-        trustSetting.generateConstraints(env, now);
+        trustSetting.genTypeConstraints(env, now);
 
         for (ExceptionDef def : exceptionDefs) {
-            def.generateConstraints(env, now);
+            def.genTypeConstraints(env, now);
         }
 
         for (FunctionDef fDef : methodDeclarations) {
-            fDef.generateConstraints(env, now);
+            fDef.genTypeConstraints(env, now);
         }
 
         // System.err.println("exiting contract: " + contractName);

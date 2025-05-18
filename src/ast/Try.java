@@ -41,7 +41,7 @@ public class Try extends Statement {
     }
 
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
@@ -59,12 +59,12 @@ public class Try extends Statement {
         }
 
         for (Statement s : body) {
-            tmp = s.generateConstraints(env, now);
+            tmp = s.genTypeConstraints(env, now);
         }
         env.exitNewScope();
 
         for (ExceptHandler h : handlers) {
-            tmp = h.generateConstraints(env, parent);
+            tmp = h.genTypeConstraints(env, parent);
         }
         return now;
     }

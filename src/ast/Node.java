@@ -47,7 +47,7 @@ public abstract class Node {
     /**
      * take each statement as an expression, return the type (context) as result.
      */
-    public abstract ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException;
+    public abstract ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException;
 
     /**
      * Return a list of AST nodes that are the current node's kids

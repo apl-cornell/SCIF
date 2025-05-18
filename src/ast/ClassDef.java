@@ -11,7 +11,7 @@ import typecheck.ScopeContext;
 public class ClassDef extends TopLayerNode {
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         return null;
     }
 

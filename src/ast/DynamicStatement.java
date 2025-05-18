@@ -13,7 +13,7 @@ public class DynamicStatement extends Statement {
         this.call = call;
     }
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         //TODO: check arguments
         return parent;
     }

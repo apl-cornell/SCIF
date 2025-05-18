@@ -50,7 +50,7 @@ public class FunctionDef extends FunctionSig {
 
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
 //        if (isSuperConstructor()) return null;
         //env.setCurSymTab(new SymTab(env.curSymTab()));
         env.enterNewScope();
@@ -73,9 +73,9 @@ public class FunctionDef extends FunctionSig {
         if (!returnVoid()) addBuiltInResult(env.curSymTab(), now);
 
         for (Arg arg : this.args.args()) {
-            arg.generateConstraints(env, now);
+            arg.genTypeConstraints(env, now);
         }
-        funcLabels.generateConstraints(env, now);
+        funcLabels.genTypeConstraints(env, now);
         if (funcSym.returnType != null) {
             env.addCons(new Constraint(new Inequality(funcSym.returnTypeSLC(), Relation.EQ,
                     funcSym.returnType.toSHErrLocFmt()), env.globalHypothesis(), location,
@@ -91,7 +91,7 @@ public class FunctionDef extends FunctionSig {
             // TODO: add support for signatures
             for (Statement stmt : body) {
                 // logger.debug("stmt: " + stmt);
-                stmt.generateConstraints(env, now);
+                stmt.genTypeConstraints(env, now);
             }
         if (isConstructor()) {
             assert env.superCalled() : "constructor of super contract is not called in the constructor of " + env.currentSourceFileFullName();

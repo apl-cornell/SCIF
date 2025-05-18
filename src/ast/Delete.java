@@ -44,7 +44,7 @@ public class Delete extends Statement {
             //Assuming target is Name
             ifNameTgt = env.getVar(((Name) target).id).labelNameSLC();
         } else if (target instanceof Subscript || target instanceof Attribute) {
-            to = target.genConsVisit(env, false);
+            to = target.genIFConstraints(env, false);
             ifNameTgt = to.valueLabelName;
             env.inContext = Utils.genNewContextAndConstraints(env, false, to.psi.getNormalPath().c, beginContext.lambda, target.nextPcSHL(), location);
         } else {
@@ -75,11 +75,11 @@ public class Delete extends Statement {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // making sure that the variable to be deleted is global
         boolean deletable = true;
         if (target instanceof Name) {
-            ScopeContext rtn = target.generateConstraints(env, parent);
+            ScopeContext rtn = target.genTypeConstraints(env, parent);
             VarSym varSym = target.getVarInfo(env);
             if (varSym.isGlobal()) {
                 return rtn;
@@ -87,7 +87,7 @@ public class Delete extends Statement {
                 deletable = false;
             }
         } else if (target instanceof Attribute) {
-            ScopeContext rtn = target.generateConstraints(env, parent);
+            ScopeContext rtn = target.genTypeConstraints(env, parent);
             if (((Attribute) target).isGlobalStruct(env)) {
                 return rtn;
             } else {

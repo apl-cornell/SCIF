@@ -34,9 +34,9 @@ public class DepMap extends Map {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-        keyType.generateConstraints(env, parent);
+        keyType.genTypeConstraints(env, parent);
 
         TypeSym keyTypeSym = env.toTypeSym(keyType, now);
         VarSym keyVarSym = new VarSym(
@@ -55,7 +55,7 @@ public class DepMap extends Map {
         } catch (SymTab.AlreadyDefined e) {
             throw new SemanticException("Identifier " + e.id + "already defined", location);
         }
-        valueType.generateConstraints(env, now);
+        valueType.genTypeConstraints(env, now);
 
         env.exitNewScope();
         DepMapTypeSym typeSym = (DepMapTypeSym) env.toTypeSym(this, scopeContext);

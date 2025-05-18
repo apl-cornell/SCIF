@@ -24,7 +24,7 @@ public class Revert extends Statement {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         return parent;
     }
 

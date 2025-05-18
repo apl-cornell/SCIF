@@ -26,7 +26,7 @@ public class GuardBlock extends Statement {
         this.target = target;
     }
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         // consider to be a new scope
         // must contain at least one Statement
         ScopeContext now = new ScopeContext(this, parent);
@@ -34,7 +34,7 @@ public class GuardBlock extends Statement {
         env.enterNewScope();
         ScopeContext rtn = null;
         for (Statement s : body) {
-            rtn = s.generateConstraints(env, now);
+            rtn = s.genTypeConstraints(env, now);
         }
         env.exitNewScope();
 

@@ -25,16 +25,16 @@ public class Return extends Statement {
         this.value = null;
     }
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         FuncSym funcSym = Utils.getCurrentFuncInfo(env, now);
         if (value != null) {
-            ScopeContext rtn = value.generateConstraints(env, now);
-            env.addCons(now.genCons(rtn, Relation.EQ, env, location));
+            ScopeContext rtn = value.genTypeConstraints(env, now);
+            env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
         }
 
         env.addCons(
-                now.genCons(funcSym.returnTypeSLC(), Relation.EQ, env, location));
+                now.genTypeConstraints(funcSym.returnTypeSLC(), Relation.EQ, env, location));
         return now;
     }
 
@@ -62,7 +62,7 @@ public class Return extends Statement {
             return psi;
         }
 
-        ExpOutcome vo = value.genConsVisit(env, true);
+        ExpOutcome vo = value.genIFConstraints(env, true);
         Context expContext = vo.psi.getNormalPath().c;
         String ifNameValue = vo.valueLabelName;
         env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtnValue), env.hypothesis(),

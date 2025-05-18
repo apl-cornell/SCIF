@@ -7,7 +7,6 @@ import compile.ast.SingleVar;
 import compile.ast.Statement;
 import compile.ast.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import typecheck.BuiltInT;
@@ -31,17 +30,17 @@ public class FlowsToExp extends Expression {
     }
 
     @Override
-    public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         env.inContext = beginContext;
-        ExpOutcome lo = lhs.genConsVisit(env, false);
+        ExpOutcome lo = lhs.genIFConstraints(env, false);
         String ifNameLeft = lo.valueLabelName;
 
         env.inContext = new Context(lo.psi.getNormalPath().c.pc, beginContext.lambda);
-        ExpOutcome ro = rhs.genConsVisit(env, false);
+        ExpOutcome ro = rhs.genIFConstraints(env, false);
         String ifNameRight = ro.valueLabelName;
 
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bool" + location.toString();
@@ -87,7 +86,7 @@ public class FlowsToExp extends Expression {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         if (lhs != null && rhs != null) {
             ScopeContext now = new ScopeContext(this, parent);
             Name left = (Name) lhs, right = (Name) rhs;
@@ -99,7 +98,7 @@ public class FlowsToExp extends Expression {
                 assert lpass : "dynamic trust queries can only happen between final address variables: " + lsym.getName() + " at " + location.errString();
                 assert rpass : "dynamic trust queries can only happen between final address variables: " + rsym.getName() + " at " + location.errString();
                 env.addCons(
-                            now.genCons(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+                            now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
                 return now;
 
             }

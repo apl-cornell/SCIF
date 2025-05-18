@@ -25,15 +25,15 @@ public class Assign extends Statement {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-        ScopeContext tgt = target.generateConstraints(env, now);
-        ScopeContext v = value.generateConstraints(env, now);
+        ScopeContext tgt = target.genTypeConstraints(env, now);
+        ScopeContext v = value.genTypeConstraints(env, now);
         // con: tgt should be a supertype of v
 //        logger.debug(v);
 //        logger.debug(env);
 //        logger.debug(location);
-        env.addCons(tgt.genCons(v, Relation.LEQ, env, location));
+        env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location));
         return now;
     }
 
@@ -55,7 +55,7 @@ public class Assign extends Statement {
             // env.prevContext = valueContext;
             /*env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, valueContext.lambda), env.hypothesis, value.location, env.curContractSym.name,
                     "Lock should be maintained before execution of this operation"));*/
-            to = target.genConsVisit(env, false);
+            to = target.genIFConstraints(env, false);
             ifNameTgt = to.valueLabelName;
 //            env.inContext = new Context(to.psi.getNormalPath().c.lambda, beginContext.lambda);
             env.inContext = Utils.genNewContextAndConstraints(env, false, to.psi.getNormalPath().c, beginContext.lambda, target.nextPcSHL(), location);
@@ -65,7 +65,7 @@ public class Assign extends Statement {
             assert false;
             //TODO: error handling
         }
-        ExpOutcome vo = value.genConsVisit(env, false);
+        ExpOutcome vo = value.genIFConstraints(env, false);
         String ifNameValue = vo.valueLabelName;
         // prevContext = valueContext;
 

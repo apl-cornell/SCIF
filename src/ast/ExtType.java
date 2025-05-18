@@ -23,7 +23,7 @@ public class ExtType extends Type {
     }
 
     @Override
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         ScopeContext now = new ScopeContext(this, parent);
         TypeSym typeSym = (TypeSym) env.getExtSym(contractName, name);
         assert !(typeSym instanceof InterfaceSym);

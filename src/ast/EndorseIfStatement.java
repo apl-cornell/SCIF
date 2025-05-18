@@ -26,13 +26,13 @@ public class EndorseIfStatement extends Statement {
         this.ifStatement = ifStatement;
     }
 
-    public ScopeContext generateConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         for (Name name: expressionList) {
-            name.generateConstraints(env, parent);
+            name.genTypeConstraints(env, parent);
         }
-        from.generateConstraints(env, parent);
-        to.generateConstraints(env, parent);
-        return ifStatement.generateConstraints(env, parent);
+        from.genTypeConstraints(env, parent);
+        to.genTypeConstraints(env, parent);
+        return ifStatement.genTypeConstraints(env, parent);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class EndorseIfStatement extends Statement {
         // curContext.lambda = env.prevContext.lambda;
         String rtnValueLabel;
 
-        ExpOutcome toOutCome = ifStatement.test.genConsVisit(env,
+        ExpOutcome toOutCome = ifStatement.test.genIFConstraints(env,
                 ifStatement.body.size() == 0 && ifStatement.orelse.size() == 0 && tail_position);
         //Context condContext = to.psi
         rtnValueLabel = toOutCome.valueLabelName;
