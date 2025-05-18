@@ -39,18 +39,19 @@ public class TypeChecker {
         Map<String, List<SourceFile>> fileMap = new HashMap<>();
         Set<String> includedFilePaths = inputFiles.stream().flatMap(file -> Stream.of(file.getAbsolutePath())).collect(
                 Collectors.toSet());
+        
         // add all built-in source files
         for (File builtinFile: Utils.BUILTIN_FILES) {
             Symbol result = Parser.parse(builtinFile, null);//p.parse();
             List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
             SourceFile root = (rootsFiles.get(0)).makeBuiltIn();
-            // SourceFile root = ((SourceFile) result.value).makeBuiltIn();
             if (root instanceof ContractFile) {
                 ((ContractFile) root).getContract().clearExtends();
             }
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(builtinFile.getAbsolutePath()),
                     StandardCharsets.UTF_8);
+            
             // sourceCode is only used to show error msgs for SLC - should save all lines from the file path anyway
             root.setSourceCode(sourceCode);
             root.addBuiltIns();
@@ -88,36 +89,9 @@ public class TypeChecker {
 
             }
         }
-/*
-        // Code-paste superclasses' methods and data fields
-        Map<String, Contract> contractMap = new HashMap<>(); // file path -> AST contract
-        Map<String, Interface> interfaceMap = new HashMap<>(); // file path -> AST Interface
-        for (SourceFile root : roots) {
-            //            fileMap.put(root.getSourceFilePath(), root);
-            // assert root.ntcAddImportEdges(graph);
-            //            System.err.println("sourcefile: " + root.getSourceFilePath());
-            if (root instanceof ContractFile) {
-                contractMap.put(root.getSourceFilePath(), ((ContractFile) root).getContract());
-            } else if (root instanceof InterfaceFile) {
-                interfaceMap.put(root.getSourceFilePath(), ((InterfaceFile) root).getInterface());
-            } else {
-                assert false: root.getContractName();
-            }
-        }
-        
-        // TODO steph: I don't understand why this check is needed, and not fixed yet
-        logger.debug(
-                " check if there is any non-existent contract name: " + contractMap.keySet() + " "
-                        + graph.getAllNodes());
-        // check if there is any non-existent contract name
-        for (String contractPath : graph.getAllNodes()) {
-            assert contractMap.containsKey(contractPath) || interfaceMap.containsKey(contractPath) : contractPath;
-            // if (!contractMap.containsKey(contractName)) {
-                // // TODO: mentioning non-existent contract
-                // return null;
-            //}
-        }
-*/
+
+        // TODO do we need to check if there's any non-existent contract name?
+
         Map<String, List<TopLayerNode>> sourceFileMap = new HashMap<>(); // file path -> list of AST contract/interface
 
         for(SourceFile root: roots) {
