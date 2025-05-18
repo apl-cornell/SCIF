@@ -36,7 +36,7 @@ public class UnaryOp extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         return operand.genIFConstraints(env, tail_position);
     }
 

@@ -106,7 +106,7 @@ public class FunctionDef extends FunctionSig {
 
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_info) throws SemanticException {
+    public PathOutcome IFCVisit(VisitEnv env, boolean tail_info) throws SemanticException {
         if (isBuiltIn() || isNative() || isSuperConstructor()) return null;
         env.incScopeLayer();
         env.enterNewMethod(getName());
@@ -179,7 +179,7 @@ public class FunctionDef extends FunctionSig {
             ++index;
             String prevLambda = env.inContext.lambda;
             boolean isTail = index == body.size() && tail_info;
-            CO = stmt.genConsVisit(env, isTail);
+            CO = stmt.IFCVisit(env, isTail);
             //Context CO = env.outContext;
             if (CO.existsNormalPath()) {
                 env.inContext = Utils.genNewContextAndConstraints(env, isTail, CO.getNormalPath().c, prevLambda, stmt.nextPcSHL(), stmt.location());

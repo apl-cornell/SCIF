@@ -30,7 +30,7 @@ public class DynamicStatement extends Statement {
 //    }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) {
         return null;
     }
 

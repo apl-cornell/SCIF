@@ -8,11 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import typecheck.*;
+import typecheck.exceptions.SemanticException;
 
 public abstract class Expression extends Node {
 
-    public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping)
-    {
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping) throws SemanticException {
         assert false;
         return null;
     }
@@ -26,7 +26,8 @@ public abstract class Expression extends Node {
 //        return "unknown";
 //    }
 
-    public abstract ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position);
+    public abstract ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
+            throws SemanticException;
 
     /*
         Check whether there are non-exception-free calls inside the expression.

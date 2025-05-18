@@ -1,9 +1,6 @@
 package ast;
 
 import compile.CompileEnv;
-import compile.CompileEnv.ScopeType;
-import compile.ast.PrimitiveType;
-import compile.ast.SolNode;
 import compile.ast.StructDef;
 import compile.ast.VarDec;
 
@@ -85,7 +82,7 @@ public class ExceptionDef extends TopLayerNode {
         return rtn;
     }
 
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) {
         return null;
     }
 

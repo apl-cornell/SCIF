@@ -214,22 +214,22 @@ public class Contract extends TopLayerNode {
         }
     }
 
-    public void genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
+    public void IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         //env.prevContext = new Context()
         // findPrincipal(env.principalSet);
 
         for (StateVariableDeclaration dec : varDeclarations) {
-            dec.genConsVisit(env, tail_position);
+            dec.IFCVisit(env, tail_position);
         }
-        trustSetting.genConsVisit(env, tail_position);
+        trustSetting.IFCVisit(env, tail_position);
 
         for (ExceptionDef expDef : exceptionDefs) {
-            expDef.genConsVisit(env, tail_position);
+            expDef.IFCVisit(env, tail_position);
         }
 
         for (FunctionDef fDef : methodDeclarations) {
             // System.err.println("Typechecking " + fDef.name + "@" + contractName + ": " + fDef.isNative);
-            fDef.genConsVisit(env, tail_position);
+            fDef.IFCVisit(env, tail_position);
         }
     }
 

@@ -175,7 +175,7 @@ public class ContractFile extends SourceFile {
         contract.globalInfoVisit(contractSym);
     }
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
-        contract.genConsVisit(env, tail_position);
+        contract.IFCVisit(env, tail_position);
         return null;
     }
 

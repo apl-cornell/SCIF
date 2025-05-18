@@ -2,7 +2,6 @@ package typecheck;
 
 import ast.*;
 import java.math.BigInteger;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,7 +14,6 @@ import sherrloc.constraint.ast.Constructor;
 import sherrloc.constraint.ast.Hypothesis;
 import sherrloc.diagnostic.DiagnosticOptions;
 import sherrloc.diagnostic.ErrorDiagnosis;
-import sherrloc.diagnostic.explanation.ConstraintEntity;
 import sherrloc.diagnostic.explanation.Entity;
 import sherrloc.diagnostic.explanation.Explanation;
 import sherrloc.graph.Variance;
@@ -886,7 +884,7 @@ public class Utils {
             ++index;
             String prevLambda = env.inContext.lambda;
             boolean isTail = index == body.size() && tail_positon;
-            so = s.genConsVisit(env, isTail);
+            so = s.IFCVisit(env, isTail);
             psi.joinExe(so);
             // env.inContext = new Context(so.getNormalPath().c.pc, beginContext.lambda);
 //            boolean nextIsTail = index + 1 == body.size() && tail_positon;
@@ -901,7 +899,7 @@ public class Utils {
             ++index;
             String prevLambda = env.inContext.lambda;
             boolean isTail = index == body.size() && tail_posn;
-            so = s.genConsVisit(env, isTail);
+            so = s.IFCVisit(env, isTail);
             PsiUnit normalUnit = so.getNormalPath();
             if (normalUnit == null) {
                 break;

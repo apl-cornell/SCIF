@@ -7,6 +7,8 @@ import compile.ast.Type;
 
 import java.util.List;
 import java.util.Map;
+
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
@@ -54,7 +56,7 @@ public class Attribute extends TrailerExpr {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         //TODO: assuming only one-level attribute access
         // to add support to multi-level access
         String varName = ((Name) value).id;
@@ -89,7 +91,8 @@ public class Attribute extends TrailerExpr {
     }
 
     @Override
-    public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping) {
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping)
+            throws SemanticException {
         VarSym rtnVarSym;
         VarSym parentVarSym = value.getVarInfo(env, tail_position, dependentMapping);
         StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;

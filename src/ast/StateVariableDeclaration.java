@@ -113,7 +113,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         assert varSym.ifl != null;
     }
 
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -205,7 +205,6 @@ public class StateVariableDeclaration extends TopLayerNode {
         } else {
             return new PathOutcome(new PsiUnit(endContext));
         }
-
     }
 
     public VarDec solidityCodeGen(CompileEnv code) {

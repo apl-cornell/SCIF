@@ -92,7 +92,7 @@ public class New extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         if (!isConstructor) {
             // creating a struct var returns a join of its arg values
             Context beginContext = env.inContext;

@@ -42,7 +42,7 @@ public class EndorseIfStatement extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
+    public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         // create new same-name variables inside the if-branch
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),

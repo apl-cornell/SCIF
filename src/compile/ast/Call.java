@@ -9,10 +9,6 @@ public class Call extends Expression {
     List<Expression> argValues;
     CallSpec callSpec;
 
-
-    public boolean testt() {
-        return false;
-    }
     public Call(String funcName, List<Expression> argValues) {
         this.funcName = funcName;
         this.argValues = argValues;

@@ -26,7 +26,7 @@ public class Assert extends Statement {
 
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         //TODO: exceptions
         if (test instanceof FlowsToExp flowsToExp) {
             Name left = (Name) flowsToExp.lhs, right = (Name) flowsToExp.rhs;

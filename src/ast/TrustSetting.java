@@ -82,7 +82,7 @@ public class TrustSetting extends Node {
 //        trust_list.add(topFlowsToThis);
     }
 
-    public void genConsVisit(VisitEnv env, boolean tail_position) {
+    public void IFCVisit(VisitEnv env, boolean tail_position) {
 
     }
 

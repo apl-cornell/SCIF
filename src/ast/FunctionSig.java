@@ -290,7 +290,7 @@ public class FunctionSig extends TopLayerNode {
         }
     }
 
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
+    public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException {
 
         assert false;
         return null;

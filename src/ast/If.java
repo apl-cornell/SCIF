@@ -57,7 +57,7 @@ public class If extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {
+    public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -120,7 +120,7 @@ public class If extends Statement {
         for (Statement stmt : body) {
             ++index;
             String prevLambda = env.inContext.lambda;
-            ifo = stmt.genConsVisit(env, index == body.size() && tail_position);
+            ifo = stmt.IFCVisit(env, index == body.size() && tail_position);
             // env.prevContext = tmp;
             // prev2 = leftContext;
             //env.context = context;
@@ -148,7 +148,7 @@ public class If extends Statement {
         for (Statement stmt : orelse) {
             ++index;
             String prevLambda = env.inContext.lambda;
-            elseo = stmt.genConsVisit(env, index == orelse.size() && tail_position);
+            elseo = stmt.IFCVisit(env, index == orelse.size() && tail_position);
             PsiUnit normalUnit = elseo.getNormalPath();
             if (normalUnit == null) {
                 break;

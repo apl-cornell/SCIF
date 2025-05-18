@@ -36,7 +36,7 @@ public class CallStatement extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException {
         return call.genIFConstraints(env, tail_position).psi;
     }
 

@@ -99,7 +99,7 @@ public class Subscript extends TrailerExpr {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -167,7 +167,8 @@ public class Subscript extends TrailerExpr {
     }
 
     @Override
-    public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping) {
+    public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping)
+            throws SemanticException {
         VarSym rtnVarSym = null;
         VarSym valueVarSym = value.getVarInfo(env, false, dependentMapping);
         String ifNameValue = valueVarSym.labelNameSLC();

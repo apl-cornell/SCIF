@@ -45,7 +45,7 @@ public class EndorseStatement extends Statement {
     }
 
     @Override
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) {
+    public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) {
         //TODO
 
         return null;

@@ -136,10 +136,10 @@ public class Call extends TrailerExpr {
                             this.location);
                     }
                 } else {
-                    throw new SemanticException("type error in call: ", this.location);
+                    throw new SemanticException("type error in call (not an attribute): ", this.location);
                 }
             } else {
-                throw new SemanticException("type error in call: ", this.location);
+                throw new SemanticException("type error in call (not a name): ", this.location);
             }
         } else {
             // a(b)
@@ -212,7 +212,8 @@ public class Call extends TrailerExpr {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
+            throws SemanticException {
         //TODO: Assuming value is a Name for now
         Context beginContext = env.inContext;
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
@@ -229,7 +230,8 @@ public class Call extends TrailerExpr {
             psi.joinExe(ao.psi);
             argValueLabelNames.add(ao.valueLabelName);
 
-            env.inContext = Utils.genNewContextAndConstraints(env, false, ao.psi.getNormalPath().c, beginContext.lambda, arg.nextPcSHL(), arg.location);
+            env.inContext = Utils.genNewContextAndConstraints(env, false,
+                    ao.psi.getNormalPath().c, beginContext.lambda, arg.nextPcSHL(), arg.location);
 //            env.inContext = new Context(
 //                    Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
 //                    beginContext.lambda);
@@ -321,8 +323,7 @@ public class Call extends TrailerExpr {
                         }
                         return new ExpOutcome(var.ifl.toSHErrLocFmt(), psi);
                     } else {
-                        assert false: "type error";
-                        return null;
+                        throw new SemanticException("Unrecognized operator", location);
                     }
                 }
 
@@ -372,8 +373,7 @@ public class Call extends TrailerExpr {
                     }
                     return new ExpOutcome(ifNameArgValue, psi);
                 } else {
-                    assert false: "method not found: " + funcName + " at " + location.errString();
-                    return null;
+                    throw new SemanticException("method not found: " + funcName, location);
                 }
             }
             funcSym = env.getFunc(funcName);

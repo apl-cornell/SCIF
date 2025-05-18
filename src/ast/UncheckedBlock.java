@@ -32,14 +32,14 @@ public class UncheckedBlock extends Statement {
         return parent;
     }
 
-    public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException  {
+    public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException  {
 
         int index = 0;
         PathOutcome ifo = null;
         for (Statement stmt: body) {
             ++index;
             String prevLambda = env.inContext.lambda;
-            ifo = stmt.genConsVisit(env, index == body.size() && tail_position);
+            ifo = stmt.IFCVisit(env, index == body.size() && tail_position);
             PsiUnit normalUnit = ifo.getNormalPath();
             if (normalUnit == null) {
                 break;

@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+/** The information-flow result from all the possible paths out of evaluation
+ * of an expression or statement.
+ */
 public class PathOutcome {
     public Map<ExceptionTypeSym, PsiUnit> psi;
 
