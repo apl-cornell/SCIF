@@ -1,14 +1,10 @@
 # Getting Started
 
-<!-- 
-    Here writes a short tutorial on how to download, install SCIF compiler and try compiling a short smart contract. 
--->
-
-A SCIF contract can be compiled with either a local or online (TODO) SCIF compiler. 
+A SCIF contract can be compiled with the SCIF compiler.  An online compiler is in the works.
 
 ## Prerequisite
 
-To build a SCIF compiler, the following packages are required:
+To build the SCIF compiler, the following packages are required:
 
 * JFlex
 * Java 17 or later
@@ -17,7 +13,7 @@ To build a SCIF compiler, the following packages are required:
 
 ## Installing the SCIF compiler
 
-SCIF project is hosted at [github](https://github.com/Neroysq/SCIF) and can be built with the help of gradle. The following instructions clone the SCIF project and build it using gradle.
+SCIF project is hosted at [github](https://github.com/apl-cornell/SCIF) and can be built with the help of gradle. The following instructions clone the SCIF project and build it using gradle.
 
 ```shell
 git clone --recurse-submodules  https://github.com/apl-cornell/SCIF.git
