@@ -93,8 +93,9 @@ public class Call extends TrailerExpr {
                 if (s instanceof VarSym varSym) {
                     if (varSym.typeSym instanceof InterfaceSym contractSym) {
                         s = contractSym.getFunc(funcName);
-                        assert s != null: "func in " + varName + "." + funcName + "() not found";
-
+                        if (s == null)
+                            throw new SemanticException("function " + varName + "." + funcName + "() not found",
+                                location);
                         funcSym = (FuncSym) s;
 
                     } else if (varSym.typeSym instanceof ArrayTypeSym arrayTypeSym) {
@@ -104,12 +105,14 @@ public class Call extends TrailerExpr {
                         this.builtIn = true;
                         if (funcName.equals("pop")) {
                             // return T
-                            assert args.size() == 0: "type error";
+                            if (!args.isEmpty()) throw new SemanticException("pop expects 0 arguments",
+                                    this.location);
                             env.addCons(now.genCons(arrayTName, Relation.EQ, env, location));
                             return now;
                         } else if (funcName.equals("push")) {
                             // require one T, return void
-                            assert args.size() == 1: "type error";
+                            if (args.size() != 1) throw new SemanticException("push expects 1 argument",
+                                    this.location);
                             Expression arg = args.get(0);
                             ScopeContext argContext = arg.generateConstraints(env, now);
                             env.addCons(argContext.genCons(arrayTName, Relation.GEQ, env, arg.location));
@@ -118,36 +121,41 @@ public class Call extends TrailerExpr {
                             return now;
                         } else if (funcName.equals("length")) {
                             // return uint
-                            assert args.size() == 0: "type error";
+                            if (!args.isEmpty()) {
+                                throw new SemanticException("length expects 0 arguments",
+                                        this.location);
+                            }
                             TypeSym rtnTypeSym = (TypeSym) env.getSym(BuiltInT.UINT);
                             env.addCons(now.genCons(rtnTypeSym.toSHErrLocFmt(), Relation.EQ, env, location));
                             return now;
                         } else {
-                            assert false: "type error";
-                            return null;
+                            throw new SemanticException("type error: unknown operator", this.location);
                         }
                     } else {
-                        assert false: "type error: " + varName + "." + funcName + "() " + varSym.typeSym.toSHErrLocFmt() + (varSym.typeSym instanceof ContractSym);
-                        return null;
+                        throw new SemanticException("type error: " + varName + "." + funcName + "() " + varSym.typeSym.toSHErrLocFmt() + (varSym.typeSym instanceof ContractSym),
+                            this.location);
                     }
                 } else {
-                    assert false;
-                    return null;
+                    throw new SemanticException("type error in call: ", this.location);
                 }
             } else {
-                assert false;
-                return null;
+                throw new SemanticException("type error in call: ", this.location);
             }
         } else {
             // a(b)
             funcName = ((Name) value).id;
             Sym s;
             if (funcName.equals(Utils.SUPER_KEYWORD)) {
-                assert !env.superCalled() : "should not call super() twice in the constructor: " + location.toString();
-                assert env.inConstructor() : "should not call super() outside the constructor: " + location.toString();
+                if (env.superCalled())
+                    throw new SemanticException("cannot call super() twice in the constructor: ", location);
+                if (!env.inConstructor())
+                    throw new SemanticException("cannot call super() outside the constructor: " , location);
                 String newFuncName = Utils.genSuperName(env.curContractSym().getName());
                 s = env.getCurSym(newFuncName);
-                assert s != null : newFuncName;
+                if (s == null) {
+                    throw new SemanticException("could not find superclass constructor",
+                            location);
+                }
                 // TODO: think twice
                  ((Name) value).id = newFuncName;
                 env.callSuper();
@@ -155,8 +163,8 @@ public class Call extends TrailerExpr {
                 s = env.getCurSym(funcName);
             }
             if (s == null) {
-                assert false: "method not found: " + funcName + " at " + location.errString();
-                return null;
+                throw new SemanticException("method not found: " + funcName,
+                    location);
             }
             if (!(s instanceof FuncSym)) {
                 if (s instanceof InterfaceSym || s instanceof BuiltinTypeSym) {
@@ -164,16 +172,20 @@ public class Call extends TrailerExpr {
                     isCast = true;
                     return now;
                 }
-                assert false: "contract not found: " + s.getName() + " at " + location.errString();
-                return null;
+                throw new SemanticException("contract not found: " + s.getName(),
+                    location);
             }
             funcSym = ((FuncSym) s);
             if (funcSym.isBuiltIn()) {
                 this.builtIn = true;
             }
         }
-        assert !env.inConstructor() || env.superCalled() : "should not call methods before called super in constructor: " + funcName + " at " + location.errString();
-        assert args.size() == funcSym.parameters.size() : "number of values provided does not match the number of arguments of the called method: " + funcName + " at " + location.errString();
+        if (env.inConstructor() && !env.superCalled())
+            throw new SemanticException("cannot call methods before super called in constructor: " + funcName,
+                 location);
+        if (args.size() != funcSym.parameters.size())
+            throw new SemanticException("number of arguments does not match the number of parameters of the called method: " + funcName,
+                location);
         this.funcSym = funcSym;
 
         if (extern && callSpec != null) {
@@ -192,9 +204,8 @@ public class Call extends TrailerExpr {
 
         for (Map.Entry<ExceptionTypeSym, String> tl : funcSym.exceptions.entrySet()) {
             if (!parent.isCheckedException(tl.getKey(), extern)) {
-                System.err.println(
-                        "Unchecked exception: " + tl.getKey().getName() + " at " + location.errString());
-                throw new RuntimeException();
+                throw new SemanticException("Unchecked exception: " + tl.getKey().getName(),
+                    location);
             }
         }
         return now;

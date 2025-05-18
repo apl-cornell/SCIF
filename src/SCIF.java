@@ -81,7 +81,7 @@ public class SCIF implements Callable<Integer> {
             List<File> files = new ArrayList<>();
             for (File file : m_inputFiles) {
                 files.add(file);
-            }
+               }
             List<SourceFile> roots;
             roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
 
