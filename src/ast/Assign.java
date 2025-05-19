@@ -62,8 +62,7 @@ public class Assign extends Statement {
             // prevContext = tmp;
             // rtnLockName = tmp.lambda;
         } else {
-            assert false;
-            //TODO: error handling
+            throw new SemanticException("Unexpected target in assignment", location);
         }
         ExpOutcome vo = value.genIFConstraints(env, false);
         String ifNameValue = vo.valueLabelName;

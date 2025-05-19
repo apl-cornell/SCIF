@@ -39,25 +39,32 @@ public class New extends Expression {
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         // check constructor_call to be a valid contract constructor call
-        assert constructor_call.value instanceof Name : "Contract name must be in the current namespace: " + location.errString();
+        if (!(constructor_call.value instanceof Name)) {
+            throw new SemanticException("Contract name must be in the current namespace: ", location);
+        }
         String name = ((Name) constructor_call.value).id;
         Sym sym = env.getCurSym(name);
-        assert sym instanceof ContractSym || sym instanceof StructTypeSym : "Not a contract or struct type: " + location.errString();
+        if (!(sym instanceof ContractSym) && !(sym instanceof StructTypeSym)) {
+            throw new SemanticException("Not a contract or struct type: " + sym, location);
+        }
         if (sym instanceof ContractSym) {
             isConstructor = true;
             String contractName = name;
             FuncSym constructorSym = ((ContractSym) sym).getConstructorSym();
-            assert !env.inConstructor() || env.superCalled() :
-                    "should not call methods before called super in constructor: " + contractName
-                            + " at " + location.toString();
-            assert constructor_call.args.size() == constructorSym.parameters.size() :
-                    "number of values provided does not match the number of arguments of the called method: "
-                            + contractName + " at " + location.toString();
+            if (env.inConstructor()  && !env.superCalled()) {
+                throw new SemanticException("should not call methods before called super in constructor: " + contractName,
+                        location);
+            }
+            if (constructor_call.args.size() != constructorSym.parameters.size()) {
+                throw new SemanticException("number of values provided " + constructor_call.args.size() +
+                        " does not match the number of arguments of the called method: " +
+                        constructorSym.parameters.size(), location);
+            }
             this.constructor_call.funcSym = constructorSym;
             if (constructor_call.callSpec != null) {
                 constructor_call.callSpec.genTypeConstraints(env, now);
             }
-            // typecheck arguments
+            // type-check arguments
             for (int i = 0; i < constructor_call.args.size(); ++i) {
                 Expression arg = constructor_call.args.get(i);
                 TypeSym paraInfo = constructorSym.parameters.get(i).typeSym;
@@ -72,9 +79,11 @@ public class New extends Expression {
         } else {
             String structName = name;
             StructTypeSym structTypeSym = (StructTypeSym) sym;
-            assert constructor_call.args.size() == structTypeSym.merberSize() :
-                    "number of values provided does not match the number of arguments of the called method: "
-                            + structTypeSym.getName() + " at " + location.toString();
+            if (constructor_call.args.size() != structTypeSym.merberSize()) {
+                throw new SemanticException("number of arguments does not match the " +
+                        "number of parameters of the called method "
+                        + structTypeSym.getName(), location);
+            }
             // this.constructor_call.funcSym = structTypeSym;
             // typecheck arguments
             for (int i = 0; i < constructor_call.args.size(); ++i) {

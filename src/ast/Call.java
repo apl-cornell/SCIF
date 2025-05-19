@@ -336,7 +336,8 @@ public class Call extends TrailerExpr {
                 ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
                 InterfaceSym contractSym = env.getContract(conType.getName());
                 funcSym = contractSym.getFunc(funcName);
-                assert funcSym != null : "not found: " + conType.getName() + "." + funcName;
+                if (funcSym == null)
+                    throw new SemanticException("not found: " + conType.getName() + "." + funcName, location);
 
                 dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(), env.thisSym().toSHErrLocFmt());
                 dependentLabelMapping.put(contractSym.any().toSHErrLocFmt(), env.curContractSym().any().toSHErrLocFmt());
@@ -345,8 +346,7 @@ public class Call extends TrailerExpr {
                 ifFuncCallPcAfter = funcSym.internalPc();
                 ifFuncGammaLock = funcSym.callGamma();
             } else {
-                assert false;
-                return null;
+                throw new Error("Internal compiler error" + location.errString());
             }
         } else {
             //a(b)
@@ -358,8 +358,7 @@ public class Call extends TrailerExpr {
             if (!env.containsFunc(funcName)) {
                 if (env.containsContract(funcName) || Utils.isPrimitiveType(funcName)) { //type cast
                     if (args.size() != 1) {
-                        assert false;
-                        return null;
+                        throw new SemanticException("cast must have one argument", location);
                     }
                     String ifNameArgValue = argValueLabelNames.get(0);
                     Utils.contextFlow(env, psi.getNormalPath().c, endContext,
