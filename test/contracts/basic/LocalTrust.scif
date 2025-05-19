@@ -1,21 +1,21 @@
 contract LocalTrust {
-    final address addrA = 0x...;
-    final address addrB = 0x...;
-    final address addrC = 0x...;
-    principal high;
+    address addrA;
+    address addrB;
+    address addrC;
     principal low;
     assume {
-        high => this;
-        this => low;
-        addrA => high;
-        addrB => low;
+        addrA => this;
     }
 
-    uint highValue{high};
-    uint lowValue{low};
+    uint highValue;
+    uint{any} lowValue;
+
+    constructor(address a) {
+        addrA = a;
+    }
 
     @public
-    void setHigh{high (join this)}(uint v) {
+    void setHigh{this}(uint v) {
         highValue = v;
     }
 
@@ -25,7 +25,7 @@ contract LocalTrust {
     }
 
     @public
-    void setLow{low}(uint v) {
+    void setLow{any}(uint v) {
         lowValue = v;
     }
 }
