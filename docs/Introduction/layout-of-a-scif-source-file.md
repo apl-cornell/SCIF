@@ -13,9 +13,16 @@
             methods
 -->
 
-A SCIF source file can contain multiple SCIF contracts definitions. This section serves as a quick overview of the SCIF file layout.
+A SCIF source file can contain multiple SCIF contract and interface
+definitions. This section serves as a quick overview of the source file
+structure.
 
-An example:
+Below is an example of a contract named `LocalTrust`. It has two private integer (`uint`)
+fields named `highValue` and `lowValue`, which represent more-trusted and less-trusted
+data respectively, as indicated by the label annotations `{high}` and `{low}`. The contract
+also defines some methods for accessing the fields. Importantly, the methods that change
+values of the fields are similarly labeled. Because `setHigh` is labeled `{high}`, only
+sufficiently trusted contracts can call this method.
 
 ```scif
 contract LocalTrust {
@@ -31,8 +38,9 @@ contract LocalTrust {
         addrB => low;
     }
 
-    uint highValue{high};
-    uint lowValue{low};
+    uint{high} highValue;
+    uint{low} lowValue;
+
     exception X();
     exception Y(uint aug1, bool aug2);
 
@@ -55,17 +63,21 @@ contract LocalTrust {
 
 ## Importing from other source files
 
-SCIF supports import statements. By using an import statement like the following:
-
+SCIF supports import statements. By using an import statement like the
+following, all global symbols such as contracts are imported from the specified
+file. 
 ```scif
 import "path-to-file";
 ```
 
-All global symbols such as contacts are imported from the specified file. 
-
 ## Structure of a contract
 
-Structure of SCIF contracts are similar to classes in object-oriented programming languages such as Java. Each contract can contain declarations of state variables, exceptions, constructors and methods. In addition, a SCIF contract supports declarations of local principals and local trust assumptions that help secure your program from muliple security vulnerabilities such as reentrancy vulnerabilities.
+The structure of SCIF contracts is similar to classes in object-oriented
+programming languages such as Java. Each contract can declare
+state variables, exceptions, constructors and
+methods. In addition, a SCIF contract supports declarations of
+local principals and local trust assumptions that help secure your
+program from security vulnerabilities.
 
 ### contract name, contract label and inheritance
 
