@@ -138,6 +138,7 @@ public class TypeChecker {
 
         // roots = toporder;
         List<SourceFile> roots = buildRoots(inputFiles);
+        if (roots == null) return roots;
 
         // Add built-ins and Collect global info
         NTCEnv ntcEnv = new NTCEnv(null);

@@ -14,6 +14,9 @@ import typecheck.sherrlocUtils.Hypothesis;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * XXX What is this class for?
+ */
 public class NTCEnv {
 
     private java.util.Map<Pair<String, String>, InterfaceSym> contractSymMap; // full filename -> ContractSym
