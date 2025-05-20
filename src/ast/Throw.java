@@ -36,7 +36,7 @@ public class Throw extends Statement {
                 String contractTypeName = ((Name) att.value).id;
                 exceptionName = att.attr.id;
                 ContractSym s = env.getContract(contractTypeName);
-                logger.debug("contract " + contractTypeName + ": " + s.getName());
+                // logger.debug("contract " + contractTypeName + ": " + s.getName());
                 if (!(env.getExtSym(contractTypeName, exceptionName) == null)) {
                     System.err.println("a.b not found");
                     return null;

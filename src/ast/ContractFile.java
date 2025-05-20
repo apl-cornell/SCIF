@@ -123,8 +123,8 @@ public class ContractFile extends SourceFile {
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterSourceFile(getSourceFilePath(), getContractName());
-        logger.debug("contract: " + contract.contractName + "\n" + env.getContract(
-                contract.contractName));
+//        // logger.debug("contract: " + contract.contractName + "\n" + env.getContract(
+//                contract.contractName));
         env.setCurSymTab(env.currentSourceFileFullName(), env.currentContractName());
         contract.genTypeConstraints(env, now);
         return now;
@@ -157,7 +157,7 @@ public class ContractFile extends SourceFile {
         // Utils.addBuiltInASTNode(env.globalSymTab, contract.trustSetting);
         // assert env.getCurSym("TrustManager") != null: env.currentSourceFileFullName();
         if (!contract.ntcGlobalInfo(env, now)) {
-            logger.debug("GlobalInfo failed with: " + contract);
+//            // logger.debug("GlobalInfo failed with: " + contract);
             return false;
         }
         return true;
@@ -170,8 +170,8 @@ public class ContractFile extends SourceFile {
         }
         // ntcGlobalInfos.add(contract.contractName);
         // contractSym.iptContracts = iptContracts;
-        logger.debug("visit Contract: " + contract.contractName + "\n"
-                + contractSym.symTab.getTypeSet());
+//        // logger.debug("visit Contract: " + contract.contractName + "\n"
+//                + contractSym.symTab.getTypeSet());
         contract.globalInfoVisit(contractSym);
     }
     public PathOutcome genConsVisit(VisitEnv env, boolean tail_position) throws SemanticException {

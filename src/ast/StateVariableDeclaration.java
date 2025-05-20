@@ -118,18 +118,18 @@ public class StateVariableDeclaration extends TopLayerNode {
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
-        logger.debug("entering AnnAssign: \n");
-        // logger.debug(this.toString() + "\n");
+        // logger.debug("entering AnnAssign: \n");
+        // // logger.debug(this.toString() + "\n");
         String SLCNameVar, SLCNameVarLbl;
         VarSym varSym;
         String id = name.id;
-        logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
+        // logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
 
         varSym = env.getVar(id);
-        logger.debug(varSym.getName());
+        // logger.debug(varSym.getName());
         SLCNameVar = varSym.toSHErrLocFmt();
         SLCNameVarLbl = varSym.labelNameSLC();
-        logger.debug(varSym.typeSym.getName());
+        // logger.debug(varSym.typeSym.getName());
         if ((varSym.isFinal &&
                 (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))) {
             env.addPrincipal(varSym);

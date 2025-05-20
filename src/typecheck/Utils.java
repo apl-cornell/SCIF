@@ -242,7 +242,7 @@ public class Utils {
     public static sherrloc.diagnostic.DiagnosticConstraintResult runSherrloc(String consFilePath)
             throws Exception {
         System.out.println("RUNNING SHERRLOC");
-//        logger.debug("runSherrloc()...");
+//        // logger.debug("runSherrloc()...");
         String[] args = new String[]{"-c", consFilePath};
         DiagnosticOptions options = new DiagnosticOptions(args);
         ErrorDiagnosis ana = ErrorDiagnosis.getAnalysisInstance(options);
@@ -263,7 +263,7 @@ public class Utils {
 //            //System.err.println(tmp);
 //        }
 //        p.waitFor();
-//        logger.debug("finished run SLC, collecting output...");
+//        // logger.debug("finished run SLC, collecting output...");
 //        p.destroy();
 //        br.close();
 //        return list.toArray(new String[0]);
@@ -285,7 +285,7 @@ public class Utils {
             //System.err.println(tmp);
         }
         p.waitFor();
-        logger.debug("finished run SLC, collecting output...");
+        // logger.debug("finished run SLC, collecting output...");
         p.destroy();
         br.close();
         return list.toArray(new String[0]);
@@ -327,7 +327,7 @@ public class Utils {
             if (constraints.size() == 0) {
                 return false;
             }
-            logger.debug("Writing the constraints of size {}", constraints.size());
+            // logger.debug("Writing the constraints of size {}", constraints.size());
             //System.err.println("Writing the constraints of size " + env.cons.size());
 //            VarSym bot = new VarSym();
 //            if (!constructors.contains("BOT") && isIFC) {
@@ -398,7 +398,7 @@ public class Utils {
             Set<sherrloc.constraint.ast.Constraint> constraintSet = new HashSet<>();
             // transform every "this" to "contractName.this"
             //BufferedWriter consFile = new BufferedWriter(new FileWriter(outputFile));
-            logger.debug("Writing the constraints of size {}", constraints.size());
+            // logger.debug("Writing the constraints of size {}", constraints.size());
             if (constraints.size() == 0) {
                 return false;
             }

@@ -89,7 +89,7 @@ public class Call extends TrailerExpr {
                 funcName = att.attr.id;
                 Sym s = env.getCurSym(varName);
                 assert s != null: "variable not found: " + varName + " at " + location.errString();
-                logger.debug("var " + varName + ": " + s.getName());
+                // logger.debug("var " + varName + ": " + s.getName());
                 if (s instanceof VarSym varSym) {
                     if (varSym.typeSym instanceof InterfaceSym contractSym) {
                         s = contractSym.getFunc(funcName);
@@ -250,12 +250,11 @@ public class Call extends TrailerExpr {
         VarSym externalTargetSym = null;
         String ifContRtn = null;
         if (!(value instanceof Name)) {
-            if (value instanceof Attribute) {
+            if (value instanceof Attribute att) {
                 //  the case: a.b(c) where a is a contract or an array, b is a function and c are the arguments
                 // att = a.b
 
                 externalCall = true;
-                Attribute att = (Attribute) value;
                 vo = att.value.genIFConstraints(env, false);
                 psi.joinExe(vo.psi);
                 ifContRtn = vo.valueLabelName; // a..lbl
@@ -630,7 +629,7 @@ public class Call extends TrailerExpr {
     }
 
 //    public String toSolCode() {
-//        logger.debug("toSOl: Call");
+//        // logger.debug("toSOl: Call");
 //        String funcName = value.toSolCode();
 ////        if (Utils.isBuiltinFunc(funcName)) {
 ////            return Utils.transBuiltinFunc(funcName, this);

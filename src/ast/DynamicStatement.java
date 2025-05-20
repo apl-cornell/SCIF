@@ -25,7 +25,7 @@ public class DynamicStatement extends Statement {
     }
 //
 //    public String toSolCode() {
-//        logger.debug("toSOl: DynamicStatement");
+//        // logger.debug("toSOl: DynamicStatement");
 //        return call.toSolCode();
 //    }
 
