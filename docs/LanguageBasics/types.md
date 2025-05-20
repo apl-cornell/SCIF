@@ -4,24 +4,26 @@ SCIF is statically typed, meaning that each variable and method type needs to be
 
 ## Primitive types
 
-* `bool`: Boolean type where the possible values are `true` and `false`.
-* `uint`: Unsigned integer type where the possible values are between 0 and 2^256 - 1.
-* `byte`: Byte type where the possible values are between 0 and 2^8 - 1.
-* `address`: Address type represents an Ethereum account address using a 20-byte value.
+* `bool`: Boolean values `true` or `false`.
+* `uint`: Unsigned integers whose possible values are between 0 and 2<sup>256</sup> - 1.
+* `byte`: Byte values. Possible values are between 0 and 2<sup>8</sup> - 1.
+* `address`: Address of an Ethereum account, represented as 20 bytes.
 
 ## Arrays
 
-`T[n]` represents the type of an array of fixed size `n` and element type `T`. For example, `uint[10]` represents the type of a `uint` array of size 10.
-
+`T[n]` is the type of an array of element type `T` and fixed length `n`.
+For example, `uint[10]` is the type of a `uint` array with 10 elements.
 Indices are zero-based.
 
 ## Maps
 
-`map(keyType, valueType)` represents a map type that maps from `keyType` to `valueType`. For example, `map(address, uint)` maps from `address` to `uint`.
+`map(keyType, valueType)` represents a map from type `keyType` to type `valueType`.
+For example, `map(address, uint)` maps from `address` to `uint`.
 
-`keyType` can be any primitive type, while `valueType` can be any type, including maps and user-defined classes.
+`keyType` can be any primitive type, while `valueType` can be any type,
+including maps and user-defined classes.
 
-Values in a map `m` can be accessed through expressions `m[k]`.
+The values in a map `m` with key `k` is accessed through the expression `m[k]`.
 
 ## Classes and Contracts
 
@@ -33,7 +35,8 @@ Values in a map `m` can be accessed through expressions `m[k]`.
 
 ## Labels
 
-Each variable type in SCIF is associated with a label representing its integrity level. `T{l}` describes a type `T` associated with the label `l`.
+Each variable type in SCIF is associated with a label representing its level of integrity.
+`T{l}` describes a type `T` associated with the label `l`.
 
 For example:
 
@@ -44,6 +47,8 @@ x = y; // compile error
 y = x; // pass
 ```
 
-`x` is labeled as `trusted` while `y` is labeled as `untrusted`. So when `x` is reassigned to `y`, the compiler will not compile because there is an integrity failure that an untrusted value is assigned to a trusted variable.
+`x` is labeled as `trusted` while `y` is labeled as `untrusted`. So when `x` is reassigned to `y`, the compiler will not compile because, assuming `trusted` and `untrusted` are defined in a reasonable way,
+it is an integrity failure for an untrusted value to be assigned to a trusted variable.
 
-If a label is not specified when declaring a variable, the compiler will either infer a label from the context or assign a default label to it.
+If a label is not specified when declaring a variable, the compiler will either
+infer a label from the context or assign a default label to it.
