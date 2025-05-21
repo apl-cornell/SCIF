@@ -66,7 +66,7 @@ def fatJar = tasks.register("fatJar", Jar) {
         attributes 'Multi-Release': 'true'
     }
 
-    archiveBaseName = "SCIF-full"
+    archiveFileName = "SCIF.jar"
 
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
