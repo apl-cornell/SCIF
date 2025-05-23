@@ -60,7 +60,8 @@ public abstract class Node {
      */
     public void passScopeContext(ScopeContext parent) {
         scopeContext = parent;
-        for (Node node : children()) {
+        var kids = children();
+        for (Node node : kids) {
             if (node != null) {
                 node.passScopeContext(scopeContext);
             }

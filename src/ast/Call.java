@@ -100,6 +100,7 @@ public class Call extends TrailerExpr {
 
                     } else if (varSym.typeSym instanceof ArrayTypeSym arrayTypeSym) {
                         // TODO: change the hard-code style
+                        // TODO: factor this block out into its own method
                         TypeSym arrayTSym = arrayTypeSym.valueType;
                         String arrayTName = arrayTSym.toSHErrLocFmt();
                         this.builtIn = true;
@@ -129,7 +130,7 @@ public class Call extends TrailerExpr {
                             env.addCons(now.genTypeConstraints(rtnTypeSym.toSHErrLocFmt(), Relation.EQ, env, location));
                             return now;
                         } else {
-                            throw new SemanticException("type error: unknown operator", this.location);
+                            throw new SemanticException("type error: unknown array operator", this.location);
                         }
                     } else {
                         throw new SemanticException("type error: " + varName + "." + funcName + "() " + varSym.typeSym.toSHErrLocFmt() + (varSym.typeSym instanceof ContractSym),
@@ -142,7 +143,7 @@ public class Call extends TrailerExpr {
                 throw new SemanticException("type error in call (not a name): ", this.location);
             }
         } else {
-            // a(b)
+            // a(b) - internal contract call
             funcName = ((Name) value).id;
             Sym s;
             if (funcName.equals(Utils.SUPER_KEYWORD)) {
@@ -348,7 +349,7 @@ public class Call extends TrailerExpr {
                 throw new Error("Internal compiler error" + location.errString());
             }
         } else {
-            //a(b)
+            // a(b) - local contract call
             funcName = ((Name) value).id;
 //            if (funcName.equals(Utils.SUPER_KEYWORD)) {
 //                funcName = Utils.genSuperName(env.curContractSym().getName());
@@ -396,15 +397,12 @@ public class Call extends TrailerExpr {
 
         // if external call and the target address is final, make this equal to the target address
         if (externalCall && callSpec != null) {
-
-            PathOutcome co = callSpec.genConsVisit(env, false);
+            PathOutcome co = callSpec.genIFConstraints(env, false);
             psi.joinExe(co);
             env.inContext = Utils.genNewContextAndConstraints(env, false, co.getNormalPath().c, beginContext.lambda, callSpec.nextPcSHL(), callSpec.location);
-
         }
 
         if (externalCall) {
-
             if (externalTargetSym.isFinal) {
                 dependentLabelMapping.put(
                         externalContractSym.thisSym().toSHErrLocFmt(),
@@ -412,7 +410,7 @@ public class Call extends TrailerExpr {
             } else {
                 dependentLabelMapping.put(
                         externalContractSym.thisSym().toSHErrLocFmt(),
-                        ifContRtn);
+                        ifContRtn); // XXX is this correct? Seems like this is the label of the contract value.
             }
         }
 
@@ -528,7 +526,9 @@ public class Call extends TrailerExpr {
         psi.joinExe(expPsi);
         Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
         psi.setNormalPath(endContext);
-
+        Constraint ln_to_t = new Constraint(new Inequality(psi.getNormalPath().c.pc, ifNameFuncRtnValue),
+                env.hypothesis(), location, env.curContractSym().getName());
+        env.cons.add(ln_to_t);
         return new ExpOutcome(ifNameFuncRtnValue, psi);
     }
 

@@ -6,18 +6,14 @@ import typecheck.sherrlocUtils.*;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 import typecheck.CodeLocation;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import typecheck.Utils;
 
 parser code {:
     //public boolean DEBUG = true;
-    protected static final Logger logger = LogManager.getLogger();
     public static String filename;
 
     public void syntax_error(Symbol cur_token) {
-        logger.error(filename + ": line " + cur_token.left + ", column " + cur_token.right, cur_token);
-        // report_error("Syntax error", cur_token);
+        report_error("Syntax error", cur_token);
     }
 
     public void debuglog(String s) {
@@ -48,10 +44,10 @@ parser code {:
             }
 
             Parser p = new Parser(lexer);
-            logger.trace("Parser init: " + filename);
+//            logger.trace("Parser init: " + filename);
 
             rtn = p.parse();
-            logger.trace("Finish");
+//            logger.trace("Finish");
 
             if (astFile != null) {
                 System.setErr(System.err);
@@ -231,10 +227,10 @@ sourceFile ::=
     | sourceFilesNoImport:b {:
         RESULT = b;
         // logger.debug(RESULT);
-    :}
-    | error:err {:
-        report_fatal_error("Syntax error in source file " + filename + "\n", err);
     :};
+//    | error:err {:
+//    report_fatal_error("Syntax error in source file " + filename + "\n", err);
+//    :};
 
 sourceFilesNoImport ::=
     sourceFilesNoImport:a contract:b {:
@@ -264,10 +260,10 @@ sourceFilesNoImport ::=
         RESULT = new ArrayList<SourceFile>();
         RESULT.add(parsed);
         // logger.debug(RESULT);
-    :}
-    | error:err {:
-        report_fatal_error("Syntax error in source file " + filename + "\n", err);
     :};
+//    | error:err {:
+//        report_fatal_error("Syntax error in source file " + filename + "\n", err);
+//    :};
 
 ipt_stmts ::=
     ipt_stmts:s  ipt_stmt:a {:
@@ -786,10 +782,10 @@ primitiveIfLabel ::= NAME:a {:
 funcdef ::=
     r_funcSig:funcSig suite:d {:
         RESULT = new FunctionDef(funcSig, d);
-    :}
-    | error:err {:
-        report_fatal_error("Syntax error when parsing a method", err);
     :};
+//    | error:err {:
+//        report_fatal_error("Syntax error when parsing a method", err);
+//    :};
 
 type ::=
     nonarray_type:a {:
@@ -1017,10 +1013,9 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     | call_stmt:a {:
         RESULT = a;
     :}
-    | error:err SEMI {:
-        // report_fatal_error("Statement syntax error when parsing source file " + filename + "\n", err);
-        RESULT = new ErrorStmt();
-    :}
+//    | error:err SEMI {:
+//        report_fatal_error("Statement syntax error when parsing source file " + filename + "\n", err);
+//    :}
     ;
 
 //endorse_stmt ::=
@@ -1613,7 +1608,7 @@ arglist ::=
 //    | exprlist_sub:a COMMA {:RESULT = a;:};
 //exprlist_sub ::=
 //    expr:a {:
-//        // logger.debug("Creating an expression list: " + a);
+//        logger.debug("Creating an expression list: " + a);
 //        List<Expression> rnt = new ArrayList<>();
 //        rnt.add(a);
 //        RESULT = rnt;

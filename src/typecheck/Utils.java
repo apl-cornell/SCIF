@@ -865,7 +865,7 @@ public class Utils {
                 Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
     }
 
-    /*
+    /**
         Generate constraints for s.
         If s is not the last op, prepare and generate the input context for the next op.
      */
