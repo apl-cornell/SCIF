@@ -86,7 +86,6 @@ public class TypeChecker {
                         includedFilePaths.add(filePath);
                     }
                 }
-
             }
         }
 
@@ -94,16 +93,15 @@ public class TypeChecker {
 
         Map<String, List<TopLayerNode>> sourceFileMap = new HashMap<>(); // file path -> list of AST contract/interface
 
-        for(SourceFile root: roots) {
+        for (SourceFile root : roots) {
             if (root instanceof ContractFile) {
                 sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(((ContractFile) root).getContract());
             } else if (root instanceof InterfaceFile) {
                 sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(((InterfaceFile) root).getInterface());
             } else {
-                assert false: root.getContractName();
+                assert false : root.getContractName();
             }
         }
-
 
         logger.debug(" code-paste in a topological order");
         List<SourceFile> toporder = new ArrayList<>();
