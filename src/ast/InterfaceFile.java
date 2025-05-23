@@ -161,7 +161,7 @@ public class InterfaceFile extends SourceFile {
         }
 
         if (!itrface.ntcGlobalInfo(env, now)) {
-            logger.debug("GlobalInfo failed with: " + itrface);
+            // logger.debug("GlobalInfo failed with: " + itrface);
             return false;
         }
         return true;

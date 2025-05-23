@@ -103,7 +103,6 @@ public class TypeChecker {
             }
         }
 
-        logger.debug(" code-paste in a topological order");
         List<SourceFile> toporder = new ArrayList<>();
         // code-paste in a topological order
         for (String x : graph.getTopologicalQueue()) {
@@ -159,7 +158,7 @@ public class TypeChecker {
         }
 
         // Check using SHErrLoc and get a solution
-        logger.debug("generating cons file for NTC");
+        // logger.debug("generating cons file for NTC");
         // constructors: all types
         // assumptions: none or relations between types
         // constraints
@@ -245,18 +244,18 @@ public class TypeChecker {
             }
         }
 
-        logger.debug("contracts: \n" + contractMap.getTypeSet());
+        // logger.debug("contracts: \n" + contractMap.getTypeSet());
         int idx = 0;
         for (SourceFile root : roots) {
             InterfaceSym contractSym = (InterfaceSym) contractMap.lookup(contractNames.get(idx));
             ++idx;
             contractSym.symTab = new SymTab(contractMap);
             root.globalInfoVisit(contractSym);
-            logger.debug(contractSym.toString());
+            // logger.debug(contractSym.toString());
             //root.findPrincipal(principalSet);
         }
 
-        logger.debug("starting to ifc typecheck");
+        // logger.debug("starting to ifc typecheck");
 
         VisitEnv env = new VisitEnv(
                 new Context(),
@@ -303,8 +302,8 @@ public class TypeChecker {
         // List<Constraint> trustCons = env.trustCons;
         // String contractName = root.getContractName();//contractNames.get(fileIdx);
         InterfaceSym contractSym = env.getContract(contractName);
-        logger.debug("current Contract: " + contractName + "\n" + contractSym + "\n"
-                + env.curSymTab.getTypeSet());
+        // logger.debug("current Contract: " + contractName + "\n" + contractSym + "\n"
+                // + env.curSymTab.getTypeSet());
         // generate trust relationship dec constraints
 
 //        if (!namespace.equals("")) {
@@ -335,7 +334,7 @@ public class TypeChecker {
 
         for (Map.Entry<String, FuncSym> funcPair : contractSym.symTab.getFuncs().entrySet()) {
             FuncSym func = funcPair.getValue();
-//            logger.debug("add func's sig constraints: [" + func.funcName + "]");
+//            // logger.debug("add func's sig constraints: [" + func.funcName + "]");
             //TODO: simplify
             namespace = "";
             String ifNameCallBeforeLabel = func.externalPcSLC();
@@ -345,7 +344,7 @@ public class TypeChecker {
             String ifCallBeforeLabel = func.getCallPcLabel(namespace);
             String ifCallAfterLabel = func.getCallAfterLabel(namespace);
             String ifCallLockLabel = func.getCallLockLabel(namespace);
-            // logger.debug(ifNameCallBeforeLabel + "\n" + ifNameCallAfterLabel + "\n" + ifNameCallLockLabel + "\n" + ifCallAfterLabel + "\n" +ifCallLockLabel);
+            // // logger.debug(ifNameCallBeforeLabel + "\n" + ifNameCallAfterLabel + "\n" + ifNameCallLockLabel + "\n" + ifCallAfterLabel + "\n" +ifCallLockLabel);
             if (ifCallBeforeLabel != null) {
                 cons.add(new Constraint(
                         new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel),
@@ -403,8 +402,8 @@ public class TypeChecker {
                                         boolean DEBUG) throws SemanticException {
         String contractName = contractFile.getContractName();//contractNames.get(fileIdx);
         InterfaceSym contractSym = env.getContract(contractName);
-        logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n"
-                + env.curSymTab.getTypeSet());
+        // logger.debug("cururent Contract: " + contractName + "\n" + contractSym + "\n"
+                // + env.curSymTab.getTypeSet());
 
         env.setCurContract(contractSym);
         // env.curSymTab.setParent(env.globalSymTab);//TODO
@@ -414,7 +413,7 @@ public class TypeChecker {
         for (Map.Entry<String, VarSym> varPair : contractSym.symTab.getVars().entrySet()) {
             VarSym var = varPair.getValue();
             String varName = var.labelNameSLC();
-            logger.debug(varName);
+            // logger.debug(varName);
             String ifLabel = var.labelValueSLC();
             if (ifLabel != null && varName != null) {
                 env.cons.add(
@@ -424,7 +423,7 @@ public class TypeChecker {
                 //env.cons.add(new Constraint(new Inequality(if Label, varName), var.location));
 
             }
-            logger.debug(": {}", var);
+            // logger.debug(": {}", var);
         }
 
         contractFile.genConsVisit(env, true);
@@ -477,7 +476,7 @@ public class TypeChecker {
         sherrloc.diagnostic.DiagnosticConstraintResult result = Utils.runSherrloc(outputFileName);
 //      System.err.println("runSLC: " + outputFileName + " " + result.success());
 //        System.err.println(Arrays.toString(Utils.runSLCCMD(classDirectoryPath, outputFileName)));
-//        logger.debug("runSLC: " + result);
+//        // logger.debug("runSLC: " + result);
         if (result.success()) {
             // System.out.println(Utils.TYPECHECK_PASS_MSG);
         } else {

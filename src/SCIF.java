@@ -113,7 +113,7 @@ public class SCIF implements Callable<Integer> {
             passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
 
             // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
-            // logger.debug("running SHErrLoc...");
+            // // logger.debug("running SHErrLoc...");
             // boolean passIFC = runSLC(outputFileName);
 
             return (passNTC && passIFC) ? roots : null;
@@ -146,7 +146,7 @@ public class SCIF implements Callable<Integer> {
                 e.printStackTrace();
                 return 0;
             }
-            logger.debug("finished typecheck, compiling...");
+            // logger.debug("finished typecheck, compiling...");
             if (roots == null) {
                 return 1;
             }

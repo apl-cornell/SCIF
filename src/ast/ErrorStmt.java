@@ -21,7 +21,7 @@ public class ErrorStmt extends Statement {
 
     @Override
     public List<Node> children() {
-        return null;
+        return List.of();
     }
 
     @Override

@@ -4,8 +4,8 @@ import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 import typecheck.*;
 import typecheck.exceptions.SemanticException;
 
@@ -60,7 +60,8 @@ public abstract class Node {
      */
     public void passScopeContext(ScopeContext parent) {
         scopeContext = parent;
-        for (Node node : children()) {
+        var kids = children();
+        for (Node node : kids) {
             if (node != null) {
                 node.passScopeContext(scopeContext);
             }
@@ -79,7 +80,7 @@ public abstract class Node {
         //return genson.serialize(location);
     }
 
-    protected static final Logger logger = LogManager.getLogger();
+//    protected static final Logger logger = LogManager.getLogger();
 
     public ScopeContext getScopeContext() {
         return scopeContext;

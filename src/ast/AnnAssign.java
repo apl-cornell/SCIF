@@ -120,12 +120,12 @@ public class AnnAssign extends Statement {
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
-        logger.debug("entering AnnAssign: \n");
-        // logger.debug(this.toString() + "\n");
+//        // logger.debug("entering AnnAssign: \n");
+        // // logger.debug(this.toString() + "\n");
         String SLCNameVar, SLCNameVarLbl;
         VarSym varSym;
         String id = ((Name) target).id;
-        logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
+        // logger.debug(scopeContext.toString() + " | " + scopeContext.isContractLevel());
         CodeLocation loc = location;
 //        if (annotation.label() == null) {
 //            annotation.setToDefault(env.curFuncExternalLabel);
@@ -146,10 +146,10 @@ public class AnnAssign extends Statement {
                     env.hypothesis(), location,
                     "Variable " + varSym.getName() + " may be labeled incorrectly"));
         }
-        logger.debug(varSym.getName());
+//        // logger.debug(varSym.getName());
         SLCNameVar = varSym.toSHErrLocFmt();
         SLCNameVarLbl = varSym.labelNameSLC();
-        logger.debug(varSym.typeSym.getName());
+//        // logger.debug(varSym.typeSym.getName());
 
         // If the declared variable is a principal (final address/contract), add it to the principal list
         if ((varSym.isFinal &&

@@ -34,17 +34,17 @@ public class Name extends Variable {
 
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         Sym s = env.getCurSym(id);
-        logger.debug("Name: " + id);
-        // logger.debug(s.toString());
+        // logger.debug("Name: " + id);
+        // // logger.debug(s.toString());
         if (s instanceof FuncSym) {
             assert false : id + " at " + location.errString();
             return null;
         } else if (s instanceof VarSym) {
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
-            logger.debug(s.getName());
+            // logger.debug(s.getName());
             env.addCons(now.genEqualCons(typeSym, env, location, "Variable `" + id + "` has the wrong type"));
-            logger.debug(now.toString());
+            // logger.debug(now.toString());
             return now;
         } else if (s instanceof TypeSym) {
             assert false;
@@ -61,7 +61,7 @@ public class Name extends Variable {
     @Override
     public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
         // assuming the name would be a variable name
-        logger.debug("Name: " + id);
+        // logger.debug("Name: " + id);
         String ifNameRtn = env.getVar(id).labelNameSLC();
         return new ExpOutcome(ifNameRtn, new PathOutcome(new PsiUnit(env.inContext)));
     }

@@ -90,7 +90,7 @@ public class FunctionDef extends FunctionSig {
         //if (!isBuiltIn()) {
             // TODO: add support for signatures
             for (Statement stmt : body) {
-                // logger.debug("stmt: " + stmt);
+                // // logger.debug("stmt: " + stmt);
                 stmt.genTypeConstraints(env, now);
             }
         if (isConstructor()) {

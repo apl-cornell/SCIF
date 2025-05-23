@@ -1,11 +1,11 @@
 # SCIF
 
-You can download a prebuilt Jar at https://github.com/apl-cornell/SCIF/releases/download/latest/SCIF-full-0.5.0.jar. This is automatically updated on every push to the master branch, so this is equivalent to checking out the repository and building the Jar yourself.
+You can download a prebuilt Jar at https://github.com/apl-cornell/SCIF/releases/download/latest/SCIF.jar. This is automatically updated on every push to the master branch, so this is equivalent to checking out the repository and building the Jar yourself.
 
 Run the Jar with:
 
 ```
-java -ea -jar SCIF-full-0.5.0.jar <args>
+java -ea -jar SCIF.jar <args>
 ```
 
 ## Usage
@@ -39,7 +39,7 @@ SCIF.
 Compile a Wallet example to `./tmp.sol`:
 
 ```console
-java -ea -jar SCIF-full-0.5.0.jar -c test/contracts/ifcTypechecking/Wallet_lock_exception.scif -o ./tmp.sol
+java -ea -jar SCIF.jar -c test/contracts/ifcTypechecking/Wallet_lock_exception.scif -o ./tmp.sol
 ```
 
 ## Documentation

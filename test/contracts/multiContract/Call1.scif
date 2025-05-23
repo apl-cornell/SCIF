@@ -1,0 +1,22 @@
+interface target {
+    exception Exc();
+    @public uint f(uint x) throws (Exc{any});
+}
+
+contract caller {
+    target tgt;
+    constructor(target{sender} t) {
+        super();
+        tgt = endorse(t, sender -> this);
+    }
+    exception Exc();
+
+    @public void f() {
+         try {
+              uint y = g(0);
+          } catch (Exc e) {}
+     }
+    @public uint g(uint x) throws (Exc{any}) {
+      if (x == 0) throw new Exc();
+    }
+}

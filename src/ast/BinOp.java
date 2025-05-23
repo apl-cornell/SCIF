@@ -30,14 +30,14 @@ public class BinOp extends Expression {
 
     @Override
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
-        logger.debug("binOp:");
+//        // logger.debug("binOp:");
         ScopeContext now = new ScopeContext(this, parent);
         ScopeContext l = left.genTypeConstraints(env, now);
-        // logger.debug("binOp/left:");
-        // logger.debug(l.toString());
+        // // logger.debug("binOp/left:");
+        // // logger.debug(l.toString());
         ScopeContext r = right.genTypeConstraints(env, now);
-        // logger.debug("binOp/right:");
-        // logger.debug(r.toString());
+        // // logger.debug("binOp/right:");
+        // // logger.debug(r.toString());
         env.addCons(now.genTypeConstraints(l, Relation.LEQ, env, location));
         env.addCons(now.genTypeConstraints(r, Relation.LEQ, env, location));
         env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));

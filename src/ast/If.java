@@ -85,16 +85,16 @@ public class If extends Statement {
             Name left = (Name) fte.lhs, right = (Name) fte.rhs;
             if (env.containsVar(left.id) && env.containsVar(right.id)) {
 
-                logger.debug("if both exists");
+//                // logger.debug("if both exists");
                 VarSym l = env.getVar(left.id), r = env.getVar(right.id);
-                logger.debug(l.toString());
-                logger.debug(r.toString());
+//                // logger.debug(l.toString());
+//                // logger.debug(r.toString());
                 createdHypo = true;
                 Inequality hypo = new Inequality(l.toSHErrLocFmt(), Relation.LEQ,
                         r.toSHErrLocFmt());
 
                 env.hypothesis().add(hypo);
-                logger.debug("testing label");
+                // logger.debug("testing label");
             }
         }
         env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis(),
@@ -138,7 +138,7 @@ public class If extends Statement {
             env.hypothesis().pop();
         }
 
-        logger.debug("finished if branch");
+        // logger.debug("finished if branch");
         //System.err.println("finished if branch");
         // env.prevContext.lambda = curContext.lambda;
         env.incScopeLayer();
@@ -166,7 +166,7 @@ public class If extends Statement {
         env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.GEQ, rightContext.lambda), env.hypothesis, location, env.curContractSym.name,
                 "Lock of else branch contributes to lock of this if statement"));*/
 
-        logger.debug("finished orelse branch");
+        // logger.debug("finished orelse branch");
 
         return ifo;
     }

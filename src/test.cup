@@ -21,7 +21,7 @@ parser code {:
     }
 
     public void debuglog(String s) {
-        logger.debug(s);
+        // logger.debug(s);
     }
 
     /*public Node<String> makeKeyword(Object kw) {
@@ -210,29 +210,29 @@ precedence left JOIN, MEET;
 start with sourceCode;
 
 sourceCode ::= sourceFile:a {: RESULT = a; :}
-    | {: logger.debug("empty sourceFile");
+    | {: // logger.debug("empty sourceFile");
     ;:};
 
 sourceFile ::=
     ipt_stmts:a contract:b {:
         RESULT = new ContractFile(filename, a, b);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-        logger.debug(RESULT);
+        // logger.debug(RESULT);
     :}
     | contract:a {:
         RESULT = new ContractFile(filename, a);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-        logger.debug(RESULT);
+        // logger.debug(RESULT);
     :}
     | ipt_stmts:a interface:b {:
         RESULT = new InterfaceFile(filename, a, b);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-        logger.debug(RESULT);
+        // logger.debug(RESULT);
     :}
     | interface:a {:
         RESULT = new InterfaceFile(filename, a);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
-        logger.debug(RESULT);
+        // logger.debug(RESULT);
     :}
     | error:err {:
         report_fatal_error("Syntax error when parsing source file " + filename + "\n", err);
@@ -450,7 +450,7 @@ modifiers ::=
 
 exp_defs ::=
     EXCEPTION:x NAME:a parameters:b SEMI {:
-        logger.debug("exception def: " + a);
+        // logger.debug("exception def: " + a);
         ExceptionDef newDef = new ExceptionDef((String) a, b);
         newDef.setLoc(new CodeLocation(xleft, xright, filename));
         List<ExceptionDef> list = new ArrayList<>();
@@ -458,7 +458,7 @@ exp_defs ::=
         RESULT = list;
     :}
     | EXCEPTION:x NAME:a parameters:b SEMI exp_defs:list {:
-        logger.debug("exception def: " + a);
+        // logger.debug("exception def: " + a);
         ExceptionDef newDef = new ExceptionDef((String) a, b);
         newDef.setLoc(new CodeLocation(xleft, xright, filename));
         list.add(newDef);
@@ -568,27 +568,27 @@ func_defs ::=
 // version: static lock
 tFuncLabels ::=
     LBRACE:x ifLabelOrNull:a RARROW ifLabelOrNull:b SEMI ifLabelOrNull:c RBRACE {:
-        logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
+        // logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
         RESULT = new FuncLabels(a, b, c, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | LBRACE:x ifLabelOrNull:a SEMI ifLabelOrNull:c RBRACE {:
-        logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
+        // logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
         RESULT = new FuncLabels(a, a, c, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | LBRACE:x ifLabelOrNull:a RARROW ifLabelOrNull:b RBRACE {:
-        logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
+        // logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
         RESULT = new FuncLabels(a, b, b, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | LBRACE:x ifLabelOrNull:a RBRACE {:
-        logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
+        // logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
         RESULT = new FuncLabels(a, a, a, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     | {:
-        logger.debug("parsing empty funclabels");
+        // logger.debug("parsing empty funclabels");
         RESULT = new FuncLabels();
     :};
 
@@ -641,7 +641,7 @@ funcSig ::= r_funcSig:a SEMI {: RESULT = a; :};
 
 errorDef ::=
     EXCEPTION:x NAME:a parameters:b SEMI {:
-        logger.debug("exception def: " + a);
+        // logger.debug("exception def: " + a);
         RESULT = new ExceptionDef((String) a, b);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
@@ -649,35 +649,35 @@ errorDef ::=
 r_funcSig ::=
     maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b {:
         // System.out.println("parsing function");
-        logger.debug("parsing func sig");
+        // logger.debug("parsing func sig");
         CodeLocation location = new CodeLocation(cleft, cright, filename);
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, c, false, location);
         //makeNode("funcdef", a, b, c, d);
     :}
     | decorators:d maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b  {:
         // System.out.println("parsing function");
-        // logger.debug("parsing func sig");
+        // // logger.debug("parsing func sig");
         CodeLocation location = new CodeLocation(cleft, cright, filename);
         RESULT = new FunctionSig((String) funcName, funclabels, b, d, c, false, location);
         //makeNode("funcdef", a, b, c, d);
     :}
     | maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b THROWS LPAR except_types:t RPAR  {:
         // System.out.println("parsing function");
-        // logger.debug("parsing func sig");
+        // // logger.debug("parsing func sig");
         CodeLocation location = new CodeLocation(cleft, cright, filename);
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, c, t, false, location);
         //makeNode("funcdef", a, b, c, d);
     :}
     | decorators:d maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b THROWS LPAR except_types:t RPAR {:
         // System.out.println("parsing function");
-        // logger.debug("parsing func sig");
+        // // logger.debug("parsing func sig");
         CodeLocation location = new CodeLocation(cleft, cright, filename);
         RESULT = new FunctionSig((String) funcName, funclabels, b, d, c, t, false, location);
         //makeNode("funcdef", a, b, c, d);
     :};
 
 decorator ::= AT:x NAME:a {:
-        logger.debug("parsing a decorator @" + (String) a);
+        // logger.debug("parsing a decorator @" + (String) a);
         RESULT = (String)a;
     :};
 decorators ::=
@@ -832,12 +832,12 @@ except_types ::=
 
 //polyDescription ::=
 //    LSQB nameList:l RSQB {:
-//        logger.debug("finished parsing polyDescription");
+//        // logger.debug("finished parsing polyDescription");
 //        RESULT = l;
 //    :};
 //nameList ::=
 //    NAME:x {:
-//        logger.debug("parsing names in polyList");
+//        // logger.debug("parsing names in polyList");
 //        List<String> rtn = new ArrayList<String>();
 //        rtn.add((String)x);
 //        RESULT = rtn;
@@ -917,14 +917,14 @@ varDec ::=
         RESULT = b;
     :}
 //    | maybeLabeledType:a annassign:b SEMI {:
-//        logger.debug("variable declaration");
+//        // logger.debug("variable declaration");
 //        b.setType(a);
 ////        b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
 //        b.setToDefault();
 //        RESULT = b;
 //    :}
 //    | FINAL maybeLabeledType:a annassign:b SEMI {:
-//        logger.debug("variable declaration");
+//        // logger.debug("variable declaration");
 //        b.setType(a);
 ////        b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
 //        b.setToDefault();
@@ -932,7 +932,7 @@ varDec ::=
 //        RESULT = b;
 //    :}
 //    | STATIC maybeLabeledType:a annassign:b SEMI {:
-//        logger.debug("variable declaration");
+//        // logger.debug("variable declaration");
 //        b.setType(a);
 ////     b.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
 //        b.setToDefault();
@@ -1568,14 +1568,14 @@ arglist ::=
 //    | exprlist_sub:a COMMA {:RESULT = a;:};
 //exprlist_sub ::=
 //    expr:a {:
-//        logger.debug("Creating an expression list: " + a);
+//        // logger.debug("Creating an expression list: " + a);
 //        List<Expression> rnt = new ArrayList<>();
 //        rnt.add(a);
 //        RESULT = rnt;
 //    :}
 //    //| star_expr:a {:RESULT = makeNode("exprlist_sub", a);:}
 //    | exprlist_sub:list COMMA expr:a {:
-//        logger.debug("Adding an expression to the list: " + a);
+//        // logger.debug("Adding an expression to the list: " + a);
 //        list.add(a);
 //        RESULT = list;
 //    :};

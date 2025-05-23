@@ -166,12 +166,12 @@ public class PrimitiveIfLabel extends IfLabel {
             valueSym = (VarSym) s;
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
-            logger.debug(s.getName());
+            // logger.debug(s.getName());
             if (!typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.PRINCIPAL)) && !typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.ADDRESS)) && !(typeSym instanceof ContractSym)) {
                 throw new RuntimeException("Primitive non-address/principal ifc label " + value.id + " at " + "location: "
                         + location.toString());
             }
-            logger.debug(now.toString());
+            // logger.debug(now.toString());
             return now;
         } else {
             throw new RuntimeException("Primitive undefined ifc label " + value.id + " at " + "location: "

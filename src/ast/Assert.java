@@ -33,8 +33,8 @@ public class Assert extends Statement {
             if (env.containsVar(left.id) && env.containsVar(right.id)) {
 
                 VarSym l = env.getVar(left.id), r = env.getVar(right.id);
-                logger.debug(l.toString());
-                logger.debug(r.toString());
+//                // logger.debug(l.toString());
+//                // logger.debug(r.toString());
                 Inequality hypo = new Inequality(l.toSHErrLocFmt(), Relation.LEQ,
                         r.toSHErrLocFmt());
 

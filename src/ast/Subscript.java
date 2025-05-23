@@ -122,13 +122,13 @@ public class Subscript extends TrailerExpr {
             // DepMapTypeSym typeSym = (DepMapTypeSym) valueVarSym.typeSym;
             Map<String, String> indexMapping = new HashMap<>();
             VarSym indexVarSym = index.getVarInfo(env, tail_position, indexMapping);
-            logger.debug("subscript/DepMap:");
-            logger.debug("lookup at: " + index.toString());
-            logger.debug(indexVarSym.toString());
+            // logger.debug("subscript/DepMap:");
+            // logger.debug("lookup at: " + index.toString());
+            // logger.debug(indexVarSym.toString());
             String ifNameIndex = indexVarSym.toSHErrLocFmt();
 
             if (indexVarSym.isPrincipalVar()) {
-//                logger.debug("typename {} to {}", valueVarSym.typeSym.getName(), ifNameIndex);
+//                // logger.debug("typename {} to {}", valueVarSym.typeSym.getName(), ifNameIndex);
                 System.err.println("typename " + depMapTypeSym.label() + " to " + ifNameIndex);
 
                 dependentMapping.put(depMapTypeSym.key().toSHErrLocFmt(), ifNameIndex);

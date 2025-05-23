@@ -149,7 +149,7 @@ public class New extends Expression {
             }
 
             if (constructor_call.callSpec != null) {
-                PathOutcome co = constructor_call.callSpec.genConsVisit(env, false);
+                PathOutcome co = constructor_call.callSpec.genIFConstraints(env, false);
                 psi.joinExe(co);
                 env.inContext = typecheck.Utils.genNewContextAndConstraints(env, false, co.getNormalPath().c, beginContext.lambda, constructor_call.callSpec.nextPcSHL(), constructor_call.callSpec.location);
 

@@ -30,9 +30,9 @@ public class Assign extends Statement {
         ScopeContext tgt = target.genTypeConstraints(env, now);
         ScopeContext v = value.genTypeConstraints(env, now);
         // con: tgt should be a supertype of v
-//        logger.debug(v);
-//        logger.debug(env);
-//        logger.debug(location);
+//        // logger.debug(v);
+//        // logger.debug(env);
+//        // logger.debug(location);
         env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location));
         return now;
     }
