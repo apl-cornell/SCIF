@@ -12,8 +12,19 @@ parser code {:
     //public boolean DEBUG = true;
     public static String filename;
 
+    public static class SyntaxError extends Exception {
+      public String message;
+
+      public SyntaxError(String msg) {
+        message = msg;
+      }
+    }
+
     public void syntax_error(Symbol cur_token) {
-        System.err.println("Syntax error at line " + cur_token.left + ", column " + cur_token.right + " at symbol " + sym.terminalNames[cur_token.sym]);
+        report_error("Syntax error at line " + cur_token.left + ", column " + cur_token.right + " at symbol " + sym.terminalNames[cur_token.sym], cur_token);
+    }
+    public void unrecovered_syntax_error(Symbol cur_token) throws SyntaxError {
+        throw new SyntaxError("Syntax error");
     }
 
     public void debuglog(String s) {
@@ -22,10 +33,14 @@ parser code {:
 
     public static void main(String args[]) {
         File inputFile = new File(args[0]);
-        parse(inputFile, null);
+        try {
+          parse(inputFile, null);
+        } catch (SyntaxError err) {
+          /* ignore */
+        }
     }
 
-    public static Symbol parse(File inputFile, File astFile) {
+    public static Symbol parse(File inputFile, File astFile) throws SyntaxError {
         Symbol rtn = null;
         try {
             filename = inputFile.getAbsolutePath();
@@ -38,17 +53,17 @@ parser code {:
 
             Parser p = new Parser(lexer);
 
-            rtn = p.parse();
-
+            try {
+                rtn = p.parse();
+            } catch (Exception e) {
+                if (e instanceof SyntaxError se) throw se;
+                throw new Error("Unexpected exception from parser");
+            }
             if (astFile != null) {
                 System.setErr(System.err);
             }
         } catch (FileNotFoundException e) {
-            System.out.println("File not found: " + e.getMessage());
-            return null;
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            // e.printStackTrace();
+            System.err.println("File not found: " + e.getMessage());
             return null;
         }
         return rtn;

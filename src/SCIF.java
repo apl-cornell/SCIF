@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import java_cup.runtime.ParserException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
@@ -83,7 +85,11 @@ public class SCIF implements Callable<Integer> {
                 files.add(file);
                }
             List<SourceFile> roots;
-            roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
+            try {
+                roots = TypeChecker.regularTypecheck(files, logDir, m_debug);
+            } catch (Parser.SyntaxError e) {
+                return null;
+            }
 
             boolean passNTC = true;
             //if (!Utils.emptyFile(outputFileName))
@@ -186,7 +192,11 @@ public class SCIF implements Callable<Integer> {
             }
         } else if (m_funcRequest.parse) {
             File astOutputFile = m_logDir == null ? null : new File(m_logDir[0] + newFileName("parse", "result"));
-            Parser.parse(m_inputFiles[0], astOutputFile);
+            try {
+                Parser.parse(m_inputFiles[0], astOutputFile);
+            } catch (Parser.SyntaxError e) {
+                /* skip */
+            }
         } else if (m_funcRequest.tokenize) {
             LexerTest.tokenize(m_inputFiles[0]);
         } else {
@@ -211,7 +221,6 @@ public class SCIF implements Callable<Integer> {
     }
 
     protected static final Logger logger = LogManager.getLogger(SCIF.class);
-
 
     static Set<String> fileNames = new HashSet<>();
 }

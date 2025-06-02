@@ -31,7 +31,7 @@ public class TypeChecker {
     /*
         parse all SCIF source files and store AST roots in roots.
     */
-    public static List<SourceFile> buildRoots(List<File> inputFiles) throws IOException, SemanticException {
+    public static List<SourceFile> buildRoots(List<File> inputFiles) throws IOException, SemanticException, Parser.SyntaxError {
         List<SourceFile> roots = new ArrayList<>();
 
         Queue<File> mentionedFiles = new ArrayDeque<>(inputFiles);
@@ -51,7 +51,7 @@ public class TypeChecker {
             // TODO root.setName(inputFile.name());
             List<String> sourceCode = Files.readAllLines(Paths.get(builtinFile.getAbsolutePath()),
                     StandardCharsets.UTF_8);
-            
+
             // sourceCode is only used to show error msgs for SLC - should save all lines from the file path anyway
             root.setSourceCode(sourceCode);
             root.addBuiltIns();
@@ -62,8 +62,9 @@ public class TypeChecker {
         }
         while (!mentionedFiles.isEmpty()) {
             File file = mentionedFiles.poll();
-            Symbol result = Parser.parse(file, null);
-            if (result == null) return null;
+            Symbol result;
+            result = Parser.parse(file, null);
+            assert result != null;
 
             List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
             assert !rootsFiles.isEmpty();
@@ -129,12 +130,13 @@ public class TypeChecker {
         error info.
      */
     public static List<SourceFile> regularTypecheck(List<File> inputFiles, File logDir,
-                                                    boolean DEBUG) throws IOException, SemanticException {
+                                                    boolean DEBUG) throws IOException, SemanticException, Parser.SyntaxError {
         File outputFile = new File(logDir, SCIF.newFileName("ntc", "cons"));
         logger.trace("typecheck starts...");
 
         // roots = toporder;
-        List<SourceFile> roots = buildRoots(inputFiles);
+        List<SourceFile> roots;
+        roots = buildRoots(inputFiles);
         if (roots == null) return roots;
 
         // Add built-ins and Collect global info
