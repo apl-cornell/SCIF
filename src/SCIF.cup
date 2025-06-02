@@ -13,19 +13,12 @@ parser code {:
     public static String filename;
 
     public void syntax_error(Symbol cur_token) {
-        report_error("Syntax error", cur_token);
+        System.err.println("Syntax error at line " + cur_token.left + ", column " + cur_token.right + " at symbol " + sym.terminalNames[cur_token.sym]);
     }
 
     public void debuglog(String s) {
         // logger.debug(s);
     }
-
-    /*public Node<String> makeKeyword(Object kw) {
-        if (kw instanceof String)
-            return new Node<String>((String)kw, -1, -1);
-        Symbol tmp = (Symbol) kw;
-        return new Node<String>(tmp.toString(), tmp.left, tmp.right);
-    }*/
 
     public static void main(String args[]) {
         File inputFile = new File(args[0]);
@@ -44,10 +37,8 @@ parser code {:
             }
 
             Parser p = new Parser(lexer);
-//            logger.trace("Parser init: " + filename);
 
             rtn = p.parse();
-//            logger.trace("Finish");
 
             if (astFile != null) {
                 System.setErr(System.err);
