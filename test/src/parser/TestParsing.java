@@ -1,3 +1,5 @@
+package parser;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;

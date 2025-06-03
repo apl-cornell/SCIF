@@ -1,8 +1,11 @@
+package parser;
+
 import java.io.*;
 import java.util.HashMap;
 
 import java_cup.runtime.*;
 import parser.sym;
+import parser.Lexer;
 
 public class LexerTest implements sym {
 

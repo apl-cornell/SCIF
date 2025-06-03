@@ -1,0 +1,10 @@
+contract Assigment_W01 {
+    constructor() { super(); }
+
+    @public
+    void init() {
+        uint x = 0;
+        bool y = true;
+        y = x + 1;
+    }
+}

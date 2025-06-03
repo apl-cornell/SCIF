@@ -24,6 +24,7 @@ import typecheck.exceptions.SemanticException;
 import typecheck.exceptions.TypeCheckFailure;
 
 import parser.Parser;
+import parser.LexerTest;
 
 /**
  * The main program of SCIF compiler. It accepts arguments and options to perform parsing,
