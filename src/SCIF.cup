@@ -102,10 +102,10 @@ terminal IF, IMPORT, IN, IS, NOT;
 terminal OR, RETURN;
 terminal LPAR, RPAR, LSQB, RSQB, SQBPAIR, COLON, COMMA, SEMI;
 terminal PLUS, MINUS, STAR, SLASH, VBAR, AMPER;
-terminal LESS, GREATER, EQUAL, DOT, PERCENT, LBRACE, RBRACE;
+terminal LESS, GREATER, EQUAL, DOT, PERCENT, LEFT_BRACE, RIGHT_BRACE;
 terminal CIRCUMFLEX, TILDE, AT;
 terminal EQEQUAL, NOTEQUAL, LESSEQUAL, LEFTSHIFT, GREATEREQUAL, RIGHTSHIFT;
-terminal RARROW;
+terminal RIGHT_ARROW;
 terminal UNARY, COMP, BIT, ADDISH, MULISH;
 terminal ENDORSE, GUARD;
 terminal MAP;
@@ -233,7 +233,7 @@ precedence left BIT, VBAR, CIRCUMFLEX, AMPER, LEFTSHIFT, RIGHTSHIFT;
 precedence left ADDISH, PLUS, MINUS;
 precedence left MULISH, STAR, AT, PERCENT, SLASH;
 precedence left UNARY;
-// precedence left LPAR, RPAR, LSQB, RSQB, LBRACE, RBRACE;
+// precedence left LPAR, RPAR, LSQB, RSQB, LEFT_BRACE, RIGHT_BRACE;
 precedence left JOIN, MEET;
 
 
@@ -327,56 +327,56 @@ ipt_name ::= IMPORT:x STRING_LITERAL:a {:
 
 contract ::=
     CONTRACT NAME: name contract_extends: c_extends
-        LBRACE
+        LEFT_BRACE
             trust_setting: t_setting
             structDefs: s_decs
             state_var_decs: v_decs
             exp_defs: e_defs
             constructors: constructors
             func_defs: f_defs
-        RBRACE {:
+        RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
         RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, e_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name IMPLEMENTS NAME: supercontract contract_extends: c_extends
-        LBRACE
+        LEFT_BRACE
             trust_setting: t_setting
             structDefs: s_decs
             state_var_decs: v_decs
             exp_defs: e_defs
             constructors: constructors
             func_defs: f_defs
-        RBRACE {:
+        RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
         RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, e_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name contract_extends: c_extends
-        LBRACE
+        LEFT_BRACE
             trust_setting: t_setting
             structDefs: s_decs
             state_var_decs: v_decs
 //            exp_defs: e_defs
             constructors: constructors
             func_defs: f_defs
-        RBRACE {:
+        RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
         RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name IMPLEMENTS NAME: supercontract contract_extends: c_extends
-        LBRACE
+        LEFT_BRACE
             trust_setting: t_setting
             structDefs: s_decs
             state_var_decs: v_decs
 //            exp_defs: e_defs
             constructors: constructors
             func_defs: f_defs
-        RBRACE {:
+        RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
         RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), constructors);
@@ -392,24 +392,24 @@ contract_extends ::=
     :};
 
 trust_setting ::=
-//    ASSUME:x LBRACE NAME:dynamicOption RBRACE {:
+//    ASSUME:x LEFT_BRACE NAME:dynamicOption RIGHT_BRACE {:
 //        List<TrustConstraint> list = new ArrayList<>();
 //        HashMap<String, String> tmp = new HashMap<String, String>();
 //        TrustSetting trustSetting = new TrustSetting((String)dynamicOption, list, tmp);
 //        RESULT = trustSetting;
 //    :}
 //    |
-//    ASSUME:x LBRACE NAME:dynamicOption SEMI trust_decs: trust_list RBRACE {:
+//    ASSUME:x LEFT_BRACE NAME:dynamicOption SEMI trust_decs: trust_list RIGHT_BRACE {:
 //        HashMap<String, String> tmp = new HashMap<String, String>();
 //        TrustSetting trustSetting = new TrustSetting((String)dynamicOption, trust_list, tmp);
 //        RESULT = trustSetting;
 //    :}
-//    | ASSUME:x LBRACE NAME:dynamicOption SEMI trust_decs: trust_list SEMI label_table:l RBRACE {:
+//    | ASSUME:x LEFT_BRACE NAME:dynamicOption SEMI trust_decs: trust_list SEMI label_table:l RIGHT_BRACE {:
 //            TrustSetting trustSetting = new TrustSetting((String)dynamicOption, trust_list, l);
 //            RESULT = trustSetting;
 //    :}
 //    |
-    ASSUME:x LBRACE trust_decs: trust_list RBRACE {:
+    ASSUME:x LEFT_BRACE trust_decs: trust_list RIGHT_BRACE {:
             TrustSetting trustSetting = new TrustSetting(trust_list);
             RESULT = trustSetting;
     :}
@@ -557,7 +557,7 @@ structDefs ::=
 ;
 
 structDef ::=
-    STRUCT:s NAME:n LBRACE plain_var_decs:decs RBRACE {:
+    STRUCT:s NAME:n LEFT_BRACE plain_var_decs:decs RIGHT_BRACE {:
         // n.setLoc(new CodeLocation(nleft, nright, filename));
         StructDef def = new StructDef((String) n, decs);
         def.setLoc(new CodeLocation(sleft, sright, filename));
@@ -629,22 +629,22 @@ func_defs ::=
 
 // version: static lock
 tFuncLabels ::=
-    LBRACE:x ifLabelOrNull:a RARROW ifLabelOrNull:b SEMI ifLabelOrNull:c RBRACE {:
+    LEFT_BRACE:x ifLabelOrNull:a RIGHT_ARROW ifLabelOrNull:b SEMI ifLabelOrNull:c RIGHT_BRACE {:
         // logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
         RESULT = new FuncLabels(a, b, c, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
-    | LBRACE:x ifLabelOrNull:a SEMI ifLabelOrNull:c RBRACE {:
+    | LEFT_BRACE:x ifLabelOrNull:a SEMI ifLabelOrNull:c RIGHT_BRACE {:
         // logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
         RESULT = new FuncLabels(a, a, c, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
-    | LBRACE:x ifLabelOrNull:a RARROW ifLabelOrNull:b RBRACE {:
+    | LEFT_BRACE:x ifLabelOrNull:a RIGHT_ARROW ifLabelOrNull:b RIGHT_BRACE {:
         // logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
         RESULT = new FuncLabels(a, b, b, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
-    | LBRACE:x ifLabelOrNull:a RBRACE {:
+    | LEFT_BRACE:x ifLabelOrNull:a RIGHT_BRACE {:
         // logger.debug("parsing func begin labels: " + "(" + xleft + "," + xright + ")");
         RESULT = new FuncLabels(a, a, a, null);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
@@ -664,20 +664,20 @@ ifLabelOrNull ::= ifLabel:x {:
 
 interface ::=
     INTERFACE:i NAME:name contract_extends: c_extends
-        LBRACE
+        LEFT_BRACE
             structDefs: s_defs
             exp_defs: e_defs
             funcSigs:a
-        RBRACE {:
+        RIGHT_BRACE {:
             RESULT = new Interface((String)name, c_extends, s_defs, e_defs, a);
             RESULT.setLoc(new CodeLocation(ileft, iright, filename));
     :}
     | INTERFACE:i NAME:name contract_extends: c_extends
-        LBRACE
+        LEFT_BRACE
             structDefs: s_defs
 //            exp_defs: e_defs
             funcSigs:a
-        RBRACE {:
+        RIGHT_BRACE {:
             RESULT = new Interface((String)name, c_extends, s_defs, new ArrayList<>(), a);
             RESULT.setLoc(new CodeLocation(ileft, iright, filename));
     :};
@@ -754,7 +754,7 @@ decorators ::=
     :};
 
 //Information flow specific modification
- endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from RARROW ifLabel:to RPAR {:
+ endorseExpression ::= ENDORSE:x LPAR expr:a COMMA ifLabel:from RIGHT_ARROW ifLabel:to RPAR {:
         RESULT = new Endorse(a, from, to);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
@@ -767,7 +767,7 @@ maybeLabeledType ::= labeledType:t {:
         RESULT.setLoc(new CodeLocation(tleft, tright, filename));
     :};
 
-labeledType ::= type:a LBRACE ifLabel:b RBRACE {:
+labeledType ::= type:a LEFT_BRACE ifLabel:b RIGHT_BRACE {:
         //System.out.println("parsed labeledType with label: \n" + b.toString());
         RESULT = new LabeledType(a, b);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
@@ -953,7 +953,7 @@ varDec ::=
         b.setToDefault();
         RESULT = b;
     :}
-    | type:t LBRACE ifLabel:l RBRACE annassign:b SEMI {:
+    | type:t LEFT_BRACE ifLabel:l RIGHT_BRACE annassign:b SEMI {:
 //        b.setFinal(m.contains(sym.FINAL));
         LabeledType lt = new LabeledType(t, l);
         lt.setLoc(new CodeLocation(tleft, tright, filename));
@@ -970,7 +970,7 @@ varDec ::=
         b.setToDefault();
         RESULT = b;
     :}
-    | FINAL type:t LBRACE ifLabel:l RBRACE annassign:b SEMI {:
+    | FINAL type:t LEFT_BRACE ifLabel:l RIGHT_BRACE annassign:b SEMI {:
         b.setFinal(true);
         LabeledType lt = new LabeledType(t, l);
         lt.setLoc(new CodeLocation(tleft, tright, filename));
@@ -1046,7 +1046,7 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     ;
 
 //endorse_stmt ::=
-//    ENDORSEIF:x LPAR name_list:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR IN suite:s {:
+//    ENDORSEIF:x LPAR name_list:exprList COMMA ifLabel:from RIGHT_ARROW ifLabel:to RPAR IN suite:s {:
 //        EndorseStatement statement = new EndorseStatement(exprList, from, to, s);
 //        RESULT = statement;
 //        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
@@ -1054,7 +1054,7 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
 //    ;
 
 endorseIf_stmt ::=
-    ENDORSE:x LPAR name_list:exprList COMMA ifLabel:from RARROW ifLabel:to RPAR if_stmt:ifStmt {:
+    ENDORSE:x LPAR name_list:exprList COMMA ifLabel:from RIGHT_ARROW ifLabel:to RPAR if_stmt:ifStmt {:
         EndorseIfStatement statement = new EndorseIfStatement(exprList, from, to, ifStmt);
         RESULT = statement;
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
@@ -1297,11 +1297,11 @@ if_stmt ::=
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 // , ref_stmt, new_stmt, deref_stmt;
-suite ::= LBRACE stmts:a RBRACE {:
+suite ::= LEFT_BRACE stmts:a RIGHT_BRACE {:
         // System.out.println("parsing suite");
         RESULT = a;
     :}
-    | LBRACE RBRACE {:
+    | LEFT_BRACE RIGHT_BRACE {:
         RESULT = new ArrayList<Statement>();
     :};
 
@@ -1477,7 +1477,7 @@ call_expr ::= trailer_expr:e  LPAR RPAR transaction_spec:ts{:
     ;
 
 transaction_spec ::=
-    LBRACE arg_spec:spec RBRACE {:
+    LEFT_BRACE arg_spec:spec RIGHT_BRACE {:
         RESULT = new CallSpec(spec);
         RESULT.setLoc(new CodeLocation(specleft, specright, filename));
     :}
@@ -1580,7 +1580,7 @@ atom ::=
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     | */LPAR expr:a RPAR {:RESULT = a; :}
-    /*| LBRACE:a RBRACE {:
+    /*| LEFT_BRACE:a RIGHT_BRACE {:
         RESULT = new Expression();
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}*/

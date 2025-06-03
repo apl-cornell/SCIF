@@ -195,10 +195,10 @@ LineTerminator = \r|\n|\r\n
     "."     { return op(sym.DOT); }
     "%"     { return op(sym.PERCENT); }
     "{"     {
-            return op(sym.LBRACE); 
+            return op(sym.LEFT_BRACE); 
     }
     "}"     {
-            return op(sym.RBRACE); 
+            return op(sym.RIGHT_BRACE); 
         }
     "^"     { return op(sym.CIRCUMFLEX); }
     "~"     { return op(sym.TILDE); }
@@ -212,7 +212,7 @@ LineTerminator = \r|\n|\r\n
     ">>"    { return op(sym.RIGHTSHIFT); }
     //"+="    { return op(sym.PLUSEQUAL); }
     //"-="    { return op(sym.MINEQUAL); }
-    "->"    { return op(sym.RARROW); }
+    "->"    { return op(sym.RIGHT_ARROW); }
     "⨆"      { return op(sym.JOIN); }
     "⨅"      { return op(sym.MEET); }
     //"*="    { return op(sym.STAREQUAL); }
