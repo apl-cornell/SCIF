@@ -2,6 +2,7 @@ import java.io.*;
 import java.util.HashMap;
 
 import java_cup.runtime.*;
+import parser.sym;
 
 public class LexerTest implements sym {
 

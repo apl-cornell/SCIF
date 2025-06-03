@@ -1,6 +1,10 @@
+package parser;
+
 import java_cup.runtime.*;
 import java.util.Stack;
 import java.util.HashMap;
+import parser.sym;
+import static parser.sym.*;
 
 %%
 
@@ -13,7 +17,8 @@ import java.util.HashMap;
 
 %{
     StringBuffer sb = new StringBuffer();
-    HashMap<String, Integer> keywords;
+    public static HashMap<String, Integer> keywords = new HashMap<>();
+    public static HashMap<Integer,String> tokenNames = new HashMap<>();
     int inbrace;
 
     Symbol op(int tokenId) {
@@ -32,64 +37,108 @@ import java.util.HashMap;
         return new Symbol(keywords.get(yytext()), yyline + 1, yycolumn + 1, yytext());
     }
 
-    protected void init_keywords() {
-        keywords.put("false",   Integer.valueOf(sym.FALSE));
-        keywords.put("none",    Integer.valueOf(sym.NONE));
-        keywords.put("true",    Integer.valueOf(sym.TRUE));
-        keywords.put("and",     Integer.valueOf(sym.AND));
-//        keywords.put("as",      Integer.valueOf(sym.AS));
-        keywords.put("assert",  Integer.valueOf(sym.ASSERT));
-        keywords.put("delete",  Integer.valueOf(sym.DELETE));
-        keywords.put("break",   Integer.valueOf(sym.BREAK));
-        // keywords.put("class",   Integer.valueOf(sym.CLASS));
-        keywords.put("continue",Integer.valueOf(sym.CONTINUE));
-        keywords.put("else",    Integer.valueOf(sym.ELSE));
-        // keywords.put("finally", Integer.valueOf(sym.FINALLY));
-        keywords.put("for",     Integer.valueOf(sym.FOR));
-        // keywords.put("from",    Integer.valueOf(sym.FROM));
-        keywords.put("if",      Integer.valueOf(sym.IF));
-        keywords.put("import",  Integer.valueOf(sym.IMPORT));
-        keywords.put("in",      Integer.valueOf(sym.IN));
-        keywords.put("is",      Integer.valueOf(sym.IS));
-        keywords.put("not",     Integer.valueOf(sym.NOT));
-        keywords.put("or",      Integer.valueOf(sym.OR));
-        keywords.put("return",  Integer.valueOf(sym.RETURN));
-        keywords.put("try",     Integer.valueOf(sym.TRY));
-        keywords.put("atomic",     Integer.valueOf(sym.ATOMIC));
-        keywords.put("while",   Integer.valueOf(sym.WHILE));
-        // keywords.put("with",    Integer.valueOf(sym.WITH));
-        keywords.put("endorse", Integer.valueOf(sym.ENDORSE));
-        keywords.put("map", Integer.valueOf(sym.MAP));
-        keywords.put("contract", Integer.valueOf(sym.CONTRACT));
-        keywords.put("interface", Integer.valueOf(sym.INTERFACE));
-        keywords.put("struct", Integer.valueOf(sym.STRUCT));
-        keywords.put("lock", Integer.valueOf(sym.GUARD));
-        keywords.put("extends", Integer.valueOf(sym.EXTENDS));
-        keywords.put("implements", Integer.valueOf(sym.IMPLEMENTS));
-        //keywords.put("super", Integer.valueOf(sym.SUPER));
-        // keywords.put("lock", Integer.valueOf(sym.LOCK));
-        keywords.put("else", Integer.valueOf(sym.ELSE));
-        keywords.put("new", Integer.valueOf(sym.NEW));
-        keywords.put("final", Integer.valueOf(sym.FINAL));
-//        keywords.put("static", Integer.valueOf(sym.STATIC));
-        keywords.put("throws", Integer.valueOf(sym.THROWS));
-        keywords.put("throw", Integer.valueOf(sym.THROW));
-        keywords.put("revert", Integer.valueOf(sym.REVERT));
-//        keywords.put("endorseIf", Integer.valueOf(sym.ENDORSEIF));
-        keywords.put("catch", Integer.valueOf(sym.CATCH));
-        keywords.put("rescue", Integer.valueOf(sym.RESCUE));
-        keywords.put("exception", Integer.valueOf(sym.EXCEPTION));
-        keywords.put("constructor", Integer.valueOf(sym.CONSTRUCTOR));
-        keywords.put("assume", Integer.valueOf(sym.ASSUME));
-        keywords.put("unchecked", Integer.valueOf(sym.UNCHECKED));
-        keywords.put("transient", Integer.valueOf(sym.TRANSIENT));
+    void addKeyword(String name, int value) {
+        keywords.put(name, value);
+        tokenNames.put(value, name);
+    }
+    void addOperator(String name, int value) {
+        tokenNames.put(value, name);
     }
 
+    protected void init_keywords() {
+        addKeyword("false",   Integer.valueOf(sym.FALSE));
+        addKeyword("none",    Integer.valueOf(sym.NONE));
+        addKeyword("true",    Integer.valueOf(sym.TRUE));
+        addKeyword("and",     Integer.valueOf(sym.AND));
+//        addKeyword("as",      Integer.valueOf(sym.AS));
+        addKeyword("assert",  Integer.valueOf(sym.ASSERT));
+        addKeyword("delete",  Integer.valueOf(sym.DELETE));
+        addKeyword("break",   Integer.valueOf(sym.BREAK));
+        // addKeyword("class",   Integer.valueOf(sym.CLASS));
+        addKeyword("continue",Integer.valueOf(sym.CONTINUE));
+        addKeyword("else",    Integer.valueOf(sym.ELSE));
+        // addKeyword("finally", Integer.valueOf(sym.FINALLY));
+        addKeyword("for",     Integer.valueOf(sym.FOR));
+        // addKeyword("from",    Integer.valueOf(sym.FROM));
+        addKeyword("if",      Integer.valueOf(sym.IF));
+        addKeyword("import",  Integer.valueOf(sym.IMPORT));
+        addKeyword("in",      Integer.valueOf(sym.IN));
+        addKeyword("is",      Integer.valueOf(sym.IS));
+        addKeyword("not",     Integer.valueOf(sym.NOT));
+        addKeyword("or",      Integer.valueOf(sym.OR));
+        addKeyword("return",  Integer.valueOf(sym.RETURN));
+        addKeyword("try",     Integer.valueOf(sym.TRY));
+        addKeyword("atomic",     Integer.valueOf(sym.ATOMIC));
+        addKeyword("while",   Integer.valueOf(sym.WHILE));
+        // addKeyword("with",    Integer.valueOf(sym.WITH));
+        addKeyword("endorse", Integer.valueOf(sym.ENDORSE));
+        addKeyword("map", Integer.valueOf(sym.MAP));
+        addKeyword("contract", Integer.valueOf(sym.CONTRACT));
+        addKeyword("interface", Integer.valueOf(sym.INTERFACE));
+        addKeyword("struct", Integer.valueOf(sym.STRUCT));
+        addKeyword("lock", Integer.valueOf(sym.GUARD));
+        addKeyword("extends", Integer.valueOf(sym.EXTENDS));
+        addKeyword("implements", Integer.valueOf(sym.IMPLEMENTS));
+        //addKeyword("super", Integer.valueOf(sym.SUPER));
+        // addKeyword("lock", Integer.valueOf(sym.LOCK));
+        addKeyword("else", Integer.valueOf(sym.ELSE));
+        addKeyword("new", Integer.valueOf(sym.NEW));
+        addKeyword("final", Integer.valueOf(sym.FINAL));
+//        addKeyword("static", Integer.valueOf(sym.STATIC));
+        addKeyword("throws", Integer.valueOf(sym.THROWS));
+        addKeyword("throw", Integer.valueOf(sym.THROW));
+        addKeyword("revert", Integer.valueOf(sym.REVERT));
+//        addKeyword("endorseIf", Integer.valueOf(sym.ENDORSEIF));
+        addKeyword("catch", Integer.valueOf(sym.CATCH));
+        addKeyword("rescue", Integer.valueOf(sym.RESCUE));
+        addKeyword("exception", Integer.valueOf(sym.EXCEPTION));
+        addKeyword("constructor", Integer.valueOf(sym.CONSTRUCTOR));
+        addKeyword("assume", Integer.valueOf(sym.ASSUME));
+        addKeyword("unchecked", Integer.valueOf(sym.UNCHECKED));
+        addKeyword("transient", Integer.valueOf(sym.TRANSIENT));
+        addOperator("(", LPAR);
+        addOperator(")", RPAR);
+        addOperator("[]", SQBPAIR);
+        addOperator("[", LSQB);
+        addOperator("]", RSQB);
+        addOperator(":", COLON);
+        addOperator(",", COMMA);
+        addOperator(";", SEMI);
+        addOperator("+", PLUS);
+        addOperator("-", MINUS);
+        addOperator("*", STAR);
+        addOperator("/", SLASH);
+        addOperator("|", VBAR);
+        addOperator("||", OR);
+        addOperator("&", AMPER);
+        addOperator("&&", AND);
+        addOperator("!", NOT);
+        addOperator("<", LESS);
+        addOperator(">", GREATER);
+        addOperator("=", EQUAL);
+        addOperator(".", DOT);
+        addOperator("%", PERCENT);
+        addOperator("{", LEFT_BRACE);
+        addOperator("}", RIGHT_BRACE);
+        addOperator("^", CIRCUMFLEX);
+        addOperator("~", TILDE);
+        addOperator("@", AT);
+        addOperator("==", EQEQUAL);
+        addOperator("!=", NOTEQUAL);
+        addOperator("<>", NOTEQUAL);
+        addOperator("<=", LESSEQUAL);
+        addOperator("<<", LEFTSHIFT);
+        addOperator(">=", GREATEREQUAL);
+        addOperator(">>", RIGHTSHIFT);
+        addOperator("->", RIGHT_ARROW);
+        addOperator("⨆", JOIN);
+        addOperator("⨅", MEET);
+        addOperator("=>", EQUALGREATER);
+    }
 
 %}
 
 %init{
-    this.keywords = new HashMap<>();
     init_keywords();
 %init}
 

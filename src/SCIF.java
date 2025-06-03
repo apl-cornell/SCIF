@@ -23,6 +23,8 @@ import java.util.concurrent.Callable;
 import typecheck.exceptions.SemanticException;
 import typecheck.exceptions.TypeCheckFailure;
 
+import parser.Parser;
+
 /**
  * The main program of SCIF compiler. It accepts arguments and options to perform parsing,
  * typechecking, and compiling SCIF code.

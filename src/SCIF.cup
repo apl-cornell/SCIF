@@ -1,3 +1,5 @@
+package parser;
+
 import java.io.*;
 import java_cup.runtime.*;
 import java.util.*;
@@ -24,10 +26,16 @@ parser code {:
         report_error("Syntax error", cur_token);
         report_expected_token_ids();
     }
+    String getTokenName(int id) {
+        String name = Lexer.tokenNames.get(id);
+        if (name == null) return sym.terminalNames[id];
+        else return "'" + name + "'";
+    }
     @Override public void report_error(String message, Object cur_token) {
         if (cur_token instanceof Symbol s) {
+            String name = getTokenName(s.sym);
             message = message + " at line " + s.left + ", column " + s.right
-                              + " at symbol " + sym.terminalNames[s.sym];
+                              + " at symbol " + name;
         }
         System.out.println(message);
     }
@@ -37,14 +45,13 @@ parser code {:
     @Override public void report_expected_token_ids() {
         List<Integer> ids = expected_token_ids();
         StringBuilder b = new StringBuilder();
-        b.append("Expected token classes: {");
+        b.append("Expected tokens: ");
         boolean first = true;
         for (int id : ids) {
           if (!first) b.append(", ");
           else first = false;
-          b.append(symbl_name_from_id(id));
+          b.append(getTokenName(id));
         }
-        b.append('}');
         System.out.println(b.toString());
     }
 

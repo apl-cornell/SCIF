@@ -14,6 +14,7 @@ import typecheck.sherrlocUtils.Hypothesis;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
+import parser.*;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
