@@ -29,13 +29,13 @@ parser code {:
     String getTokenName(int id) {
         String name = Lexer.tokenNames.get(id);
         if (name == null) return sym.terminalNames[id];
-        else return "'" + name + "'";
+        else return name;
     }
     @Override public void report_error(String message, Object cur_token) {
         if (cur_token instanceof Symbol s) {
             String name = getTokenName(s.sym);
-            message = message + " at line " + s.left + ", column " + s.right
-                              + " at symbol " + name;
+            message = "Line " + s.left + ", column " + s.right + ": " + message 
+                              + " at symbol: " + name;
         }
         System.out.println(message);
     }
@@ -45,7 +45,7 @@ parser code {:
     @Override public void report_expected_token_ids() {
         List<Integer> ids = expected_token_ids();
         StringBuilder b = new StringBuilder();
-        b.append("Expected tokens: ");
+        b.append("  Expected: ");
         boolean first = true;
         for (int id : ids) {
           if (!first) b.append(", ");
