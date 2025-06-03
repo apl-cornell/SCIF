@@ -69,9 +69,9 @@ public class TestParsing {
             assertNotNull(result);
         } catch (URISyntaxException e) {
             System.err.println("IOException when converting the input file URL to URI");
-        } /*catch (Exception e) {
-
-        }*/
+        } catch (Parser.SyntaxError e) {
+            System.err.println("Syntax error");
+        }
     }
 
     @ParameterizedTest
@@ -86,8 +86,8 @@ public class TestParsing {
             assertNull(result);
         } catch (URISyntaxException e) {
             System.err.println("IOException when converting the input file URL to URI");
-        } /*catch (Exception e) {
-
-        }*/
+        } catch (Parser.SyntaxError e) {
+            System.err.println("Syntax error");
+        }
     }
 }

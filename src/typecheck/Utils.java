@@ -241,8 +241,7 @@ public class Utils {
 
     public static sherrloc.diagnostic.DiagnosticConstraintResult runSherrloc(String consFilePath)
             throws Exception {
-        System.out.println("RUNNING SHERRLOC");
-//        // logger.debug("runSherrloc()...");
+        // logger.debug("runSherrloc()...");
         String[] args = new String[]{"-c", consFilePath};
         DiagnosticOptions options = new DiagnosticOptions(args);
         ErrorDiagnosis ana = ErrorDiagnosis.getAnalysisInstance(options);

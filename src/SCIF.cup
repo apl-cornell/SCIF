@@ -21,10 +21,29 @@ parser code {:
     }
 
     public void syntax_error(Symbol cur_token) {
-        report_error("Syntax error at line " + cur_token.left + ", column " + cur_token.right + " at symbol " + sym.terminalNames[cur_token.sym], cur_token);
+        report_error("Syntax error", cur_token);
+        report_expected_token_ids();
+    }
+    public void report_error(String message, Symbol cur_token) {
+        System.err.println(message + ((cur_token == null) ? ""
+        : " at line " + cur_token.left + ", column " +
+          cur_token.right + " at symbol " + sym.terminalNames[cur_token.sym]));
     }
     public void unrecovered_syntax_error(Symbol cur_token) throws SyntaxError {
         throw new SyntaxError("Syntax error");
+    }
+    public void report_expected_token_ids() {
+        List<Integer> ids = expected_token_ids();
+        StringBuilder b = new StringBuilder();
+        b.append("Expected token classes: {");
+        boolean first = true;
+        for (int id : ids) {
+          if (!first) b.append(", ");
+          else first = false;
+          b.append(symbl_name_from_id(id));
+        }
+        b.append('}');
+        System.out.println(b.toString());
     }
 
     public void debuglog(String s) {
