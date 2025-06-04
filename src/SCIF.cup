@@ -275,9 +275,9 @@ sourceFile ::=
         RESULT = b;
         // logger.debug(RESULT);
     :}
-    | error:err {:
+    // | error:err {:
 //    report_fatal_error("Syntax error in source file " + filename + "\n", err);
-    :}
+    // :}
     ;
 
 sourceFilesNoImport ::=
@@ -309,9 +309,9 @@ sourceFilesNoImport ::=
         RESULT.add(parsed);
         // logger.debug(RESULT);
     :}
-    | error:err {:
+    // | error:err {:
 //        report_fatal_error("Syntax error in source file " + filename + "\n", err);
-    :}
+    // :}
     ;
 
 ipt_stmts ::=
@@ -941,7 +941,7 @@ parameters ::=
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 typedarglist ::=
-    probinittfpdef:a {:RESULT = a; :}
+    probinittfpdef:a {: RESULT = a; :}
     | typedarglist:list COMMA probinittfpdef:a {:
         list.merge(a);
         RESULT = list;
