@@ -12,6 +12,7 @@ import typecheck.Utils;
 
 parser code {:
     //public boolean DEBUG = true;
+    public boolean hasError = false;
     public static String filename;
 
     public static class SyntaxError extends Exception {
@@ -32,18 +33,22 @@ parser code {:
         else return name;
     }
     @Override public void report_error(String message, Object cur_token) {
+        hasError = true;
         if (cur_token instanceof Symbol s) {
             String name = getTokenName(s.sym);
-            message = "Line " + s.left + ", column " + s.right + ": " + message 
-                              + " at symbol: " + name;
+            // filename is defined to be the absolute path
+            message = new File(filename).getName() + ":" + s.left + ":" + s.right + ": "
+                            + message + ": symbol '" + name + "', found '" + s.value + "';";
         }
         System.out.println(message);
     }
+    
     @Override public void unrecovered_syntax_error(Symbol cur_token) throws SyntaxError {
         throw new SyntaxError("Syntax error");
     }
     @Override public void report_expected_token_ids() {
         List<Integer> ids = expected_token_ids();
+        if (ids.isEmpty()) return;
         StringBuilder b = new StringBuilder();
         b.append("  Expected: ");
         boolean first = true;
@@ -53,6 +58,14 @@ parser code {:
           b.append(getTokenName(id));
         }
         System.out.println(b.toString());
+    }
+
+    @Override public Symbol parse() throws Exception {
+        Symbol result = super.parse();
+        if (hasError) {
+            throw new SyntaxError("Syntax error");
+        }
+        return result;
     }
 
     public void debuglog(String s) {
@@ -261,10 +274,11 @@ sourceFile ::=
     | sourceFilesNoImport:b {:
         RESULT = b;
         // logger.debug(RESULT);
-    :};
-//    | error:err {:
+    :}
+    | error:err {:
 //    report_fatal_error("Syntax error in source file " + filename + "\n", err);
-//    :};
+    :}
+    ;
 
 sourceFilesNoImport ::=
     sourceFilesNoImport:a contract:b {:
@@ -294,10 +308,11 @@ sourceFilesNoImport ::=
         RESULT = new ArrayList<SourceFile>();
         RESULT.add(parsed);
         // logger.debug(RESULT);
-    :};
-//    | error:err {:
+    :}
+    | error:err {:
 //        report_fatal_error("Syntax error in source file " + filename + "\n", err);
-//    :};
+    :}
+    ;
 
 ipt_stmts ::=
     ipt_stmts:s  ipt_stmt:a {:
@@ -626,7 +641,7 @@ constructor ::=
 
 func_defs ::=
     funcdef:fDef func_defs:list {:
-        list.add(0, fDef);
+        if (fDef != null) list.add(0, fDef);
         RESULT = list;
     :}
     | {:
@@ -816,10 +831,11 @@ primitiveIfLabel ::= NAME:a {:
 funcdef ::=
     r_funcSig:funcSig suite:d {:
         RESULT = new FunctionDef(funcSig, d);
-    :};
-//    | error:err {:
+    :}
+    | error:err {:
 //        report_fatal_error("Syntax error when parsing a method", err);
-//    :};
+    :}
+    ;
 
 type ::=
     nonarray_type:a {:
@@ -1047,9 +1063,10 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     | call_stmt:a {:
         RESULT = a;
     :}
-//    | error:err SEMI {:
-//        report_fatal_error("Statement syntax error when parsing source file " + filename + "\n", err);
-//    :}
+    | error:err SEMI {:
+        //report_error("Statement syntax error when parsing source file " + filename + "\n", err);
+        // syntax_error((Symbol) err);
+    :}
     ;
 
 //endorse_stmt ::=
