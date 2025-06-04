@@ -2,6 +2,3 @@
 	path = sherrloc
 	url = https://github.com/andrewcmyers/sherrloc.git
 	branch = scif
-[submodule "easyIO"]
-	path = easyIO
-	url = https://github.com/andrewcmyers/easyIO.git
