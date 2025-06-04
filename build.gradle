@@ -32,7 +32,7 @@ sourceSets {
             srcDirs = ['src', 'build/generated-src/cup', 'easyIO/src']
         }
         resources {
-            srcDirs = ['src/config']
+            srcDirs = ['src/config', 'resources']
         }
     }
     test {
