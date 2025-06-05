@@ -1,6 +1,7 @@
 package ast;
 
 import compile.CompileEnv;
+import compile.ast.Event;
 import compile.ast.Function;
 import compile.ast.VarDec;
 import java.util.HashSet;
@@ -23,12 +24,14 @@ public class Contract extends TopLayerNode {
     List<StructDef> structDefs;
     List<StateVariableDeclaration> varDeclarations;
     List<ExceptionDef> exceptionDefs;
+    List<EventDef> eventDefs;
     private List<FunctionDef> methodDeclarations;
 
     /*
         fields that are supposed to complete after typechecking
      */
     Map<String, ExceptionTypeSym> exceptionTypeSymMap;
+    Map<String, EventTypeSym> eventTypeSymMap;
 //
 //    public Contract(String contractName, TrustSetting trustSetting,
 //            List<StateVariableDeclaration> varDeclarations,
@@ -51,6 +54,7 @@ public class Contract extends TopLayerNode {
                     List<StructDef> structDefs,
                     List<StateVariableDeclaration> varDeclarations,
                     List<ExceptionDef> exceptionDefs,
+                    List<EventDef> eventDefs,
                     List<FunctionDef> methodDeclarations) throws SemanticException {
         this.contractName = contractName;
         this.implementsContractName = implementsContractName;
@@ -60,6 +64,7 @@ public class Contract extends TopLayerNode {
         this.structDefs = structDefs;
         this.varDeclarations = varDeclarations;
         this.exceptionDefs = exceptionDefs;
+        this.eventDefs = eventDefs;
         this.methodDeclarations = methodDeclarations;
         setDefault();
         // set namespace for exception defs
@@ -143,12 +148,19 @@ public class Contract extends TopLayerNode {
             }
         }
 
+        for (EventDef def : eventDefs) {
+            if (!def.ntcGlobalInfo(env, now)) {
+                return false;
+            }
+        }
+
         for (FunctionDef fDef : methodDeclarations) {
             if (!fDef.ntcGlobalInfo(env, now)) {
                 return false;
             }
         }
         exceptionTypeSymMap = env.getExceptionTypeSymMap();
+        eventTypeSymMap = env.getEventTypeSymMap();
         env.exitNewScope();
         return true;
     }
@@ -169,6 +181,10 @@ public class Contract extends TopLayerNode {
         trustSetting.genTypeConstraints(env, now);
 
         for (ExceptionDef def : exceptionDefs) {
+            def.genTypeConstraints(env, now);
+        }
+
+        for (EventDef def : eventDefs) {
             def.genTypeConstraints(env, now);
         }
 
@@ -209,6 +225,10 @@ public class Contract extends TopLayerNode {
             expDef.globalInfoVisit(contractSym);
         }
 
+        for (EventDef eventDef : eventDefs) {
+            eventDef.globalInfoVisit(contractSym);
+        }
+
         for (FunctionDef fDef : methodDeclarations) {
             fDef.globalInfoVisit(contractSym);
         }
@@ -225,6 +245,10 @@ public class Contract extends TopLayerNode {
 
         for (ExceptionDef expDef : exceptionDefs) {
             expDef.IFCVisit(env, tail_position);
+        }
+
+        for (EventDef eventDef : eventDefs) {
+            eventDef.IFCVisit(env, tail_position);
         }
 
         for (FunctionDef fDef : methodDeclarations) {
@@ -255,8 +279,10 @@ public class Contract extends TopLayerNode {
     public compile.ast.Contract solidityCodeGen(CompileEnv code) {
 
         code.setExceptionMap(exceptionTypeSymMap);
+        code.setEventMap(eventTypeSymMap);
         List<VarDec> stateVarDecs = new ArrayList<>();
         List<compile.ast.StructDef> structAndExcDefs = new ArrayList<>();
+        List<compile.ast.Event> evDefs = new ArrayList<>();
         List<Function> methods = new ArrayList<>();
         for (StructDef structDef: structDefs) {
             structAndExcDefs.add(structDef.solidityCodeGen(code));
@@ -273,6 +299,10 @@ public class Contract extends TopLayerNode {
             }
         }
 
+        for (EventDef eventDef: eventDefs) {
+            evDefs.add(eventDef.solidityCodeGen(code));
+        }
+
         for (FunctionDef fDef : methodDeclarations)
             if (!fDef.isBuiltIn()) {
                 methods.add(fDef.solidityCodeGen(code));
@@ -280,7 +310,7 @@ public class Contract extends TopLayerNode {
 
         methods.addAll(code.tempFunctions());
         code.clearTempFunctions();
-        return new compile.ast.Contract(contractName, implementsContractName, stateVarDecs, structAndExcDefs, methods);
+        return new compile.ast.Contract(contractName, implementsContractName, stateVarDecs, structAndExcDefs, evDefs, methods);
     }
 
     @Override
@@ -298,6 +328,7 @@ public class Contract extends TopLayerNode {
         rtn.addAll(structDefs);
         rtn.addAll(varDeclarations);
         rtn.addAll(exceptionDefs);
+        rtn.addAll(eventDefs);
         rtn.addAll(methodDeclarations);
         return rtn;
     }
@@ -313,6 +344,9 @@ public class Contract extends TopLayerNode {
         }
         for (ExceptionDef exp: exceptionDefs) {
             nameSet.add(exp.exceptionName);
+        }
+        for (EventDef eventDef: eventDefs) {
+            nameSet.add(eventDef.eventName);
         }
         for (FunctionSig f: methodDeclarations) {
             nameSet.add(f.name);
@@ -340,6 +374,19 @@ public class Contract extends TopLayerNode {
             if (nameSet.contains(exp.exceptionName)) {
                 if (!exp.typeMatch(expMap.get(exp.exceptionName))) {
                     assert false : exp.exceptionName;
+                }
+            }
+        }
+
+        Map<String, EventDef> eventMap = new HashMap<>();
+        for (EventDef f : eventDefs) {
+            eventMap.put(f.eventName, f);
+        }
+        for (EventDef eventDef : itrface.eventDefs) {
+            if (eventDef.isBuiltIn()) continue;
+            if (nameSet.contains(eventDef.eventName)) {
+                if (!eventDef.typeMatch(eventMap.get(eventDef.eventName))) {
+                    assert false : eventDef.eventName;
                 }
             }
         }
@@ -389,6 +436,7 @@ public class Contract extends TopLayerNode {
             Map<String, StateVariableDeclaration> varNames = new HashMap<>();
 //            Map<String, StructDef> strDefs = new HashMap<>();
             Map<String, ExceptionDef> expDefs = new HashMap<>();
+            Map<String, EventDef> evDefs = new HashMap<>();
             Map<String, FunctionSig> funcNames = new HashMap<>();
             Set<String> nameSet = new HashSet<>();
             for (StructDef structDef: structDefs) {
@@ -406,10 +454,19 @@ public class Contract extends TopLayerNode {
             }
 
             for (ExceptionDef exp : exceptionDefs) {
+                // TODO steph: assert?
                 assert !nameSet.contains(exp.exceptionName) :
                         "duplicate exception: " + exp.exceptionName;
                 nameSet.add(exp.exceptionName);
                 expDefs.put(exp.exceptionName, exp);
+            }
+
+            for (EventDef eventDef : eventDefs) {
+                // TODO steph: assert?
+                assert !nameSet.contains(eventDef.eventName) :
+                        "duplicate event: " + eventDef.eventName;
+                nameSet.add(eventDef.eventName);
+                evDefs.put(eventDef.eventName, eventDef);
             }
 
             for (FunctionDef f : methodDeclarations) {
@@ -421,6 +478,7 @@ public class Contract extends TopLayerNode {
             List<StateVariableDeclaration> newStateVarDecs = new ArrayList<>();
             List<StructDef> newStructDefs = new ArrayList<>();
             List<ExceptionDef> newExpDefs = new ArrayList<>();
+            List<EventDef> newEvDefs = new ArrayList<>();
             List<FunctionDef> newFuncDefs = new ArrayList<>();
 
             int builtInIndex = 0;
@@ -476,6 +534,23 @@ public class Contract extends TopLayerNode {
             newExpDefs.addAll(exceptionDefs.subList(builtInIndex, exceptionDefs.size()));
 
             builtInIndex = 0;
+            for (EventDef a : eventDefs) {
+                if (a.isBuiltIn())
+                    newEvDefs.add(a);
+                else
+                    break;
+                builtInIndex += 1;
+            }
+            for (EventDef eventDef : superContract.eventDefs) {
+                if (eventDef.isBuiltIn())
+                    continue;
+                // TODO: steph: assert?
+                assert !nameSet.contains(eventDef.eventName) : eventDef.eventName;
+                newEvDefs.add(eventDef);
+            }
+            newEvDefs.addAll(eventDefs.subList(builtInIndex, eventDefs.size()));
+
+            builtInIndex = 0;
             for (FunctionDef a : methodDeclarations) {
                 if (a.isBuiltIn())
                     newFuncDefs.add(a);
@@ -516,6 +591,7 @@ public class Contract extends TopLayerNode {
             structDefs = newStructDefs;
             varDeclarations = newStateVarDecs;
             exceptionDefs = newExpDefs;
+            eventDefs = newEvDefs;
             methodDeclarations = newFuncDefs;
         }
     }
@@ -533,6 +609,7 @@ public class Contract extends TopLayerNode {
         addBuiltInTrustSettings();
         addBuiltInVars();
         addBuiltInExceptions();
+        addBuiltInEvents();
         addBuiltInMethods();
     }
 
@@ -641,6 +718,10 @@ public class Contract extends TopLayerNode {
 //                true
 //        );
 //        exceptionDefs.add(error);
+    }
+
+    private void addBuiltInEvents() {
+        // No builtin events
     }
 
     private void addBuiltInVars() {

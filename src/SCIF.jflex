@@ -96,6 +96,8 @@ import static parser.sym.*;
         addKeyword("assume", Integer.valueOf(sym.ASSUME));
         addKeyword("unchecked", Integer.valueOf(sym.UNCHECKED));
         addKeyword("transient", Integer.valueOf(sym.TRANSIENT));
+        addKeyword("event", Integer.valueOf(sym.EVENT));
+        addKeyword("emit", Integer.valueOf(sym.EMIT));
         addOperator("(", LPAR);
         addOperator(")", RPAR);
         addOperator("[]", SQBPAIR);

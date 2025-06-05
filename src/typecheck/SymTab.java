@@ -102,4 +102,14 @@ public class SymTab {
         }
         return result;
     }
+
+    public Map<String, EventTypeSym> getEventMap() {
+        Map<String, EventTypeSym> result = parent == null ? new HashMap<>() : parent.getEventMap();
+        for (Entry<String, Sym> entry : table.entrySet()) {
+            if (entry.getValue() instanceof EventTypeSym value) {
+                result.put(entry.getKey(), value);
+            }
+        }
+        return result;
+    }
 }

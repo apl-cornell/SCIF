@@ -142,6 +142,7 @@ terminal ASSUME;
 terminal REVERT;
 terminal WHILE, FOR;
 terminal NEW, STRUCT, UNCHECKED, TRANSIENT;
+terminal EVENT, EMIT;
 
 nonterminal List<SourceFile> sourceCode;
 nonterminal Interface interface;
@@ -243,6 +244,10 @@ nonterminal Revert revert_stmt;
 nonterminal List<Name> name_list, name_list_oneplus;
 nonterminal CallSpec transaction_spec;
 nonterminal java.util.Map<String, Expression> arg_spec;
+nonterminal List<EventDef> event_defs;
+nonterminal EventDef event_def;
+// nonterminal Object event_parameters, event_par_list;
+nonterminal Emit emit_stmt;
 
 precedence left EQUALGREATER;
 precedence left OR;
@@ -354,12 +359,13 @@ contract ::=
             structDefs: s_decs
             state_var_decs: v_decs
             exp_defs: e_defs
+            event_defs: event_defs
             constructors: constructors
             func_defs: f_defs
         RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, e_defs, constructors);
+        RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, e_defs, event_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name IMPLEMENTS NAME: supercontract contract_extends: c_extends
@@ -368,12 +374,13 @@ contract ::=
             structDefs: s_decs
             state_var_decs: v_decs
             exp_defs: e_defs
+            event_defs: event_defs
             constructors: constructors
             func_defs: f_defs
         RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, e_defs, constructors);
+        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, e_defs, event_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name contract_extends: c_extends
@@ -382,12 +389,13 @@ contract ::=
             structDefs: s_decs
             state_var_decs: v_decs
 //            exp_defs: e_defs
+            event_defs: event_defs
             constructors: constructors
             func_defs: f_defs
         RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), constructors);
+        RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), event_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name IMPLEMENTS NAME: supercontract contract_extends: c_extends
@@ -396,12 +404,13 @@ contract ::=
             structDefs: s_decs
             state_var_decs: v_decs
 //            exp_defs: e_defs
+            event_defs: event_defs
             constructors: constructors
             func_defs: f_defs
         RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), constructors);
+        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), event_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :};
 
@@ -567,6 +576,25 @@ r_exp_defs ::=
         RESULT = list;
     :};
 
+event_defs ::=
+    event_defs:list event_def:eDef {:
+        list.add(eDef);
+        RESULT = list;
+    :}
+    | {:
+        List<EventDef> list = new ArrayList<>();
+        RESULT = list;
+    :}
+    ;
+
+event_def ::=
+    EVENT:e NAME:n parameters:para SEMI {:
+        EventDef eventDef = new EventDef((String) n, para);
+        eventDef.setLoc(new CodeLocation(eleft, eright, filename));
+        RESULT = eventDef;
+    :}
+    ;
+
 structDefs ::=
     structDefs:list structDef:sDef {:
         list.add(sDef);
@@ -689,18 +717,20 @@ interface ::=
         LEFT_BRACE
             structDefs: s_defs
             exp_defs: e_defs
+            event_defs: event_defs
             funcSigs:a
         RIGHT_BRACE {:
-            RESULT = new Interface((String)name, c_extends, s_defs, e_defs, a);
+            RESULT = new Interface((String)name, c_extends, s_defs, e_defs, event_defs, a);
             RESULT.setLoc(new CodeLocation(ileft, iright, filename));
     :}
     | INTERFACE:i NAME:name contract_extends: c_extends
         LEFT_BRACE
             structDefs: s_defs
 //            exp_defs: e_defs
+            event_defs: event_defs
             funcSigs:a
         RIGHT_BRACE {:
-            RESULT = new Interface((String)name, c_extends, s_defs, new ArrayList<>(), a);
+            RESULT = new Interface((String)name, c_extends, s_defs, new ArrayList<>(), event_defs, a);
             RESULT.setLoc(new CodeLocation(ileft, iright, filename));
     :};
 
@@ -1054,6 +1084,7 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     | unchecked_stmt:a {: RESULT = a; :}
     | throw_stmt:a {: RESULT = a;:}
     | revert_stmt:a {: RESULT = a;:}
+    | emit_stmt:a {: RESULT = a; :}
 //    | endorse_stmt:a {:
 //        RESULT = a;
 //    :}
@@ -1076,6 +1107,17 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
 //        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
 //    :}
 //    ;
+
+emit_stmt ::=
+    EMIT:x call_expr:e SEMI {:
+        if (!(e instanceof Call)) {
+            return null;
+        }
+
+        RESULT = new Emit((Call)e);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
+    ;
 
 endorseIf_stmt ::=
     ENDORSE:x LPAR name_list:exprList COMMA ifLabel:from RIGHT_ARROW ifLabel:to RPAR if_stmt:ifStmt {:

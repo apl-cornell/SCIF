@@ -217,6 +217,23 @@ public class NTCEnv {
         return new ExceptionTypeSym(exceptionName, memberList, parent);
     }
 
+    public EventTypeSym newEventType(String eventName, Arguments arguments, ScopeContext parent) throws SemanticException {
+        Sym sym = curSymTab.lookup(eventName);
+        if (sym != null) {
+            if (sym instanceof EventTypeSym) {
+                return (EventTypeSym) sym;
+                // TODO steph haven't figured out the code logic
+            } else {
+                return null;
+            }
+        }
+
+        enterNewScope();
+        ArrayList<VarSym> memberList = arguments.parseArgs(this, parent);
+        exitNewScope();
+        return new EventTypeSym(eventName, memberList, parent);
+    }
+
     public ExceptionTypeSym getExceptionTypeSym(Type t) {
         return (ExceptionTypeSym) getCurSym(t.name());
     }
@@ -298,6 +315,11 @@ public class NTCEnv {
     public java.util.Map<String, ExceptionTypeSym> getExceptionTypeSymMap() {
         return curSymTab.getExceptionMap();
     }
+
+    public java.util.Map<String, EventTypeSym> getEventTypeSymMap() {
+        return curSymTab.getEventMap();
+    }
+
 
     public void enterConstructor() {
 //        System.err.println("entering the constructor");
