@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import jflex.base.Pair;
 import typecheck.exceptions.SemanticException;
 import typecheck.exceptions.TypeCheckFailure;
 import typecheck.sherrlocUtils.Constraint;
@@ -19,7 +18,7 @@ import java.util.HashMap;
  */
 public class NTCEnv {
 
-    private java.util.Map<Pair<String, String>, InterfaceSym> contractSymMap; // full filename -> ContractSym
+    private java.util.Map<String, InterfaceSym> contractSymMap; // fullFileName ":" contractName -> ContractSym
     private SymTab curSymTab;
     private List<Constraint> cons;
     private java.util.Map<String, java.util.Map<String, List<Constraint>>> conMap;
@@ -45,7 +44,7 @@ public class NTCEnv {
     }
 
     public void addContractSym(String fullFileName, String contractName, InterfaceSym contractSym) {
-        contractSymMap.put(new Pair(fullFileName, contractName), contractSym);
+        contractSymMap.put(fullFileName + ":" + contractName, contractSym);
     }
 
     public void setNewCurSymTab() {
@@ -292,13 +291,13 @@ public class NTCEnv {
     }
 
     public void setCurSymTab(String currentSourceFileFullName, String currentContractName) {
-        assert contractSymMap.containsKey(new Pair(currentSourceFileFullName, currentContractName));
-        curSymTab = contractSymMap.get(new Pair(currentSourceFileFullName, currentContractName)).symTab;
+        assert contractSymMap.containsKey(currentSourceFileFullName + ":" +  currentContractName);
+        curSymTab = contractSymMap.get(currentSourceFileFullName + ":" +  currentContractName).symTab;
     }
 
     public void importContract(String iptContract, String contractName,
                                CodeLocation location) throws SemanticException {
-        InterfaceSym sym = contractSymMap.get(new Pair (iptContract, contractName));
+        InterfaceSym sym = contractSymMap.get(iptContract + ":" + contractName);
         if (sym == null) {
             throw new SemanticException("not containing imported contract/interface: " + iptContract,
                     location);
