@@ -12,6 +12,7 @@ import typecheck.Utils;
 
 parser code {:
     //public boolean DEBUG = true;
+    public boolean hasError = false;
     public static String filename;
 
     public static class SyntaxError extends Exception {
@@ -32,18 +33,22 @@ parser code {:
         else return name;
     }
     @Override public void report_error(String message, Object cur_token) {
+        hasError = true;
         if (cur_token instanceof Symbol s) {
             String name = getTokenName(s.sym);
-            message = "Line " + s.left + ", column " + s.right + ": " + message 
-                              + " at symbol: " + name;
+            // filename is defined to be the absolute path
+            message = new File(filename).getName() + ":" + s.left + ":" + s.right + ": "
+                            + message + ": symbol '" + name + "', found '" + s.value + "';";
         }
         System.out.println(message);
     }
+    
     @Override public void unrecovered_syntax_error(Symbol cur_token) throws SyntaxError {
         throw new SyntaxError("Syntax error");
     }
     @Override public void report_expected_token_ids() {
         List<Integer> ids = expected_token_ids();
+        if (ids.isEmpty()) return;
         StringBuilder b = new StringBuilder();
         b.append("  Expected: ");
         boolean first = true;
@@ -53,6 +58,14 @@ parser code {:
           b.append(getTokenName(id));
         }
         System.out.println(b.toString());
+    }
+
+    @Override public Symbol parse() throws Exception {
+        Symbol result = super.parse();
+        if (hasError) {
+            throw new SyntaxError("Syntax error");
+        }
+        return result;
     }
 
     public void debuglog(String s) {
@@ -129,6 +142,7 @@ terminal ASSUME;
 terminal REVERT;
 terminal WHILE, FOR;
 terminal NEW, STRUCT, UNCHECKED, TRANSIENT;
+terminal EVENT, EMIT;
 
 nonterminal List<SourceFile> sourceCode;
 nonterminal Interface interface;
@@ -230,6 +244,10 @@ nonterminal Revert revert_stmt;
 nonterminal List<Name> name_list, name_list_oneplus;
 nonterminal CallSpec transaction_spec;
 nonterminal java.util.Map<String, Expression> arg_spec;
+nonterminal List<EventDef> event_defs;
+nonterminal EventDef event_def;
+// nonterminal Object event_parameters, event_par_list;
+nonterminal Emit emit_stmt;
 
 precedence left EQUALGREATER;
 precedence left OR;
@@ -261,10 +279,11 @@ sourceFile ::=
     | sourceFilesNoImport:b {:
         RESULT = b;
         // logger.debug(RESULT);
-    :};
-//    | error:err {:
+    :}
+    // | error:err {:
 //    report_fatal_error("Syntax error in source file " + filename + "\n", err);
-//    :};
+    // :}
+    ;
 
 sourceFilesNoImport ::=
     sourceFilesNoImport:a contract:b {:
@@ -294,10 +313,11 @@ sourceFilesNoImport ::=
         RESULT = new ArrayList<SourceFile>();
         RESULT.add(parsed);
         // logger.debug(RESULT);
-    :};
-//    | error:err {:
+    :}
+    // | error:err {:
 //        report_fatal_error("Syntax error in source file " + filename + "\n", err);
-//    :};
+    // :}
+    ;
 
 ipt_stmts ::=
     ipt_stmts:s  ipt_stmt:a {:
@@ -339,12 +359,13 @@ contract ::=
             structDefs: s_decs
             state_var_decs: v_decs
             exp_defs: e_defs
+            event_defs: event_defs
             constructors: constructors
             func_defs: f_defs
         RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, e_defs, constructors);
+        RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, e_defs, event_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name IMPLEMENTS NAME: supercontract contract_extends: c_extends
@@ -353,12 +374,13 @@ contract ::=
             structDefs: s_decs
             state_var_decs: v_decs
             exp_defs: e_defs
+            event_defs: event_defs
             constructors: constructors
             func_defs: f_defs
         RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, e_defs, constructors);
+        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, e_defs, event_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name contract_extends: c_extends
@@ -367,12 +389,13 @@ contract ::=
             structDefs: s_decs
             state_var_decs: v_decs
 //            exp_defs: e_defs
+            event_defs: event_defs
             constructors: constructors
             func_defs: f_defs
         RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), constructors);
+        RESULT = new Contract((String) name, "", c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), event_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :}
     | CONTRACT NAME: name IMPLEMENTS NAME: supercontract contract_extends: c_extends
@@ -381,12 +404,13 @@ contract ::=
             structDefs: s_decs
             state_var_decs: v_decs
 //            exp_defs: e_defs
+            event_defs: event_defs
             constructors: constructors
             func_defs: f_defs
         RIGHT_BRACE {:
         // TrustSetting t_setting = new TrustSetting();
         constructors.addAll(f_defs);
-        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), constructors);
+        RESULT = new Contract((String) name, (String) supercontract, c_extends, t_setting, s_decs, v_decs, new ArrayList<>(), event_defs, constructors);
         RESULT.setLoc(new CodeLocation(nameleft, nameright, filename));
     :};
 
@@ -552,6 +576,25 @@ r_exp_defs ::=
         RESULT = list;
     :};
 
+event_defs ::=
+    event_defs:list event_def:eDef {:
+        list.add(eDef);
+        RESULT = list;
+    :}
+    | {:
+        List<EventDef> list = new ArrayList<>();
+        RESULT = list;
+    :}
+    ;
+
+event_def ::=
+    EVENT:e NAME:n parameters:para SEMI {:
+        EventDef eventDef = new EventDef((String) n, para);
+        eventDef.setLoc(new CodeLocation(eleft, eright, filename));
+        RESULT = eventDef;
+    :}
+    ;
+
 structDefs ::=
     structDefs:list structDef:sDef {:
         list.add(sDef);
@@ -626,7 +669,7 @@ constructor ::=
 
 func_defs ::=
     funcdef:fDef func_defs:list {:
-        list.add(0, fDef);
+        if (fDef != null) list.add(0, fDef);
         RESULT = list;
     :}
     | {:
@@ -674,18 +717,20 @@ interface ::=
         LEFT_BRACE
             structDefs: s_defs
             exp_defs: e_defs
+            event_defs: event_defs
             funcSigs:a
         RIGHT_BRACE {:
-            RESULT = new Interface((String)name, c_extends, s_defs, e_defs, a);
+            RESULT = new Interface((String)name, c_extends, s_defs, e_defs, event_defs, a);
             RESULT.setLoc(new CodeLocation(ileft, iright, filename));
     :}
     | INTERFACE:i NAME:name contract_extends: c_extends
         LEFT_BRACE
             structDefs: s_defs
 //            exp_defs: e_defs
+            event_defs: event_defs
             funcSigs:a
         RIGHT_BRACE {:
-            RESULT = new Interface((String)name, c_extends, s_defs, new ArrayList<>(), a);
+            RESULT = new Interface((String)name, c_extends, s_defs, new ArrayList<>(), event_defs, a);
             RESULT.setLoc(new CodeLocation(ileft, iright, filename));
     :};
 
@@ -816,10 +861,11 @@ primitiveIfLabel ::= NAME:a {:
 funcdef ::=
     r_funcSig:funcSig suite:d {:
         RESULT = new FunctionDef(funcSig, d);
-    :};
-//    | error:err {:
+    :}
+    | error:err {:
 //        report_fatal_error("Syntax error when parsing a method", err);
-//    :};
+    :}
+    ;
 
 type ::=
     nonarray_type:a {:
@@ -925,7 +971,7 @@ parameters ::=
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
 typedarglist ::=
-    probinittfpdef:a {:RESULT = a; :}
+    probinittfpdef:a {: RESULT = a; :}
     | typedarglist:list COMMA probinittfpdef:a {:
         list.merge(a);
         RESULT = list;
@@ -1038,6 +1084,7 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     | unchecked_stmt:a {: RESULT = a; :}
     | throw_stmt:a {: RESULT = a;:}
     | revert_stmt:a {: RESULT = a;:}
+    | emit_stmt:a {: RESULT = a; :}
 //    | endorse_stmt:a {:
 //        RESULT = a;
 //    :}
@@ -1047,9 +1094,10 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     | call_stmt:a {:
         RESULT = a;
     :}
-//    | error:err SEMI {:
-//        report_fatal_error("Statement syntax error when parsing source file " + filename + "\n", err);
-//    :}
+    | error:err SEMI {:
+        //report_error("Statement syntax error when parsing source file " + filename + "\n", err);
+        // syntax_error((Symbol) err);
+    :}
     ;
 
 //endorse_stmt ::=
@@ -1059,6 +1107,17 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
 //        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
 //    :}
 //    ;
+
+emit_stmt ::=
+    EMIT:x call_expr:e SEMI {:
+        if (!(e instanceof Call)) {
+            return null;
+        }
+
+        RESULT = new Emit((Call)e);
+        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+    :}
+    ;
 
 endorseIf_stmt ::=
     ENDORSE:x LPAR name_list:exprList COMMA ifLabel:from RIGHT_ARROW ifLabel:to RPAR if_stmt:ifStmt {:

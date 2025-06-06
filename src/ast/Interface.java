@@ -1,6 +1,7 @@
 package ast;
 
 import compile.CompileEnv;
+import compile.ast.Event;
 import compile.ast.SolNode;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ public class Interface extends TopLayerNode {
     String superContractName;
     TrustSetting trustSetting;
     List<StructDef> structDefs;
+    List<EventDef> eventDefs;
     List<StateVariableDeclaration> varDeclarations;
 
     List<ExceptionDef> exceptionDefs;
@@ -28,11 +30,13 @@ public class Interface extends TopLayerNode {
                      String superContractName,
                      List<StructDef> structDefs,
                      List<ExceptionDef> exceptionDefs,
+                     List<EventDef> eventDefs,
                      List<FunctionSig> funcSigs) {
         this.contractName = contractName;
         this.superContractName = superContractName;
         this.structDefs = structDefs;
         this.exceptionDefs = exceptionDefs;
+        this.eventDefs = eventDefs;
         this.funcSigs = funcSigs;
 
         varDeclarations = new ArrayList<>();
@@ -82,6 +86,12 @@ public class Interface extends TopLayerNode {
             }
         }
 
+        for (EventDef def : eventDefs) {
+            if (!def.ntcGlobalInfo(env, now)) {
+                return false;
+            }
+        }
+
         for (FunctionSig fDef : funcSigs) {
             if (!fDef.ntcGlobalInfo(env, now)) {
                 return false;
@@ -111,6 +121,9 @@ public class Interface extends TopLayerNode {
             expDef.globalInfoVisit(contractSym);
         }
 
+        for (EventDef eventDef : eventDefs) {
+            eventDef.globalInfoVisit(contractSym);
+        }
 
         for (FunctionSig stmt : funcSigs) {
             stmt.globalInfoVisit(contractSym);
@@ -142,6 +155,7 @@ public class Interface extends TopLayerNode {
 
     public compile.ast.Interface solidityCodeGen(CompileEnv code) {
         List<compile.ast.StructDef> structAndExcDefs = new ArrayList<>();
+        List<compile.ast.Event> evDefs = new ArrayList<>();
         for (StructDef structDef: structDefs) {
             structAndExcDefs.add(structDef.solidityCodeGen(code));
         }
@@ -152,13 +166,17 @@ public class Interface extends TopLayerNode {
             }
         }
 
+        for (EventDef eventDef: eventDefs) {
+            evDefs.add(eventDef.solidityCodeGen(code));
+        }
+
         List<compile.ast.FunctionSig> functionSigs = new ArrayList<>();
         for (FunctionSig functionSig: funcSigs)
             if (!functionSig.isBuiltIn()) {
                 functionSigs.add(functionSig.solidityCodeGen(code));
             }
 
-        return new compile.ast.Interface(contractName, structAndExcDefs, functionSigs);
+        return new compile.ast.Interface(contractName, structAndExcDefs, evDefs, functionSigs);
     }
 
     @Override
@@ -166,6 +184,7 @@ public class Interface extends TopLayerNode {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.addAll(structDefs);
         rtn.addAll(exceptionDefs);
+        rtn.addAll(eventDefs);
         rtn.addAll(funcSigs);
         return rtn;
     }
@@ -200,6 +219,9 @@ public class Interface extends TopLayerNode {
         for (ExceptionDef exp: exceptionDefs) {
             nameSet.add(exp.exceptionName);
         }
+        for (EventDef eventDef: eventDefs) {
+            nameSet.add(eventDef.eventName);
+        }
         for (FunctionSig f: funcSigs) {
             nameSet.add(f.name);
         }
@@ -216,6 +238,11 @@ public class Interface extends TopLayerNode {
                 assert false: "duplicate exception: " + exp.exceptionName;
             }
         }
+        for (EventDef eventDef: superContract.eventDefs) {
+            if (eventDef.isBuiltIn()) continue;
+            // TODO assert?
+            assert (!nameSet.contains(eventDef.eventName)) : "duplicate event: " + eventDef.eventName;
+        }
         for (FunctionSig f: superContract.funcSigs) {
             if (f.isBuiltIn()) continue;
             if (nameSet.contains(f.name)) {
@@ -226,6 +253,7 @@ public class Interface extends TopLayerNode {
         // paste exceptions and methods
         List<StructDef> newStrDefs = new ArrayList<>();
         List<ExceptionDef> newExpDefs = new ArrayList<>();
+        List<EventDef> newEventDefs = new ArrayList<>();
         List<FunctionSig> newFuncSigs = new ArrayList<>();
 
         newStrDefs.addAll(superContract.structDefs);
@@ -240,6 +268,11 @@ public class Interface extends TopLayerNode {
             if (exceptionDef.isBuiltIn()) continue;
             newExpDefs.add(exceptionDef);
         }
+        newEventDefs.addAll(superContract.eventDefs);
+        for (EventDef eventDef: eventDefs) {
+            if (eventDef.isBuiltIn()) continue;
+            newEventDefs.add(eventDef);
+        }
         newFuncSigs.addAll(superContract.funcSigs);
         for (FunctionSig functionSig: funcSigs) {
             if (functionSig.isBuiltIn()) continue;
@@ -248,6 +281,7 @@ public class Interface extends TopLayerNode {
 
         structDefs = newStrDefs;
         exceptionDefs = newExpDefs;
+        eventDefs = newEventDefs;
         funcSigs = newFuncSigs;
     }
 
@@ -255,6 +289,7 @@ public class Interface extends TopLayerNode {
         addBuiltInTrustSettings();
         addBuiltInVars();
         addBuiltInExceptions();
+        addBuiltInEvents();
         addBuiltInMethods();
     }
 
@@ -365,6 +400,10 @@ public class Interface extends TopLayerNode {
 //                true
 //        );
 //        exceptionDefs.add(error);
+    }
+
+    private void addBuiltInEvents() {
+        // no builtin events
     }
 
     private void addBuiltInVars() {

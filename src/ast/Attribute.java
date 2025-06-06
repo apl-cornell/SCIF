@@ -29,6 +29,8 @@ public class Attribute extends TrailerExpr {
         attr = a;
     }
 
+    // steph: if this represents "a.b", then value = a and attr = b.
+
     @Override
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         VarSym varSym = getVarInfo(env);
@@ -48,7 +50,12 @@ public class Attribute extends TrailerExpr {
         } else if (parentVarSym.typeSym instanceof ExceptionTypeSym) {
             ExceptionTypeSym parentTypeInfo = (ExceptionTypeSym) parentVarSym.typeSym;
             rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
-        } else {
+        } else if (parentVarSym.typeSym instanceof EventTypeSym) {
+            // TODO steph double check--not sure of correctness
+            EventTypeSym parentTypeInfo = (EventTypeSym) parentVarSym.typeSym;
+            rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
+        }
+        else {
             assert false: "unknown types for attribute: " + value.toString() + " at " + location.errString();
             return null;
         }
@@ -60,6 +67,7 @@ public class Attribute extends TrailerExpr {
         //TODO: assuming only one-level attribute access
         // to add support to multi-level access
         String varName = ((Name) value).id;
+        // TODO: steph: needs to check instanceof 
 
         VarSym varSym = env.getVar(varName);
         if (!(varSym.typeSym instanceof StructTypeSym structType)) {

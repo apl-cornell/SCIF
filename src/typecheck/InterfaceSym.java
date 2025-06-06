@@ -262,6 +262,26 @@ public class InterfaceSym extends TypeSym {
         return (ExceptionTypeSym) sym;
     }
 
+    public EventTypeSym toEventType(String eventName, Arguments arguments, ScopeContext defContext) throws SemanticException {
+        EventTypeSym sym = getEventSym(eventName);
+        if (sym != null) {
+            return sym;
+        }
+
+        symTab = new SymTab(symTab);
+        List<VarSym> memberList = arguments.parseArgs(this);
+        symTab = symTab.getParent();
+        return new EventTypeSym(eventName, memberList, defContext);
+    }
+
+    public EventTypeSym getEventSym(String eventName) {
+        Sym sym = symTab.lookup(eventName);
+        if (sym == null || (!(sym instanceof EventTypeSym))) {
+            return null;
+        }
+        return (EventTypeSym) sym;
+    }
+
     public Iterable<Assumption> assumptions() {
         return assumptions;
     }

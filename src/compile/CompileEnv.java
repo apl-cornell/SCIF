@@ -19,6 +19,8 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Stack;
 import java.util.stream.Collectors;
+
+import typecheck.EventTypeSym;
 import typecheck.ExceptionTypeSym;
 import typecheck.Utils;
 
@@ -31,6 +33,7 @@ public class CompileEnv {
     ExceptionManager exceptionManager;
     TemporaryNameManager temporaryNameManager;
     Map<String, ExceptionTypeSym> exceptionSymTable;
+    Map<String, EventTypeSym> eventSymTable;
     List<Function> temporaryFunctions;
     Stats stats = new Stats();
 
@@ -127,6 +130,10 @@ public class CompileEnv {
 
     public void setExceptionMap(Map<String, ExceptionTypeSym> exceptionTypeSymMap) {
         this.exceptionSymTable = exceptionTypeSymMap;
+    }
+
+    public void setEventMap(Map<String, EventTypeSym> eventTypeSymMap) {
+        this.eventSymTable = eventTypeSymMap;
     }
 
     public Collection<? extends Function> tempFunctions() {
@@ -743,6 +750,11 @@ public class CompileEnv {
     public ExceptionTypeSym findExceptionTypeSym(String name) {
         assert exceptionSymTable.containsKey(name);
         return exceptionSymTable.get(name);
+    }
+
+    public EventTypeSym findEventTypeSym(String name) {
+        assert eventSymTable.containsKey(name);
+        return eventSymTable.get(name);
     }
 
     public String newTempVarName() {
