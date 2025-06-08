@@ -38,7 +38,7 @@ parser code {:
             String name = getTokenName(s.sym);
             // filename is defined to be the absolute path
             message = new File(filename).getName() + ":" + s.left + ":" + s.right + ": "
-                            + message + ": symbol '" + name + "', found '" + s.value + "';";
+                            + message + " at symbol '" + s.value + "';";
         }
         System.out.println(message);
     }
@@ -143,6 +143,7 @@ terminal REVERT;
 terminal WHILE, FOR;
 terminal NEW, STRUCT, UNCHECKED, TRANSIENT;
 terminal EVENT, EMIT;
+terminal VAR;
 
 nonterminal List<SourceFile> sourceCode;
 nonterminal Interface interface;

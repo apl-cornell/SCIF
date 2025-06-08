@@ -146,7 +146,7 @@ public class TypeChecker {
             ntcEnv.addSourceFile(root.getSourceFilePath(), root);
 
             root.passScopeContext(null);
-            System.err.println("Checking contract " + root.getContractName());
+            // System.err.println("Checking contract " + root.getContractName());
             if (!root.ntcGlobalInfo(ntcEnv, null)) {
                 assert false : "Must succeed or throw a semantic exception";
             }
