@@ -39,7 +39,7 @@ contract Dexible {
             uint{sender} i = 0;
             while (i < tokens.length() - 1) {
                 try {
-                    emit Swap(tokens[i], tokens[i + 1], routers[i], amounts[i]Dexible.scif);
+                    emit Swap(tokens[i], tokens[i + 1], routers[i], amounts[i]);
                     swap(tokens[i], tokens[i + 1], routers[i], amounts[i]);
                 } catch (FailedSwap e) {
                     assert false;
