@@ -24,4 +24,4 @@ jobs:
     - uses: gradle/actions/setup-gradle@v4.4.0
 
     - name: Gradle Test with Wrapper
-      run: ./gradlew test
+      run: ./gradlew --console=plain test
