@@ -1,11 +1,10 @@
-package parser;
-
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java_cup.runtime.Symbol;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import parser.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
