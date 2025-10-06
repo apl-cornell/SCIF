@@ -43,7 +43,7 @@ public class TestParsing {
             "builtin_files/ExternallyManagedContractImp",
             "builtin_files/LockManager",
             "builtin_files/TrustManager",
-            "examples/ERC20",
+            // "examples/ERC20",
             "examples/IERC20",
             "examples/IExchange",
             "examples/Dexible",

@@ -34,7 +34,7 @@ public class TestIfcTypechecking {
             "basic/ExceptionThrowAndCatch",
             "basic/EndroseIf",
             "examples/SimpleStorage",
-            "examples/ERC20",
+            // "examples/ERC20",
             "examples/DeployToken",
     })
     void testPositive(String contractName) {

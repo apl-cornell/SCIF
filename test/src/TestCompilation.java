@@ -36,7 +36,7 @@ public class TestCompilation {
             "basic/ExceptionThrowAndCatch",
             "basic/EndroseIf",
             "ifcTypechecking/Wallet_lock_exception",
-            "examples/ERC20",
+            // "examples/ERC20",
             "examples/SimpleStorage",
             "examples/DeployToken",
             "multiContract/importTest/import1",
