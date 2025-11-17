@@ -4,7 +4,7 @@ SCIF provides the ability to label information manipulated by programs with secu
 
 ## Principals
 
-A principal is an entity that represents some power to change certain aspects of the program. In SCIF, a principal can either be an *address*, representing an on-chain account, or a unique identifier that are defined by the programmer and only carries meaning within the scope of the current contract.
+A principal is an entity that represents some power to change certain aspects of the program. In SCIF, a principal can either be an *address*, representing an on-chain account, or a unique identifier that are defined by the programmer and only carries meaning within the scope of the current contract, such as `{this}`, `{sender}`, `{any}`. 
 
 ## Trust relationships
 

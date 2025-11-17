@@ -14,9 +14,12 @@ The following contract demonstrates a straightforward implementation of a multi-
 ```scif
 contract Wallet {
     map(address, uint) balances;
+    
+    constructor() {
+    	super();
+    }
 
-    @public
-    void withdraw(uint amount) {
+    public void withdraw(uint amount) {
         endorse(amount, any -> this) if (balances[sender] >= amount) {
             lock(this) {
                 send(sender, amount);
@@ -27,9 +30,7 @@ contract Wallet {
         }
     }
 
-    @public
-    @payable
-    void deposit() {
+    public payable void deposit() {
         balances[sender] += value;
     }
 }
@@ -55,28 +56,29 @@ The following contract showcases a multi-user wallet implementation that incorpo
 ```scif
 contract Wallet {
     map(address, uint) balances;
-    exception balanceNotEnough;
-    exception transferFailure;
+    exception balanceNotEnough();
+    exception transferFailure();
+    
+    constructor() {
+    		super();
+    }
 
-    @public
-    void withdraw(uint amount) throws (balanceNotEnough, transferFailure) {
-        endorse(amount, any -> this) if (balances[sender] >= amount) {
+    public void withdraw(uint amount) throws (balanceNotEnough, transferFailure) {
+        endorse(amount, any -> this) when (balances[sender] >= amount) {
             lock(this) {
                 atomic {
                     send(sender, amount);
                 } rescue (error e) {
-                    throw transferFailure;
+                    throw transferFailure();
                 }
                 balances[sender] -= amount;
             }
         } else {
-            throw balanceNotEnough;
+            throw balanceNotEnough();
         }
     }
 
-    @public
-    @payable
-    void deposit() {
+		public payable void deposit() {
         balances[sender] += value;
     }
 }

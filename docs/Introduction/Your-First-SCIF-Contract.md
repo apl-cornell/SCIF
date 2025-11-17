@@ -1,24 +1,24 @@
 # Your First SCIF Contract
 
-In this tutorial we will learn how to:
+In this tutorial we will cover how to:
 
-- Install the SCIF compiler and (optional) the Foundry toolchain
+- Install the SCIF compiler and (optionally) the Foundry toolchain
 - Explore the `IERC20` SCIF interface and its `ERC20` implementation
-- Compile the `ERC20` SCIF code and (optional) deploy it
-- Extend the `ERC20` token with more functionality
+- Compile the `ERC20` SCIF code and (optionally) deploy it
+- Extend the `ERC20` token with additional functionality
 
 ## Dependencies
 
-Make sure that you have the following installed:
+Ensure the following are installed:
 
 - Java 21
-- (optional for deployment) Foundry
+- Foundry (optional, for deployment) 
 
 ## Running SCIF Contracts
 
 #### SCIF Compilation
 
-You can directly download the prebuilt SCIF JAR file from: https://github.com/apl-cornell/SCIF/releases/download/latest/SCIF.jar, and run:
+Download the pre-built SCIF JAR from: https://github.com/apl-cornell/SCIF/releases/download/latest/SCIF.jar and run:
 
 ```
 java -ea -jar SCIF.jar -c [path_to_SCIF_contract]
@@ -26,7 +26,7 @@ java -ea -jar SCIF.jar -c [path_to_SCIF_contract]
 
 > [!NOTE]
 >
-> Alternatively, if you would like to compile from the source code, make sure to install Java 21, JFlex, Ant, and Gradle, and run:
+> Alternatively, to build SCIF from source, install Java 21, JFlex, Ant, and Gradle, then run:
 >
 > ```bash
 > git clone --recurse-submodules https://github.com/apl-cornell/SCIF.git
@@ -36,7 +36,7 @@ java -ea -jar SCIF.jar -c [path_to_SCIF_contract]
 
 #### Deploying SCIF Contracts
 
-After compilation, you will get a Solidity file that is equipped with full security guarantees that SCIF promises. One way to deploy it is to use the Foundry toolchain. 
+After compilation, you will obtain a Solidity file that inherits the full security guarantees provided by SCIF: **no reentrancy vulnerabilities, no CDA vulnerabilities, and no improper error handling**. You can deploy it using the Foundry toolchain:
 
 ```bash
 mkdir scif_erc20_token
@@ -44,13 +44,13 @@ cd scif_erc20_token
 forge init --no-git
 ```
 
-Copy the generated Solidity contracts to the `src` folder, then run 
+Copy the generated Solidity contracts into the `src` folder and run
 
 ```bash
 forge build
 ```
 
-Now you have built the project. 
+Then deploy the contract to an Ethereum-compatible blockchain and interact with it by sending transactions or function calls:
 
 ```bash
 forge create src/ERC20_depmap.sol:ERC20 \
@@ -60,45 +60,73 @@ forge create src/ERC20_depmap.sol:ERC20 \
   --broadcast
 ```
 
-## Understanding ERC20 Contract in SCIF
+## Understanding the ERC20 Contract in SCIF
 
-Before we dive into the actual SCIF code, let's first do a brief overview on how SCIF's information flow control (IFC) works, because the IFC annotations provide the security guarantees for our contracts.
+Before diving into code, let's briefly review how SCIF's information flow control (IFC) works, since its annotations are what enable security guarantees.
 
-### Basic Knowledge on Information Flow Control (IFC)
+### Basics on Information Flow Control (IFC)
 
-SCIF provides the ability to label information manipulated by programs with security policies. The compiler then enforces the security of the program by leveraging information flow control techniques.
+SCIF labels information with security policies and uses compile-time IFC checks to ensure that sensitive data cannot be modified or influenced by untrusted sources.
 
 #### Principal
 
-A principal in SCIF represents some authority. It usually is a blockchian address, or some acronym referring to an address, such as the contract itself (`this`), the caller (`sender`), or method parameters. 
+A *principal* in SCIF represents an integrity source. It is typically a blockchain address or a symbol such as:
+
+- `{this}` (the contract itself, highest integrity)
+- `{sender}` (the caller)
+- `{any}` (lowest integrity) 
 
 #### Variable Labels
 
-A variable's integrity level is expressed by the label annotating to its type. For example, 
+Each variable's integrity is declared with a label:
 
 ```
 address{this} owner
 ```
 
-says that upon the declaration of address `owner`, we require that only principals as trusted as `this` (the contract itself) are allowed to inflence it. 
+This means only principals as trusted as `{this}` may influence `owner`. 
 
-#### Method Labels
+Inside a function, you may use `{sender}` as a label to indicate caller integrity. 
 
-A method signature can include optional labels to describe the integriy of the caller, parameters, return valuesk and reentrancy locks:
+#### Function Labels
+
+A function signature can also include optional labels to describe integrity requirements for the caller, parameters, return values and reentrancy locks. The general syntax looks like this:
 
 ```
 bool{l_r} f{l_ex -> l_in; l_lk}(address{l_addr} addr, uint{l_amt} amt);
 ```
 
-- The external label `l_ex` denotes the integrity requirement for the caller. The method can be invoked only when the caller is as trusted as `l_ex`. 
-- The internal (auto-endorsement) label `l_in` denotes the integrity requirement for the control flow at the beginning of the method. Upon the execution of the method body, the caller's control flow is auto endorsed to `l_in`, enabling high-integrity operations. When the `l_in` label is not specified, by default we make no auto-endorsement, i.e., let `l_in := l_ex`.
-- The reentrancy lock label `l_lk` denotes the integrity requirement for the lock to prevent reentrancy. Only principals that are as trusted as `l_lk` can reenter the method. 
-- The parameter labels `l_addr` and `l_amt` denote the integrity requirement for argumument `addr` and `amt`. The caller must supply inputs that are as trusted as `l_addr` and `l_i`, respectively. 
-- The return label `l_r` denotes the integrity of the return value. 
+- `{l_ex}` - **External begin label (caller integrity)**
 
-[user defined addr params example]
+  This label specifies *who* is allowed to call the function.
 
-If a label is not specified when declaring a variable, the compiler will either infer a label from the context, or assign a default label to it.
+  A function may only be invoked when the caller's integrity level is **at least as high as** `{l_ex}`. For instance, if `{l_ex}` is `from`, only a principal as trusted as `from` can invoke this function. If no external label is given, the default is `{sender}`, meaning no integrity restriction on callers.
+
+- `{l_in}` - **Internal input label (auto-endorsement of control flow)**
+
+  When the function body starts executing, SCIF *auto-endorses* the control flow from `l_ex` to `l_in`.
+
+  This mechanism effectively raises the "trust level" of the ongoing computation. Auto-endorsement is what enables high-integrity operations (like modifying state protected by `this`) once the call passes its security check.
+
+- `{l_out}` - **Reentrancy lock output label (reentrancy-free enforcement with input label)**
+
+  This label specifies what integrity level are the renentrancy lock that is maintained by the function execution.
+
+  To learn more about reentrancy and how SCIF prevents it, direct link to reentrancy section.
+
+- `{l_addr}`, `{l_amt}` - **Parameter labels**
+
+  Each parameter has its own integrity label indicating the minimum trust level required for its value.
+
+  When the caller supplies arguments, those arguments must satisfy these label constraints. Typically, each parameter label is at least as restrictive as the external label `{l_ex}`, since untrusted parameters would violate the function’s integrity assumption.
+
+- `{l_r}` - **Return-value label**
+
+  The label attached to the return type indicates the integrity level of the result value the function produces.
+
+  This ensures that results from low-integrity calls cannot later influence high-integrity logic without explicit endorsement.
+
+If a label is omitted, the compiler infers it or assigns a safe default. Say what the default actually is. 
 
 ### `IERC20.scif` Interface
 
@@ -106,35 +134,35 @@ If a label is not specified when declaring a variable, the compiler will either 
 interface IERC20 {
     exception ERC20InsufficientBalance(address owner, uint cur, uint needed);
     exception ERC20InsufficientAllowance(address owner, uint cur, uint needed);
-    @public uint balanceOf(address account);
-    @public void approve{sender}(address allowed, uint amount);
-    @public void approveFrom{from}(final address from, address spender, uint val);
-    @public void transfer{from -> this}(final address from, address to, uint amount) throws (ERC20InsufficientBalance{this});
-    @public void transferFrom{sender -> from; sender}(final address from, address to, uint amount) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this});
+    public uint balanceOf(address account);
+    public void approve{sender}(address allowed, uint amount);
+    public void approveFrom{from}(final address from, address spender, uint val);
+    public void transfer{from -> this}(final address from, address to, uint amount) throws (ERC20InsufficientBalance{this});
+    public void transferFrom{sender -> from; sender}(final address from, address to, uint amount) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this});
 }
 ```
 
-`IERC20.scif` defines the `ERC20` token interface, including two exceptions and five public methods. A few things to note:
+`IERC20.scif` defines the `ERC20` token interface, including two exceptions and five public functions. A few things to note:
 
 - `uint balanceOf(address account)` returns the balance of an account.
 
-- `void approve{sender}(address allowed, uint amount)` allows the caller (`sender`) to set an allowance. 
-- `void approveFrom{from}(final address from, address spender, uint val)` lets a caller that is as trusted as `from` to set an allowance on behalf of `from`.
-- `void transfer{from -> this}(final address from, address to, uint amount)` moves tokens from `from` to `to` when the caller is as trusted as `from`, and the control flow will be auto-endorsed to the highest (?) level (`this` means the contract itself), enabling high-integrity operations.
+- `void approve{sender}(address allowed, uint amount)` allows the caller (`{sender}`) to set an allowance. 
+- `void approveFrom{from}(final address from, address spender, uint val)` lets a caller that is as trusted as `{from}` to set an allowance on behalf of `from`.
+- `void transfer{from -> this}(final address from, address to, uint amount)` moves tokens from `from` to `to` when the caller is as trusted as `{from}`, and the control flow will be auto-endorsed to the integrity level of `{this}` (which means the contract itself), enabling high-integrity operations.
 
-### `ERC20.scif` Implementation Revealed
+### Implementing `ERC20` Interface 
 
-Based on the IERC20 interface, we are able to build the ERC20 implementation (which can be accessed here) steps by steps and **in order**:
+Now that we've examined the `IERC20` interface, let's look at how it is implemented in SCIF. The full [implementation](https://github.com/apl-cornell/SCIF) is available. Below we walk through its structure step by step. 
 
-#### imports
+#### Imports
 
 ```solidity
 import "./IERC20.scif";
 ```
 
-The `import` statement is used to import contracts, methods, and other definitions, by specifing the relative path to another SCIF file. Here, we import `IERC20` (the `ERC20` interface) and implments it. 
+The `import` statement includes other SCIF files by relative path. Here, we import the `IERC20` interface that we will implement. 
 
-#### contract name (and inheritance)
+#### Contract Header and Inheritance
 
 ```solidity
 contract ERC20 implements IERC20 {
@@ -142,9 +170,9 @@ contract ERC20 implements IERC20 {
 }
 ```
 
-Similar to Java syntax, the header declares that the contract `ERC20` implements `IERC20` interface. You can also add an optional inheritance; for more details, you can look at ___. 
+As in Java, the header declares that `ERC20` implements the `IERC20` interface. Inheritance can also be specified if needed. 
 
-#### state variable declarations
+#### State Variable Declarations
 
 ```solidity
 map(address, uint) _balances;
@@ -155,30 +183,20 @@ bytes _name;
 bytes _symbol;
 ```
 
-State variables are variables that are stored persistently and used globally in the contract. A few common variable types are supported in SCIF. This includes:
+State variables are persistent storage and are globally visible to all functions in the contract. SCIF supports common types such as `bool`, `uint`, `bytes`, `address`, `string`, fixed-length arrays `T[n]`, and associative maps `map(keyT, valT)`.  
 
-- `bool`: boolean value of `true` or `false`.
-- `uint`: Unsigned integers whose possible values are between `0` and `2^256 - 1`.
-- `bytes`: Dynamically-sized byte array. 
-- `address`: Address of an Ethereum account, represented as `20` bytes.
-- `string`: String literal containing printably ASCII and common escape characters. 
-- `T[n]`: Array of type `T` and fixed length `n`. 
-- `map(keyT, valT)`: Map mapping from type `keyT`  to type `valT` elements. 
+Each type can carry an integrity label with the syntax `T{l}`, meaning the value of type `T` is guarded by label `l`.
 
-Each variable type in SCIF is associated with a label representing its level of integrity. It can be explicitly annotated by`T{l}`, meaning that the type `T` is associated with the label `l`. For example, `map(address owner, map(address, uint{owner}){owner}) _allowances;`...
-
-The above code declares all necessary state variables to implement `ERC20` contract. 
-
-#### exceptions
+#### Exceptions
 
 ```solidity
 exception ERC20InsufficientBalance(address owner, uint cur, uint needed);
 exception ERC20InsufficientAllowance(address owner, uint cur, uint needed);
 ```
 
-Exceptions can be used to indicate special behaviors and scenarios during contract executions. Here, we declare two exceptions for handling insufficient balance and allowance scenarios during `ERC20` exection. Just like state varaibles, exception declarations can be optionally annotated with information labels too.
+Exceptions can be used to indicate special behaviors and scenarios during contract executions. Here, we declare two exceptions for handling insufficient balance and allowance scenarios during `ERC20` execution. Just like state varaibles and function definitions, exception declarations can be optionally annotated with information labels too.
 
-#### constructor methods
+#### Constructors
 
 ```solidity
 constructor(bytes name_, bytes symbol_) {
@@ -188,48 +206,107 @@ constructor(bytes name_, bytes symbol_) {
 }
 ```
 
-Contructor methods are optional, and if exist, the constructor method will be executed once, just like in Solidity, upon the contract is created. It is usually required to call `super()` (why?) at the end of the constructor method. 
+Contructors are optional; if present, the constructor will be executed once, just like in Solidity, when the contract is created. It is required to call `super()` before making any function calls in constructor. 
 
-#### methods
+#### Functions
 
-A typical method declaaration looks like this:
+A typical function declaration looks like this:
 
 ```solidity
-@public void transferFrom{sender -> from; sender}(final address from, address to, uint val) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this}) {
-    endorse([from, to, val], sender -> from)
-    if (_allowances[from][sender] >= val) {
-        transfer(from, to, val);
-        unchecked {
-            _allowances[from][sender] -= val;
-        }
+public void transfer{from -> this}(final address from, address to, uint val) throws (ERC20InsufficientBalance{this}) {
+    endorse([from, to, val], from -> this)
+    when (_balances[from] >= val) {
+        _balances[from] -= val;
+        _balances[to] += val;
     } else {
-        throw ERC20InsufficientAllowance(to, _allowances[from][sender], val);
+        throw ERC20InsufficientBalance(from, _balances[from], val);
     }
 }
 ```
 
-This `ERC20` methods ...
+This `ERC20` function transfer `val`-sized amount of tokens from `from` address to `to` address, potentially throwing `ERC20InsufficientBalance` exception.  
 
-##### header
+##### Function signature and labels
 
-Method definitions are Java-like, with optional flags placed at the start of the header: `@public`, `@private`, `@payable`, `@override`.  Similar to interface, method can have optional information labels annotated, as detailed in ___. 
+Function definitions are Java-like, with optional flags placed at the start of the header: `public`, `private`, `payable`, and `override`.  Similar to interface, function can have optional information labels annotated, as detailed in ___. 
 
-##### method body
+In `ERC20.transfer` function, the external label `{l_ex}` is `from`, which is the first parameter address passed in by the caller; this means that the caller must have at least the same integrity level as principal `{from}` . The internal label is `{this}`, so the control flow is auto-endorsed to highest integrity level `{this}`, permitting the function body to perform high-integrity level operations. 
 
-SCIF supports most common statements, including but not limited to assignment, contract creation, control flow expressions (`if`, `else`, `while`, `for`, `break`, `continute`, `return`), exception handling (`try`, `catch`), and method calls. There are also IFC-related statements, `endorse (var, low_lbl -> high_lbl) when (cond) { body_1 } else { body_2 }`, which will endrose `var`'s integrity from `low_lbl` to `high_lbl` and execute `body1` only when `cond` is satisifed; otherwise, no endorsement happens and the program will execute `body_2`. 
+##### Function body and IFC statements
+
+SCIF supports standard statements, including but not limited to assignment, contract creation, control flow expressions (`if`, `else`, `while`, `for`, `break`, `continue`, `return`), exception handling (`try`, `catch`), and function calls. There are also IFC-related statements, `endorse (var, low_lbl -> high_lbl) when (cond) { body_1 } else { body_2 }`, which will endorse `var`'s integrity from `{low_lbl}` to `{high_lbl}` and execute `body_1` only when `cond` is satisifed; otherwise, no endorsement happens and the program will execute `body_2`. 
+
+The example `ERC20.transfer` function does the following step by step:
+
+1. **Caller requirement**: the caller and all the parameters are required to be as trusted as principal `{from}`
+2. **Auto-endorsement**: the control flow is auto-endorsed to the highest integrity level `{this}`
+3. **Balance check**: verify whether address `from` has sufficient balance to send `val` tokens; if not, throw `ERC20InsufficientBalance` exception and exit the body
+4. **Variable endorsement**: endorse all three parameters from `{from}` to the highest `{this}` integrity level
+5. **State updates**: perform transactions to send `val` tokens from`from` address to `to` address
+
+##### Why IFC is important
+
+- If you downgrade the internal label in `ERC20.transfer`'s function signature to `{from}`, essentially voiding the second step above, the code will not compile. 
+- If you remove the endorsement statement in the `transfer` function, essentially voiding the third step check, the code will also not compile. 
+
+This demonstrates SCIF enforces the requirements and guarantees the principle that if the code compiles, "**no reentrancy vulnerabilities, no CDA vulnerabilities, and no improper error handling**".
 
 ## Extending the ERC20 Token
 
+The provided `ERC20.scif` implements the core functionalities, but you can easily extend it.
+
 #### Adding Events
+
+Like Solidity, SCIF supports event declarations for logging. The event declarations happens after exception declarations and before construtors. For example, we can add the following two events to `ERC20`  contract. 
+
+```solidity
+event Transfer(address from, address to, uint value);
+event Approval(address owner, address spender, uint value);
+```
+
+You can emit them within functions, for example:
+
+```solidity
+emit Transfer(from, to, val);
+```
 
 #### Minting and burning
 
-## Futher Reading
+Minting and burning are cruicial for operating on `ERC20` tokens. Minting is used to create new tokens and add them to the system, and burning is for destroying tokens and removing them from the system. You can try to implement those with proper security annotations, and see if that compiles!
 
-inheritence to uniswap
+// toggle list to be added:
 
-exception handling
+```solidity
+/**
+ * Only owners can mint tokens
+ */
+public void mint{this}(address to, uint val) {
+    if (val > 0) {
+        _totalSupply += val;
+        _balances[to] += val;
+    }
+}
 
-reentrancy prevention
+/**
+ * Sender can only burn their own tokens
+ */
+public void burn{from -> this}(final address from, uint val)
+    throws (ERC20InsufficientBalance{this})
+{
+    endorse([from, val], from -> this)
+    when (_balances[from] >= val) {
+        _balances[from] -= val;
+        _totalSupply -= val;
+        _burnt += val;
+    } else {
+        throw ERC20InsufficientBalance(from, _balances[from], val);
+    }
+}
+```
 
-CDA prevention
+## Further Reading
+
+- Extending `IERC20` to Uniswap‑style interactions while preserving integrity
+- Exceptions and error handling patterns (`try`/`catch`) in SCIF
+- Reentrancy prevention
+- CDA prevention
