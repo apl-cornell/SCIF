@@ -52,7 +52,7 @@ contract ERC20 implements IERC20 {
     @public void transfer{from -> this}(final address from, address to, uint val) throws (ERC20InsufficientBalance{this}) {
         uint{from} fromBalance = _balances[from];
         endorse([from, to, val, fromBalance], from -> this)
-        if (fromBalance >= val) {
+        when (fromBalance >= val) {
             _balances[from] = fromBalance - val;
             _balances[to] += val;
         } else {
@@ -67,7 +67,7 @@ contract ERC20 implements IERC20 {
     @public void transferFrom{sender -> from; sender}(final address from, address to, uint val) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this}) {
         uint{from} currentAllowance = _allowances[from][sender];
         endorse([from, to, val], sender -> from)
-        if (currentAllowance >= val) {
+        when (currentAllowance >= val) {
             transfer(from, to, val);
             _allowances[from][sender] = currentAllowance - val;
         } else {
