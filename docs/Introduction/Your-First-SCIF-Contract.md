@@ -148,7 +148,7 @@ This allows external calls with immediate endorsement to the contract's integrit
 
 ### `IERC20.scif` Interface
 
-```solidity
+```scif
 interface IERC20 {
     exception ERC20InsufficientBalance(address owner, uint cur, uint needed);
     exception ERC20InsufficientAllowance(address owner, uint cur, uint needed);
@@ -174,7 +174,7 @@ Now that we've examined the `IERC20` interface, let's look at how it is implemen
 
 #### Imports
 
-```solidity
+```scif
 import "./IERC20.scif";
 ```
 
@@ -182,7 +182,7 @@ The `import` statement includes other SCIF files by relative path. Here, we impo
 
 #### Contract Header and Inheritance
 
-```solidity
+```scif
 contract ERC20 implements IERC20 {
 	...
 }
@@ -192,7 +192,7 @@ As in Java, the header declares that `ERC20` implements the `IERC20` interface. 
 
 #### State Variable Declarations
 
-```solidity
+```scif
 map(address, uint) _balances;
 map(address owner, map(address, uint{owner}){owner}) _allowances;
 uint _burnt;
@@ -207,7 +207,7 @@ Each type can carry an integrity label with the syntax `T{l}`, meaning the value
 
 #### Exceptions
 
-```solidity
+```scif
 exception ERC20InsufficientBalance(address owner, uint cur, uint needed);
 exception ERC20InsufficientAllowance(address owner, uint cur, uint needed);
 ```
@@ -216,7 +216,7 @@ Exceptions can be used to indicate special behaviors and scenarios during contra
 
 #### Constructors
 
-```solidity
+```scif
 constructor(bytes name_, bytes symbol_) {
     _name = endorse(name_, sender -> this);
     _symbol = endorse(symbol_, sender -> this);
@@ -230,7 +230,7 @@ Contructors are optional; if present, the constructor will be executed once, jus
 
 A typical function definition looks like this:
 
-```solidity
+```scif
 public void transfer{from -> this}(final address from, address to, uint val) 
 		throws (ERC20InsufficientBalance{this}) 
 {
@@ -279,14 +279,14 @@ The provided `ERC20.scif` implements the core functionalities of the `ERC20` tok
 
 Like Solidity, SCIF supports event declarations for logging. Event declarations happen after exception definitions and before construtors. For example, we can add the following two events to the `ERC20`  contract. 
 
-```solidity
+```scif
 event Transfer(address from, address to, uint value);
 event Approval(address owner, address spender, uint value);
 ```
 
 You can emit them within functions, for example:
 
-```solidity
+```scif
 emit Transfer(from, to, val);
 ```
 
@@ -296,7 +296,7 @@ Minting and burning are crucial for operating on `ERC20` tokens. Minting is used
 
 <details> <summary>Example implementation: mint & burn</summary>
 
-```solidity
+```scif
 /**
  * Only owners can mint tokens
  */

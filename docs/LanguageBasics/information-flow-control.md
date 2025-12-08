@@ -28,7 +28,7 @@ Alice == Bob
 
 In information flow control, integrity and confidentiality are well-known duals. In SCIF, we only focus on integrity because most smart contracts are currently running on public blockchains, where anyone can see all states of a smart contract.
 
-In SCIF, an integity policy is expressed as labels attached to code.
+In SCIF, an integrity policy is expressed as labels attached to code.
 
 Here is a quick example:
 
