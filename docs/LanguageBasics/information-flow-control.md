@@ -26,9 +26,9 @@ Alice == Bob
 
 ## Labels
 
-In information flow control, integrity and confidentiality are well-known duals. In SCIF, we only focus on the integrity because most smart contracts are currently running on public blockchains, where anyone can see anything of a smart contract.
+In information flow control, integrity and confidentiality are well-known duals. In SCIF, we only focus on integrity because most smart contracts are currently running on public blockchains, where anyone can see all states of a smart contract.
 
-In SCIF, an intergity policy is expressed as labels attached to code.
+In SCIF, an integity policy is expressed as labels attached to code.
 
 Here is a quick example:
 
@@ -39,4 +39,4 @@ uint{owner} trustedCounter;
 
 `trustedCounter` is labeled as `owner`, meaning that the integrity level of `trustedCounter` is `owner`. In other words, only principals trusted by address `owner` can influence its value directly or indirectly.
 
-A label can be as simple as one single principal. It can also be a complicated combination of multiple principals. See later sections for details.
+A label can be as simple as a single principal. It can also be a complicated combination of multiple principals. See later sections for details.

@@ -63,7 +63,7 @@ events that help signaling important state changes of the contract.
 
 ### contract name, interface inheritance, and inheritance
 
-Each contract starts with a name and inheritance declaration (optional).
+Each contract starts with a name and optional inheritance declarations.
 
 ```scif
 contract SimpleStorage implements IStorage extends BaseContract {
@@ -80,7 +80,7 @@ contract SimpleStorage {
     uint{this} storedData;
 ```
 
-The above code declares an integer owner-trusted state variable. 
+The above code declares an integer state variable, trusted by the owner. 
 
 ### exceptions
 

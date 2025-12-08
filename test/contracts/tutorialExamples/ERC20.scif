@@ -1,0 +1,75 @@
+import "./IERC20.scif";
+
+contract ERC20 implements IERC20 {
+    map(address, uint) _balances;
+    map(address owner, map(address, uint{owner}){owner}) _allowances;
+    uint _burnt;
+    uint _totalSupply;
+    bytes _name;
+    bytes _symbol;
+
+    exception ERC20InsufficientBalance(address owner, uint cur, uint needed);
+    exception ERC20InsufficientAllowance(address owner, uint cur, uint needed);
+
+    constructor(bytes name_, bytes symbol_) {
+        _name = endorse(name_, sender -> this);
+        _symbol = endorse(symbol_, sender -> this);
+        super();
+    }
+
+    @public bytes name() {
+        return _name;
+    }
+
+    @public bytes symbol() {
+        return _symbol;
+    }
+
+    @public uint decimals() {
+        return 18;
+    }
+
+    @public uint totalSupply() {
+        return _totalSupply;
+    }
+
+    @public uint balanceOf(address account) {
+        return _balances[account];
+    }
+
+    @public uint burnt() {
+        return _burnt;
+    }
+
+    @public void approve{sender}(address spender, uint val) {
+        _allowances[sender][spender] = val;
+    }
+
+    @public void approveFrom{from}(final address from, address spender, uint val) {
+        _allowances[from][spender] = val;
+    }
+
+    @public void transfer{from -> this}(final address from, address to, uint val) throws (ERC20InsufficientBalance{this}) {
+        endorse([from, to, val], from -> this)
+        when (_balances[from] >= val) {
+                _balances[from] -= val;
+                _balances[to] += val;
+        } else {
+            throw ERC20InsufficientBalance(from, _balances[from], val);
+        }
+    }
+
+    @public uint{owner} allowance(final address owner, final address spender) {
+        return _allowances[owner][spender];
+    }
+
+    @public void transferFrom{sender -> from; sender}(final address from, address to, uint val) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this}) {
+        endorse([from, to, val], sender -> from)
+        when (_allowances[from][sender] >= val) {
+            transfer(from, to, val);
+            _allowances[from][sender] -= val;
+        } else {
+            throw ERC20InsufficientAllowance(to, _allowances[from][sender], val);
+        }
+    }
+}
