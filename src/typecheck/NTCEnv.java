@@ -262,11 +262,11 @@ public class NTCEnv {
         return curSymTab;
     }
 
-    public Label newLabel(IfLabel ifl) {
+    public Label newLabel(IfLabel ifl) throws SemanticException {
         if (ifl instanceof PrimitiveIfLabel) {
             VarSym label = (VarSym) curSymTab.lookup(((PrimitiveIfLabel) ifl).value().id);
             // if (label == null) return null;
-            assert label != null :  ((PrimitiveIfLabel) ifl).value().id;
+            if (label == null) throw new SemanticException("Bad label: " + ((PrimitiveIfLabel) ifl).value().id, ifl.location());
             return new PrimitiveLabel(label, ifl.getLocation());
         } else if (ifl instanceof ComplexIfLabel) {
             return new ComplexLabel(newLabel(((ComplexIfLabel) ifl).getLeft()),

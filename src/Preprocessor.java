@@ -37,7 +37,6 @@ public class Preprocessor {
                 result = Parser.parse(builtinFile, null); //p.parse()
                 assert result != null;
             } catch (SyntaxError se) {
-                System.err.println("Syntax Error: " + se);
                 continue;
             }
 
@@ -69,8 +68,7 @@ public class Preprocessor {
                 result = Parser.parse(file, null); //p.parse()
                 assert result != null;
             } catch (SyntaxError se) {
-                System.err.println("Syntax Error: " + se);
-                continue;
+                throw se;
             }
 
             List<SourceFile> rootsFiles = (List<SourceFile>) result.value;

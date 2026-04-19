@@ -760,18 +760,10 @@ public class Utils {
                 // Built-in or default
                 result.add(program.getSourceFilePath() + "\n" + explanation + ".\n");
             }
-            StringBuilder rtn =
-                    new StringBuilder(
-                            program.getSourceFileBasename() + ", line " + row + ", column " + scol + ": " + "\n"
-                                    + explanation + ".\n");
-
-            rtn.append("Constraint violated: " + expBuffer.substring(0, expBuffer.length() - 2) + ".\n");
-
-            rtn.append(program.getSourceCodeLine(row - 1)).append("\n");
-            for (int i = 1; i < col; ++i) {
-                rtn.append(" ");
-            }
-            rtn.append("^");
+            StringBuilder rtn = new StringBuilder(
+                    ErrorFormatter.format(program.getSourceFilePath(), row, col,
+                            explanation + ".\n"
+                            + "Constraint violated: " + expBuffer.substring(0, expBuffer.length() - 2) + "."));
 
 //            String expString = expBuffer.toString() + (locBuffer.isEmpty() ? "" : ":[" + locBuffer.toString() + "]");
             result.add(rtn.toString());

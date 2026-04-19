@@ -8,6 +8,7 @@ import typecheck.sherrlocUtils.*;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
 import typecheck.CodeLocation;
+import typecheck.ErrorFormatter;
 import typecheck.Utils;
 
 parser code {:
@@ -16,55 +17,74 @@ parser code {:
     public static String filename;
 
     public static class SyntaxError extends Exception {
-      public String message;
-
       public SyntaxError(String msg) {
-        message = msg;
+        super(msg);
       }
     }
 
-    @Override public void syntax_error(Symbol cur_token) {
-        report_error("Syntax error", cur_token);
-        report_expected_token_ids();
-    }
+    private List<String> errorMessages = new ArrayList<>();
+
     String getTokenName(int id) {
         String name = Lexer.tokenNames.get(id);
         if (name == null) return sym.terminalNames[id];
         else return name;
     }
-    @Override public void report_error(String message, Object cur_token) {
-        hasError = true;
-        if (cur_token instanceof Symbol s) {
-            String name = getTokenName(s.sym);
-            // filename is defined to be the absolute path
-            message = new File(filename).getName() + ":" + s.left + ":" + s.right + ": "
-                            + message + " at symbol '" + s.value + "';";
-        }
-        System.out.println(message);
-    }
-    
-    @Override public void unrecovered_syntax_error(Symbol cur_token) throws SyntaxError {
-        throw new SyntaxError("Syntax error" + cur_token);
+
+    private String describeToken(Symbol s) {
+        if (s.value != null) return "'" + s.value + "'";
+        return getTokenName(s.sym);
     }
 
-    @Override public void report_expected_token_ids() {
+    private String expectedTokenString() {
         List<Integer> ids = expected_token_ids();
-        if (ids.isEmpty()) return;
+        if (ids.isEmpty()) return "";
         StringBuilder b = new StringBuilder();
-        b.append("  Expected: ");
+        b.append("  Expected one of: ");
         boolean first = true;
         for (int id : ids) {
           if (!first) b.append(", ");
           else first = false;
           b.append(getTokenName(id));
         }
-        System.out.println(b.toString());
+        return b.toString();
+    }
+
+    @Override public void syntax_error(Symbol cur_token) {
+        hasError = true;
+        String msg = "Syntax error at " + describeToken(cur_token);
+        StringBuilder sb = new StringBuilder(
+            ErrorFormatter.format(filename, cur_token.left, cur_token.right, msg));
+        String expected = expectedTokenString();
+        if (!expected.isEmpty()) {
+            sb.append("\n").append(expected);
+        }
+        errorMessages.add(sb.toString());
+    }
+
+    @Override public void report_error(String message, Object info) {
+        // only used by CUP internals; actual reporting is done in syntax_error
+        hasError = true;
+    }
+
+    @Override public void report_expected_token_ids() {
+        // handled inline by syntax_error
+    }
+
+    @Override public void unrecovered_syntax_error(Symbol cur_token) throws SyntaxError {
+        String msg;
+        if (!errorMessages.isEmpty()) {
+            msg = String.join("\n", errorMessages);
+        } else {
+            msg = ErrorFormatter.format(filename, cur_token.left, cur_token.right,
+                "Unrecovered syntax error at " + describeToken(cur_token));
+        }
+        throw new SyntaxError(msg);
     }
 
     @Override public Symbol parse() throws Exception {
         Symbol result = super.parse();
         if (hasError) {
-            throw new SyntaxError("Syntax error");
+            throw new SyntaxError(String.join("\n", errorMessages));
         }
         return result;
     }

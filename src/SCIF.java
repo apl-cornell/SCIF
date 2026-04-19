@@ -90,11 +90,11 @@ public class SCIF implements Callable<Integer> {
             }
 
             List<SourceFile> roots;
-//            try {
-            roots = Preprocessor.preprocess(files);
-//            } catch (Parser.SyntaxError e) {
-//                return null;
-//            }
+//          try {
+              roots = Preprocessor.preprocess(files);
+//          } catch (Parser.SyntaxError e) {
+//             return null;
+//          }
             if (roots == null) {
                 return null;
             }
@@ -142,6 +142,7 @@ public class SCIF implements Callable<Integer> {
 //            return (passNTC && passIFC) ? roots : null;
             return (passIFC) ? roots : null;
         } catch (Parser.SyntaxError e) {
+            System.err.println(e.getMessage());
             return null;
         } catch (SemanticException e) {
             System.err.println(e.getMessage());

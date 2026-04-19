@@ -10,6 +10,7 @@ import java.util.List;
 import java_cup.runtime.Symbol;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import parser.Parser;
 import typecheck.exceptions.SemanticException;
 
 public class TestRegularTypechecking {
@@ -94,6 +95,8 @@ public class TestRegularTypechecking {
                 assert TypeChecker.regularTypecheck(roots, m_debug);
         } catch (AssertionError e) {
             e.printStackTrace();
+            assert true;
+        } catch (Parser.SyntaxError e) {
             assert true;
         } catch (SemanticException e) {
             assert true;

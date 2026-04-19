@@ -9,6 +9,7 @@ import java.util.List;
 import java_cup.runtime.Symbol;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import parser.Parser;
 
 public class TestIfcTypechecking {
     boolean m_debug = true;
@@ -113,6 +114,8 @@ public class TestIfcTypechecking {
             // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
             // logger.debug("running SHErrLoc...");
             // boolean passIFC = runSLC(outputFileName);
+        } catch (Parser.SyntaxError e) {
+            assert true;
         } catch (Exception e) {
             e.printStackTrace();
             assert true;
