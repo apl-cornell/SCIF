@@ -109,7 +109,7 @@ public class AnnAssign extends Statement {
             ScopeContext v = value.genTypeConstraints(env, now);
             env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location));
         } else if (isFinal) {
-            throw new RuntimeException("final variable " + name + " not initialized at " + location);
+            throw new SemanticException("final variable " + name + " not initialized", location);
         }
         return now;
     }
@@ -190,7 +190,7 @@ public class AnnAssign extends Statement {
                                 "New principal declaration"
                         ));
             } else {
-                throw new RuntimeException("A final address/Contract must be initialized to another final address/Contract: " + id);
+                throw new SemanticException("A final address/Contract must be initialized to another final address/Contract: " + id, location);
             }
         }
 

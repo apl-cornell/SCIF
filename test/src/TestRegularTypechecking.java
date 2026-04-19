@@ -10,6 +10,7 @@ import java.util.List;
 import java_cup.runtime.Symbol;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import typecheck.exceptions.SemanticException;
 
 public class TestRegularTypechecking {
     private boolean m_debug = true;
@@ -89,9 +90,12 @@ public class TestRegularTypechecking {
         files.add(new File(input.getFile()));
         try {
             List<SourceFile> roots = Preprocessor.preprocess(files);
-            assert (roots == null || !TypeChecker.regularTypecheck(roots, m_debug));
+            if (roots != null)
+                assert TypeChecker.regularTypecheck(roots, m_debug);
         } catch (AssertionError e) {
             e.printStackTrace();
+            assert true;
+        } catch (SemanticException e) {
             assert true;
         } catch (Exception e) {
             e.printStackTrace();

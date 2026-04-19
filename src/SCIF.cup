@@ -44,8 +44,9 @@ parser code {:
     }
     
     @Override public void unrecovered_syntax_error(Symbol cur_token) throws SyntaxError {
-        throw new SyntaxError("Syntax error");
+        throw new SyntaxError("Syntax error" + cur_token);
     }
+
     @Override public void report_expected_token_ids() {
         List<Integer> ids = expected_token_ids();
         if (ids.isEmpty()) return;
@@ -96,8 +97,9 @@ parser code {:
 
             try {
                 rtn = p.parse();
+            } catch (SyntaxError se) {
+                throw se;
             } catch (Exception e) {
-                if (e instanceof SyntaxError se) throw se;
                 throw new Error("Unexpected exception from parser");
             }
             if (astFile != null) {
