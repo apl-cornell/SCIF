@@ -79,7 +79,7 @@ abstract class CupTask extends DefaultTask {
 
 tasks.register("cup", CupTask) {
     cupFiles = fileTree("src") { include "SCIF.cup" }
-    cupOutput = file("build/generated-src/cup")
+    cupOutput = file("build/generated-src/cup/parser")
     cupJar = file("lib/java_cup.jar")
 }
 
@@ -134,7 +134,9 @@ configurations {
 }
 
 dependencies {
-    priority "de.jflex:jflex:1.8.2"
+    priority("de.jflex:jflex:1.8.2") {
+        exclude group: 'com.github.vbmacher', module: 'java-cup-runtime'
+    }
     priority files('lib/java_cup.jar')
     implementation 'org.apache.logging.log4j:log4j-core:2.12.1'
     implementation 'com.owlike:genson:1.5'
