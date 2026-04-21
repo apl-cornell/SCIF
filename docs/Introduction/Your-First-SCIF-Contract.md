@@ -36,15 +36,17 @@ java -ea -jar SCIF.jar -c [path_to_SCIF_contract]
 
 #### Deploying SCIF Contracts
 
-After compilation, you will obtain a Solidity file that inherits the full security guarantees provided by SCIF: **no reentrancy vulnerabilities, no CDA vulnerabilities, and no improper error handling**. You can deploy it using the Foundry toolchain:
+After compilation, you will obtain a Solidity file that inherits the full
+security guarantees provided by SCIF: **no reentrancy vulnerabilities, no CDA
+vulnerabilities, and no improper error handling**. You can deploy it using the
+Foundry toolchain:
 
 ```bash
 mkdir scif_erc20_token
 cd scif_erc20_token
 forge init --no-git
 ```
-
-Copy the generated Solidity contracts into the `src` folder and run
+Copy the generated Solidity contracts into the `src` folder and run these commands:
 
 ```bash
 forge build
@@ -62,11 +64,14 @@ forge create src/ERC20_depmap.sol:ERC20 \
 
 ## Understanding the ERC20 Contract in SCIF
 
-Before diving into code, let's briefly review how SCIF's information flow control (IFC) works, since its annotations are what enable security guarantees.
+Before diving into code, let's briefly review how SCIF's information flow
+control (IFC) works, since its annotations are what enable security guarantees.
 
 ### Basics on Information Flow Control (IFC)
 
-SCIF labels information with security policies and uses compile-time IFC checks to ensure that sensitive data cannot be modified or influenced by untrusted sources.
+SCIF labels information with security policies and uses compile-time
+IFC checks to ensure that sensitive data cannot be modified or
+influenced by untrusted sources.
 
 #### Principal
 
