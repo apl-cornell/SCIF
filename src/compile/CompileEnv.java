@@ -471,7 +471,7 @@ public class CompileEnv {
         // TODO: make labels unique
         List<compile.ast.Statement> result = new ArrayList<>();
 
-        if (!funcLabels.begin_pc.equals(funcLabels.to_pc)) {
+        if (!funcLabels.begin_pc.typeMatch(funcLabels.to_pc)) {
             result.add(new compile.ast.Assert(checkIfUnlocked(funcLabels.begin_pc, funcLabels.to_pc)));
             // addLine(assertExp("!" +  + ";");
         }
