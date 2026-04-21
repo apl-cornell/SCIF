@@ -210,6 +210,8 @@ public class TypeChecker {
 
         for (Map.Entry<String, FuncSym> funcPair : contractSym.symTab.getFuncs().entrySet()) {
             FuncSym func = funcPair.getValue();
+            // only evaluate public methods or methods under the current contract
+            if (!curContractName.equals(contractName) && !func.isPublic()) continue;
 //            // logger.debug("add func's sig constraints: [" + func.funcName + "]");
             //TODO: simplify
             namespace = "";

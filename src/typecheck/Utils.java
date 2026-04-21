@@ -31,6 +31,7 @@ public class Utils {
 
     public static final String[] BUILTIN_TYPE_NAMES =
             new String[]{"bool", "address", "bytes", "string", "void", "uint", "principal"};
+            // TODO(steph): remove principal?
     //new String[] {"bool", "int128", "uint256", "address", "bytes", "string", "int", "void", "uint"};
     public static final HashSet<String> BUILTIN_TYPES = new HashSet<>(
             Arrays.asList(BUILTIN_TYPE_NAMES));

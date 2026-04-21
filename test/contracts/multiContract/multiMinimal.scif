@@ -1,0 +1,16 @@
+contract B {
+    constructor() { super(); }
+
+    @public void foo{sender}() {
+    }
+}
+
+contract A {
+    B b;
+
+    constructor() { super(); }
+
+    @public void bar{this -> this; any}() {
+        b.foo();
+    }
+}
