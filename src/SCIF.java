@@ -90,17 +90,17 @@ public class SCIF implements Callable<Integer> {
             }
 
             List<SourceFile> roots;
-//            try {
-            roots = Preprocessor.preprocess(files);
-//            } catch (Parser.SyntaxError e) {
-//                return null;
-//            }
+//          try {
+              roots = Preprocessor.preprocess(files);
+//          } catch (Parser.SyntaxError e) {
+//             return null;
+//          }
             if (roots == null) {
                 return null;
             }
 
 //            try {
-            if (!TypeChecker.regularTypecheck(roots, logDir, m_debug)) {
+            if (!TypeChecker.regularTypecheck(roots, m_debug)) {
                 return null;
             }
 //            } catch (Parser.SyntaxError e) {
@@ -133,7 +133,7 @@ public class SCIF implements Callable<Integer> {
 //        System.out.println("\nInformation Flow Type Checking:");
             boolean passIFC = false;
 
-            passIFC = TypeChecker.ifcTypecheck(roots, logDir, m_debug);
+            passIFC = TypeChecker.ifcTypecheck(roots, m_debug);
 
             // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
             // // logger.debug("running SHErrLoc...");
@@ -142,6 +142,7 @@ public class SCIF implements Callable<Integer> {
 //            return (passNTC && passIFC) ? roots : null;
             return (passIFC) ? roots : null;
         } catch (Parser.SyntaxError e) {
+            System.err.println(e.getMessage());
             return null;
         } catch (SemanticException e) {
             System.err.println(e.getMessage());

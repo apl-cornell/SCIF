@@ -1,6 +1,7 @@
 package typecheck.exceptions;
 
 import typecheck.CodeLocation;
+import typecheck.ErrorFormatter;
 
 public class SemanticException extends Exception {
     CodeLocation location;
@@ -9,6 +10,6 @@ public class SemanticException extends Exception {
         location = loc;
     }
     @Override public String getMessage() {
-        return location.errString() + ": " + super.getMessage();
+        return ErrorFormatter.format(location, super.getMessage());
     }
 }

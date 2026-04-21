@@ -95,7 +95,7 @@ public class StateVariableDeclaration extends TopLayerNode {
             ScopeContext v = value.genTypeConstraints(env, now);
             env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location));
         } else if (isFinal && !isBuiltin) {
-            throw new RuntimeException("final variable " + name.id + " not initialized");
+            throw new SemanticException("final variable " + name.id + " not initialized", location);
         }
         return now;
     }
@@ -169,7 +169,8 @@ public class StateVariableDeclaration extends TopLayerNode {
                                 "New principal declaration"
                         ));
             } else if (!isBuiltin) {
-                throw new RuntimeException("A final address/Contract must be initialized to another final address/Contract: " + id);
+                throw new SemanticException("A final address/Contract must be initialized to another final address/Contract: " + id,
+                    location);
             }
 
 

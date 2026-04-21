@@ -2,6 +2,8 @@
 
 ROOT=`dirname $0`
 
+export GRADLE_OPTS="${GRADLE_OPTS} --enable-native-access=ALL-UNNAMED"
+
 if [[ -z "$GRADLE" ]]
 then
     GRADLE=${ROOT}/gradlew

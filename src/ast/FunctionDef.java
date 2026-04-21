@@ -95,7 +95,7 @@ public class FunctionDef extends FunctionSig {
             }
         if (isConstructor()) {
             // TODO(steph): fix assert
-            assert env.superCalled() : "constructor of super contract is not called in the constructor of " + env.currentSourceFileFullName();
+            if (!env.superCalled()) throw new SemanticException("constructor of super contract is not called in the constructor of " + env.currentSourceFileFullName(), location);
             env.leaveConstructor();
         }
         //}

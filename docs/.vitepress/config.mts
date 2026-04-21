@@ -1,40 +1,9 @@
-import { getHighlighter } from "shiki"
 import { readFileSync } from "fs"
 import { defineConfig } from "vitepress"
 
-export async function highlighter() {
-    console.log('Current directory: '+ process.cwd())
-    const highlighter = await getHighlighter({})
+const scifGrammar = JSON.parse(readFileSync("./docs/.vitepress/c.tmLanguage.json", "utf-8"))
 
-    const scifGrammar = JSON.parse(readFileSync("./docs/.vitepress/c.tmLanguage.json", "utf-8"))
-
-    const scif = {
-        id: "scif",
-        scopeName: 'source.scif',
-        grammar: scifGrammar,
-        // aliases: ['scif'],
-    }
-    // Inject another grammar
-    highlighter.loadLanguage(scif)
-
-    const preRE = /^<pre.*?>/
-    const vueRE = /-vue$/
-
-    return (str: string, lang: string) => {
-        const vPre = vueRE.test(lang) ? '' : 'v-pre'
-        lang = lang.replace(vueRE, '')
-
-        return highlighter
-            .codeToHtml(str, { lang})
-            .replace(preRE, `<pre ${vPre}>`)
-    }
-}
-
-
-// const highlighter = await shiki.getHighlighter()
-// await highlighter.loadLanguage(myLanguage)
-
-export default async () => defineConfig({
+export default defineConfig({
     lang: 'en-US',
     title: 'SCIF',
     description: 'A secure smart contract language',
@@ -48,11 +17,7 @@ export default async () => defineConfig({
                 items: [
                     {
                         text: 'Getting Started',
-                        link: '/Introduction/getting-started'
-                    },
-                    {
-                        text: 'Layout of a SCIF source file',
-                        link: '/Introduction/layout-of-a-scif-source-file'
+                        link: '/Introduction/Your-First-SCIF-Contract'
                     },
                     {
                         text: 'SCIF by Example',
@@ -89,11 +54,11 @@ export default async () => defineConfig({
                         link: '/LanguageBasics/built-in-methods-and-variables'
                     }
                 ]
-            }, 
+            },
             {
                 text: 'Security Mechanisms',
                 collapsible: true,
-                items: [ 
+                items: [
                 {
                     text: 'Label Model',
                     link: '/SecurityMechanisms/label-model'
@@ -111,11 +76,10 @@ export default async () => defineConfig({
                     link: '/SecurityMechanisms/confused-deputy'
                 }
                 ]
-
             }
         ]
     },
     markdown: {
-        highlight: await highlighter()
+        languages: [scifGrammar]
     }
 })

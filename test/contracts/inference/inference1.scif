@@ -1,0 +1,9 @@
+contract inference1 {
+    constructor() { super(); }
+
+    @public
+    void init() {
+        var x;
+        x = 0;
+    }
+}

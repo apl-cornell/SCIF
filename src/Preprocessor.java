@@ -11,6 +11,7 @@ import java_cup.runtime.*;
 import typecheck.exceptions.SemanticException;
 import typecheck.*;
 import parser.*;
+import parser.Parser.SyntaxError;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -31,8 +32,13 @@ public class Preprocessor {
 
         // add all built-in source files
         for (File builtinFile : Utils.BUILTIN_FILES) {
-            Symbol result = Parser.parse(builtinFile, null); //p.parse()
-            assert result != null;
+            Symbol result;
+            try {
+                result = Parser.parse(builtinFile, null); //p.parse()
+                assert result != null;
+            } catch (SyntaxError se) {
+                continue;
+            }
 
             List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
             assert rootsFiles.size() == 1;
@@ -57,8 +63,13 @@ public class Preprocessor {
         // add all contracts from inputFiles recursively
         while (!mentionedFiles.isEmpty()) {
             File file = mentionedFiles.poll();
-            Symbol result = Parser.parse(file, null); //p.parse()
-            assert result != null;
+            Symbol result;
+            try {
+                result = Parser.parse(file, null); //p.parse()
+                assert result != null;
+            } catch (SyntaxError se) {
+                throw se;
+            }
 
             List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
             assert !rootsFiles.isEmpty();

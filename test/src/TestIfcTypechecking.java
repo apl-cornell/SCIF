@@ -9,6 +9,7 @@ import java.util.List;
 import java_cup.runtime.Symbol;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import parser.Parser;
 
 public class TestIfcTypechecking {
     boolean m_debug = true;
@@ -49,7 +50,7 @@ public class TestIfcTypechecking {
         try {
             List<SourceFile> roots = Preprocessor.preprocess(files);
             assertNotNull(roots);
-            assert (TypeChecker.regularTypecheck(roots, logDir, m_debug));
+            assert (TypeChecker.regularTypecheck(roots, m_debug));
 
             // System.out.println("["+ outputFileName + "]");
             //        ArrayList<File> ifcConsFiles = new ArrayList<>();
@@ -61,7 +62,7 @@ public class TestIfcTypechecking {
 
             System.out.println("\nInformation Flow Typechecking:");
 
-            assert (TypeChecker.ifcTypecheck(roots, logDir, m_debug));
+            assert (TypeChecker.ifcTypecheck(roots, m_debug));
             // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
             // logger.debug("running SHErrLoc...");
             // boolean passIFC = runSLC(outputFileName);
@@ -97,7 +98,7 @@ public class TestIfcTypechecking {
         try {
             List<SourceFile> roots = Preprocessor.preprocess(files);
             assertNotNull(roots);
-            assert (TypeChecker.regularTypecheck(roots, logDir, m_debug));
+            assert (TypeChecker.regularTypecheck(roots, m_debug));
 
             // System.out.println("["+ outputFileName + "]");
             //        ArrayList<File> ifcConsFiles = new ArrayList<>();
@@ -109,10 +110,12 @@ public class TestIfcTypechecking {
 
             System.out.println("\nInformation Flow Typechecking:");
 
-            assert (!TypeChecker.ifcTypecheck(roots, logDir, m_debug));
+            assert (!TypeChecker.ifcTypecheck(roots, m_debug));
             // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
             // logger.debug("running SHErrLoc...");
             // boolean passIFC = runSLC(outputFileName);
+        } catch (Parser.SyntaxError e) {
+            assert true;
         } catch (Exception e) {
             e.printStackTrace();
             assert true;

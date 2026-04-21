@@ -94,8 +94,8 @@ contract B extends A {
 }
 ```
 
-Like in Java, contract `B` will inherit all state variables, exceptions, and methods from `A`.
-`B` can also override `A`'s method by decorator `override`.
+Like in other object-oriented languages, contract `B`  inherits all state variables, exceptions, and methods from `A`.
+Contract `B` can also override `A`'s method by decorator `override`.
 
 
 ## Interface
