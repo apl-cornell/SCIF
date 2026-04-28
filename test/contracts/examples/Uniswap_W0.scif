@@ -4,8 +4,7 @@ contract Uniswap {
     IERC20 tX;
     IERC20 tY;
     constructor() { super(); }
-    @public
-    uint exchangeXForY(final address buyer, uint xSold) {
+    public uint exchangeXForY(final address buyer, uint xSold) {
         uint prod = tX.getBal(this) * tY.getBal(this);
         uint yKept = prod / (tX.getBal(this) + endorse(xSold, sender -> this));
         uint yBought = tY.getBal(this) - yKept;

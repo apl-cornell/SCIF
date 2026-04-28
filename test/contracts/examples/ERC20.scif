@@ -4,15 +4,13 @@ contract ERC20 {
     map(address, uint) balances;
     map(address owner, map(address, uint{owner}){owner}) allowances;
     constructor() { super(); }
-    @public
-    void approve{sender}(address allowed, uint amount) {
+    public void approve{sender}(address allowed, uint amount) {
         allowances[sender][allowed] = amount;
     }
 
     //
     //  dynamically check that (msg.sender join l_deputy) => from
-    @public
-    bool{this} transfer{from -> this}(final address from, address to, uint amount) {
+    public bool{this} transfer{from -> this}(final address from, address to, uint amount) {
     // bool transfer{from -> this; 1}(final address from, address to, uint amount) {
         endorse([from, to, amount], from -> this)
         when (balances[from] >= amount) {
@@ -24,8 +22,7 @@ contract ERC20 {
         }
     }
 
-    @public
-    bool{from} transferAllowed{sender -> from; any}(final address from, address to, uint amount) {
+    public bool{from} transferAllowed{sender -> from; any}(final address from, address to, uint amount) {
         endorse([from, to, amount], sender -> from)
         when (allowances[from][sender] >= amount) {
             if (transfer(from, to, amount)) {
@@ -36,7 +33,7 @@ contract ERC20 {
         return false;
     }
 
-    // @public
+    // public
     // bool transferAllowed{sender->from; sender}(final address from, address to, uint amount) {
     //     endorse([from, to, amount], sender -> from)
     //     // address _from = endorse(from, sender -> from);
@@ -52,7 +49,7 @@ contract ERC20 {
     //     // return false;
     // }
 
-    // @public void transferFrom{sender -> from; sender}(final address from, address to, uint val) {
+    // public void transferFrom{sender -> from; sender}(final address from, address to, uint val) {
     //     endorse([from, to, val], sender -> from)
     //     if (_allowances[from][sender] >= val) {
     //         transfer(from, to, val);
@@ -64,13 +61,11 @@ contract ERC20 {
     //     }
     // }
 
-    @public
-    void deposit() {
+    public void deposit() {
         balances[sender] += value;
     }
 
-    @public
-    uint getBalance() {
+    public uint getBalance() {
         return balances[sender];
     }
 }

@@ -166,6 +166,7 @@ terminal WHILE, FOR;
 terminal NEW, STRUCT, UNCHECKED, TRANSIENT;
 terminal EVENT, EMIT;
 terminal VAR;
+terminal PUBLIC, PAYABLE, PROTECTED, PRIVATE, NATIVE;
 
 nonterminal List<SourceFile> sourceCode;
 nonterminal Interface interface;
@@ -813,10 +814,12 @@ r_funcSig ::=
         //makeNode("funcdef", a, b, c, d);
     :};
 
-decorator ::= AT:x NAME:a {:
-        // logger.debug("parsing a decorator @" + (String) a);
-        RESULT = (String)a;
-    :};
+decorator ::= PUBLIC:x {: RESULT = "public"; :}
+    | PAYABLE:x {: RESULT = "payable"; :}
+    | PROTECTED:x {: RESULT = "protected"; :}
+    | PRIVATE:x {: RESULT = "private"; :}
+    | NATIVE:x {: RESULT = "native"; :}
+    ;
 decorators ::=
     decorator:a {:
         List<String> rnt = new ArrayList<String>();

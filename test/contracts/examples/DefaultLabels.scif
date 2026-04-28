@@ -2,8 +2,7 @@ contract DefaultLabels extends Contract {
     uint{?} x; // {this}
     address addrY;
 
-    @public
-    // {this} {this or ⊥ -> this?}  {this}
+    public // {this} {this or ⊥ -> this?}  {this}
     void{?} foo{?}(uint{?} y) {
         uint{?} z; // To be inferred or internal begin label?
         send(...);
@@ -14,14 +13,12 @@ contract Contract {
     static map(address, uint) balances;
     private uint balance;
 
-    @protected
-    @final
+    protected final
     void send{this -> 0; 1}(address target, uint amount) {
         //...
     }
 
-    @public
-    @final
+    public final
     uint{ipc} balance{ipc -> 0}(final address addr) {
         return balances[addr];
     }

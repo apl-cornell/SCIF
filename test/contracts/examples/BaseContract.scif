@@ -15,14 +15,12 @@ contract BaseContract {
         setTrust(owner);
     }
 
-    @private
-    void setLocalTrust(address trustee) {
+    private void setLocalTrust(address trustee) {
         trustees.push(trustee);
         trusteeIndex[trustee] = trustees.length;
     }
 
-    @private
-    void revokeLocalTrust(address trustee) {
+    private void revokeLocalTrust(address trustee) {
         uint ind = trusteeIndex[trustee];
         address lastTrustee = trustees[trustees.length - 1];
         trustees[ind - 1] = lastTrustee;
@@ -31,22 +29,19 @@ contract BaseContract {
         trusteeIndex[trustee] = 0;
     }
 
-    @public
-    bool setTrust{this}(address trustee) {
+    public bool setTrust{this}(address trustee) {
         if (sender != owner) return false;
         setLocalTrust(trustee);
         return trustManager.setTrust(trustee);
     }
 
-    @public
-    bool revokeTrust{this}(address trustee) {
+    public bool revokeTrust{this}(address trustee) {
         if (sender != owner) return false;
         revokeLocalTrust(trustee);
         return trustManager.revokeTrust(trustee);
     }
 
-    @public
-    bool changeOwner{this}(address newOwner) {
+    public bool changeOwner{this}(address newOwner) {
         if (sender != owner) return false;
         revokeTrust(owner);
         owner = newOwner;
@@ -54,8 +49,7 @@ contract BaseContract {
         return true;
     }
 
-    @public
-    bool ifDTrust(address trustee) {
+    public bool ifDTrust(address trustee) {
         for (uint i = 0; i < trustees.length; ++i) {
             if (trustees[i] == trustee) {
                 return true;
@@ -64,18 +58,15 @@ contract BaseContract {
         return false;
     }
 
-    @public
-    address[] getDTrustList() {
+    public address[] getDTrustList() {
         return trustees;
     }
 
-    @public
-    address trustManager() {
+    public address trustManager() {
         return trustManager;
     }
 
-    @public
-    address lockManager() {
+    public address lockManager() {
         return lockManager;
     }
 }

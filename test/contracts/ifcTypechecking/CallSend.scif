@@ -4,8 +4,7 @@ import "../applications/IERC777.scif";
 contract CallSend {
     IERC777 token;
 
-    @private
-    void tokenToEthInput() {
+    private void tokenToEthInput() {
 
 //        send(sender, 0);
         atomic {

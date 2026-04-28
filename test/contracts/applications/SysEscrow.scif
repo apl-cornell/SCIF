@@ -27,7 +27,7 @@ contract SysEscrow {
         super();
     }
 
-    @public void createEscrow(
+    public void createEscrow(
       /**
        * Create a new escrow and add it to `escrows`.
        * _tradeHash is created by hashing _tradeID, _seller, _buyer, _value and _fee variables. These variables must be supplied on future contract calls.
@@ -46,7 +46,7 @@ contract SysEscrow {
         }
     }
 
-    @public void setArbitrator{this}( address _newArbitrator ) {
+    public void setArbitrator{this}( address _newArbitrator ) {
         /**
          * Set the arbitrator to a new address. Only the owner can call this.
          * @param address _newArbitrator
@@ -54,8 +54,7 @@ contract SysEscrow {
         arbitrator = _newArbitrator;
     }
 
-    @public
-    void cancelEscrow(
+    public void cancelEscrow(
       /**
        * Cancel escrow. Return money to buyer
        */
@@ -84,8 +83,7 @@ contract SysEscrow {
         delete escrows[_tradeHash];
     }
 
-    @public
-    void approveEscrow(
+    public void approveEscrow(
       /**
        * Approve escrow.
        */
@@ -100,8 +98,7 @@ contract SysEscrow {
         currentEscrow.buyerApprovedTheTransaction = true;
     }
 
-    @public
-    void releaseEscrow(
+    public void releaseEscrow(
       /**
        * Release escrow. Send money to seller
        */
@@ -131,8 +128,7 @@ contract SysEscrow {
 
     }
 
-    @private
-    bool isExistsEscrow(
+    private bool isExistsEscrow(
       uint _tradeHash, // The unique ID of the trade
       address _seller, // The selling party of the trade
       address _buyer, // The buying party of the trade

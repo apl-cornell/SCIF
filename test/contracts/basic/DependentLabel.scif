@@ -20,20 +20,16 @@ contract DependentLabel {
         owner = theOwner;
     }
 
-    @public
-    void setOwner{this}(address{this} newOwner) {
+    public void setOwner{this}(address{this} newOwner) {
         uint{newOwner} x;
         setTrust(newOwner);
         revokeTrust(owner);
         owner = newOwner;
     }
 
-    @public
-    void setV1{owner}(uint v) { v1 = v; }
+    public void setV1{owner}(uint v) { v1 = v; }
 
-    @public
-    void setV2{this}(uint v) { v2 = v; }
+    public void setV2{this}(uint v) { v2 = v; }
 
-    @public
-    void setV1toV2{this}() { v1 = v2; }
+    public void setV1toV2{this}() { v1 = v2; }
 }

@@ -2,7 +2,7 @@ import "import2.scif";
 import "import3.scif";
 
 interface B {
-    @public void bar{sender->sender;this}();
+    public void bar{sender->sender;this}();
 }
 
 contract A {
@@ -12,19 +12,19 @@ contract A {
 	E eddr;
     constructor() { super(); }
 
-    @public void fooB() {
+    public void fooB() {
         addr.bar();
     }
 
-	@public void fooC() {
+	public void fooC() {
     	cddr.car();
     }
 
-	@public void fooD() {
+	public void fooD() {
     	dddr.dar();
     }
 
-	@public void fooE() {
+	public void fooE() {
     	eddr.ear();
     }
 }

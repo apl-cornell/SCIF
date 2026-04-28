@@ -8,7 +8,7 @@ contract DynamicTest {
     uint{owner} v1;
     uint{owner} v2;
 
-//    @public
+//    public
 //    bool setOwner{msg.sender -> this}(address _newOwner) {
 //        if (msg.sender => owner) {
 //            address newOwner = endorse(_newOwner, * -> this);
@@ -24,24 +24,19 @@ contract DynamicTest {
         owner = theOwner;
     }
 
-    @public
-    void setOwner{owner}(address newOwner) {
+    public void setOwner{owner}(address newOwner) {
         setTrust(newOwner);
         revokeTrust(owner);
         owner = newOwner;
     }
 
-    @public
-    void setV1{owner}(uint v) { v1 = v; }
+    public void setV1{owner}(uint v) { v1 = v; }
 
-    @public
-    void setV2{owner}(uint v) { v2 = v; }
+    public void setV2{owner}(uint v) { v2 = v; }
 
-    @public
-    void setV1toV2{owner}() { v1 = v2; }
+    public void setV1toV2{owner}() { v1 = v2; }
 
-    @public
-    bool withdraw{this}(uint amount) {
+    public bool withdraw{this}(uint amount) {
         if (amount <= this.balance) {
             send(msg.sender, amount);
             return true;

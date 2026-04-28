@@ -1,8 +1,7 @@
 contract SharedWallet {
     map(address, map(address, uint)) balances;
 
-    @public
-    void deposit{userA ⨆ userB -> this}(final address userA, final address userB) {
+    public void deposit{userA ⨆ userB -> this}(final address userA, final address userB) {
         // trusts(this, A) and trusts(this, B) or
         // bypassLocks(A join B)
         // bypassLocks(A) and bLs(B) C locked
@@ -11,8 +10,7 @@ contract SharedWallet {
         }
     }
 
-    @public
-    bool{userA ⨅ userB} transfer{userA ⨅ userB -> this; any}
+    public bool{userA ⨅ userB} transfer{userA ⨅ userB -> this; any}
         (final address userA, final address userB, address recipient, uint amount) {
         endorse([from, to, recipient, amount], userA ⨅ userB -> this)
         when (balances[from][to] >= amount) {

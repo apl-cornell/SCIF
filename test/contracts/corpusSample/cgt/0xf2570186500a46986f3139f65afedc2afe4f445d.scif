@@ -5,8 +5,7 @@ contract RealOldFuckMaker {
 
 	constructor() { super(); }
 
-	@public 
-	void makeOldFucks(uint _number) {
+	public  void makeOldFucks(uint _number) {
 		uint number = endorse(_number, any -> this);
 		uint i;
 		while (i < number) {

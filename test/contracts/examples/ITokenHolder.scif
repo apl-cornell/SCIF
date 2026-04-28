@@ -1,6 +1,4 @@
 interface ITokenHolder {
-    @public
-    bool confirmSent{this; any}(address to, uint amount);
-    @public
-    bool confirmReceived{this; any}(address from, uint amount);
+    public bool confirmSent{this; any}(address to, uint amount);
+    public bool confirmReceived{this; any}(address from, uint amount);
 }

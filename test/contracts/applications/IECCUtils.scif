@@ -21,11 +21,11 @@ interface IECCUtils {
         address toContract;
         bytes args;
     }
-    @public bool verifySig{this}(Header{any} header, bytes{any} sigList, address[]{any} keepers, uint{any} m);
-    @public address verifyPubkey{this}(address[]{any} keepers);
-    @public bytes encodeParam{this}(uint{any} paramTxHash, address{any} _this, address{any} _sender, uint{any} toChainId, address{any} toContract, bytes{any} txData);
-    @public uint keccak256{this}(bytes{any} data);
-    @public uint merkleProveValue{this}(bytes{any} proof, uint{any} root);
-    @public ToMerkleValue merkleProve{this}(bytes{any} proof, uint{any} root);
-    @public uint getHeaderHash{this}(Header{any} header);
+    public bool verifySig{this}(Header{any} header, bytes{any} sigList, address[]{any} keepers, uint{any} m);
+    public address verifyPubkey{this}(address[]{any} keepers);
+    public bytes encodeParam{this}(uint{any} paramTxHash, address{any} _this, address{any} _sender, uint{any} toChainId, address{any} toContract, bytes{any} txData);
+    public uint keccak256{this}(bytes{any} data);
+    public uint merkleProveValue{this}(bytes{any} proof, uint{any} root);
+    public ToMerkleValue merkleProve{this}(bytes{any} proof, uint{any} root);
+    public uint getHeaderHash{this}(Header{any} header);
 }

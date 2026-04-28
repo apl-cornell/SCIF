@@ -29,8 +29,7 @@ contract Wallet extends BaseContract {
     }
 
     // {msg.sender -> this; BOT} (t{BOT} name) return {value: this; end_pc: this}
-    @public
-    void withdraw(uint amount) throws (balanceNotEnough, transferFailure) {
+    public void withdraw(uint amount) throws (balanceNotEnough, transferFailure) {
 
         endorse(amount, msg.sender, msg.sender -> this)
         when (balances[msg.sender] >= amount) {
@@ -47,8 +46,7 @@ contract Wallet extends BaseContract {
         }
     }
 
-    @public
-    void withdraw2(uint amount) throws (balanceNotEnough, transferFailure) {
+    public void withdraw2(uint amount) throws (balanceNotEnough, transferFailure) {
 
         endorse(amount, msg.sender, msg.sender -> this) when (balances[msg.sender] >= amount) {
             if (msg.sender => this) {
@@ -73,9 +71,7 @@ contract Wallet extends BaseContract {
         }
     }
 
-    @public
-    @payable
-    void deposit() {
+    public payable void deposit() {
         endorse(msg.value, msg.sender, BOT -> this) {
             balances[msg.sender] += msg.value;
         }

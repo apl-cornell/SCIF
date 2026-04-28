@@ -11,8 +11,7 @@ contract Wallet {
 //        // ...
 //    }
     constructor() { super(); }
-    @public
-    void withdraw(uint _amount) throws (balanceNotEnough, transferFailure) {
+    public void withdraw(uint _amount) throws (balanceNotEnough, transferFailure) {
         uint amount = endorse(_amount, any -> this);
         if (balances[sender] >= amount) {
             lock(this) {
@@ -28,8 +27,7 @@ contract Wallet {
         }
     }
 
-    @public
-    void deposit() {
+    public void deposit() {
         balances[sender] = balances[sender] + value;
     }
 }

@@ -1,15 +1,15 @@
 interface IERC20 {
     exception ERC20InsufficientBalance(address owner, uint cur, uint needed);
     exception ERC20InsufficientAllowance(address owner, uint cur, uint needed);
-    @public uint balanceOf(address account);
-    @public void approve{sender}(address allowed, uint amount);
-    @public void approveFrom{from}(final address from, address spender, uint val);
-    @public void transfer{from -> this}(final address from, address to, uint amount) throws (ERC20InsufficientBalance{this});
-    @public void transferFrom{sender -> from; sender}(final address from, address to, uint amount) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this});
+    public uint balanceOf(address account);
+    public void approve{sender}(address allowed, uint amount);
+    public void approveFrom{from}(final address from, address spender, uint val);
+    public void transfer{from -> this}(final address from, address to, uint amount) throws (ERC20InsufficientBalance{this});
+    public void transferFrom{sender -> from; sender}(final address from, address to, uint amount) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this});
 }
 
 interface IExchange {
-    @public void exchange{user -> this}(
+    public void exchange{user -> this}(
         final address user,
         IERC20{user} tokenIn, IERC20{user} tokenOut, uint{user} amount
         );
@@ -22,7 +22,7 @@ contract Dexible {
 
     constructor() { super(); }
 
-    @public void swap{sender}(IERC20 tokenIn, IERC20 tokenOut, IExchange router, uint amount)
+    public void swap{sender}(IERC20 tokenIn, IERC20 tokenOut, IExchange router, uint amount)
         throws (FailedSwap) {
         emit Swap(tokenIn, tokenOut, router, amount);
         atomic {
@@ -33,7 +33,7 @@ contract Dexible {
         }
     }
 
-    @public void multiSwap{sender}(IERC20[] tokens, IExchange[] routers, uint[] amounts)
+    public void multiSwap{sender}(IERC20[] tokens, IExchange[] routers, uint[] amounts)
         throws (FailedSwap) {
         atomic {
             uint{sender} i = 0;

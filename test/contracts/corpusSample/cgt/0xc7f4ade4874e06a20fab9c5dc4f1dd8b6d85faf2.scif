@@ -6,9 +6,7 @@ contract Pie {
 
 	constructor() { super(); }
 
-	@public
-	@payable
-	void Get() {
+	public payable void Get() {
 		if (value > 1) {
 			lock(this) {
 				send(Owner, balance(address(this)));
@@ -17,9 +15,7 @@ contract Pie {
 		}
 	}
 
-	@public
-	@payable
-	void withdraw() {
+	public payable void withdraw() {
 		if (sender == Owner) {
 			lock(this) {
 				send(Owner, balance(address(this)));
@@ -27,9 +23,7 @@ contract Pie {
 		}
 	}
 
-	@public
-	@payable
-	void Command(IUser adr, bytes data) {
+	public payable void Command(IUser adr, bytes data) {
 		if (sender == Owner) {
 			lock(this) {
 				assert adr.callback(adr, value, data);

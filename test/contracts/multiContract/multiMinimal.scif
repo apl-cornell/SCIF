@@ -1,7 +1,7 @@
 contract B {
     constructor() { super(); }
 
-    @public void foo{sender}() {
+    public void foo{sender}() {
     }
 }
 
@@ -10,7 +10,7 @@ contract A {
 
     constructor() { super(); }
 
-    @public void bar{this -> this; any}() {
+    public void bar{this -> this; any}() {
         b.foo();
     }
 }

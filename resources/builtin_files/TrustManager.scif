@@ -4,13 +4,10 @@ interface TrustManager {
         True: a trusts b.
         False: not sure
     */
-    @public
-    bool trusts(address a, address b);
-    // @public
+    public bool trusts(address a, address b);
+    // public
     // bool trustsWithProof(address a, address b, address[] proof);
 
-    @public
-    bool addTrust(address trustee);
-    @public
-    bool revokeTrust(address trustee);
+    public bool addTrust(address trustee);
+    public bool revokeTrust(address trustee);
 }

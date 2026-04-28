@@ -7,7 +7,7 @@ contract StructEx {
     s0 a;
 
     constructor() { super(); }
-    @public void init(s0 b) {
+    public void init(s0 b) {
         a = endorse(b, sender->this);
     }
 }

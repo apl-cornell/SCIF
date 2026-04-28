@@ -6,7 +6,7 @@ contract Dexible {
 
     constructor() { super(); }
 
-    @public void swap(IERC20 tokenIn, IERC20 tokenOut, final IExchange router, uint amount)
+    public void swap(IERC20 tokenIn, IERC20 tokenOut, final IExchange router, uint amount)
         throws (FailedSwap) {
         atomic {
             tokenIn.approveFrom(sender, router, amount);
@@ -17,7 +17,7 @@ contract Dexible {
         }
     }
 
-    @public void multiSwap(IERC20[] tokens, IExchange[] routers, uint[] amounts)
+    public void multiSwap(IERC20[] tokens, IExchange[] routers, uint[] amounts)
         throws (FailedSwap) {
         atomic {
             uint i = 0;

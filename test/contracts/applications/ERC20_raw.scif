@@ -15,57 +15,57 @@ contract ERC20 {
         super();
     }
 
-    @public bytes name() {
+    public bytes name() {
         return _name;
     }
 
-    @public bytes symbol() {
+    public bytes symbol() {
         return _symbol;
     }
 
-    @public uint decimals() {
+    public uint decimals() {
         return 18;
     }
 
-    @public uint totalSupply() {
+    public uint totalSupply() {
         return _totalSupply;
     }
 
-    @public uint balanceOf(address account) {
+    public uint balanceOf(address account) {
         return _balances[account];
     }
 
-    @public uint burnt() {
+    public uint burnt() {
         return _burnt;
     }
 
-    @public uint allowance(final address owner, address spender) {
+    public uint allowance(final address owner, address spender) {
         return _allowances[owner][spender];
     }
 
-    @public void approve(address spender, uint val) {
+    public void approve(address spender, uint val) {
         _allowances[sender][spender] = val;
     }
 
-    @public void approveFrom(address from, address spender, uint val) {
+    public void approveFrom(address from, address spender, uint val) {
         _allowances[from][spender] = val;
     }
 
-    @public void transfer(address from, address to, uint val) throws (ERC20InsufficientBalance) {
+    public void transfer(address from, address to, uint val) throws (ERC20InsufficientBalance) {
         _transfer(from, to, val);
     }
 
-    @public void transferFrom(address from, address to, uint val) throws (ERC20InsufficientAllowance, ERC20InsufficientBalance) {
+    public void transferFrom(address from, address to, uint val) throws (ERC20InsufficientAllowance, ERC20InsufficientBalance) {
         _spendAllowance(from, sender, val);
         _transfer(from, to, val);
     }
 
-    @public void mint(address account, uint val) {
+    public void mint(address account, uint val) {
         _totalSupply += val;
         _balances[account] += val;
     }
 
-    @public void burn(address account, uint val) throws (ERC20InsufficientBalance) {
+    public void burn(address account, uint val) throws (ERC20InsufficientBalance) {
         if (_balances[account] < val) {
             throw ERC20InsufficientBalance(account, _balances[account], val);
         }

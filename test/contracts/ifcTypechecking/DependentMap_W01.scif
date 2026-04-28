@@ -5,8 +5,7 @@ contract DependentMap {
 
     constructor() { super(); }
 
-    @public
-    void foo(uint{any} amount) {
+    public void foo(uint{any} amount) {
         balances[sender] = amount;
     }
 }

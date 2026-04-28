@@ -8,18 +8,15 @@ contract LocalTrust {
     uint{high} highValue;
     uint{low} lowValue;
 
-    @public
-    void setHigh{high (join this)}(uint v) {
+    public void setHigh{high (join this)}(uint v) {
         highValue = v;
     }
 
-    @public
-    void foo() {
+    public void foo() {
         setHigh(0);
     }
 
-    @public
-    void setLow{low}(uint v) {
+    public void setLow{low}(uint v) {
         lowValue = v;
     }
 }

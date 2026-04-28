@@ -3,9 +3,7 @@ contract Lotto {
 
 	constructor() { super(); }
 
-	@public
-	@payable
-	void receive() {
+	public payable void receive() {
 		uint _value = value - (value % ticketPrice)
 		if (_value != 0) {
 			if (_value < value) {

@@ -5,8 +5,7 @@ contract Wallet {
 
     constructor() { super(); }
 
-    @public
-    void withdraw{any -> this; this}(uint _amount) throws (balanceNotEnough, transferFailure) {
+    public void withdraw{any -> this; this}(uint _amount) throws (balanceNotEnough, transferFailure) {
         uint amount = endorse(_amount, any -> this);
         if (balances[sender] >= amount) {
             atomic {
@@ -23,9 +22,7 @@ contract Wallet {
         }
     }
 
-    @public
-    @payable
-    void deposit() {
+    public payable void deposit() {
         balances[sender] = balances[sender] + value;
     }
 }

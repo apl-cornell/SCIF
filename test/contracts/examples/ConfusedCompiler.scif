@@ -1,9 +1,7 @@
 contract CompilerService {
     final LogContract logContract;
 
-    @public
-    @payable
-    void compile{any->this;any}(bytes code, final Updatable1 targetContract) {
+    public payable void compile{any->this;any}(bytes code, final Updatable1 targetContract) {
         //endorse(code, any -> this) in {
             bytes binary, log;
             binary, log = runCompile(code);

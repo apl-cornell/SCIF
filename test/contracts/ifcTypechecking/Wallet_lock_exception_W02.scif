@@ -7,8 +7,7 @@ contract Wallet {
 //     *  msg.sender: address{msg.sender}
 //     *  amount: uint{msg.sender}
 //     *
-    @public
-    void withdraw{any -> this; this}(uint _amount) {
+    public void withdraw{any -> this; this}(uint _amount) {
         uint amount = endorse(_amount, any -> this);
         send(sender, amount);
         _amount = 1;

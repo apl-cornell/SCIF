@@ -1,6 +1,5 @@
 interface IUser {
-    @public
-    bool callback{this}(
+    public bool callback{this}(
         final address{user} user,
         uint val,
         bytes{user} args);

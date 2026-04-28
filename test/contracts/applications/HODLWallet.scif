@@ -11,7 +11,7 @@ contract HODLWallet {
         super();
     }
 
-    @public void doWithdraw{from -> this}(final address from, address to, uint amount) {
+    public void doWithdraw{from -> this}(final address from, address to, uint amount) {
         endorse([from, to, amount], from -> this)
         when (amount <= MAX_WITHDRAWAL && balances[from] >= amount && withdrawalCount[from] < 3) {
             unchecked {
@@ -26,7 +26,7 @@ contract HODLWallet {
         }
     }
 
-    @public void doDeposit(address to) {
+    public void doDeposit(address to) {
         endorse([to, value], sender -> this)
         when (value > 0) {
             unchecked {
@@ -37,7 +37,7 @@ contract HODLWallet {
         }
     }
 
-    @public void withdrawForTo{sender -> from; sender}(final address from, address to, uint amount) {
+    public void withdrawForTo{sender -> from; sender}(final address from, address to, uint amount) {
         endorse([from, to, amount], sender -> from)
         when (approvals[from][sender]) {
             doWithdraw(from, to, amount);
@@ -46,7 +46,7 @@ contract HODLWallet {
         }
     }
 
-    @public void approve{sender}(address toApprove) {
+    public void approve{sender}(address toApprove) {
         // in case you want to do your business from other addresses
 
         assert (balances[sender] > 0);
@@ -54,7 +54,7 @@ contract HODLWallet {
         approvals[sender][toApprove] = true;
     }
 
-    @public void unapprove{sender}(address toUnapprove) {
+    public void unapprove{sender}(address toUnapprove) {
         // in case trusting that address was a bad idea
 
         assert (balances[sender] > 0);
@@ -62,11 +62,11 @@ contract HODLWallet {
         approvals[sender][toUnapprove] = false;
     }
 
-    @public uint getBalance(address toCheck) {
+    public uint getBalance(address toCheck) {
         return balances[toCheck];
     }
 
-    @public void addBalance{this}(address addr, uint _balance) {
+    public void addBalance{this}(address addr, uint _balance) {
         // in case more idio^H^H^H^HHODLers want to join
 
         balances[addr] = _balance;

@@ -4,7 +4,6 @@ contract Constructor {
         super();
     }
 
-    @public
-    void foo() {
+    public void foo() {
     }
 }

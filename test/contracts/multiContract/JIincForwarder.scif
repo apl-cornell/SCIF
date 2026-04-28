@@ -1,5 +1,5 @@
 interface JIincInterfaceForForwarder {
-	@public @payable bool deposit {addr} (final address addr);
+	public payable bool deposit {addr} (final address addr);
 }
 
 contract JIincForwarder {
@@ -7,17 +7,13 @@ contract JIincForwarder {
 	bool needsBank_;
 	constructor() { super(); }
 
-	@public
-	@payable
-	void receive() {
+	public payable void receive() {
 		lock(this) {
 			currentCorpBank_.deposit(currentCorpBank_);
 		}
 	}
 
-	@public
-	@payable
-	void deposit() {
+	public payable void deposit() {
 		if (value > 0 && needsBank_ == false) {
 			lock(this) {
 				assert currentCorpBank_.deposit(sender);

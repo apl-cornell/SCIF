@@ -6,8 +6,7 @@ contract stakin_contract {
 
 	constructor() { super(); }
 
-	@public
-	void AVSTokenDonation (uint amount) {
+	public void AVSTokenDonation (uint amount) {
 		avsAddress.transferFrom(sender, address(this), endorse(amount, any -> sender));
 
 		allAVSTokens += endorse(amount, any -> this);

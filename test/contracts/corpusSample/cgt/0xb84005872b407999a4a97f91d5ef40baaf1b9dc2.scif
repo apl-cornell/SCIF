@@ -5,8 +5,7 @@ contract TestToken {
 
 	constructor() { super(); }
 
-	@public
-	void refund() {
+	public void refund() {
 		uint tokenValue = _balances[sender];
 		
 		if (tokenValue != 0) {

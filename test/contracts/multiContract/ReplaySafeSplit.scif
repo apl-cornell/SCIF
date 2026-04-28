@@ -1,6 +1,5 @@
 interface AmIOnTheFork {
-	@public
-	bool forked();
+	public bool forked();
 }
 
 contract ReplaySafeSplit {
@@ -8,8 +7,7 @@ contract ReplaySafeSplit {
 
 	constructor() { super(); }
 
-	@public
-	bool split(address _targetFork, address _targetNoFork) {
+	public bool split(address _targetFork, address _targetNoFork) {
 		address targetFork = endorse(_targetFork, any -> this);
 		address targetNoFork = endorse(_targetNoFork, any -> this);
 		bool b;

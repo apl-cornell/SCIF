@@ -15,52 +15,52 @@ contract ERC20 {
         super();
     }
 
-    @public bytes name() {
+    public bytes name() {
         return _name;
     }
 
-    @public bytes symbol() {
+    public bytes symbol() {
         return _symbol;
     }
 
-    @public uint decimals() {
+    public uint decimals() {
         return 18;
     }
 
-    @public uint totalSupply() {
+    public uint totalSupply() {
         return _totalSupply;
     }
 
-    @public uint balanceOf(address account) {
+    public uint balanceOf(address account) {
         return _balances[account];
     }
 
-    @public uint burnt() {
+    public uint burnt() {
         return _burnt;
     }
 
-    @public uint allowance(final address owner, address spender) {
+    public uint allowance(final address owner, address spender) {
         return _allowances[owner][spender];
     }
 
-    @public void approve(address spender, uint val) {
+    public void approve(address spender, uint val) {
         address _to = endorse(spender, sender->this);
         uint _val = endorse(val, sender->this);
         _allowances[sender][_to] = _val;
     }
 
-    @public void approveFrom{from->this}(final address from, address spender, uint val) {
+    public void approveFrom{from->this}(final address from, address spender, uint val) {
         address _from = endorse(from, sender->this);
         address _to = endorse(spender, sender->this);
         uint _val = endorse(val, sender->this);
         _allowances[from][spender] = val;
     }
 
-    @public void transfer{from->this}(final address from, address to, uint val) throws (ERC20InsufficientBalance) {
+    public void transfer{from->this}(final address from, address to, uint val) throws (ERC20InsufficientBalance) {
         _transfer(endorse(from, from->this), endorse(to, from->this), endorse(val, from->this));
     }
 
-    @public void transferFrom(address from, address to, uint val) throws (ERC20InsufficientAllowance, ERC20InsufficientBalance) {
+    public void transferFrom(address from, address to, uint val) throws (ERC20InsufficientAllowance, ERC20InsufficientBalance) {
         address _from = endorse(from, sender->this);
         address _to = endorse(to, sender->this);
         uint _val = endorse(val, sender->this);
@@ -68,14 +68,14 @@ contract ERC20 {
         _transfer(_from, _to, _val);
     }
 
-    @public void mint{this}(address account, uint val) {
+    public void mint{this}(address account, uint val) {
         unchecked {
             _totalSupply += val;
             _balances[account] += val;
         }
     }
 
-    @public void burn{this}(address account, uint val) throws (ERC20InsufficientBalance) {
+    public void burn{this}(address account, uint val) throws (ERC20InsufficientBalance) {
         if (_balances[account] < val) {
             throw ERC20InsufficientBalance(account, _balances[account], val);
         }

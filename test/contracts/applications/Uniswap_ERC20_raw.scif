@@ -20,7 +20,7 @@ contract Uniswap {
         decimals = 18;
     }
 
-    @public uint addLiquidity(uint min_liquidity, uint max_tokens, uint deadline) {
+    public uint addLiquidity(uint min_liquidity, uint max_tokens, uint deadline) {
         assert (deadline > now && max_tokens > 0 && value > 0);
         uint total_liquidity = totalSupply;
         if (total_liquidity > 0) {
@@ -63,7 +63,7 @@ contract Uniswap {
         }
     }
 
-    @public void removeLiquidity(uint amount, uint min_eth, uint min_tokens, uint deadline) {
+    public void removeLiquidity(uint amount, uint min_eth, uint min_tokens, uint deadline) {
         assert ((amount > 0 && deadline > now) and (min_eth > 0 && min_tokens > 0));
         uint total_liquidity = totalSupply;
         assert (total_liquidity > 0);
@@ -114,11 +114,11 @@ contract Uniswap {
         return tokens_bought;
     }
 
-    @public uint ethToTokenSwapInput(uint min_tokens, uint deadline) {
+    public uint ethToTokenSwapInput(uint min_tokens, uint deadline) {
         return ethToTokenInput(value, min_tokens, deadline, sender, sender);
     }
 
-    @public uint ethToTokenTransferInput(uint min_tokens, uint deadline, address recipient) {
+    public uint ethToTokenTransferInput(uint min_tokens, uint deadline, address recipient) {
         assert (recipient != address(this) and recipient != address(0));
         return ethToTokenInput(value, min_tokens, deadline, sender, recipient);
     }
@@ -141,11 +141,11 @@ contract Uniswap {
         return eth_sold;
     }
 
-    @public uint ethToTokenSwapOutput(uint tokens_bought, uint deadline) {
+    public uint ethToTokenSwapOutput(uint tokens_bought, uint deadline) {
         return ethToTokenOutput(tokens_bought, value, deadline, sender, sender);
     }
 
-    @public uint ethToTokenTransferOutput(uint tokens_bought, uint deadline, address recipient) {
+    public uint ethToTokenTransferOutput(uint tokens_bought, uint deadline, address recipient) {
         assert (recipient != address(this) && recipient != address(0));
         return ethToTokenOutput(tokens_bought, value, deadline, sender, recipient);
     }
@@ -169,11 +169,11 @@ contract Uniswap {
         return wei_bought;
     }
 
-    @public uint tokenToEthSwapInput(uint tokens_sold, uint min_eth, uint deadline) {
+    public uint tokenToEthSwapInput(uint tokens_sold, uint min_eth, uint deadline) {
         return tokenToEthInput(tokens_sold, min_eth, deadline, sender, sender);
     }
 
-    @public uint tokenToEthTransferInput(uint tokens_sold, uint min_eth, uint deadline, address recipient) {
+    public uint tokenToEthTransferInput(uint tokens_sold, uint min_eth, uint deadline, address recipient) {
         assert (recipient != address(this) and recipient != address(0));
         return tokenToEthInput(tokens_sold, min_eth, deadline, sender, recipient);
     }
@@ -196,11 +196,11 @@ contract Uniswap {
         return tokens_sold;
     }
 
-    @public uint tokenToEthSwapOutput(uint eth_bought, uint max_tokens, uint deadline) {
+    public uint tokenToEthSwapOutput(uint eth_bought, uint max_tokens, uint deadline) {
         return tokenToEthOutput(eth_bought, max_tokens, deadline, sender, sender);
     }
 
-    @public uint tokenToEthTransferOutput(uint eth_bought, uint max_tokens, uint deadline, address recipient) {
+    public uint tokenToEthTransferOutput(uint eth_bought, uint max_tokens, uint deadline, address recipient) {
         assert (recipient != address(this) && recipient != address(0));
         return tokenToEthOutput(eth_bought, max_tokens, deadline, sender, recipient);
     }
@@ -226,12 +226,12 @@ contract Uniswap {
         return tokens_bought;
     }
 
-    @public uint tokenToTokenSwapInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address token_addr) {
+    public uint tokenToTokenSwapInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address token_addr) {
         address exchange_addr = token_to_exchange[token_addr];
         return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, sender, exchange_addr);
     }
 
-    @public uint tokenToTokenTransferInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address recipient, address token_addr) {
+    public uint tokenToTokenTransferInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address recipient, address token_addr) {
         address exchange_addr = token_to_exchange[token_addr];
         return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, recipient, exchange_addr);
     }
@@ -257,94 +257,94 @@ contract Uniswap {
         return tokens_sold;
     }
 
-    @public uint tokenToTokenSwapOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address token_addr) {
+    public uint tokenToTokenSwapOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address token_addr) {
         address exchange_addr = token_to_exchange[token_addr];
         return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, sender, exchange_addr);
     }
 
-    @public uint tokenToTokenTransferOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address recipient, address token_addr) {
+    public uint tokenToTokenTransferOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address recipient, address token_addr) {
         address exchange_addr = token_to_exchange[token_addr];
         return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, recipient, exchange_addr);
     }
 
-    @public uint tokenToExchangeSwapInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address exchange_addr) {
+    public uint tokenToExchangeSwapInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address exchange_addr) {
         return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, sender, exchange_addr);
     }
 
-    @public uint tokenToExchangeTransferInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address recipient, address exchange_addr) {
+    public uint tokenToExchangeTransferInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address recipient, address exchange_addr) {
         assert (recipient != address(this));
         return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, recipient, exchange_addr);
     }
 
-    @public uint tokenToExchangeSwapOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address exchange_addr) {
+    public uint tokenToExchangeSwapOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address exchange_addr) {
         return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, sender, exchange_addr);
     }
 
-    @public uint tokenToExchangeTransferOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address recipient, address exchange_addr) {
+    public uint tokenToExchangeTransferOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address recipient, address exchange_addr) {
         assert (recipient != address(this));
         return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, recipient, exchange_addr);
     }
 
-    @public uint getEthToTokenInputPrice(uint eth_sold) {
+    public uint getEthToTokenInputPrice(uint eth_sold) {
         assert (eth_sold > 0);
         uint token_reserve = token.balanceOf(address(this));
         return getInputPrice(eth_sold, balance(address(this)), token_reserve);
     }
 
-    @public uint getEthToTokenOutputPrice(uint tokens_bought) {
+    public uint getEthToTokenOutputPrice(uint tokens_bought) {
         assert (tokens_bought > 0);
         uint token_reserve = token.balanceOf(address(this));
         uint eth_sold = getOutputPrice(tokens_bought, balance(address(this)), token_reserve);
         return eth_sold;
     }
 
-    @public uint getTokenToEthInputPrice(uint tokens_sold) {
+    public uint getTokenToEthInputPrice(uint tokens_sold) {
         assert (tokens_sold > 0);
         uint token_reserve = token.balanceOf(address(this));
         uint eth_bought = getInputPrice(tokens_sold, token_reserve, balance(address(this)));
         return eth_bought;
     }
 
-    @public uint getTokenToEthOutputPrice(uint eth_bought) {
+    public uint getTokenToEthOutputPrice(uint eth_bought) {
         assert (eth_bought > 0);
         uint token_reserve = token.balanceOf(address(this));
         return getOutputPrice(eth_bought, token_reserve, balance(address(this)));
     }
 
-    @public address tokenAddress() {
+    public address tokenAddress() {
         return address(token);
     }
 
 
 //# @return Address of factory that created this exchange.
-//@public
+//public
 //@constant
 //def factoryAddress() -> address(Factory):
 //    return self.factory
 
-//    @public uint balanceOf(address _owner) {
+//    public uint balanceOf(address _owner) {
 //        return balances[_owner];
 //    }
 //
-//    @public bool transfer(address _to, uint _value) {
+//    public bool transfer(address _to, uint _value) {
 //        balances[sender] -= _value;
 //        balances[_to] += _value;
 //        return true;
 //    }
 //
-//    @public bool transferFrom(address _from, address _to, uint _value) {
+//    public bool transferFrom(address _from, address _to, uint _value) {
 //        balances[_from] -= _value;
 //        balances[_to] += _value;
 //        allowances[_from][sender] -= _value;
 //        return true;
 //    }
 //
-//    @public bool approve(address _spender, uint _value) {
+//    public bool approve(address _spender, uint _value) {
 //        allowances[sender][_spender] = _value;
 //        return true;
 //    }
 //
-//    @public uint allowance(address _owner, address _spender) {
+//    public uint allowance(address _owner, address _spender) {
 //        return allowances[_owner][_spender];
 //    }
 

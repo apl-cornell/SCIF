@@ -3,9 +3,7 @@ import "../basic/EmptyContract2.scif";
 contract DeployToken {
     EmptyContract2 token;
     constructor() { super(); }
-    @public
-    @native
-    bool{any} deploy() {
+    public native bool{any} deploy() {
         token = new EmptyContract2();
         return token.trusts(address(token), address(this));
     }

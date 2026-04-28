@@ -13,8 +13,7 @@ contract TownCrier {
         FEE = _FEE;
     }
 
-    @public
-    void request(address _callback) throw NotEnoughPayment() {
+    public void request(address _callback) throw NotEnoughPayment() {
         endorse(sender, _callback, BOT => this) when (value >= FEE) {
             requester = sender;
             callback = _callback;
@@ -23,8 +22,7 @@ contract TownCrier {
         }
     }
 
-    @public
-    void deliver{this; any}(bytes data) throws (NoPendingRequest) {
+    public void deliver{this; any}(bytes data) throws (NoPendingRequest) {
         if (requester == 0) {
             throw NoPendingRequest();
         }

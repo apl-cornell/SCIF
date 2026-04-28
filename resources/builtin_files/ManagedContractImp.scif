@@ -9,15 +9,13 @@ contract ManagedContractImp implements ManagedContract {
         addTrust(sender);
     }
 
-    @public
-    bool addTrust{this}(address trustee) {
+    public bool addTrust{this}(address trustee) {
         trustees.push(trustee);
         trusteeIndex[trustee] = trustees.length();
         return true;
     }
 
-    @public
-    bool revokeTrust{this}(address trustee) {
+    public bool revokeTrust{this}(address trustee) {
         if (trustees.length() <= 1) {
             return false;
         }
@@ -30,9 +28,7 @@ contract ManagedContractImp implements ManagedContract {
         return true;
     }
 
-    @public
-    @native
-    bool trusts(address a, address b) {
+    public native bool trusts(address a, address b) {
         if (a == b || b == address(this)) {
             return true;
         }
@@ -49,9 +45,7 @@ contract ManagedContractImp implements ManagedContract {
         return false;
     }
 
-    @private
-    @native
-    bool bypassLocks(address from) {
+    private native bool bypassLocks(address from) {
         if (m_lock) {
             return trusts(address(this), from);
         } else {
@@ -59,9 +53,7 @@ contract ManagedContractImp implements ManagedContract {
         }
     }
 
-    @private
-    @native
-    bool acquireLock(address l) {
+    private native bool acquireLock(address l) {
         if (trusts(address(this), l)) {
             m_lock = true;
             return true;
@@ -70,9 +62,7 @@ contract ManagedContractImp implements ManagedContract {
         }
     }
 
-    @private
-    @native
-    bool releaseLock(address l) {
+    private native bool releaseLock(address l) {
         if (trusts(address(this), l)) {
             m_lock = false;
             return true;

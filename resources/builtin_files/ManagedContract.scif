@@ -3,8 +3,6 @@ import "./TrustManager.scif";
 import "./Contract.scif";
 
 interface ManagedContract extends Contract {
-    @public
-    bool addTrust{this}(address trustee);
-    @public
-    bool revokeTrust{this}(address trustee);
+    public bool addTrust{this}(address trustee);
+    public bool revokeTrust{this}(address trustee);
 }

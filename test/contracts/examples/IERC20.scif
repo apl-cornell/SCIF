@@ -1,8 +1,5 @@
 interface IERC20 {
-    @public
-    void approve{sender}(address allowed, uint amount);
-    @public
-    bool{this} transfer{from -> this}(final address from, address to, uint amount);
-    @public
-    bool{from} transferAllowed{sender->from; any}(final address from, address to, uint amount);
+    public void approve{sender}(address allowed, uint amount);
+    public bool{this} transfer{from -> this}(final address from, address to, uint amount);
+    public bool{from} transferAllowed{sender->from; any}(final address from, address to, uint amount);
 }

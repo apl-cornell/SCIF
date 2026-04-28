@@ -6,7 +6,7 @@ contract KoET {
 
 
     // Claim the throne for the given name by paying the currentClaimFee.
-    @public void claimThrone{sender->this;any}() {
+    public void claimThrone{sender->this;any}() {
         // If they paid too little, reject claim and refund their money.
         if (true) {
             send(sender, 0);

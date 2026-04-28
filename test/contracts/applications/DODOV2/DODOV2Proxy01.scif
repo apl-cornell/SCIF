@@ -12,9 +12,7 @@ contract DODOV2Proxy01 {
         DODO_APPROVE = endorse(dodoApprove, sender -> this);
     }
 
-    @payable
-    @public
-    uint externalSwap{sender->this}(
+    payable public uint externalSwap{sender->this}(
         IERC20 fromToken,
         IERC20 toToken,
         final address approveTarget,

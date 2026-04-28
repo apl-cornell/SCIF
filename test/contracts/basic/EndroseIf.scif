@@ -2,13 +2,12 @@ contract EndorseIf {
     uint num;
 
     constructor() { super(); }
-    @public
-    bool transfer(address to, uint amount) {
+    public bool transfer(address to, uint amount) {
         endorse([to, amount], any -> this) when (amount > 0) {
             num = amount;
         }
     }
-//    @public
+//    public
 //    bool transfer2(address to, uint amount) {
 //        endorse([to, amount], any -> this) {
 //            num = amount;

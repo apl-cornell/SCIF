@@ -1,7 +1,6 @@
 contract FinalVar {
     constructor() { super(); }
-    @public
-    void foo() {
+    public void foo() {
         final uint a;
     }
 }

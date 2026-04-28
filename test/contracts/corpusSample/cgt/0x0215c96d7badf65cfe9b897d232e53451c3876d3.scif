@@ -10,9 +10,7 @@ contract PrayerCoin {
 
 	constructor() { super(); }
 
-	@public
-	@payable
-	void receive() {
+	public payable void receive() {
 		if (acceptingDonations == true && value != 0) {
 			lock(this){
 				send(god, value);

@@ -69,12 +69,12 @@ contract KoET {
         ), sender->this);
     }
 
-    @public uint numberOfMonarchs() {
+    public uint numberOfMonarchs() {
         return pastMonarchs.length();
     }
 
     // Claim the throne for the given name by paying the currentClaimFee.
-    @public void claimThrone{sender->this;any}(bytes name) {
+    public void claimThrone{sender->this;any}(bytes name) {
 
         uint valuePaid = value;
 
@@ -155,12 +155,12 @@ contract KoET {
     }
 
     // Used only by the wizard to collect his commission.
-    @public void sweepCommission{this;any}(uint amount) {
+    public void sweepCommission{this;any}(uint amount) {
         send(wizardAddress, amount);
     }
 
     // Used only by the wizard to collect his commission.
-    @public void setNewWizard{this}(address newWizard) {
+    public void setNewWizard{this}(address newWizard) {
         wizardAddress = newWizard;
     }
 

@@ -16,8 +16,7 @@ contract x15 {
 
 	constructor() { super(); }
 
-	@public 
-	void enter() {
+	public  void enter() {
 		if (value < 30) {
 			lock(this) {
 				send(kappa, value);

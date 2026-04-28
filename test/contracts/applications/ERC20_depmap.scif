@@ -17,39 +17,39 @@ contract ERC20 implements IERC20 {
         super();
     }
 
-    @public bytes name() {
+    public bytes name() {
         return _name;
     }
 
-    @public bytes symbol() {
+    public bytes symbol() {
         return _symbol;
     }
 
-    @public uint decimals() {
+    public uint decimals() {
         return 18;
     }
 
-    @public uint totalSupply() {
+    public uint totalSupply() {
         return _totalSupply;
     }
 
-    @public uint balanceOf(address account) {
+    public uint balanceOf(address account) {
         return _balances[account];
     }
 
-    @public uint burnt() {
+    public uint burnt() {
         return _burnt;
     }
 
-    @public void approve{sender}(address spender, uint val) {
+    public void approve{sender}(address spender, uint val) {
         _allowances[sender][spender] = val;
     }
 
-    @public void approveFrom{from}(final address from, address spender, uint val) {
+    public void approveFrom{from}(final address from, address spender, uint val) {
         _allowances[from][spender] = val;
     }
 
-    @public void transfer{from -> this}(final address from, address to, uint val) throws (ERC20InsufficientBalance{this}) {
+    public void transfer{from -> this}(final address from, address to, uint val) throws (ERC20InsufficientBalance{this}) {
         endorse([from, to, val], from -> this)
         when (_balances[from] >= val) {
             // unchecked {
@@ -61,11 +61,11 @@ contract ERC20 implements IERC20 {
         }
     }
 
-    @public uint{owner} allowance(final address owner, final address spender) {
+    public uint{owner} allowance(final address owner, final address spender) {
         return _allowances[owner][spender];
     }
 
-    @public void transferFrom{sender -> from; sender}(final address from, address to, uint val) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this}) {
+    public void transferFrom{sender -> from; sender}(final address from, address to, uint val) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this}) {
         endorse([from, to, val], sender -> from)
         when (_allowances[from][sender] >= val) {
             transfer(from, to, val);

@@ -1,6 +1,6 @@
 contract Bug {
     constructor() { super(); }
 
-    @public void foo{this -> this; this}() {
+    public void foo{this -> this; this}() {
     }
 }

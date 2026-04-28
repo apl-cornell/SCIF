@@ -15,39 +15,39 @@ contract ERC20 {
         super();
     }
 
-    @public bytes name() {
+    public bytes name() {
         return _name;
     }
 
-    @public bytes symbol() {
+    public bytes symbol() {
         return _symbol;
     }
 
-    @public uint decimals() {
+    public uint decimals() {
         return 18;
     }
 
-    @public uint totalSupply() {
+    public uint totalSupply() {
         return _totalSupply;
     }
 
-    @public uint balanceOf(address account) {
+    public uint balanceOf(address account) {
         return _balances[account];
     }
 
-    @public uint burnt() {
+    public uint burnt() {
         return _burnt;
     }
 
-    @public void transfer(address to, uint val) throws (ERC20InsufficientBalance) {
+    public void transfer(address to, uint val) throws (ERC20InsufficientBalance) {
         _transfer(sender, to, val);
     }
 
-    @public uint allowance(address owner, address spender) {
+    public uint allowance(address owner, address spender) {
         return _allowances[owner][spender];
     }
 
-    @public void transferFrom(address from, address to, uint val) throws (ERC20InsufficientAllowance, ERC20InsufficientBalance) {
+    public void transferFrom(address from, address to, uint val) throws (ERC20InsufficientAllowance, ERC20InsufficientBalance) {
         _spendAllowance(from, sender, val);
         _transfer(from, to, val);
     }

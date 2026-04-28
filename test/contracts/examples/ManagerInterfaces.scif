@@ -3,8 +3,7 @@
 **/
 interface TrustManager {
     exception NotUser;
-    @public
-    bool register();
+    public bool register();
     /**
         if a trusts b.
         Checks: this is a's manager. Throw E otherwise.
@@ -12,32 +11,24 @@ interface TrustManager {
         False: a doesn't trust b
         E: not sure
     */
-    @public
-    bool ifTrust(address a, address b) throws (NotUser);
+    public bool ifTrust(address a, address b) throws (NotUser);
 
-    @public
-    bool ifTrust(address a, address b, address[] proof) throws (NotUser);
+    public bool ifTrust(address a, address b, address[] proof) throws (NotUser);
 
     /**
         Set that the sender trusts trustee.
     */
-    @public
-    void setTrust(address trustee) throws (NotUser);
+    public void setTrust(address trustee) throws (NotUser);
 
-    @public
-    void revokeTrust(address trustee) throws (NotUser);
+    public void revokeTrust(address trustee) throws (NotUser);
 }
 
 interface LockManager {
-    @public
-    bool register();
+    public bool register();
 
-    @public
-    bool lock(address l);
+    public bool lock(address l);
 
-    @public
-    bool unlock(address l);
+    public bool unlock(address l);
 
-    @public
-    bool ifLocked(address l);
+    public bool ifLocked(address l);
 }

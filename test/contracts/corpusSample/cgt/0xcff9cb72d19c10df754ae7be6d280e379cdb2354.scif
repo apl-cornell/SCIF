@@ -13,8 +13,7 @@ contract quick {
 
 	constructor() { super(); }
 
-	@private
-	void enter() {
+	private void enter() {
 		if (value < 1) {
 			send(sender, value);
 			return;

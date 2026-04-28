@@ -4,8 +4,7 @@ import "./IExchange.scif";
 contract Dexible {
     exception FailedSwap();
     constructor() { super(); }
-    @public
-    void swap(IERC20 tokenIn, IERC20 tokenOut, final IExchange router, uint amount)
+    public void swap(IERC20 tokenIn, IERC20 tokenOut, final IExchange router, uint amount)
         throws (FailedSwap) {
         atomic {
             tokenIn.approve(sender, router, amount);
@@ -16,8 +15,7 @@ contract Dexible {
         }
     }
 
-    @public
-    void multiSwap(IERC20[] tokens, IExchange[] routers, uint[] amounts, bytes extraData)
+    public void multiSwap(IERC20[] tokens, IExchange[] routers, uint[] amounts, bytes extraData)
         throws (FailedSwap) {
         atomic {
             uint i = 0;

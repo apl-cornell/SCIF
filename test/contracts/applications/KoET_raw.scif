@@ -68,12 +68,12 @@ contract KoET {
         );
     }
 
-    @public uint numberOfMonarchs() {
+    public uint numberOfMonarchs() {
         return pastMonarchs.length();
     }
 
     // Claim the throne for the given name by paying the currentClaimFee.
-    @public void claimThrone(bytes name) {
+    public void claimThrone(bytes name) {
 
         uint valuePaid = value;
 
@@ -148,14 +148,14 @@ contract KoET {
     }
 
     // Used only by the wizard to collect his commission.
-    @public void sweepCommission(uint amount) {
+    public void sweepCommission(uint amount) {
         if (sender == wizardAddress) {
             send(wizardAddress, amount);
         }
     }
 
     // Used only by the wizard to collect his commission.
-    @public void transferOwnership(address newOwner) {
+    public void transferOwnership(address newOwner) {
         if (sender == wizardAddress) {
             wizardAddress = newOwner;
         }

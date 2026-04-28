@@ -2,8 +2,7 @@ contract ExceptionDefinition {
     exception X();
     exception Y(uint aug1, uint aug2);
 
-    @public
-    void foo() throws (X) {
+    public void foo() throws (X) {
         try {
             bar(1, 2);
         } catch (Y expY) {
@@ -11,8 +10,7 @@ contract ExceptionDefinition {
         }
     }
 
-    @public
-    void bar(uint a, uint b) throws (Y) {
+    public void bar(uint a, uint b) throws (Y) {
         if (a != b) {
             throw X();
         }

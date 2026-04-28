@@ -6,15 +6,13 @@ contract ERC20 implements IERC20 {
     map(address owner, map(address, uint){owner}) allowances;
     // TODO: generate constraints
 
-    @public
-    void approve{sender}(final address allowed, uint amount) {
+    public void approve{sender}(final address allowed, uint amount) {
         allowances[sender][allowed] = amount;
     }
 
     //
     //  dynamically check that (msg.sender join l_deputy) => from
-    @public
-    bool transfer{from -> this; any}(final ITokenHolder from, final ITokenHolder to, uint amount) {
+    public bool transfer{from -> this; any}(final ITokenHolder from, final ITokenHolder to, uint amount) {
     // bool transfer{from -> this; 1}(final address from, address to, uint amount) {
         result = false;
         endorse([from, to, amount], from -> this)
@@ -30,8 +28,7 @@ contract ERC20 implements IERC20 {
 
     //
     //  dynamically check that (msg.sender join l_deputy) => from
-    @public
-    bool transfer{from -> this; any}(final ITokenHolder from, final ITokenHolder to, uint amount) {
+    public bool transfer{from -> this; any}(final ITokenHolder from, final ITokenHolder to, uint amount) {
     // bool transfer{from -> this; 1}(final address from, address to, uint amount) {
         result = false;
         endorse([from, to, amount], from -> this)
@@ -52,8 +49,7 @@ contract ERC20 implements IERC20 {
 //        }
     }
 
-    @public
-    bool{from} transferAllowed{any -> from; any}(final ITokenHolder from, ITokenHolder to, uint amount) {
+    public bool{from} transferAllowed{any -> from; any}(final ITokenHolder from, ITokenHolder to, uint amount) {
         endorse([from, to, amount], any -> from)
         when (allowances[from][sender] >= amount) {
             if (transfer(from, to, amount)) {
@@ -63,8 +59,7 @@ contract ERC20 implements IERC20 {
         }
         return false;
     }
-    @public
-    bool{from} transferAllowed{sender -> from; any}(final ITokenHolder from, ITokenHolder to, uint amount) {
+    public bool{from} transferAllowed{sender -> from; any}(final ITokenHolder from, ITokenHolder to, uint amount) {
         endorse([from, to, amount], sender -> from)
         when (allowances[from][sender] >= amount) {
             if (transfer(from, to, amount)) {

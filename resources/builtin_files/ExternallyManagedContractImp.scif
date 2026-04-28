@@ -16,14 +16,12 @@ contract ExternallyManagedContractImp implements ExternallyManagedContract {
         addTrust(owner);
     }
 
-    @private
-    void addDirectTrust(address trustee) {
+    private void addDirectTrust(address trustee) {
         trustees.push(trustee);
         trusteeIndex[trustee] = trustees.length();
     }
 
-    @private
-    void revokeDirectTrust(address trustee) {
+    private void revokeDirectTrust(address trustee) {
         uint ind = trusteeIndex[trustee];
         address lastTrustee = trustees[trustees.length() - 1];
         trustees[ind - 1] = lastTrustee;
@@ -32,8 +30,7 @@ contract ExternallyManagedContractImp implements ExternallyManagedContract {
         trusteeIndex[trustee] = 0;
     }
 
-    @public
-    bool addTrust{this}(address trustee) {
+    public bool addTrust{this}(address trustee) {
         if (sender != owner) {
             return false;
         }
@@ -41,8 +38,7 @@ contract ExternallyManagedContractImp implements ExternallyManagedContract {
         return m_trustManager.addTrust(trustee);
     }
 
-    @public
-    bool revokeTrust{this}(address trustee) {
+    public bool revokeTrust{this}(address trustee) {
         if (sender != owner) {
             return false;
         }
@@ -50,8 +46,7 @@ contract ExternallyManagedContractImp implements ExternallyManagedContract {
         return m_trustManager.revokeTrust(trustee);
     }
 
-    @public
-    bool changeOwner{this}(address newOwner) {
+    public bool changeOwner{this}(address newOwner) {
         if (sender != owner) {
             return false;
         }
@@ -61,13 +56,11 @@ contract ExternallyManagedContractImp implements ExternallyManagedContract {
         return true;
     }
 
-    @public
-    address getOwner() {
+    public address getOwner() {
         return owner;
     }
 
-    @public
-    bool directlyTrusts(address trustee) {
+    public bool directlyTrusts(address trustee) {
         address _trustee = endorse(trustee, any -> this);
         uint i = 0;
         while (i < trustees.length()) {
@@ -79,36 +72,28 @@ contract ExternallyManagedContractImp implements ExternallyManagedContract {
         return false;
     }
 
-    @public
-    address[] directTrustees() {
+    public address[] directTrustees() {
         return trustees;
     }
 
-    @public
-    TrustManager trustManager() {
+    public TrustManager trustManager() {
         return m_trustManager;
     }
 
-    @public
-    LockManager lockManager() {
+    public LockManager lockManager() {
         return m_lockManager;
     }
 
-    @public
-    @native
-    bool trusts(address a, address b) {
+    public native bool trusts(address a, address b) {
         return m_trustManager.trusts(a, b);
     }
-    @private
-    bool bypassLocks(address l) {
+    private bool bypassLocks(address l) {
         return m_lockManager.bypassLocks(l);
     }
-    @private
-    bool acquireLock(address l) {
+    private bool acquireLock(address l) {
         return m_lockManager.acquireLock(l);
     }
-    @private
-    bool releaseLock(address l) {
+    private bool releaseLock(address l) {
         return m_lockManager.releaseLock(l);
     }
 }

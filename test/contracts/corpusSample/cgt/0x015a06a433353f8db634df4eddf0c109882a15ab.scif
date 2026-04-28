@@ -17,9 +17,7 @@ contract PixelMap {
 		super();
 	}
 
-	@public
-	@payable
-	void buyTile(uint _location) {
+	public payable void buyTile(uint _location) {
 		uint location = endorse(_location, any -> this);
 		if (location <= 3969) {
 			Tile t = tiles[location];

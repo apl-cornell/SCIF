@@ -12,8 +12,7 @@ contract EthCrossChainManager {
         super();
     }
 
-    @public
-    void initGenesisBlock(Header@IECCUtils header, bytes pubKeyList) {
+    public void initGenesisBlock(Header@IECCUtils header, bytes pubKeyList) {
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
         final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
         address[] keepers = eccd.getCurEpochConPubKeys();
@@ -31,8 +30,7 @@ contract EthCrossChainManager {
         }
     }
 
-    @public
-    void changeBookKeeper(Header@IECCUtils header, address[] polyChainBKs, bytes sigList) {
+    public void changeBookKeeper(Header@IECCUtils header, address[] polyChainBKs, bytes sigList) {
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
         final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
         // Make sure rawHeader.height is higher than recorded current epoch start height
@@ -57,8 +55,7 @@ contract EthCrossChainManager {
         }
     }
 
-    @public
-    void crossChain(uint toChainId, address toContract, bytes txData) {
+    public void crossChain(uint toChainId, address toContract, bytes txData) {
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
         final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
         // To help differentiate two txs, the ethTxHashIndex is increasing automatically
@@ -73,8 +70,7 @@ contract EthCrossChainManager {
         eccd.putEthTxHash(cutils.keccak256(rawParam));
     }
 
-    @public
-    void verifyHeaderAndExecuteTx(bytes proof, Header@IECCUtils header, bytes headerProof, Header@IECCUtils curHeader, bytes headerSig) {
+    public void verifyHeaderAndExecuteTx(bytes proof, Header@IECCUtils header, bytes headerProof, Header@IECCUtils curHeader, bytes headerSig) {
         // Load ehereum cross chain data contract
         // Get stored consensus public key bytes of current poly chain epoch and deserialize Poly chain consensus public key bytes to address[]
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);

@@ -1,8 +1,8 @@
 interface IPolyCallee {
     // called by PolyNetManager
-//    @public void polyCallBack{any}(bytes args, bytes _fromContractAddr, uint _fromChainId);
-//    @public void polyCallBack{origin}(final address origin, bytes args, bytes _fromContractAddr, uint _fromChainId);
-    @public void polyCallback{this}(final address origin, bytes{origin} args, bytes _fromContractAddr, uint _fromChainId);
+//    public void polyCallBack{any}(bytes args, bytes _fromContractAddr, uint _fromChainId);
+//    public void polyCallBack{origin}(final address origin, bytes args, bytes _fromContractAddr, uint _fromChainId);
+    public void polyCallback{this}(final address origin, bytes{origin} args, bytes _fromContractAddr, uint _fromChainId);
 }
 interface IECCUtils {
     struct Header {
@@ -27,23 +27,23 @@ interface IECCUtils {
         address toContract;
         bytes args;
     }
-    @public bool verifySig{this}(Header{any} header, bytes{any} sigList, address[]{any} keepers, uint{any} m);
-    @public address verifyPubkey{this}(address[]{any} keepers);
-    @public bytes encodeParam{this}(uint{any} paramTxHash, address{any} _this, address{any} _sender, uint{any} toChainId, address{any} toContract, bytes{any} txData);
-    @public uint keccak256{this}(bytes{any} data);
-    @public uint merkleProveValue{this}(bytes{any} proof, uint{any} root);
-    @public ToMerkleValue merkleProve{this}(bytes{any} proof, uint{any} root);
-    @public uint getHeaderHash{this}(Header{any} header);
+    public bool verifySig{this}(Header{any} header, bytes{any} sigList, address[]{any} keepers, uint{any} m);
+    public address verifyPubkey{this}(address[]{any} keepers);
+    public bytes encodeParam{this}(uint{any} paramTxHash, address{any} _this, address{any} _sender, uint{any} toChainId, address{any} toContract, bytes{any} txData);
+    public uint keccak256{this}(bytes{any} data);
+    public uint merkleProveValue{this}(bytes{any} proof, uint{any} root);
+    public ToMerkleValue merkleProve{this}(bytes{any} proof, uint{any} root);
+    public uint getHeaderHash{this}(Header{any} header);
 }
 interface IEthCrossChainData {
-    @public address[] getCurEpochConPubKeys();
-    @public void putCurEpochConPubKeys{this}(address[] keepers);
-    @public uint getCurEpochStartHeight();
-    @public uint getEthTxHashIndex();
-    @public void putCurEpochStartHeight{this}(uint height);
-    @public void putEthTxHash{this}(uint hash);
-    @public bool checkIfFromChainTxExist(uint fromChainID, uint txHash);
-    @public void markFromChainTxExist{this}(uint fromChainID, uint txHash);
+    public address[] getCurEpochConPubKeys();
+    public void putCurEpochConPubKeys{this}(address[] keepers);
+    public uint getCurEpochStartHeight();
+    public uint getEthTxHashIndex();
+    public void putCurEpochStartHeight{this}(uint height);
+    public void putEthTxHash{this}(uint hash);
+    public bool checkIfFromChainTxExist(uint fromChainID, uint txHash);
+    public void markFromChainTxExist{this}(uint fromChainID, uint txHash);
 }
 contract EthCrossChainManager {
 
@@ -56,8 +56,7 @@ contract EthCrossChainManager {
         super();
     }
 
-    @public
-    void initGenesisBlock(Header@IECCUtils header, bytes pubKeyList) {
+    public void initGenesisBlock(Header@IECCUtils header, bytes pubKeyList) {
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
         final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
         address[] keepers = eccd.getCurEpochConPubKeys();
@@ -75,8 +74,7 @@ contract EthCrossChainManager {
         }
     }
 
-    @public
-    void changeBookKeeper(Header@IECCUtils header, address[] polyChainBKs, bytes sigList) {
+    public void changeBookKeeper(Header@IECCUtils header, address[] polyChainBKs, bytes sigList) {
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
         final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
         // Make sure rawHeader.height is higher than recorded current epoch start height
@@ -101,8 +99,7 @@ contract EthCrossChainManager {
         }
     }
 
-    @public
-    void crossChain(uint toChainId, address toContract, bytes txData) {
+    public void crossChain(uint toChainId, address toContract, bytes txData) {
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
         final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
         // To help differentiate two txs, the ethTxHashIndex is increasing automatically
@@ -117,8 +114,7 @@ contract EthCrossChainManager {
         eccd.putEthTxHash(cutils.keccak256(rawParam));
     }
 
-    @public
-    void verifyHeaderAndExecuteTx(bytes proof, Header@IECCUtils header, bytes headerProof, Header@IECCUtils curHeader, bytes headerSig) {
+    public void verifyHeaderAndExecuteTx(bytes proof, Header@IECCUtils header, bytes headerProof, Header@IECCUtils curHeader, bytes headerSig) {
         // Load ehereum cross chain data contract
         // Get stored consensus public key bytes of current poly chain epoch and deserialize Poly chain consensus public key bytes to address[]
         final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);

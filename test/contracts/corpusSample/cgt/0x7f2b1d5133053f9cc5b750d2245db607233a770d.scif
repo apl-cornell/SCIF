@@ -3,8 +3,7 @@ contract Dappster {
 
 	constructor() { super(); }
 
-	@public
-	bool withdraw() {
+	public bool withdraw() {
 		uint amount = pendingWithdrawals[sender];
 		pendingWithdrawals[sender] = 0;
 		lock(this) {

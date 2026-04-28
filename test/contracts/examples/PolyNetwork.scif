@@ -1,7 +1,6 @@
 contract PolyNetwork {
     exception CallFailed;
-    @public
-    void executeCrossChainTx{user -> this}(
+    public void executeCrossChainTx{user -> this}(
             final address user,
             final IUser{user} targetContract, bytes{user} args)
             throws (CallFailed) {
@@ -26,8 +25,7 @@ interface IUser {
     /**
         a method that can be invoked by trusted parties, with additional arguments from user.
     */
-    @public
-    void callback{this}(
+    public void callback{this}(
         final address{user} user,
         address fromAddr, uint fromChainId,
         bytes{user} args);
