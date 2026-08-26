@@ -101,6 +101,41 @@ public class InterfaceSym extends TypeSym {
             assert s instanceof StructTypeSym;
             return (TypeSym) s;
         }
+        
+        if (astType instanceof ast.ClosureType closure) {
+            ast.FuncLabels fl = closure.funcLabels;
+            ScopeContext closureScope = new ScopeContext(closure, defContext);
+            symTab = new SymTab(symTab);
+            List<VarSym> binderSyms = new ArrayList<>();
+            for (int i = 0; i < closure.params.size(); ++i) {
+                if (!closure.isBinder(i)) {
+                    binderSyms.add(null);
+                    continue;
+                }
+                ast.Arg p = closure.params.get(i);
+                VarSym binderVar = newVarSym(p.name(), closure.binderLabeledType(i),
+                        false, true, false, p.location(), closureScope);
+                addVar(p.name(), binderVar, astType.location());
+                binderSyms.add(binderVar);
+            }
+            Label pcExL = fl == null || fl.begin_pc == null ? null : newLabel(fl.begin_pc);
+            Label pcInL = fl == null || fl.to_pc == null ? null : newLabel(fl.to_pc);
+            Label gammaL = fl == null || fl.gamma_label == null ? null : newLabel(fl.gamma_label);
+            Label retL = closure.returnType.label() == null
+                    ? pcExL : newLabel(closure.returnType.label());
+            List<TypeSym> paramTypes = new ArrayList<>();
+            List<Label> paramLabels = new ArrayList<>();
+            for (LabeledType lt : closure.unboundParams) {
+                paramTypes.add(toTypeSym(lt.type(), defContext));
+                paramLabels.add(lt.label() == null ? pcExL : newLabel(lt.label()));
+            }
+            TypeSym retType = toTypeSym(closure.returnType.type(), defContext);
+            symTab = symTab.parent;
+            ClosureTypeSym result = new ClosureTypeSym(paramTypes, retType, new ArrayList<>(),
+                    defContext, paramLabels, pcExL, pcInL, gammaL, retL);
+            result.setBinderSyms(binderSyms);
+            return result;
+        }
 
         Sym s = symTab.lookup(astType.name());
         TypeSym typeSym = null;
@@ -330,5 +365,11 @@ public class InterfaceSym extends TypeSym {
         VarSym anySym = (VarSym) lookupSym(Utils.LABEL_BOTTOM);
         assert anySym != null;
         return anySym;
+    }
+
+    public VarSym invoker() {
+        VarSym invokerSym = (VarSym) lookupSym(Utils.LABEL_INVOKER);
+        assert invokerSym != null;
+        return invokerSym;
     }
 }

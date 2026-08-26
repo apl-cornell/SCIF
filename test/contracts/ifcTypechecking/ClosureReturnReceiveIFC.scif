@@ -1,0 +1,27 @@
+// IFC positive — receiving a closure from a call's return value.
+//
+// `f.build()` returns a closure; assigning it to a closure-typed
+// local relates the returned closure type's inner labels (re-anchored
+// into this call site's names: the factory's `sender` becomes this
+// contract) to the declared type of `c`. Both sides agree, so the
+// contract typechecks.
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+interface IFactory {
+    public (fun {sender -> sender; sender} () -> void) {sender}
+        build{sender -> sender; sender}();
+}
+
+contract Receiver {
+    IFactory f;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        (fun {this -> this; this} () -> void) {this} c = f.build();
+    }
+}

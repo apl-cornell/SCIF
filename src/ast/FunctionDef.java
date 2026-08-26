@@ -291,6 +291,31 @@ public class FunctionDef extends FunctionSig {
                 code.addTemporaryFunction(new Function(name, arguments, returnType, false, false, statements));
                 wapperStatements.add(new Return(new Call(name, arguments.stream().map(arg -> new SingleVar(arg.name())).collect(
                         Collectors.toList()))));
+
+                if (isClosurable() && !isNative()) {
+                    code.enterNewVarScope();
+                    code.pushScope(ScopeType.METHOD);
+
+                    List<compile.ast.Statement> closureStatements = new ArrayList<>();
+                    compile.Utils.addBuiltInVars(true, closureStatements, code);
+                    closureStatements.addAll(code.enterClosureFuncCheck(funcLabels, args));
+                    closureStatements.add(new Return(new Call(name,
+                            arguments.stream().map(arg -> new SingleVar(arg.name()))
+                                    .collect(Collectors.toList()))));
+                    
+                    List<Argument> closureArguments = new ArrayList<>(arguments);
+                    closureArguments.add(new Argument(
+                            new compile.ast.ArrayType(new compile.ast.PrimitiveType(compile.Utils.PRIMITIVE_TYPE_ADDRESS_NAME)),
+                            "lExtBef"));
+                    
+                    code.markLabelRuntimeRequired();
+                    code.addTemporaryFunction(new Function(
+                            typecheck.Utils.closureMethodNameHash(name, signature()),
+                            closureArguments, returnType, pub, payable, closureStatements));
+                    
+                    code.exitVarScope();
+                    code.popScope();
+                }
                 return new Function(methodName, arguments, returnType, pub, payable, wapperStatements);
             } else {
                 return new Function(methodName, arguments, returnType, pub, payable, statements);

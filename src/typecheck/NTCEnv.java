@@ -82,6 +82,11 @@ public class NTCEnv {
         return new VarSym(varName, typeSym, null, location, context, isConst, isFinal, isBuiltIn, isGlobal);
     }
 
+    /**
+     * Resolve an AST type to its type symbol: a named type is looked up in
+     * scope; a compound type (map, array, closure, dependent map) is built
+     * recursively from its component types.
+     */
     public TypeSym toTypeSym(ast.Type astType, ScopeContext defContext) throws SemanticException {
         TypeSym typeSym = null;
         if (astType == null) {
@@ -92,6 +97,48 @@ public class NTCEnv {
             Sym s = getExtSym(extType.contractName(), extType.name());
             assert s instanceof StructTypeSym;
             return (TypeSym) s;
+        }
+
+        if (astType instanceof ast.ClosureType closure) {
+            ast.FuncLabels fl = closure.funcLabels;
+            ScopeContext closureScope = new ScopeContext(closure, defContext);
+            enterNewScope();
+            java.util.List<VarSym> binderSyms = new java.util.ArrayList<>();
+            for (int i = 0; i < closure.params.size(); ++i) {
+                if (!closure.isBinder(i)) {
+                    binderSyms.add(null);
+                    continue;
+                }
+                ast.Arg p = closure.params.get(i);
+                VarSym binderVar = newVarSym(p.name(), closure.binderLabeledType(i),
+                        false, true, false, p.location(), closureScope);
+                try {
+                    addSym(p.name(), binderVar);
+                } catch (SymTab.AlreadyDefined e) {
+                    throw new SemanticException(
+                            "closure binder name already defined: " + p.name(),
+                            astType.location());
+                }
+                binderSyms.add(binderVar);
+            }
+            Label pcExL = fl == null || fl.begin_pc == null ? null : newLabel(fl.begin_pc);
+            Label pcInL = fl == null || fl.to_pc == null ? null : newLabel(fl.to_pc);
+            Label gammaL = fl == null || fl.gamma_label == null ? null : newLabel(fl.gamma_label);
+            Label retL = closure.returnType.label() == null
+                    ? pcExL : newLabel(closure.returnType.label());
+            java.util.List<TypeSym> paramTypes = new java.util.ArrayList<>();
+            java.util.List<Label> paramLabels = new java.util.ArrayList<>();
+            for (ast.LabeledType lt : closure.unboundParams) {
+                paramTypes.add(toTypeSym(lt.type(), defContext));
+                paramLabels.add(lt.label() == null ? pcExL : newLabel(lt.label()));
+            }
+            TypeSym retType = toTypeSym(closure.returnType.type(), defContext);
+            exitNewScope();
+            ClosureTypeSym result = new ClosureTypeSym(paramTypes, retType,
+                    new java.util.ArrayList<>(), defContext,
+                    paramLabels, pcExL, pcInL, gammaL, retL);
+            result.setBinderSyms(binderSyms);
+            return result;
         }
 
         Sym s = getCurSym(astType.name());

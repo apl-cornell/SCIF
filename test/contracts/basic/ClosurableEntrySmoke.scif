@@ -1,0 +1,28 @@
+// Compilation smoke test for the closure entry point of closurable
+// methods. Each closurable public method compiles to a second entry
+// `<name>_closure_<hash>(orig params, address[] lExtBef)` that keeps
+// the regular entry's lock check, drops the msg.sender trust check,
+// and instead checks the caller-vouched external label against the
+// method's real external label. Covers a `sender` external pc (lock
+// check present, lExt = [msg.sender]) and a bound-principal external
+// pc (lExt = [user]).
+interface IT {
+    closurable public void ping{sender -> this; this}(uint x);
+    closurable public void pong{user -> this; user}(final address user, uint x);
+}
+
+contract ClosurableEntrySmoke {
+    uint acc;
+
+    constructor() {
+        super();
+    }
+
+    closurable public void ping{sender -> this; this}(uint x) {
+        acc = 0;
+    }
+
+    closurable public void pong{user -> this; user}(final address user, uint x) {
+        acc = 0;
+    }
+}

@@ -21,12 +21,13 @@ public class FuncSym extends Sym {
 
     public Map<ExceptionTypeSym, String> exceptions;
     public CodeLocation location;
-    private boolean isPublic, isBuiltIn;
+    private boolean isPublic, isBuiltIn, isClosurable;
     private String plainSignature;
 
     public FuncSym(String funcName,
                    boolean isPublic,
                    boolean isBuiltIn,
+                   boolean isClosurable,
                    String plainSignature,
                    Label external_pc,
                    Label internal_pc,
@@ -42,6 +43,7 @@ public class FuncSym extends Sym {
         this.sender = sender;
         this.isPublic = isPublic;
         this.isBuiltIn = isBuiltIn;
+        this.isClosurable = isClosurable;
         this.plainSignature = plainSignature;
         // this.funcLabels = funcLabels;
         assert external_pc != null: funcName;
@@ -59,6 +61,7 @@ public class FuncSym extends Sym {
     public FuncSym(String funcName,
                 boolean isPublic,
                 boolean isBuiltIn,
+                boolean isClosurable,
                 String plainSignature,
                 Label external_pc,
                 Label internal_pc,
@@ -73,6 +76,7 @@ public class FuncSym extends Sym {
         this.funcName = funcName;
         this.isPublic = isPublic;
         this.isBuiltIn = isBuiltIn;
+        this.isClosurable = isClosurable;
         this.plainSignature = plainSignature;
         this.sender = sender;
         // this.name = funcName;
@@ -216,6 +220,10 @@ public class FuncSym extends Sym {
 
     public boolean isBuiltIn() {
         return isBuiltIn;
+    }
+
+    public boolean isClosurable() {
+        return isClosurable;
     }
 //    public String getLabelNameCallGamma(String namespace) {
 //        if (!Objects.equals(namespace, ""))

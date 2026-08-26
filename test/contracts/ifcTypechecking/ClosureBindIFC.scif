@@ -1,0 +1,28 @@
+// IFC positive — binding a closure that is already a closure value.
+//
+// The first closure leaves two slots open; the bind fills the first of
+// them and hands back a narrower closure, which is then invoked with
+// the last. The result's labels are the source's with the filled slot
+// replaced and the remaining one renumbered, so the declared type of
+// `done` names one parameter where `half` named two.
+interface IToken {
+    closurable public void transfer{this -> this; this}(
+        final address from, address{this} to, uint{this} amount
+    );
+}
+
+contract Payer {
+    IToken token;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}(address{this} recipient, uint{this} amount) {
+        (fun {this; this} (address{this}, uint{this}) -> void) {this} half =
+            closure token.transfer(address(this), _, _);
+        (fun {this; this} (uint{this}) -> void) {this} done =
+            closure half(recipient, _);
+        done.invoke(amount);
+    }
+}

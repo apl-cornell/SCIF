@@ -1,5 +1,6 @@
 package typecheck;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,6 +18,9 @@ abstract public class Label {
     abstract public String toSHErrLocFmt();
     abstract public String toSHErrLocFmt(String origin, String substitution);
     abstract public String toSHErrLocFmt(Map<String, String> mapping);
+
+    /** The local names of this label's principal leaves (flattening joins). */
+    abstract public List<String> principalLeaves();
 
     public CodeLocation location() {
         return location;

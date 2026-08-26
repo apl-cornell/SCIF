@@ -1,0 +1,24 @@
+// IFC positive — `c.target`: read-only access to a closure's target
+// address. The expression's value label is the closure reference's
+// own value label (trust in the identity = trust in the reference),
+// so a {this}-trusted closure yields a {this}-trusted address.
+interface IT {
+    closurable public void op{sender -> sender}();
+}
+
+contract User {
+    IT t;
+    address{this} seen;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        (fun {invoker; invoker} () -> void) {this} c = closure t.op();
+        address{this} a = c.target;
+        if (c.target == a) {
+            seen = a;
+        }
+    }
+}

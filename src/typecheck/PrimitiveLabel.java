@@ -1,9 +1,15 @@
 package typecheck;
 
+import java.util.List;
 import java.util.Map;
 
 public class PrimitiveLabel extends Label {
     VarSym sym;
+
+    @Override
+    public List<String> principalLeaves() {
+        return List.of(sym.getName());
+    }
 
     public PrimitiveLabel(VarSym sym, CodeLocation location) {
         super(location);

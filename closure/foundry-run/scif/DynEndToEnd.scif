@@ -1,0 +1,53 @@
+// The same dynamic-argument path against a real generated target, so
+// the closure entry check and the compiler's own decoder see calldata
+// with a tail in it -- not only the Solidity mock of DynArgs.scif.
+//
+// `pc_ex` is the payer, an unbound slot filled at invocation, so the
+// believed label sits after the dynamic tails in calldata: the trailing
+// lExtBef offset has to be right for the entry check to see it at all.
+
+interface IDynStore {
+    closurable public void put{payer -> this; payer}(
+        final address payer, bytes{payer} data
+    );
+}
+
+contract DynStore {
+    bytes{this} saved;
+    uint{this} count;
+
+    constructor() {
+        super();
+    }
+
+    closurable public void put{payer -> this; payer}(
+        final address payer, bytes{payer} data
+    ) {
+        endorse([payer, data], payer -> this)
+        when (true) {
+            saved = data;
+            count = count + 1;
+        }
+    }
+
+    public bytes{this} getSaved{this -> this; this}() {
+        return saved;
+    }
+
+    public uint{this} getCount{this -> this; this}() {
+        return count;
+    }
+}
+
+contract DynStoreUser {
+
+    constructor() {
+        super();
+    }
+
+    public void store{this -> this; this}(IDynStore target, bytes{this} data) {
+        (fun {payer; payer}(final address payer, bytes{payer} data) -> void) {this} c =
+            closure target.put(_, _);
+        c.invoke(address(this), data);
+    }
+}

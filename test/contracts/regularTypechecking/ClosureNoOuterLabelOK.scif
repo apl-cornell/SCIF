@@ -1,0 +1,17 @@
+// Regular TC positive: a closure-typed state variable is declared
+// without an explicit value label. State-variable declarations
+// default to {this} integrity when no label is written, regardless
+// of the underlying type — so this declaration is equivalent to
+// writing `(fun ...) {this} closureField;` explicitly.
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+contract C {
+    IT t;
+    (fun {this -> this; this} () -> void) closureField;
+
+    constructor() {
+        super();
+    }
+}

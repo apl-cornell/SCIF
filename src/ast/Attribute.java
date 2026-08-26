@@ -18,6 +18,10 @@ import java.util.ArrayList;
 
 public class Attribute extends TrailerExpr {
 
+    // Set at regular typechecking when this node is `c.target` on a
+    // closure value; drives the value-label rule and codegen.
+    private boolean isClosureTarget = false;
+
     /**
      * value attr
      */
@@ -44,6 +48,14 @@ public class Attribute extends TrailerExpr {
         VarSym rtnVarSym;
         VarSym parentVarSym = value.getVarInfo(env);
         assert parentVarSym != null: "at " + location.errString();
+        if (parentVarSym.typeSym instanceof ClosureTypeSym
+                && attr.id.equals(Utils.CLOSURE_TARGET_MEMBER)) {
+            // c.target: the closure's target address, read-only.
+            this.isClosureTarget = true;
+            return new VarSym(Utils.CLOSURE_TARGET_MEMBER,
+                    (TypeSym) env.getSym(BuiltInT.ADDRESS), null, location,
+                    parentVarSym.defContext(), false, true, true);
+        }
         if (parentVarSym.typeSym instanceof StructTypeSym) {
             StructTypeSym parentTypeInfo = (StructTypeSym) parentVarSym.typeSym;
             rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
@@ -70,6 +82,10 @@ public class Attribute extends TrailerExpr {
         // TODO: steph: needs to check instanceof 
 
         VarSym varSym = env.getVar(varName);
+        if (varSym != null && varSym.typeSym instanceof ClosureTypeSym
+                && attr.id.equals(Utils.CLOSURE_TARGET_MEMBER)) {
+            return value.genIFConstraints(env, tail_position);
+        }
         if (!(varSym.typeSym instanceof StructTypeSym structType)) {
             //TODO: throw errors: variable not struct
 //            return null;
@@ -95,6 +111,9 @@ public class Attribute extends TrailerExpr {
 
     @Override
     public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        if (isClosureTarget) {
+            return new Attr(value.solidityCodeGen(result, code), "addr");
+        }
         return new Attr(value.solidityCodeGen(result, code), attr.id);
     }
 

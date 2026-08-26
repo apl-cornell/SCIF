@@ -1,0 +1,25 @@
+// Compilation smoke test for the bind form: a closure created with two
+// open slots is narrowed by binding one of them, and the result is
+// invoked with the last. `bindClosure` fills the slot in a copy, so
+// `half` is still a usable two-slot closure afterwards.
+interface IT {
+    closurable public void op{this -> this; this}(
+        final address user, address{this} to, uint{this} amount
+    );
+}
+
+contract ClosureBindSmoke {
+    IT t;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}(address{this} recipient, uint{this} amount) {
+        (fun {this; this} (address{this}, uint{this}) -> void) {this} half =
+            closure t.op(address(this), _, _);
+        (fun {this; this} (uint{this}) -> void) {this} done =
+            closure half(recipient, _);
+        done.invoke(amount);
+    }
+}

@@ -1,0 +1,26 @@
+// Compilation smoke test for invocation arguments: a closure created
+// with both slots open is invoked with the two missing values, which
+// the runtime binds into a copy before performing the call.
+//
+// The second slot's label names the first, so binding it at creation
+// would be ill-typed (see ifcTypechecking/ClosureBinderBoundDependent_W01)
+// and invocation is the only point at which it can be filled. The
+// closure's external label is `this`, not one of the arguments, so no
+// binder has to be materialized into `lExtBef`.
+interface IT {
+    closurable public void op{this -> this; this}(final address user, uint{user} x);
+}
+
+contract ClosureInvokeArgsSmoke {
+    IT t;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        (fun {this; this} (final address user, uint{user} x) -> void) {this} c =
+            closure t.op(_, _);
+        c.invoke(address(this), 42);
+    }
+}

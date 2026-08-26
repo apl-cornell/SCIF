@@ -34,6 +34,25 @@ public class VisitEnv {
     public Map<String, String> sigReq = new HashMap<>();
     public Map<String, List<SourceFile>> programMap;
 
+    private final Set<String> rigidAtoms = new java.util.LinkedHashSet<>();
+    private final List<String[]> atomAssumptions = new ArrayList<>();
+
+    public void addRigidAtom(String name) {
+        rigidAtoms.add(name);
+    }
+
+    public Set<String> rigidAtoms() {
+        return rigidAtoms;
+    }
+
+    public void addAtomAssumption(String a, String b) {
+        atomAssumptions.add(new String[]{a, b});
+    }
+
+    public List<String[]> atomAssumptions() {
+        return atomAssumptions;
+    }
+
     public VisitEnv(Context inContext,
                     List<Constraint> cons,
                     List<Constraint> trustCons,

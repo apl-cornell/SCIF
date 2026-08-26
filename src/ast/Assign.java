@@ -27,6 +27,11 @@ public class Assign extends Statement {
     @Override
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
+        if (target instanceof Attribute att && att.value.getVarInfo(env) != null
+                && att.value.getVarInfo(env).typeSym instanceof typecheck.ClosureTypeSym
+                && att.attr.id.equals(typecheck.Utils.CLOSURE_TARGET_MEMBER)) {
+            throw new SemanticException("the target of a closure is read-only", location);
+        }
         ScopeContext tgt = target.genTypeConstraints(env, now);
         ScopeContext v = value.genTypeConstraints(env, now);
         // con: tgt should be a supertype of v
@@ -77,6 +82,12 @@ public class Assign extends Statement {
                 new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis(), value.location,
                         env.curContractSym().getName(),
                         "Integrity of control flow must be trusted to allow this assignment"));
+
+  
+        if (target instanceof Name tgtName && env.getVar(tgtName.id).typeSym instanceof typecheck.ClosureTypeSym targetCs) {
+            ClosureCreation.checkFlowInto(value, targetCs, new java.util.HashMap<>(), env,
+                value.location, "Closure value flowing into the assignment target must subtype its slot");
+        }
 
         typecheck.Utils.contextFlow(env, vo.psi.getNormalPath().c, endContext, value.location);
         // env.outContext = endContext;

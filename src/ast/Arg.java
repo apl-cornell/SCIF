@@ -49,6 +49,14 @@ public class Arg extends Node {
         return varSym;
     }
 
+    public String name() {
+        return name;
+    }
+
+    public boolean isFinal() {
+        return isFinal;
+    }
+
     public VarSym parseArg(NTCEnv env, ScopeContext parent)
             throws SemanticException
     {
@@ -95,6 +103,12 @@ public class Arg extends Node {
 
         VarSym varSym = env.curContractSym().newVarSym(name, annotation, isStatic, isFinal, true, location,
                 scopeContext);
+
+        if (varSym.typeSym instanceof typecheck.ClosureTypeSym cs
+                && annotation.type() instanceof ast.ClosureType astClosure) {
+            cs.resolveLabels(env, astClosure);
+        }
+        
         try {
             env.addVar(name, varSym);
         } catch (SymTab.AlreadyDefined e) {

@@ -310,7 +310,49 @@ public class Contract extends TopLayerNode {
 
         methods.addAll(code.tempFunctions());
         code.clearTempFunctions();
+        if (code.labelRuntimeRequired()) {
+            methods.add(compile.Utils.loadRuntimeFunction(
+                    compile.Utils.RUNTIME_FUNC_PRIMITIVE_ACTS_FOR));
+            methods.add(compile.Utils.loadRuntimeFunction(
+                    compile.Utils.RUNTIME_FUNC_ACTS_FOR));
+            code.clearLabelRuntimeFlag();
+        }
+        if (code.closureLibRequired()) {
+            methods.add(compile.Utils.loadRuntimeFunction(
+                    compile.Utils.RUNTIME_FUNC_MAKE_CLOSURE));
+            methods.add(compile.Utils.loadRuntimeFunction(
+                    compile.Utils.RUNTIME_FUNC_BIND_SLOTS));
+            methods.add(compile.Utils.loadRuntimeFunction(
+                    compile.Utils.RUNTIME_FUNC_INVOKE));
+            methods.add(compile.Utils.loadRuntimeFunction(
+                    compile.Utils.RUNTIME_FUNC_COPY_CLOSURE));
+            methods.add(compile.Utils.loadRuntimeFunction(
+                    compile.Utils.RUNTIME_FUNC_INVOKE_WITH));
+            methods.add(compile.Utils.loadRuntimeFunction(
+                    compile.Utils.RUNTIME_FUNC_BIND_CLOSURE));
+            code.clearClosureLibFlag();
+        }
         return new compile.ast.Contract(contractName, implementsContractName, stateVarDecs, structAndExcDefs, evDefs, methods);
+    }
+
+    /**
+     * Build the runtime Closure struct. Exactly:
+     *   struct Closure {
+     *       address  addr;       // target contract address
+     *       uint256  dynMask;    // bitmask: dynamically-typed bound slots
+     *       uint256  boundMask;  // bitmask: which positional slots are bound
+     *       bytes    head;       // ABI-encoded statically-typed bound args
+     *       bytes[]  dynArgs;    // ABI-encoded dynamically-typed bound args
+     *   }
+     */
+    public static compile.ast.StructDef buildClosureStruct() {
+        List<compile.ast.VarDec> members = new ArrayList<>();
+        members.add(new compile.ast.VarDec(new compile.ast.PrimitiveType(compile.Utils.PRIMITIVE_TYPE_ADDRESS_NAME), "addr"));
+        members.add(new compile.ast.VarDec(new compile.ast.PrimitiveType(compile.Utils.PRIMITIVE_TYPE_UINT_NAME), "dynMask"));
+        members.add(new compile.ast.VarDec(new compile.ast.PrimitiveType(compile.Utils.PRIMITIVE_TYPE_UINT_NAME), "boundMask"));
+        members.add(new compile.ast.VarDec(new compile.ast.PrimitiveType(compile.Utils.PRIMITIVE_TYPE_BYTES_NAME), "head"));
+        members.add(new compile.ast.VarDec(new compile.ast.ArrayType(new compile.ast.PrimitiveType(compile.Utils.PRIMITIVE_TYPE_BYTES_NAME)), "dynArgs"));
+        return new compile.ast.StructDef("Closure", members);
     }
 
     @Override
@@ -777,11 +819,23 @@ public class Contract extends TopLayerNode {
         );
         uintmaxDec.name().setLoc(CodeLocation.builtinCodeLocation(3, 0));
         uintmaxDec.setLoc(CodeLocation.builtinCodeLocation(3, 0));
+        StateVariableDeclaration invokerDec = new StateVariableDeclaration(
+                new Name(Utils.LABEL_INVOKER),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP)), CodeLocation.builtinCodeLocation(4, 1)),
+                null,
+                true,
+                true,
+                false,
+                true
+        );
+        invokerDec.name().setLoc(CodeLocation.builtinCodeLocation(4, 0));
+        invokerDec.setLoc(CodeLocation.builtinCodeLocation(4, 0));
         List<StateVariableDeclaration> newDecs = new ArrayList<>();
         newDecs.add(topDec);
         newDecs.add(botDec);
         newDecs.add(thisDec);
         newDecs.add(uintmaxDec);
+        newDecs.add(invokerDec);
         newDecs.addAll(varDeclarations);
         varDeclarations = newDecs;
     }

@@ -1,0 +1,51 @@
+// Execution test for dynamically-sized closure arguments. The target is
+// mocked in Solidity (test/Run.t.sol) so the test can assert on the
+// exact bytes it received: solc decodes what the closure runtime
+// encoded, so agreement is the correctness statement for the ABI tail
+// assembly in `invoke` and the strip loop in `_bindSlots`.
+//
+// `tag` sits after the dynamic slot on purpose -- with the dynamic slot
+// last, wrong head offsets can still decode by accident. `trailer` is a
+// second dynamic slot, so the tail offsets have to accumulate.
+
+interface IDynTarget {
+    closurable public void record{this -> this; this}(
+        bytes{this} payload, uint{this} tag, bytes{this} trailer
+    );
+}
+
+contract DynUser {
+
+    constructor() {
+        super();
+    }
+
+    // Everything bound up front: _bindSlots reached through makeClosure.
+    public void allAtCreation{this -> this; this}(
+        IDynTarget target, bytes{this} payload, uint{this} tag, bytes{this} trailer
+    ) {
+        (fun {this; this} () -> void) {this} c =
+            closure target.record(payload, tag, trailer);
+        c.invoke();
+    }
+
+    // Everything supplied at the invocation: _bindSlots reached through
+    // invokeWith, binding into the copy.
+    public void allAtInvoke{this -> this; this}(
+        IDynTarget target, bytes{this} payload, uint{this} tag, bytes{this} trailer
+    ) {
+        (fun {this; this} (bytes{this}, uint{this}, bytes{this}) -> void) {this} c =
+            closure target.record(_, _, _);
+        c.invoke(payload, tag, trailer);
+    }
+
+    // Split across both: the dynamic head slot is bound at creation and
+    // the rest at invocation, so the mask has to survive the hand-off.
+    public void splitBinding{this -> this; this}(
+        IDynTarget target, bytes{this} payload, uint{this} tag, bytes{this} trailer
+    ) {
+        (fun {this; this} (uint{this}, bytes{this}) -> void) {this} c =
+            closure target.record(payload, _, _);
+        c.invoke(tag, trailer);
+    }
+}

@@ -1,0 +1,23 @@
+// IFC positive: a closure value is created in one method, stored in a
+// state field, and invoked in another method. Exercises closure value
+// flow across methods (assignment to a field, then read at invoke).
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+contract C {
+    IT t;
+    (fun {this -> this; this} () -> void) {this} stored;
+
+    constructor() {
+        super();
+    }
+
+    public void install{this -> this; this}() {
+        stored = closure t.op();
+    }
+
+    public void run{this -> this; this}() {
+        stored.invoke();
+    }
+}

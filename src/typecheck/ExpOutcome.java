@@ -1,7 +1,6 @@
 package typecheck;
 
-/** The result from information-flow checking of an expression.
- */
+/** The result from information-flow checking of an expression. */
 public class ExpOutcome {
     public String valueLabelName;
     public PathOutcome psi;

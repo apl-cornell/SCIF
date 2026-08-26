@@ -1,0 +1,19 @@
+// IFC negative: at closure creation, the bound argument `dirty` is
+// labeled {any} (anyone can have produced its value) while the target
+// method's parameter slot demands {this}-integrity input. Binding a
+// least-trusted value into a most-trusted slot must be rejected.
+interface IT {
+    closurable public void op{this -> this}(uint{this} v);
+}
+
+contract Bad {
+    IT t;
+
+    constructor() {
+        super();
+    }
+
+    public void bind{this -> this; this}(uint{any} dirty) {
+        (fun {this -> this; this} () -> void) {this} c = closure t.op(dirty);
+    }
+}

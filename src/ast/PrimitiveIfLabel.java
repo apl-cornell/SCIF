@@ -6,7 +6,7 @@ import compile.ast.Statement;
 import java.util.List;
 import java.util.Objects;
 import typecheck.BuiltInT;
-import typecheck.ContractSym;
+import typecheck.InterfaceSym;
 import typecheck.ExpOutcome;
 import typecheck.FuncSym;
 import typecheck.NTCEnv;
@@ -160,6 +160,10 @@ public class PrimitiveIfLabel extends IfLabel {
 //        if (value.id.equals(Utils.LABEL_BOTTOM) || value.id.equals(Utils.LABEL_TOP) || value.id.equals(Utils.LABEL_SENDER) || value.id.equals(Utils.LABEL_THIS)) {
 //            return null;
 //        }
+        if (value.id.equals(Utils.LABEL_INVOKER) && !parent.insideClosureType()) {
+            throw new RuntimeException(
+                    "label `invoker` is only valid inside closure types, at " + location.toString());
+        }
         Sym s = env.getCurSym(value.id);
         assert s != null: value.id;
         if (s instanceof VarSym) {
@@ -167,7 +171,10 @@ public class PrimitiveIfLabel extends IfLabel {
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
             // logger.debug(s.getName());
-            if (!typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.PRINCIPAL)) && !typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.ADDRESS)) && !(typeSym instanceof ContractSym)) {
+            // TODO: double check if we allow InterfaceSym
+            if (!typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.PRINCIPAL))
+                    && !typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.ADDRESS))
+                    && !(typeSym instanceof InterfaceSym)) {
                 throw new RuntimeException("Primitive non-address/principal ifc label " + value.id + " at " + "location: "
                         + location.toString());
             }

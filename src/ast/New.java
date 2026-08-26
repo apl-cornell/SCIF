@@ -213,10 +213,16 @@ public class New extends Expression {
                 );
             }
 
+            // pc_2 dropped
+            // PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
+            //         Utils.joinLabels(psi.getNormalPath().c.pc,
+            //                 funcSym.endPc().toSHErrLocFmt(dependentLabelMapping)),
+            //         Utils.joinLabels(funcSym.getLabelNameCallGamma(), funcSym.internalPcSLC())
+            // )));
             PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
                     Utils.joinLabels(psi.getNormalPath().c.pc,
                             funcSym.endPc().toSHErrLocFmt(dependentLabelMapping)),
-                    Utils.joinLabels(funcSym.getLabelNameCallGamma(), funcSym.internalPcSLC())
+                    funcSym.getLabelNameCallGamma()
             )));
 
             typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
@@ -226,17 +232,25 @@ public class New extends Expression {
                             env.hypothesis(),
                             location, env.curContractSym().getName(),
                             "Current control flow must be trusted to call this method"));
-            env.cons.add(new Constraint(
-                    new Inequality(ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
-                            Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping),
-                                    beginContext.lambda)), env.hypothesis(),
-                    location, env.curContractSym().getName(),
-                    "Calling this function does not respect static reentrancy locks"));
+            // pc_2 dropped
+            // env.cons.add(new Constraint(
+            //         new Inequality(ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
+            //                 Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping),
+            //                         beginContext.lambda)), env.hypothesis(),
+            //         location, env.curContractSym().getName(),
+            //         "Calling this function does not respect static reentrancy locks"));
 
+            // pc_2 dropped
+            // env.cons.add(new Constraint(
+            //         new Inequality(
+            //                 Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping),
+            //                         ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
+            //                 Relation.EQ, endContext.lambda), env.hypothesis(), location,
+            //         env.curContractSym().getName(),
+            //         typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
             env.cons.add(new Constraint(
                     new Inequality(
-                            Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping),
-                                    ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
+                            ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping),
                             Relation.EQ, endContext.lambda), env.hypothesis(), location,
                     env.curContractSym().getName(),
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));

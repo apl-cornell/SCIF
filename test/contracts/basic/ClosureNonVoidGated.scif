@@ -1,0 +1,21 @@
+// A closure with a result. Both typechecking phases accept it -- the
+// invocation's type is the closure's return type -- but the generated
+// invocation discards the callee's return data, so code generation
+// stops here instead of emitting an assignment from a void expression.
+interface IT {
+    closurable public uint{this} get{this -> this; this}(uint{this} x);
+}
+
+contract ClosureNonVoidGated {
+    IT t;
+    uint{this} v;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        (fun {this; this} (uint{this}) -> uint{this}) {this} c = closure t.get(_);
+        v = c.invoke(5);
+    }
+}

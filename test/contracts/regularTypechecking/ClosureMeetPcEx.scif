@@ -1,0 +1,18 @@
+// Regular-TC negative: a closurable method's external pc may be a
+// primitive or a join of primitives, but not a meet. A meet-pc entry
+// check has no supported runtime materialization (checkIfTrustSender
+// asserts false on meet). A join, by contrast, is allowed — the
+// runtime label operations are set-shaped.
+interface IT {
+    closurable public void op{userA ⨅ userB -> this}(
+        final address userA, final address userB
+    );
+}
+
+contract Bad {
+    IT t;
+
+    constructor() {
+        super();
+    }
+}

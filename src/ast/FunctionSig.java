@@ -32,7 +32,7 @@ public class FunctionSig extends TopLayerNode {
     List<String> decoratorList;
     LabeledType rtn;
     List<LabeledType> exceptionList;
-    private boolean isConstructor, isNative;
+    private boolean isConstructor, isNative, isClosurable;
 
     final private boolean isBuiltin;
     FuncSym funcSym;
@@ -112,6 +112,9 @@ public class FunctionSig extends TopLayerNode {
                 if (dec.equals(Utils.NATIVE_DECORATOR)) {
                     isNative = true;
                 }
+                if (dec.equals(Utils.CLOSURABLE_DECORATOR)) {
+                    isClosurable = true;
+                }
             }
             if (!(isPrivate || isPublic)) {
                 decoratorList.add(Utils.PRIVATE_DECORATOR);
@@ -148,13 +151,33 @@ public class FunctionSig extends TopLayerNode {
         this.isConstructor = funcSig.isConstructor;
         this.isNative = funcSig.isNative;
         this.isPublic = funcSig.isPublic;
+        this.isClosurable = funcSig.isClosurable;
         this.isBuiltin = false;
         this.location = funcSig.location;
         setDefault();
     }
 
+    private static boolean isJoinOfPrimitives(IfLabel l) {
+        if (l instanceof PrimitiveIfLabel) {
+            return true;
+        }
+        if (l instanceof ComplexIfLabel c && c.getOp() == IfOperator.JOIN) {
+            return isJoinOfPrimitives(c.getLeft()) && isJoinOfPrimitives(c.getRight());
+        }
+        return false;
+    }
+
+    /** Build this method's FuncSym (labels, params, return, exceptions) and register it in the contract scope. */
     @Override
     public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
+        if (isClosurable && funcLabels.begin_pc != null
+                && !isJoinOfPrimitives(funcLabels.begin_pc)) {
+            throw new SemanticException(
+                    "closurable method " + name
+                            + " requires a primitive or join-of-primitives external pc "
+                            + "label (meet is not supported)",
+                    location);
+        }
         SymTab contractSymTab = env.curSymTab();
         env.enterNewScope();
         ScopeContext now = new ScopeContext(this, parent);
@@ -171,6 +194,7 @@ public class FunctionSig extends TopLayerNode {
         funcSym = new FuncSym(name,
                 isPublic,
                 isBuiltin,
+                isClosurable,
                 signature(),
                 env.newLabel(funcLabels.begin_pc),
                 env.newLabel(funcLabels.to_pc),
@@ -219,6 +243,7 @@ public class FunctionSig extends TopLayerNode {
                 new FuncSym(name,
                         isPublic,
                         isBuiltin,
+                        isClosurable,
                         signature(),
                         contractSym.newLabel(funcLabels.begin_pc),
                         contractSym.newLabel(funcLabels.to_pc),
@@ -290,6 +315,27 @@ public class FunctionSig extends TopLayerNode {
         }
     }
 
+    public compile.ast.FunctionSig solidityClosureSigCodeGen(CompileEnv code) {
+        code.enterNewVarScope();
+
+        boolean isPublic = decoratorList != null
+                && decoratorList.contains(typecheck.Utils.PUBLIC_DECORATOR);
+        boolean isPayable = decoratorList != null
+                && decoratorList.contains(typecheck.Utils.PAYABLE_DECORATOR);
+        
+        List<Argument> arguments = new ArrayList<>(args.solidityCodeGen(code));
+        arguments.add(new Argument(
+                new compile.ast.ArrayType(new compile.ast.PrimitiveType(compile.Utils.PRIMITIVE_TYPE_ADDRESS_NAME)), "lExtBef"));
+        Type returnType = exceptionFree()
+                ? rtn.type().solidityCodeGen(code)
+                : compile.Utils.UNIVERSAL_RETURN_TYPE;
+        
+        code.exitVarScope();
+        return new compile.ast.FunctionSig(
+                typecheck.Utils.closureMethodNameHash(name, signature()),
+                arguments, returnType, isPublic, isPayable);
+    }
+
     public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException {
 
         assert false;
@@ -310,7 +356,7 @@ public class FunctionSig extends TopLayerNode {
     }
 
     public boolean typeMatch(FunctionSig f) {
-        if (true) {
+        if (!signatureMentionsClosure() && !f.signatureMentionsClosure()) {
             return f.signature().equals(signature());
         }
         if (!f.name.equals(name)) {
@@ -416,6 +462,20 @@ public class FunctionSig extends TopLayerNode {
         decoratorList.add(Utils.PUBLIC_DECORATOR);
     }
 
+    /** True if any argument or the return type carries a closure type. */
+    private boolean signatureMentionsClosure() {
+        if (rtn != null && rtn.type() instanceof ast.ClosureType) return true;
+        
+        if (args != null) {
+            for (Arg arg : args.args()) {
+                if (arg.annotation != null && arg.annotation.type() instanceof ast.ClosureType) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public String signature() {
         StringBuilder sb = new StringBuilder();
         String separator = "$";
@@ -463,6 +523,9 @@ public class FunctionSig extends TopLayerNode {
     }
     public boolean isNative() {
         return isNative;
+    }
+    public boolean isClosurable() {
+        return isClosurable;
     }
 
     public void makeNonConstructor() {
