@@ -1,0 +1,24 @@
+// IFC negative: the declared closure type makes weaker promises
+// (pc_ex / pc_in / gamma = {any}) than the underlying closurable
+// function actually offers ({this} on every label). Without a
+// creation-site variance check, the bound-arg and value-label
+// constraints all pass (no bound args, and the value label aligns),
+// and downstream invokers would be checked against the lax
+// declared type instead of the strict underlying-function labels.
+// The creation-site A5 variance hook against the synthesised
+// "underlying function" closure type should reject this.
+interface IT {
+    closurable public void op{this -> this; this}();
+}
+
+contract Bad {
+    IT t;
+
+    constructor() {
+        super();
+    }
+
+    public void bind{this -> this; this}() {
+        (fun {any -> any; any} () -> void) {this} c = closure t.op();
+    }
+}

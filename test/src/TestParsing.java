@@ -2,6 +2,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java_cup.runtime.Symbol;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import parser.*;
@@ -9,6 +10,15 @@ import parser.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestParsing {
+
+    /** Closure syntax must parse; a SyntaxError fails the test. */
+    @Test
+    void testClosureBasicParsesStrict() throws Exception {
+        URL input = ClassLoader.getSystemResource("parsing/ClosureBasic.scif");
+        assertNotNull(input, "parsing/ClosureBasic.scif must be on the test classpath");
+        Symbol result = Parser.parse(new File(input.toURI()), null);
+        assertNotNull(result, "closure syntax must parse to a non-null AST");
+    }
 
     @ParameterizedTest
     @ValueSource(strings = {
@@ -60,35 +70,34 @@ public class TestParsing {
             "applications/IExchange",
             "applications/Dexible_raw",
             "applications/KoET_raw",
+            "parsing/ClosureMultiHole",
+            "parsing/ClosureAllBound",
+            "parsing/ClosureNoOuterLabel",
     })
-    void testPositive(String contractName) {
-        //if (!contractName.equals("basic/DependentMap")) return;
+    void testPositive(String contractName) throws Exception {
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
-        try {
-            Symbol result = Parser.parse(new File(input.toURI()), null);
-            assertNotNull(result);
-        } catch (URISyntaxException e) {
-            System.err.println("IOException when converting the input file URL to URI");
-        } catch (Parser.SyntaxError e) {
-            System.err.println("Syntax error");
-        }
+        assertNotNull(input, inputFilePath + " must be on the test classpath");
+        // A SyntaxError propagates and fails the test.
+        Symbol result = Parser.parse(new File(input.toURI()), null);
+        assertNotNull(result, "expected " + contractName + " to parse");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
             "WrongStateVarDeclaration",
+            "ClosureHoleInInvoke",
     })
-    void testNegative(String contractName) {
+    void testNegative(String contractName) throws Exception {
         String inputFilePath = "parsing/" + contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
+        assertNotNull(input, inputFilePath + " must be on the test classpath");
+        boolean parsed;
         try {
-            Symbol result = Parser.parse(new File(input.toURI()), null);
-            assertNull(result);
-        } catch (URISyntaxException e) {
-            System.err.println("IOException when converting the input file URL to URI");
-        } catch (Parser.SyntaxError e) {
-            System.err.println("Syntax error");
+            parsed = Parser.parse(new File(input.toURI()), null) != null;
+        } catch (Parser.SyntaxError expected) {
+            parsed = false;
         }
+        assertFalse(parsed, "expected " + contractName + " to fail parsing");
     }
 }

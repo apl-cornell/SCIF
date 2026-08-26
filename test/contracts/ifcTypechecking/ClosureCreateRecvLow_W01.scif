@@ -1,0 +1,23 @@
+// IFC negative: the closure target `t` is held in a state field
+// labeled {any} (any code could have written `t`'s current value),
+// while the closure value itself is declared with the most-trusted
+// label {this}. A closure value can be no more trusted than the
+// receiver it was built against — otherwise an attacker could swap
+// `t` to a contract of their choosing and laundering would succeed.
+// The pc is {this} so pc => valLabel holds; only the receiver-trust
+// constraint forces the rejection.
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+contract Bad {
+    IT{any} t;
+
+    constructor() {
+        super();
+    }
+
+    public void make{this -> this; this}() {
+        (fun {this -> this; this} () -> void) {this} c = closure t.op();
+    }
+}

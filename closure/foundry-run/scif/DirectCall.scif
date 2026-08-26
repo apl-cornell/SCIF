@@ -1,0 +1,27 @@
+// SCIF direct-call baseline: the user calls the router's closurable
+// method directly (no relay, no closure) through the normal entry.
+import "./IRouterClosureCompile_IERC20.scif";
+
+interface IUniswapRouter {
+    closurable public void swap{user -> this; user}(
+        final address user,
+        IERC20 tokenIn, IERC20 tokenOut,
+        uint amountIn
+    );
+}
+
+contract UserDirect {
+
+    constructor() {
+        super();
+    }
+
+    public void doSwapDirect{this -> this; this}(
+        IUniswapRouter uniswapRouter,
+        IERC20 tokenIn,
+        IERC20 tokenOut,
+        uint amount
+    ) {
+        uniswapRouter.swap(address(this), tokenIn, tokenOut, amount);
+    }
+}

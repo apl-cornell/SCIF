@@ -1,0 +1,27 @@
+// IFC positive — a method whose return type is a closure type.
+//
+// `Factory.build` constructs a closure value targeting `t.op` and
+// returns it. The function's declared return type is a closure type,
+// and the local variable `c` carries the same closure shape. At the
+// `return c;` statement the closure-return variance hook fires: the
+// inner labels of `c`'s closure type must subtype the inner labels
+// of the declared return closure type per A5 (pc_ex / gamma /
+// paramLabels contravariant; pc_in / retLabel covariant). Here the
+// two sides are written identically, so the variance constraints
+// reduce trivially and the contract typechecks.
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+contract Factory {
+    IT t;
+
+    constructor() {
+        super();
+    }
+
+    public (fun {this -> this; this} () -> void) {this} build{this -> this; this}() {
+        (fun {this -> this; this} () -> void) {this} c = closure t.op();
+        return c;
+    }
+}

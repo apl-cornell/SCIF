@@ -17,6 +17,14 @@ public class Endorse extends Expression {
     Expression value;
     IfLabel from, to;
 
+    private ClosureTypeSym.RealLabels realLabels;
+    private boolean ifcVisited = false;
+
+    ClosureTypeSym.RealLabels realLabels() {
+        assert ifcVisited : "endorse labels read before IFC visit: " + location;
+        return realLabels;
+    }
+
     public Endorse(Expression value, IfLabel from, IfLabel to) {
         this.value = value;
         this.from = from;
@@ -57,6 +65,22 @@ public class Endorse extends Expression {
                 new Constraint(new Inequality(beginContext.pc, endContext.pc), env.hypothesis(),
                         location, env.curContractSym().getName(),
                         "The control flow of this expression would be endorsed"));
+
+        // if (value instanceof Name n && env.getVar(n.id) != null
+        //         && env.getVar(n.id).typeSym instanceof ClosureTypeSym cs) {
+        //     Label fromLab = env.toLabel(from);
+        //     Label toLab = env.toLabel(to);
+        //     java.util.Map<String, String> sub = new java.util.HashMap<>();
+        //     if (fromLab != null && toLab != null) {
+        //         sub.put(fromLab.toSHErrLocFmt(), toLab.toSHErrLocFmt());
+        //     }
+        //     this.realLabels = cs.renderLabels(sub);
+        // }
+        if (value instanceof Name n && env.getVar(n.id) != null
+                && env.getVar(n.id).typeSym instanceof ClosureTypeSym cs) {
+            this.realLabels = cs.renderLabels(new java.util.HashMap<>());
+        }
+        this.ifcVisited = true;
 
         return new ExpOutcome(ifNameRtn, vo.psi);
     }

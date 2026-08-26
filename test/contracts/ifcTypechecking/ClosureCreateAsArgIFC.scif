@@ -1,0 +1,30 @@
+// IFC positive — a closure creation expression passed directly as a
+// call argument, without binding it to a variable first.
+//
+// The creation's labels (the target method's labels re-anchored into
+// this contract's names) are checked against the parameter slot's
+// declared closure type at the call site. The slot writes `sender`,
+// which the call-boundary substitution re-anchors to this contract,
+// matching the creation's `this`-anchored labels.
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+interface IOther {
+    public void accept{this -> this; this}(
+        (fun {sender -> this; sender} () -> void) {sender} c
+    );
+}
+
+contract CreateAsArg {
+    IT t;
+    IOther other;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        other.accept(closure t.op());
+    }
+}

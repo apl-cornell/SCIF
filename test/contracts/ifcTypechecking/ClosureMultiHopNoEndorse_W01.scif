@@ -1,0 +1,73 @@
+// IFC negative — multi-hop closure forwarding without endorsement.
+//
+// Caller creates a closure value and passes it to Intermediate.
+// Intermediate then forwards the closure to Other without endorsing
+// (re-labelling) it. At the first hop, the dependent-label
+// substitution at the call site aligns the labels: the parameter
+// slot's `sender` substitutes to Caller's identity, matching the
+// closure's labels. But inside Intermediate the closure is held with
+// Intermediate-scope inner labels, and at the second hop the
+// substitution maps Other's `sender` to Intermediate, not to Caller.
+// The closure's actual labels (originally Caller-scoped) no longer
+// align with what Other expects, so the variance constraints emitted
+// at the second hop fail.
+//
+// Should be rejected by IFC. If we ever extend `endorse` to closures
+// (so Intermediate can write `endorse(c, sender -> this)` and re-
+// label inner labels before forwarding), a separate positive test
+// can demonstrate the multi-hop case with explicit endorse working.
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+interface IIntermediate {
+    public void process{this -> this; this}(
+        (fun {sender -> this; sender} () -> void) {sender} c
+    );
+}
+
+interface IOther {
+    public void accept{this -> this; this}(
+        (fun {sender -> this; sender} () -> void) {sender} c
+    );
+}
+
+contract Caller {
+    IT t;
+    IIntermediate intermediate;
+
+    constructor() {
+        super();
+    }
+
+    public void make{this -> this; this}() {
+        (fun {this -> this; this} () -> void) {this} c = closure t.op();
+        intermediate.process(c);
+    }
+}
+
+contract Intermediate {
+    IOther other;
+
+    constructor() {
+        super();
+    }
+
+    public void process{this -> this; this}(
+        (fun {sender -> this; sender} () -> void) {sender} c
+    ) {
+        other.accept(c);
+    }
+}
+
+contract Other {
+    constructor() {
+        super();
+    }
+
+    public void accept{this -> this; this}(
+        (fun {sender -> this; sender} () -> void) {sender} c
+    ) {
+        c.invoke();
+    }
+}

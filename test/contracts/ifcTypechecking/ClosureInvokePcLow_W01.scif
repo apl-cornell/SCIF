@@ -1,0 +1,21 @@
+// IFC negative: a closure whose target expects {this}-trusted entry
+// (its declared pc_ex is {this}) is invoked from a method whose
+// control flow (pc) is only {any}-trusted. The caller does not have
+// enough authority to dispatch into this closure. The closure's
+// value label is {this} so receiver-trust holds; only the caller
+// authority (pc vs. pc_ex) forces the rejection.
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+contract Bad {
+    constructor() {
+        super();
+    }
+
+    public void run{any -> any; this}(
+        (fun {this -> this; this} () -> void) {this} c
+    ) {
+        c.invoke();
+    }
+}

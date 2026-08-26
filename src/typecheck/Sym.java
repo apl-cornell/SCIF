@@ -38,6 +38,7 @@ public abstract class Sym {
         return this.hashCode() == other.hashCode();
     }
 
+    /** This symbol's SHErrLoc name: its defining scope qualified by its name. */
     final public String toSHErrLocFmt() {
         return defContext.getSHErrLocName() + "." + getLocalName();
     }
@@ -48,6 +49,7 @@ public abstract class Sym {
 
     protected void setName(String s) {
         name = s;
+        hashCode = s.hashCode();
     }
 
     public ScopeContext defContext() {

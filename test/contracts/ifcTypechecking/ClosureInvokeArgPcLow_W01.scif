@@ -1,0 +1,27 @@
+// IFC negative: a closure whose unbound parameter slot demands
+// {this}-trusted input is invoked under a control flow (pc) that is
+// only {any}-trusted. The runtime argument `clean` itself has high
+// integrity, but the decision to feed it into the slot was made
+// under low-trust control flow — which the parameter slot cannot
+// accept. The closure's pc_ex and value label are both left at {any}
+// so the other invoke-time trust constraints (caller authority,
+// receiver trust) hold; only the control flow vs. parameter slot
+// constraint forces the rejection.
+interface IT {
+    closurable public void op{any -> any}(uint{this} v);
+}
+
+contract Bad {
+    IT t;
+    uint{this} clean;
+
+    constructor() {
+        super();
+    }
+
+    public void run{any -> any; this}() {
+        (fun {any -> any; this} (uint{this}) -> void) {any} c =
+            closure t.op(_);
+        c.invoke(clean);
+    }
+}

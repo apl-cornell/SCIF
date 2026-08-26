@@ -73,6 +73,11 @@ public class Return extends Statement {
                         env.curContractSym().getName(),
                         "Control flow must be trusted to return"));
 
+        if (funcSym.returnType instanceof typecheck.ClosureTypeSym targetCs) {
+            ClosureCreation.checkFlowInto(value, targetCs, new java.util.HashMap<>(), env, location,
+                "Returned closure value must subtype the declared return closure type");
+        }
+
         env.cons.add(new Constraint(
                 new Inequality(Utils.joinLabels(endContext.lambda, beginContext.lambda),
                         ifRtnLockName), env.hypothesis(), location, env.curContractSym().getName(),

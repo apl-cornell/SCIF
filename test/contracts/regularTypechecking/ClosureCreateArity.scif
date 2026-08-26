@@ -1,0 +1,17 @@
+interface IBank {
+    closurable public void transfer{from -> this}(final address from, address to, uint amount);
+}
+
+contract Client {
+    IBank bank;
+
+    constructor() {
+        super();
+    }
+
+    public void bad{this -> this; this}(address from, address to) {
+        (fun {from -> bank; this} (uint) -> void) {this} c =
+            closure bank.transfer(from, to);
+        c.invoke();
+    }
+}

@@ -1,0 +1,22 @@
+// Compilation smoke test for closure creation. A partial binding
+// (one bound argument, one hole) compiles to: positional index and
+// ABI-encoded value locals, then `makeClosure` packing them behind
+// the target's closure-entry selector. Also exercises the emitted
+// closure runtime (`makeClosure`/`_bindSlots`) and the Closure
+// struct injection.
+interface IT {
+    closurable public void op{this -> this; this}(uint{this} x, uint{this} y);
+}
+
+contract ClosureCreateSmoke {
+    IT t;
+    uint{this} v;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        (fun {this; this} (uint{this}) -> void) {this} c = closure t.op(v, _);
+    }
+}

@@ -1,0 +1,19 @@
+// Parsing: all arguments are bound at creation (no holes), so the
+// resulting closure has zero unbound slots and is invoked with no
+// arguments.
+interface IT {
+    closurable public void op{this -> this}(uint a, uint b);
+}
+
+contract C {
+    IT t;
+
+    constructor() {
+        super();
+    }
+
+    public void make{this -> this; this}(uint x, uint y) {
+        (fun {this -> this; this} () -> void) {this} f = closure t.op(x, y);
+        f.invoke();
+    }
+}

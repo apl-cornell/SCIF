@@ -174,6 +174,9 @@ public class Interface extends TopLayerNode {
         for (FunctionSig functionSig: funcSigs)
             if (!functionSig.isBuiltIn()) {
                 functionSigs.add(functionSig.solidityCodeGen(code));
+                if (functionSig.isClosurable()) {
+                    functionSigs.add(functionSig.solidityClosureSigCodeGen(code));
+                }
             }
 
         return new compile.ast.Interface(contractName, structAndExcDefs, evDefs, functionSigs);
@@ -442,10 +445,22 @@ public class Interface extends TopLayerNode {
         );
         botDec.name().setLoc(CodeLocation.builtinCodeLocation(2, 0));
         botDec.setLoc(CodeLocation.builtinCodeLocation(2, 0));
+        StateVariableDeclaration invokerDec = new StateVariableDeclaration(
+                new Name(Utils.LABEL_INVOKER),
+                new LabeledType(Utils.ADDRESS_TYPE, new PrimitiveIfLabel(new Name(Utils.LABEL_TOP)), CodeLocation.builtinCodeLocation(3, 1)),
+                null,
+                true,
+                true,
+                false,
+                true
+        );
+        invokerDec.name().setLoc(CodeLocation.builtinCodeLocation(3, 0));
+        invokerDec.setLoc(CodeLocation.builtinCodeLocation(3, 0));
         List<StateVariableDeclaration> newDecs = new ArrayList<>();
         newDecs.add(topDec);
         newDecs.add(botDec);
         newDecs.add(thisDec);
+        newDecs.add(invokerDec);
         newDecs.addAll(varDeclarations);
         varDeclarations = newDecs;
     }

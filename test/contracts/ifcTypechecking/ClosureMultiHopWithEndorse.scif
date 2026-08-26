@@ -1,0 +1,67 @@
+// IFC negative — multi-hop forwarding of a `sender`-anchored closure,
+// with an endorse at the middle hop.
+//
+// Endorsing a closure affects only its *value* label; the inner
+// labels pass through unchanged. So Intermediate's
+// `endorse(c, sender -> this)` cannot re-anchor the closure's
+// `sender`-written inner labels into its own vocabulary, and at the
+// second hop the labels the closure carries (Intermediate's `sender`
+// = the original caller) no longer align with Other's slot
+// expectation (Other's `sender` = Intermediate). The flow is
+// rejected. Closures whose inner labels must survive multiple hops
+// are written with `invoker` instead — see ClosureMultiHopInvoker.
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+interface IIntermediate {
+    public void process{this -> this; this}(
+        (fun {sender -> this; sender} () -> void) {sender} c
+    );
+}
+
+interface IOther {
+    public void accept{this -> this; sender}(
+        (fun {sender -> this; sender} () -> void) {sender} c
+    );
+}
+
+contract Caller {
+    IT t;
+    IIntermediate intermediate;
+
+    constructor() {
+        super();
+    }
+
+    public void make{this -> this; this}() {
+        (fun {this -> this; this} () -> void) {this} c = closure t.op();
+        intermediate.process(c);
+    }
+}
+
+contract Intermediate {
+    IOther other;
+
+    constructor() {
+        super();
+    }
+
+    public void process{this -> this; this}(
+        (fun {sender -> this; sender} () -> void) {sender} c
+    ) {
+        other.accept(endorse(c, sender -> this));
+    }
+}
+
+contract Other {
+    constructor() {
+        super();
+    }
+
+    public void accept{this -> this; sender}(
+        (fun {sender -> this; sender} () -> void) {sender} c
+    ) {
+        c.invoke();
+    }
+}

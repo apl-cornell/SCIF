@@ -1,0 +1,66 @@
+// IFC positive — multi-hop closure forwarding with `invoker` labels.
+//
+// The target method is open-entry (`sender`-anchored), so the closure
+// created over it carries `invoker`-anchored labels: `invoker` names
+// whoever eventually calls `c.invoke()`, and it is one shared
+// principal that every scope agrees on. The closure crosses two
+// contract boundaries with no relabeling of its inner labels — each
+// hop's slot writes the same `invoker` — and the invoke site
+// substitutes the invoking contract for it. Only the closure's
+// *value* label changes per hop, via an ordinary endorse of the
+// value's trust.
+interface IT {
+    closurable public void op{sender -> sender}();
+}
+
+interface IIntermediate {
+    public void process{this -> this; this}(
+        (fun {invoker -> invoker; invoker} () -> void) {sender} c
+    );
+}
+
+interface IOther {
+    public void accept{this -> this; this}(
+        (fun {invoker -> invoker; invoker} () -> void) {this} c
+    );
+}
+
+contract Caller {
+    IT t;
+    IIntermediate intermediate;
+
+    constructor() {
+        super();
+    }
+
+    public void make{this -> this; this}() {
+        (fun {invoker -> invoker; invoker} () -> void) {this} c = closure t.op();
+        intermediate.process(c);
+    }
+}
+
+contract Intermediate {
+    IOther other;
+
+    constructor() {
+        super();
+    }
+
+    public void process{this -> this; this}(
+        (fun {invoker -> invoker; invoker} () -> void) {sender} c
+    ) {
+        other.accept(endorse(c, sender -> this));
+    }
+}
+
+contract Other {
+    constructor() {
+        super();
+    }
+
+    public void accept{this -> this; this}(
+        (fun {invoker -> invoker; invoker} () -> void) {this} c
+    ) {
+        c.invoke();
+    }
+}

@@ -1,0 +1,17 @@
+// Parsing positive: a closure type written without a trailing value
+// label parses cleanly. Closure types treat their value label the
+// same as any other type: optional at the syntactic level, defaulted
+// by the surrounding declaration site (state vars default to {this};
+// function parameters default to the enclosing method's pc_ex).
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+contract C {
+    IT t;
+    (fun {this -> this; this} () -> void) closureField;
+
+    constructor() {
+        super();
+    }
+}

@@ -1,0 +1,81 @@
+// DEX aggregator with a first-class closure: User pre-authorizes a
+// swap on a specific router and hands the pending call to an
+// aggregator, which executes it without holding User's authority.
+//
+// The closure binds all of swap's arguments, including the principal
+// `user` (bound to this contract), so the closure's entry requirement
+// is User itself. At the hand-off, Aggregator's slot writes `sender`
+// for that principal — Aggregator's caller *is* User, so the ordinary
+// call-boundary substitution aligns the labels. Single hop; the
+// closure is user-pinned, not open-entry, so `invoker` is not used.
+import "./IRouterClosureCompile_IERC20.scif";
+
+interface IUniswapRouter {
+    closurable public void swap{user -> this; user}(
+        final address user,
+        IERC20 tokenIn, IERC20 tokenOut,
+        uint amountIn
+    );
+}
+
+interface IAggregator {
+    public void fill{sender -> this; sender}(
+        (fun {sender; sender} () -> void) {sender} routerCall
+    );
+}
+
+contract UniswapRouter {
+
+    constructor() {
+        super();
+    }
+
+    closurable public void swap{user -> this; user}(
+        final address user,
+        IERC20 tokenIn, IERC20 tokenOut,
+        uint amountIn
+    ) {
+        endorse([user, tokenIn, tokenOut, amountIn], user -> this)
+        when (true) {
+            tokenIn.transferFrom(user, address(this), amountIn);
+
+            // Swap logic (simplified)
+            uint amountOut = amountIn * 99 / 100;
+
+            tokenOut.transfer(address(this), user, amountOut);
+        }
+    }
+}
+
+contract Aggregator {
+
+    constructor() {
+        super();
+    }
+
+    public void fill{sender -> this; sender}(
+        (fun {sender; sender} () -> void) {sender} routerCall
+    ) {
+        routerCall.invoke();
+    }
+}
+
+contract User {
+
+    constructor() {
+        super();
+    }
+
+    public void doSwap{this -> this; this}(
+        IAggregator aggregator,
+        IUniswapRouter uniswapRouter,
+        IERC20 tokenIn,
+        IERC20 tokenOut,
+        uint amount
+    ) {
+        (fun {this; this} () -> void) {this} routerCall =
+            closure uniswapRouter.swap(address(this), tokenIn, tokenOut, amount);
+
+        aggregator.fill(routerCall);
+    }
+}

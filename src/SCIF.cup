@@ -155,6 +155,7 @@ terminal CONTRACT, INTERFACE;
 terminal EQUALGREATER;
 terminal EXTENDS, IMPLEMENTS;
 terminal FINAL;
+terminal CLOSURE, CLOSURABLE, FUN, HOLE;
 //terminal STATIC;
 terminal TRY, ATOMIC, CATCH, RESCUE, EXCEPTION, THROW, THROWS;
 terminal DELETE;
@@ -228,6 +229,12 @@ nonterminal TrailerExpr trailer;
 // nonterminal ClassDef classdef;
 nonterminal Call arglist;
 nonterminal LabeledType labeledType, maybeLabeledType;
+nonterminal ast.ClosureType closureType;
+nonterminal List<LabeledType> throwsOpt;
+nonterminal List<Arg> closureParams;
+nonterminal Arg closureParam;
+nonterminal Expression closureArg;
+nonterminal List<Expression> closureArgList;
 nonterminal IfLabel ifLabel, unitIfLabel;
 nonterminal PrimitiveIfLabel primitiveIfLabel;
 nonterminal Type type, nonarray_type;
@@ -785,33 +792,13 @@ errorDef ::=
     :};
 
 r_funcSig ::=
-    maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b {:
-        // System.out.println("parsing function");
-        // logger.debug("parsing func sig");
-        CodeLocation location = new CodeLocation(cleft, cright, filename);
-        RESULT = new FunctionSig((String) funcName, funclabels, b, null, c, false, location);
-        //makeNode("funcdef", a, b, c, d);
-    :}
-    | decorators:d maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b  {:
-        // System.out.println("parsing function");
-        // // logger.debug("parsing func sig");
-        CodeLocation location = new CodeLocation(cleft, cright, filename);
-        RESULT = new FunctionSig((String) funcName, funclabels, b, d, c, false, location);
-        //makeNode("funcdef", a, b, c, d);
-    :}
-    | maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b THROWS LPAR except_types:t RPAR  {:
-        // System.out.println("parsing function");
-        // // logger.debug("parsing func sig");
+    maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b throwsOpt:t {:
         CodeLocation location = new CodeLocation(cleft, cright, filename);
         RESULT = new FunctionSig((String) funcName, funclabels, b, null, c, t, false, location);
-        //makeNode("funcdef", a, b, c, d);
     :}
-    | decorators:d maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b THROWS LPAR except_types:t RPAR {:
-        // System.out.println("parsing function");
-        // // logger.debug("parsing func sig");
+    | decorators:d maybeLabeledType:c NAME:funcName tFuncLabels:funclabels parameters:b throwsOpt:t {:
         CodeLocation location = new CodeLocation(cleft, cright, filename);
         RESULT = new FunctionSig((String) funcName, funclabels, b, d, c, t, false, location);
-        //makeNode("funcdef", a, b, c, d);
     :};
 
 decorator ::= PUBLIC:x {: RESULT = "public"; :}
@@ -819,6 +806,7 @@ decorator ::= PUBLIC:x {: RESULT = "public"; :}
     | PROTECTED:x {: RESULT = "protected"; :}
     | PRIVATE:x {: RESULT = "private"; :}
     | NATIVE:x {: RESULT = "native"; :}
+    | CLOSURABLE:x {: RESULT = "closurable"; :}
     ;
 decorators ::=
     decorator:a {:
@@ -911,7 +899,66 @@ nonarray_type ::=
     :}
     | mapType:m {:
         RESULT = m;
+    :}
+    | closureType:a {:
+        RESULT = a;
     :};
+
+closureType ::=
+    LPAR FUN tFuncLabels:fl LPAR closureParams:ps RPAR RIGHT_ARROW maybeLabeledType:r throwsOpt:ex RPAR {:
+        RESULT = new ast.ClosureType(fl, ps, r, ex);
+        RESULT.setLoc(new CodeLocation(flleft, flright, filename));
+    :};
+
+closureParams ::=
+    {: RESULT = new ArrayList<Arg>(); :}
+    | closureParam:t {:
+        List<Arg> rnt = new ArrayList<Arg>();
+        rnt.add(t);
+        RESULT = rnt;
+    :}
+    | closureParams:l COMMA closureParam:t {:
+        l.add(t);
+        RESULT = l;
+    :};
+
+closureParam ::=
+    maybeLabeledType:t {:
+        RESULT = new Arg(null, t);
+        RESULT.setLoc(new CodeLocation(tleft, tright, filename));
+    :}
+    | maybeLabeledType:t NAME:a {:
+        RESULT = new Arg((String) a, t, false, false);
+        RESULT.setLoc(new CodeLocation(tleft, tright, filename));
+    :}
+    | FINAL maybeLabeledType:t NAME:a {:
+        RESULT = new Arg((String) a, t, false, true);
+        RESULT.setLoc(new CodeLocation(tleft, tright, filename));
+    :};
+
+closureArgList ::=
+    {: RESULT = new ArrayList<Expression>(); :}
+    | closureArg:a {:
+        List<Expression> rnt = new ArrayList<Expression>();
+        rnt.add(a);
+        RESULT = rnt;
+    :}
+    | closureArgList:l COMMA closureArg:a {:
+        l.add(a);
+        RESULT = l;
+    :};
+
+closureArg ::=
+    expr:e {: RESULT = e; :}
+    | HOLE:h {:
+        ast.Hole hole = new ast.Hole();
+        hole.setLoc(new CodeLocation(hleft, hright, filename));
+        RESULT = hole;
+    :};
+
+throwsOpt ::=
+    {: RESULT = new ArrayList<LabeledType>(); :}
+    | THROWS LPAR except_types:t RPAR {: RESULT = t; :};
 
 extType ::=
     NAME:methodName AT NAME:contractName {:
@@ -1467,6 +1514,18 @@ expr ::=
     NEW:n call_expr:constructor_call {:
         RESULT = new New(constructor_call);
         RESULT.setLoc(new CodeLocation(nleft, nright, filename));
+    :}
+    |
+    CLOSURE:k trailer_expr:t LPAR closureArgList:as RPAR {:
+        RESULT = new ast.ClosureCreation(t, as);
+        RESULT.setLoc(new CodeLocation(kleft, kright, filename));
+    :}
+    |
+    CLOSURE:k NAME:c LPAR closureArgList:as RPAR {:
+        Name cn = new Name((String) c);
+        cn.setLoc(new CodeLocation(cleft, cright, filename));
+        RESULT = new ast.ClosureCreation(cn, as);
+        RESULT.setLoc(new CodeLocation(kleft, kright, filename));
     :}
     |
     NAME:a EQUALGREATER NAME:b {:

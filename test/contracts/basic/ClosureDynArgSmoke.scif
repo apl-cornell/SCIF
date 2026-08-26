@@ -1,0 +1,35 @@
+// Compilation smoke test for dynamically-sized closure arguments.
+// `payload` is `bytes`, so its slot is marked in the closure's dynMask
+// and its encoding lives in dynArgs until invocation reassembles the
+// ABI tail. One closure binds it at creation, the other leaves it open
+// and fills it at invocation, covering both entries into _bindSlots.
+//
+// The static `tag` after the dynamic slot is deliberate: it keeps the
+// head offsets from being right by accident when the dynamic slot is
+// last.
+interface IT {
+    closurable public void op{this -> this; this}(
+        bytes{this} payload, uint{this} tag
+    );
+}
+
+contract ClosureDynArgSmoke {
+    IT t;
+    bytes{this} stored;
+
+    constructor() {
+        super();
+    }
+
+    public void boundAtCreation{this -> this; this}() {
+        (fun {this; this} (uint{this}) -> void) {this} c =
+            closure t.op(stored, _);
+        c.invoke(7);
+    }
+
+    public void filledAtInvoke{this -> this; this}() {
+        (fun {this; this} (bytes{this}, uint{this}) -> void) {this} c =
+            closure t.op(_, _);
+        c.invoke(stored, 9);
+    }
+}

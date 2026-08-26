@@ -1,0 +1,11 @@
+// Regular TC negative: `invoke` is only defined on closure values.
+// Calling it on a `uint` variable must be rejected.
+contract Bad {
+    constructor() {
+        super();
+    }
+
+    public void run{this -> this; this}(uint x) {
+        x.invoke();
+    }
+}

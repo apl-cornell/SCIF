@@ -1,4 +1,4 @@
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import ast.SourceFile;
 import java.io.File;
@@ -37,39 +37,36 @@ public class TestIfcTypechecking {
             "examples/SimpleStorage",
             // "examples/ERC20",
             "examples/DeployToken",
+            "ifcTypechecking/ClosureCreateIFC",
+            "ifcTypechecking/ClosureInvokeIFC",
+            "ifcTypechecking/ClosureFieldStoreInvokeIFC",
+            "ifcTypechecking/ClosureCrossContractBothThis",
+            "ifcTypechecking/ClosureMultiHopInvoker",
+            "ifcTypechecking/ClosureReturnIFC",
+            "ifcTypechecking/ClosureCreateAsArgIFC",
+            "ifcTypechecking/ClosureReturnReceiveIFC",
+            "ifcTypechecking/IRouterClosure",
+            "ifcTypechecking/ClosureBinderIFC",
+            "ifcTypechecking/ClosureBindIFC",
+            "ifcTypechecking/ClosureTargetMember",
+            "ifcTypechecking/ClosureInvokePostPcAutoendorse",
+            "ifcTypechecking/ClosurePcExStronger",
     })
-    void testPositive(String contractName) {
+    void testPositive(String contractName) throws Exception {
         File logDir = new File("./.scif");
         logDir.mkdirs();
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         System.out.println(inputFilePath + ": " + input);
-//        File ntcConsFile = new File(logDir, "ntc.cons");
         ArrayList<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
-        try {
-            List<SourceFile> roots = Preprocessor.preprocess(files);
-            assertNotNull(roots);
-            assert (TypeChecker.regularTypecheck(roots, m_debug));
-
-            // System.out.println("["+ outputFileName + "]");
-            //        ArrayList<File> ifcConsFiles = new ArrayList<>();
-            //        for (int i = 0; i < roots.size(); ++i) {
-            //            File IFCConsFile;
-            //            IFCConsFile = new File(logDir, "ifc" + i + ".cons");
-            //            ifcConsFiles.add(IFCConsFile);
-            //        }
-
-            System.out.println("\nInformation Flow Typechecking:");
-
-            assert (TypeChecker.ifcTypecheck(roots, m_debug));
-            // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
-            // logger.debug("running SHErrLoc...");
-            // boolean passIFC = runSLC(outputFileName);
-        } catch (Exception e) {
-            e.printStackTrace();
-            assert false;
-        }
+        List<SourceFile> roots = Preprocessor.preprocess(files);
+        assertNotNull(roots, contractName);
+        assertTrue(TypeChecker.regularTypecheck(roots, m_debug),
+                "expected " + contractName + " to regular-typecheck");
+        System.out.println("\nInformation Flow Typechecking:");
+        assertTrue(TypeChecker.ifcTypecheck(roots, m_debug),
+                "expected " + contractName + " to IFC-typecheck");
     }
     @ParameterizedTest
     @ValueSource(strings = {
@@ -84,41 +81,45 @@ public class TestIfcTypechecking {
             "ifcTypechecking/Wallet_lock_exception_W01",
             "ifcTypechecking/Wallet_lock_exception_W02",
             "ifcTypechecking/TailCall",
+            "ifcTypechecking/ClosureCreateArgLow_W01",
+            "ifcTypechecking/ClosureInvokeArgLow_W01",
+            "ifcTypechecking/ClosureCreatePcLow_W01",
+            "ifcTypechecking/ClosureCreateValLabelHigh_W01",
+            "ifcTypechecking/ClosureInvokePcLow_W01",
+            "ifcTypechecking/ClosureCreateRecvLow_W01",
+            "ifcTypechecking/ClosureInvokeArgPcLow_W01",
+            "ifcTypechecking/CallPcLow_W01",
+            "ifcTypechecking/CallRecvLow_W01",
+            "ifcTypechecking/ClosureMultiHopNoEndorse_W01",
+            "ifcTypechecking/ClosureMultiHopWithEndorse",
+            "ifcTypechecking/ClosureDeclaredWeakerThanFunc_W01",
+            "ifcTypechecking/ClosureReturnDeclaredWeaker_W01",
+            "ifcTypechecking/ClosureBinderNotPrincipal_W01",
+            "ifcTypechecking/ClosureBinderBoundDependent_W01",
+            "ifcTypechecking/ClosureBindArgLow_W01",
+            "ifcTypechecking/ClosureBindBoundDependent_W01",
             // "examples/ERC20",
     })
-    void testNegative(String contractName) {
+    void testNegative(String contractName) throws Exception {
         File logDir = new File("./.scif");
         logDir.mkdirs();
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         System.out.println(inputFilePath + ": " + input);
-//        File ntcConsFile = new File(logDir, "ntc.cons");
         ArrayList<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
+        List<SourceFile> roots = Preprocessor.preprocess(files);
+        assertNotNull(roots, contractName);
+        assertTrue(TypeChecker.regularTypecheck(roots, m_debug),
+                "expected " + contractName + " to clear regular typecheck "
+                        + "(IFC must be the rejector)");
+        boolean ifcAccepted;
         try {
-            List<SourceFile> roots = Preprocessor.preprocess(files);
-            assertNotNull(roots);
-            assert (TypeChecker.regularTypecheck(roots, m_debug));
-
-            // System.out.println("["+ outputFileName + "]");
-            //        ArrayList<File> ifcConsFiles = new ArrayList<>();
-            //        for (int i = 0; i < roots.size(); ++i) {
-            //            File IFCConsFile;
-            //            IFCConsFile = new File(logDir, "ifc" + i + ".cons");
-            //            ifcConsFiles.add(IFCConsFile);
-            //        }
-
-            System.out.println("\nInformation Flow Typechecking:");
-
-            assert (!TypeChecker.ifcTypecheck(roots, m_debug));
-            // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
-            // logger.debug("running SHErrLoc...");
-            // boolean passIFC = runSLC(outputFileName);
-        } catch (Parser.SyntaxError e) {
-            assert true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            assert true;
+            ifcAccepted = TypeChecker.ifcTypecheck(roots, m_debug);
+        } catch (typecheck.exceptions.SemanticException e) {
+            ifcAccepted = false;
         }
+        assertFalse(ifcAccepted,
+                "expected " + contractName + " to be rejected by IFC typecheck");
     }
 }

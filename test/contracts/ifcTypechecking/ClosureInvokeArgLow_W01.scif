@@ -1,0 +1,23 @@
+// IFC negative: at the invocation site, the runtime argument `dirty`
+// is labeled {any} (least trusted) but the closure's remaining
+// unbound slot demands {this}-integrity input. Feeding a least-
+// trusted value into a most-trusted slot must be rejected — the
+// closure cannot be invoked with this argument no matter how it was
+// originally bound.
+interface IT {
+    closurable public void op{this -> this}(uint{this} v);
+}
+
+contract Bad {
+    IT t;
+
+    constructor() {
+        super();
+    }
+
+    public void run{this -> this; this}(uint{any} dirty) {
+        (fun {this -> this; this} (uint{this}) -> void) {this} c =
+            closure t.op(_);
+        c.invoke(dirty);
+    }
+}

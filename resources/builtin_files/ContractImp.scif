@@ -2,11 +2,20 @@ import "./Contract.scif";
 
 contract ContractImp implements Contract {
     transient bool m_lock;
+    map(address, map(address, bool)) m_trusts;
 
     constructor() {}
 
     public native bool trusts(address a, address b) {
-        return a == b || b == address(this);
+        return a == b || b == address(this) || m_trusts[a][b];
+    }
+
+    public native void registerTrust(address b) {
+        m_trusts[sender][b] = true;
+    }
+
+    public native void unregisterTrust(address b) {
+        m_trusts[sender][b] = false;
     }
 
     private native bool bypassLocks(address from) {

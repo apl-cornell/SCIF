@@ -108,6 +108,14 @@ public class ScopeContext {
         return parent.isContractLevel();
     }
 
+    /** True when this scope sits inside a closure type annotation. */
+    public boolean insideClosureType() {
+        if (cur instanceof ClosureType) {
+            return true;
+        }
+        return parent != null && parent.insideClosureType();
+    }
+
     public ScopeContext getParent() {
         return parent;
     }
@@ -153,6 +161,7 @@ public class ScopeContext {
         return parent;
     }
 
+    /** Constraint: this context's type equals the given symbol's type. */
     public Constraint genEqualCons(Sym sym, NTCEnv env, CodeLocation location, String explanation) {
         assert !getSHErrLocName().startsWith("null") : getSHErrLocName();
         return new Constraint(new Inequality(getSHErrLocName(), CompareOperator.Eq, sym.toSHErrLocFmt()),

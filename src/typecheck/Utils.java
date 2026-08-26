@@ -41,6 +41,8 @@ public class Utils {
     public static final String LABEL_BOTTOM = "any";
     public static final String LABEL_THIS = "this";
     public static final String LABEL_SENDER = "sender";
+    public static final String LABEL_INVOKER = "invoker";
+    public static final String CLOSURE_TARGET_MEMBER = "target";
     public static final String DEAD = "---DEAD---";
     public static final String KEY = "KEY";
     public static final String SHERRLOC_TOP = LABEL_TOP;
@@ -272,6 +274,13 @@ public class Utils {
 
     public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors, List<Constraint> assumptions,
             List<Constraint> constraints, boolean isIFC, InterfaceSym contractSym) {
+        return createDiagnoser(constructors, assumptions, constraints, isIFC, contractSym,
+                java.util.Set.of(), List.of());
+    }
+
+    public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors, List<Constraint> assumptions,
+            List<Constraint> constraints, boolean isIFC, InterfaceSym contractSym,
+            Set<String> rigidAtoms, List<String[]> atomAssumptions) {
 
         SherrlocDiagnoser diagnoser = new SherrlocDiagnoser(DiagnosticOptions.Mode.CONS, true, false);
 
@@ -311,6 +320,20 @@ public class Utils {
                 diagnoser.addAssumedInequality(diagnoser.createEqualityConstraint(
                         diagnoser.createElement(top.toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition()),
                         diagnoser.createElement(contractSym.thisSym().toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition())));
+            }
+            if (isIFC) {
+                for (String atom : rigidAtoms) {
+                    diagnoser.defineConstructor(atom, 0);
+                    // bottom bound only: atom ⇒ any
+                    diagnoser.addAssumedInequality(diagnoser.createGreaterThanConstraint(
+                            diagnoser.createElement(bot.toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition()),
+                            diagnoser.createElement(atom, sherrloc.constraint.ast.Position.EmptyPosition())));
+                }
+                for (String[] pair : atomAssumptions) {
+                    diagnoser.addAssumedInequality(diagnoser.createEqualityConstraint(
+                            diagnoser.createElement(pair[0], sherrloc.constraint.ast.Position.EmptyPosition()),
+                            diagnoser.createElement(pair[1], sherrloc.constraint.ast.Position.EmptyPosition())));
+                }
             }
         }
 
@@ -680,6 +703,14 @@ public class Utils {
         return methodNameHash(funName, functionSig.signature());
     }
     public static String methodNameHash(String funName, String plainSignature) {
+        return funName + "_" + signatureHashHex(plainSignature);
+    }
+
+    public static String closureMethodNameHash(String funName, String plainSignature) {
+        return funName + "_closure_" + signatureHashHex(plainSignature);
+    }
+
+    private static String signatureHashHex(String plainSignature) {
         // SHA256
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -697,8 +728,7 @@ public class Utils {
                 hexString.insert(0, '0');
             }
 
-            return funName + "_" + hexString.toString();
-            // return plainSignature;
+            return hexString.toString();
         } catch (NoSuchAlgorithmException exc) {
             throw new RuntimeException();
         }

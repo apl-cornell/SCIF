@@ -15,3 +15,6 @@ node_modules
 .DS_Store
 .vscode
 *.sol
+!closure/evaluation/bin/
+!resources/closure_runtime/*.sol
+!closure/foundry-run/**/*.sol

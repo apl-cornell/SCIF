@@ -1,0 +1,10 @@
+import "./ClosureFieldSmoke_IT.scif";
+
+contract C {
+    IT t;
+    (fun {this -> this; this} () -> void) {this} closureField;
+
+    constructor() {
+        super();
+    }
+}

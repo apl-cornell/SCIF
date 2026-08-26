@@ -1,0 +1,23 @@
+// IFC negative — binding an untrusted value into a trusted slot of a
+// closure. The bind form runs the same argument check creation does:
+// `recipient` arrives at {any} but `to` is guarded by {this}.
+interface IToken {
+    closurable public void transfer{this -> this; this}(
+        final address from, address{this} to, uint{this} amount
+    );
+}
+
+contract Payer {
+    IToken token;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}(address{any} recipient) {
+        (fun {this; this} (address{this}, uint{this}) -> void) {this} half =
+            closure token.transfer(address(this), _, _);
+        (fun {this; this} (uint{this}) -> void) {this} done =
+            closure half(recipient, _);
+    }
+}

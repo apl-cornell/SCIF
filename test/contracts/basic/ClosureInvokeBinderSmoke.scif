@@ -1,0 +1,26 @@
+// Compilation smoke test for a closure whose external label names one
+// of its own unbound slots. The believed label materialized at the
+// invoke site is the argument supplied there, so `lExtBef` is built
+// from the local holding it rather than from a name in scope.
+//
+// Same shape as ifcTypechecking/ClosureBinderIFC, which typechecks;
+// this exercises its code generation.
+interface IToken {
+    closurable public void transfer{from -> this; from}(
+        final address from, address{this} to, uint{from} amount
+    );
+}
+
+contract ClosureInvokeBinderSmoke {
+    IToken token;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        (fun {payer; payer}(final address payer, uint{payer} amount) -> void) {this} clo =
+            closure token.transfer(_, address(this), _);
+        clo.invoke(address(this), 100);
+    }
+}

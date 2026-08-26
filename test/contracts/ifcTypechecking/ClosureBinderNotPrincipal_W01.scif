@@ -1,0 +1,27 @@
+// IFC negative — invoking a closure whose labels depend on its own
+// unbound parameter, with an actual that does not name a principal.
+//
+// The closure's entry (and its `amount` slot) are guarded by the
+// first unbound parameter. Substituting it requires the invoke
+// argument to name a principal (a final address/contract), exactly
+// like a dependent map access; `bob` is not final, so the closure's
+// believed labels cannot be resolved and the invoke is rejected.
+interface IToken {
+    closurable public void transfer{from -> this; from}(
+        final address from, address{this} to, uint{from} amount
+    );
+}
+
+contract Bad {
+    IToken token;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}(address bob) {
+        (fun {payer}(final address payer, uint{payer} amount) -> void) {this} clo =
+            closure token.transfer(_, address(this), _);
+        clo.invoke(bob, 100);
+    }
+}

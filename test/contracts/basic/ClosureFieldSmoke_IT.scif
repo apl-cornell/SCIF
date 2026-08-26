@@ -1,0 +1,3 @@
+interface IT {
+    closurable public void op{this -> this}();
+}

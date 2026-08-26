@@ -1,0 +1,22 @@
+// Regular-TC positive: a closurable method whose external pc is a
+// join of primitives. The invoke site materializes the join into an
+// address[] and the runtime label operations (labelJoin / actsFor)
+// are set-shaped, so join-pc is supported.
+//
+// Uses a join of built-in principals. A join of *parameters*
+// (`userA ⨆ userB`) additionally trips a pre-existing complex-label
+// resolver bug (the same one that keeps examples/SharedWallet out of
+// the test suite — later params are not yet in scope when the
+// signature label resolves); that is a general complex-pc-ex bug,
+// independent of closures, and out of scope here.
+interface IT {
+    closurable public void op{this ⨆ sender -> this}();
+}
+
+contract Ok {
+    IT t;
+
+    constructor() {
+        super();
+    }
+}

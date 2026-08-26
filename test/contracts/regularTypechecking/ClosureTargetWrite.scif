@@ -1,0 +1,18 @@
+// Regular-TC negative — `c.target` is read-only; assigning to it is
+// rejected.
+interface IT {
+    closurable public void op{sender -> sender}();
+}
+
+contract Bad {
+    IT t;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}(address x) {
+        (fun {invoker; invoker} () -> void) {this} c = closure t.op();
+        c.target = x;
+    }
+}

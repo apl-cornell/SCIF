@@ -1,0 +1,22 @@
+// Regular TC negative: a contract claims to implement an interface
+// whose method takes a closure-typed parameter, but the contract's
+// matching method declares a closure type with a different unbound
+// parameter type (the interface says uint, the contract says
+// address). The signatures are structurally distinct closure types,
+// so the implements relationship must be rejected.
+interface IRunner {
+    public void exec{this -> this; this}(
+        (fun {this -> this; this} (uint) -> void) {this} c
+    );
+}
+
+contract Runner implements IRunner {
+    constructor() {
+        super();
+    }
+
+    public void exec{this -> this; this}(
+        (fun {this -> this; this} (address) -> void) {this} c
+    ) {
+    }
+}

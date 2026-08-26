@@ -50,6 +50,7 @@ public class Utils {
     public static final String LOCK_CALL = "acquireLock";
     public static final String UNLOCK_CALL = "releaseLock";
     public static final String NATIVE_DECORATOR = "native";
+    public static final String CLOSURABLE_DECORATOR = "closurable";
     public static final String BYPASSLOCK_CALL = "bypassLocks";
     public static final String SOL_PUBLIC_DECORATOR = "public";
     public static final String SOL_PRIVATE_DECORATOR = "internal";
@@ -57,6 +58,39 @@ public class Utils {
     public static final String SOL_EXTERNAL_DECORATOR = "external";
     public static final String PRIMITIVE_TYPE_VOID_NAME = "void";
     public static final String PRIMITIVE_TYPE_ADDRESS_NAME = "address";
+
+    public static final String CLOSURE_RUNTIME_DIR = "closure_runtime/";
+    public static final String RUNTIME_FUNC_PRIMITIVE_ACTS_FOR = "primitiveActsFor";
+    public static final String RUNTIME_FUNC_ACTS_FOR = "actsFor";
+    public static final String RUNTIME_FUNC_MAKE_CLOSURE = "makeClosure";
+    public static final String RUNTIME_FUNC_BIND_SLOTS = "bindSlots";
+    public static final String RUNTIME_FUNC_INVOKE = "invoke";
+    public static final String RUNTIME_FUNC_INVOKE_WITH = "invokeWith";
+    public static final String RUNTIME_FUNC_COPY_CLOSURE = "copyClosure";
+    public static final String RUNTIME_FUNC_BIND_CLOSURE = "bindClosure";
+
+    /**
+     * How a value of this type is laid out in an ABI-encoded argument
+     * list, which is what decides how a closure can carry it.
+     */
+    public enum AbiKind { STATIC_WORD, DYNAMIC, UNSUPPORTED }
+
+    public static AbiKind abiKind(compile.ast.Type t) {
+        if (t instanceof compile.ast.FixedArrayType) {
+            return AbiKind.UNSUPPORTED;
+        }
+        if (t instanceof compile.ast.ArrayType) {
+            return AbiKind.DYNAMIC;
+        }
+        if (t instanceof compile.ast.PrimitiveType p) {
+            String name = p.name();
+            if (name.equals(PRIMITIVE_TYPE_BYTES_NAME) || name.equals("string")) {
+                return AbiKind.DYNAMIC;
+            }
+            return AbiKind.STATIC_WORD;
+        }
+        return AbiKind.UNSUPPORTED;
+    }
 
     public static String toBinOp(BinaryOperator op) {
         if (op == BinaryOperator.Add)
@@ -172,6 +206,22 @@ public class Utils {
                 Collectors.joining(", "));
     }
 
+
+    public static compile.ast.Function loadRuntimeFunction(String name) {
+        String resourcePath = CLOSURE_RUNTIME_DIR + name + ".sol";
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        try (java.io.InputStream in = cl.getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                throw new IllegalStateException("Missing resource: " + resourcePath);
+            }
+            List<String> lines = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8))
+                    .lines().collect(java.util.stream.Collectors.toList());
+            return new compile.ast.VerbatimFunction(name, lines);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load runtime function " + name, e);
+        }
+    }
 
     public static void writeToFile(SolNode node, File outputFile) {
         try {

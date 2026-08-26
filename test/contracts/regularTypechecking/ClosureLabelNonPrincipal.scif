@@ -1,0 +1,21 @@
+// Regular TC negative: a closure type's labels reference `counter`, a
+// uint state field. Labels can only name values that denote a
+// principal at runtime — addresses, principals, contracts, or
+// interfaces. Using a uint variable as a principal label must be
+// rejected at regular typechecking.
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+contract Bad {
+    IT t;
+    uint counter;
+
+    constructor() {
+        super();
+    }
+
+    public void run{this -> this; this}() {
+        (fun {counter -> this; this} () -> void) c = closure t.op();
+    }
+}

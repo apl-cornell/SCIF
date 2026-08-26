@@ -1,0 +1,18 @@
+// Parsing negative: `_` is a closure-creation/bind sentinel only;
+// using it as a runtime argument to `invoke(...)` is a syntax error.
+interface IT {
+    closurable public void op{this -> this}(uint a);
+}
+
+contract C {
+    IT t;
+
+    constructor() {
+        super();
+    }
+
+    public void make{this -> this; this}() {
+        (fun {this -> this; this} (uint) -> void) {this} f = closure t.op(_);
+        f.invoke(_);
+    }
+}

@@ -1,0 +1,25 @@
+// IFC negative — non-closure twin of ClosureCreatePcLow_W01.
+//
+// The method's control flow (pc) is {any}-trusted but it directly
+// calls `t.op(clean)`, whose declared pc_ex is {this} and whose
+// parameter slot demands {this}-trusted input. The caller does not
+// have enough authority to dispatch into op; the call must be
+// rejected. In the closure version of this scenario, the same
+// caller-vs-callee mismatch is caught at closure bind time. Here it
+// is caught at the direct call site instead.
+interface IT {
+    public void op{this -> this}(uint{this} v);
+}
+
+contract Bad {
+    IT t;
+    uint{this} clean;
+
+    constructor() {
+        super();
+    }
+
+    public void run{any -> any; this}() {
+        t.op(clean);
+    }
+}
