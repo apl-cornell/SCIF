@@ -33,13 +33,11 @@ Methods within the same contract can be called using their names. For example,
 
 ```scif
 contract C {
-    @private 
-    uint f(uint i) {
+    private uint f(uint i) {
         return i + 1;
     }
 
-    @public
-    uint g() {
+    public uint g() {
         return f(10);
     }
 }
@@ -54,8 +52,7 @@ Internal method calls are compiled into simple jumps inside the EVM. So they are
 ```scif
 contract D {
     C c;
-    @private
-    uint h() {
+    private uint h() {
         return c.g() + 10;
     }
 }

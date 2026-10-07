@@ -1,0 +1,16 @@
+contract C {
+    private uint f(uint i) {
+        return i + 1;
+    }
+
+    public uint g() {
+        return f(10);
+    }
+}
+
+contract D {
+    C c;
+    private uint h() {
+        return c.g() + 10;
+    }
+}

@@ -1,0 +1,28 @@
+contract Wallet {
+    map(address, uint) balances;
+    exception balanceNotEnough();
+    exception transferFailure();
+    
+    constructor() {
+    		super();
+    }
+
+    public void withdraw(uint amount) throws (balanceNotEnough, transferFailure) {
+        endorse(amount, any -> this) when (balances[sender] >= amount) {
+            lock(this) {
+                atomic {
+                    send(sender, amount);
+                } rescue (error e) {
+                    throw transferFailure();
+                }
+                balances[sender] -= amount;
+            }
+        } else {
+            throw balanceNotEnough();
+        }
+    }
+
+		public payable void deposit() {
+        balances[sender] += value;
+    }
+}

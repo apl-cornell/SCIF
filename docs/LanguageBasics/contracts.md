@@ -34,8 +34,7 @@ contract ContractName[this] {
     }
 
     // methods
-    @public 
-    void transfer(address to, uint amount) throws (TransferFailure) {
+    public void transfer(address to, uint amount) throws (TransferFailure) {
         if (balances[msg.sender] >= amount) {
             balances[msg.sender] = balance[msg.sender] - amount;
             balances[to] = balance[to] + amount;

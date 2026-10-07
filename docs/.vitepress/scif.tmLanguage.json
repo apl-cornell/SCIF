@@ -1,4 +1,200 @@
 {
-    "name": "scif",
-    "scopeName": "source.scif",
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "scif",
+  "scopeName": "source.scif",
+  "fileTypes": [
+    "scif"
+  ],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#label"
+    },
+    {
+      "include": "#type-declaration"
+    },
+    {
+      "include": "#external-type"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#builtins"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#function-call"
+    },
+    {
+      "include": "#operators"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.scif",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.scif",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.scif",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.scif",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "label": {
+      "name": "meta.label.scif",
+      "begin": "(?<=[A-Za-z0-9_\\)\\]])(\\{)(?=\\s*\\(?\\s*[A-Za-z_][A-Za-z0-9_]*\\s*\\)?(?:\\s*(?:->|;|⨆|⨅)\\s*\\(?\\s*[A-Za-z_][A-Za-z0-9_]*\\s*\\)?)*\\s*\\})",
+      "end": "\\}",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.label.begin.scif"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.label.end.scif"
+        }
+      },
+      "patterns": [
+        {
+          "name": "variable.language.principal.scif",
+          "match": "\\b(?:this|sender|any|TOP)\\b"
+        },
+        {
+          "name": "keyword.operator.label.scif",
+          "match": "->|;|⨆|⨅"
+        },
+        {
+          "name": "entity.other.attribute-name.label.scif",
+          "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+        }
+      ]
+    },
+    "type-declaration": {
+      "match": "\\b(contract|interface|struct|exception|event|extends|implements|new)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": {
+          "name": "keyword.declaration.scif"
+        },
+        "2": {
+          "name": "entity.name.type.scif"
+        }
+      }
+    },
+    "external-type": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*)(@)([A-Za-z_][A-Za-z0-9_]*)\\b",
+      "captures": {
+        "1": {
+          "name": "entity.name.type.scif"
+        },
+        "2": {
+          "name": "punctuation.separator.external-type.scif"
+        },
+        "3": {
+          "name": "entity.name.type.scif"
+        }
+      }
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.scif",
+          "match": "\\b(?:if|else|while|for|return|break|continue|try|catch|throw|atomic|rescue|lock|unchecked|endorse|when|revert|emit|delete|assert|assume)\\b"
+        },
+        {
+          "name": "keyword.declaration.scif",
+          "match": "\\b(?:contract|interface|struct|exception|event|constructor|import|extends|implements|throws|map|new|var)\\b"
+        },
+        {
+          "name": "storage.modifier.scif",
+          "match": "\\b(?:public|private|protected|payable|native|final|transient)\\b"
+        },
+        {
+          "name": "keyword.operator.word.scif",
+          "match": "\\b(?:and|or|not|in|is)\\b"
+        },
+        {
+          "name": "constant.language.scif",
+          "match": "\\b(?:true|false|none)\\b"
+        }
+      ]
+    },
+    "builtins": {
+      "patterns": [
+        {
+          "name": "support.type.primitive.scif",
+          "match": "\\b(?:bool|uint|address|bytes|string|void|principal)\\b"
+        },
+        {
+          "name": "variable.language.principal.scif",
+          "match": "\\b(?:this|sender|any|TOP)\\b"
+        },
+        {
+          "name": "variable.language.scif",
+          "match": "\\b(?:value|now|result|UINT_MAX)\\b"
+        },
+        {
+          "name": "support.function.builtin.scif",
+          "match": "\\b(?:send|balance|trusts|super)\\b(?=\\s*\\()"
+        }
+      ]
+    },
+    "numbers": {
+      "name": "constant.numeric.scif",
+      "match": "\\b(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|[0-9][0-9_]*)\\b"
+    },
+    "function-call": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*)(?=\\s*(?:\\{[^{}]*\\})?\\s*\\()",
+      "captures": {
+        "1": {
+          "name": "entity.name.function.scif"
+        }
+      }
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.flow.scif",
+          "match": "->|=>|⨆|⨅"
+        },
+        {
+          "name": "keyword.operator.comparison.scif",
+          "match": "==|!=|<>|<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.logical.scif",
+          "match": "&&|\\|\\||!"
+        },
+        {
+          "name": "keyword.operator.assignment.scif",
+          "match": "="
+        },
+        {
+          "name": "keyword.operator.arithmetic.scif",
+          "match": "<<|>>|[-+*/%&|^~]"
+        }
+      ]
+    }
+  }
 }

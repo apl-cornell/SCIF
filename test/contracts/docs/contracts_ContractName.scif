@@ -1,0 +1,27 @@
+contract ContractName[this] {
+    // state variables
+    map(address, uint) balances;
+    final address owner;
+
+    // exceptions
+    exception TransferFailure(address from, address to, uint amount);
+
+    // events
+    event Transfer(address to, uint amount);
+
+    // constructors
+    constructor(address owner) {
+        this.owner = owner;
+    }
+
+    // methods
+    public void transfer(address to, uint amount) throws (TransferFailure) {
+        if (balances[msg.sender] >= amount) {
+            balances[msg.sender] = balance[msg.sender] - amount;
+            balances[to] = balance[to] + amount;
+            emit Transfer(to, amount);
+        } else {
+            throw TransferFailure(msg.sender, to, amount);
+        }
+    }
+}

@@ -136,7 +136,7 @@ contract Wallet {
     }
 
     public void withdraw(uint amount) {
-        endorse(amount, any -> this) if (balances[sender] >= amount) {
+        endorse(amount, any -> this) when (balances[sender] >= amount) {
             lock(this) {
                 send(sender, amount);
                 balances[sender] -= amount;
