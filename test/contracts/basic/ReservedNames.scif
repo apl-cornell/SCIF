@@ -1,9 +1,9 @@
 contract ReservedNames {
-    uint{any} counter;
+    uint{this} counter;
 
     constructor() { super(); }
 
-    public uint{this} get{sender -> this}() {
+    public uint{this} get{sender -> this; any}() {
         lock(this) {
             result = counter;
         }

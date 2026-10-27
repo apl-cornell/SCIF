@@ -1,0 +1,17 @@
+// `value` is reserved. Before it was, this contract compiled, but every public
+// method starts with the compiler-inserted `uint256 value = msg.value;`, which
+// shadows the state variable: set() wrote to that local, so storage was never
+// written, and get() returned the ether sent with the call.
+contract ValueShadow {
+    uint value;
+
+    constructor() { super(); }
+
+    public void set{this}(uint v) {
+        value = v;
+    }
+
+    public uint get() {
+        return value;
+    }
+}

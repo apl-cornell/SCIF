@@ -1,0 +1,18 @@
+// `result` is reserved. Before it was, this contract compiled, but non-void
+// methods are generated with a named return variable
+// `returns (uint256 result)`, which shadows the state variable: record() wrote
+// to its own return slot instead of storage, and get() always returned 0.
+contract ResultShadow {
+    uint result;
+
+    constructor() { super(); }
+
+    public uint record{this}(uint x) {
+        result = x;
+        return x;
+    }
+
+    public uint get() {
+        return result;
+    }
+}

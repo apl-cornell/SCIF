@@ -1,0 +1,17 @@
+// `now` is reserved. Before it was, this contract compiled, but every reference
+// named `now` is rewritten to `block.timestamp`: set() became
+// `block.timestamp = t` and get() returned the current time, so the stored
+// value could never be read back.
+contract NowShadow {
+    uint now;
+
+    constructor() { super(); }
+
+    public void set{this}(uint t) {
+        now = t;
+    }
+
+    public uint get() {
+        return now;
+    }
+}

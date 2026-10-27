@@ -44,8 +44,13 @@ Dependency:
 * Ant
 * Gradle
 
-```console
-git clone --recurse-submodules https://github.com/apl-cornell/SCIF.git
+```console 
+git clone --recurse-submodules https://github.com/apl-cornell/SCIF.git 
+
+Use:
+git submodule update --init --recursive
+If you already have the repository. 
+
 cd SCIF
 ./gradlew build
 ./scif -c test/contracts/ifcTypechecking/Wallet_lock_exception.scif -o ./tmp.sol

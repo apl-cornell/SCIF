@@ -1,4 +1,0 @@
-contract ReservedStateVarValue {
-    uint value;
-    constructor() { super(); }
-}

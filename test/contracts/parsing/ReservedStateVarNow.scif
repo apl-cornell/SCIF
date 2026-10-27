@@ -1,4 +1,0 @@
-contract ReservedStateVarNow {
-    uint now;
-    constructor() { super(); }
-}

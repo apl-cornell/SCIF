@@ -1,0 +1,17 @@
+// `sender` is reserved. Before it was, this contract compiled, but every method
+// starts with the compiler-inserted `address sender = msg.sender;`, which
+// shadows the state variable: set() wrote to that local, so storage was never
+// written, and get() returned the caller's own address.
+contract SenderShadow {
+    address sender;
+
+    constructor() { super(); }
+
+    public void set{this}(address a) {
+        sender = a;
+    }
+
+    public address get() {
+        return sender;
+    }
+}
