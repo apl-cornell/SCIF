@@ -109,6 +109,8 @@ import static parser.sym.*;
         addKeyword("sender", Integer.valueOf(sym.SENDER));
         addKeyword("any", Integer.valueOf(sym.ANY));
         addKeyword("result", Integer.valueOf(sym.RESULT_KW));
+        addKeyword("value", Integer.valueOf(sym.VALUE));
+        addKeyword("now", Integer.valueOf(sym.NOW));
         addOperator("<identifier>", NAME);
         addOperator("<number>", NUMBER);
         addOperator("(", LPAR);

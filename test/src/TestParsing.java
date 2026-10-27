@@ -83,6 +83,9 @@ public class TestParsing {
             "ReservedParam",
             "ReservedStateVar",
             "ReservedMethodName",
+            "ReservedStateVarValue",
+            "ReservedStateVarNow",
+            "ReservedParamValue",
     })
     void testNegative(String contractName) {
         String inputFilePath = "parsing/" + contractName + ".scif";

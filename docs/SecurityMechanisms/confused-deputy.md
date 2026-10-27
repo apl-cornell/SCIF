@@ -16,9 +16,9 @@ External calls in smart contracts are like remote procedure calls: the caller ha
 
 When compiling to Solidity, information flow labels are stripped off from the code. 
 And because the way Solidity assigns identities to methods, two methods whose signatures only differ in labels will be assigned the same id. This leads to potential of confused deputy vulnerabilities. 
-For example, `uint{this} g{this}(uint{this} value)` and `uint{any} g{this}(uint{this} value)` will be assigned the same id while they return values of different integrity level, resulting in potential information flow violation.
+For example, `uint{this} g{this}(uint{this} amount)` and `uint{any} g{this}(uint{this} amount)` will be assigned the same id while they return values of different integrity level, resulting in potential information flow violation.
 
-To get rid of method type confusion, SCIF embeds labels in method signatures in their names when compiling to Solidity. For example, the name of a method `uint{this} g{this}(uint{this} value)` will become `"g" + hash(["this", "this", "this"])`, when compiling to a Solidity function.
+To get rid of method type confusion, SCIF embeds labels in method signatures in their names when compiling to Solidity. For example, the name of a method `uint{this} g{this}(uint{this} amount)` will become `"g" + hash(["this", "this", "this"])`, when compiling to a Solidity function.
 
 
 ## Run-time system for confused deputy prevention
@@ -26,45 +26,45 @@ To get rid of method type confusion, SCIF embeds labels in method signatures in 
 
 
 ```scif
-uint{this} f1{sender -> this}(final ContractTarget{sender} target, uint{sender} value) {
-    return target.g(value);
+uint{this} f1{sender -> this}(final ContractTarget{sender} target, uint{sender} amount) {
+    return target.g(amount);
 }
 
-uint{this} f2{any -> this}(ContractTarget{any} target, uint{any} value) {
-    endorse([target, value], any -> this) {
-        return target.g(value);
+uint{this} f2{any -> this}(ContractTarget{any} target, uint{any} amount) {
+    endorse([target, amount], any -> this) {
+        return target.g(amount);
     }
 }
 
-uint{this} f3{any -> this}(uint{any} value) {
-    return constTarget.g(value);
+uint{this} f3{any -> this}(uint{any} amount) {
+    return constTarget.g(amount);
 }
 
 uint{this} f4{any -> this}() {
     return constTarget.g(constValue);
 }
 
-uint{this} g{this}(uint{sender} value) in ContractTarget
-uint{this} g{this}(uint{this} value) in ContractRealTarget1
-uint{any} g{this}(uint{this} value) in ContractRealTarget2
+uint{this} g{this}(uint{sender} amount) in ContractTarget
+uint{this} g{this}(uint{this} amount) in ContractRealTarget1
+uint{any} g{this}(uint{this} amount) in ContractRealTarget2
 ```
 
 ```scif
-uint{this} f1{sender -> this}(final ContractTarget{sender} target, uint{sender} value) {
+uint{this} f1{sender -> this}(final ContractTarget{sender} target, uint{sender} amount) {
     assert sender => target;
     assert this => target;
 
     assert target => this;
-    return target.g(value);
+    return target.g(amount);
 }
 
-uint{this} g{this}(uint{any} value) {
+uint{this} g{this}(uint{any} amount) {
     checkHash;
     assert sender => this;
 }
 in ContractTarget
 
-uint{this} g{l -> this}(uint{any} value) {
+uint{this} g{l -> this}(uint{any} amount) {
     checkHash;
     assert sender => l; // if sender => l, can we trust sender calls in the right pc
 }

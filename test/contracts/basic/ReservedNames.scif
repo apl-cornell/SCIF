@@ -12,4 +12,12 @@ contract ReservedNames {
     public address self() {
         return address(this);
     }
+
+    public uint paid() {
+        return value;
+    }
+
+    public uint time() {
+        return now;
+    }
 }

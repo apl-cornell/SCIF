@@ -285,8 +285,8 @@ The provided `ERC20.scif` implements the core functionalities of the `ERC20` tok
 Like Solidity, SCIF supports event declarations for logging. Event declarations happen after exception definitions and before construtors. For example, we can add the following two events to the `ERC20`  contract. 
 
 ```scif
-event Transfer(address from, address to, uint value);
-event Approval(address owner, address spender, uint value);
+event Transfer(address from, address to, uint amount);
+event Approval(address owner, address spender, uint amount);
 ```
 
 You can emit them within functions, for example:

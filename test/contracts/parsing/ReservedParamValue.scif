@@ -1,0 +1,6 @@
+contract ReservedParamValue {
+    constructor() { super(); }
+    public uint foo(uint value) {
+        return value;
+    }
+}
