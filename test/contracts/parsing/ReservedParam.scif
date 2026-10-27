@@ -1,0 +1,5 @@
+contract ReservedParam {
+    constructor() { super(); }
+    void foo(address sender) {
+    }
+}

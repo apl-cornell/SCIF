@@ -1,0 +1,4 @@
+contract ReservedStateVar {
+    uint any;
+    constructor() { super(); }
+}

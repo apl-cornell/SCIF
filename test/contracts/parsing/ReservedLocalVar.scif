@@ -1,0 +1,7 @@
+contract ReservedLocalVar {
+    constructor() { super(); }
+    uint foo() {
+        uint result = 1;
+        return result;
+    }
+}

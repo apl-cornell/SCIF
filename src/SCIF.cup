@@ -167,6 +167,7 @@ terminal NEW, STRUCT, UNCHECKED, TRANSIENT;
 terminal EVENT, EMIT;
 terminal VAR;
 terminal PUBLIC, PAYABLE, PROTECTED, PRIVATE, NATIVE;
+terminal THIS, SENDER, ANY, RESULT_KW;
 
 nonterminal List<SourceFile> sourceCode;
 nonterminal Interface interface;
@@ -185,6 +186,7 @@ nonterminal List<ExceptionDef> exp_defs, r_exp_defs;
 nonterminal List<FunctionDef> func_defs;
 //nonterminal Node<String> file_input_unit;
 nonterminal String decorator;
+nonterminal String identName, builtinName;
 nonterminal List<String> decorators;
 // nonterminal FunctionDef decorated;
 nonterminal FunctionDef funcdef;
@@ -877,12 +879,23 @@ unitIfLabel ::= primitiveIfLabel:a {:
     | LPAR ifLabel:a RPAR {:
         RESULT = a;
     :};
-primitiveIfLabel ::= NAME:a {:
+primitiveIfLabel ::= identName:a {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
         RESULT = new PrimitiveIfLabel(name);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
 :};
+
+// Built-in names (this, sender, any, result) are reserved: they may be used
+// wherever a name is referenced, but never declared.
+identName ::= NAME:a {: RESULT = (String)a; :}
+    | builtinName:a {: RESULT = a; :}
+    ;
+builtinName ::= THIS {: RESULT = "this"; :}
+    | SENDER {: RESULT = "sender"; :}
+    | ANY {: RESULT = "any"; :}
+    | RESULT_KW {: RESULT = "result"; :}
+    ;
 
 funcdef ::=
     r_funcSig:funcSig suite:d {:
@@ -1154,7 +1167,7 @@ endorseIf_stmt ::=
     ;
 
 name_list ::=
-    NAME:x {:
+    identName:x {:
         List<Name> rtn = new ArrayList<>();
         rtn.add(new Name(x));
         RESULT = rtn;
@@ -1165,14 +1178,14 @@ name_list ::=
     ;
 
 name_list_oneplus ::=
-    NAME:x {:
+    identName:x {:
         List<Name> rtn = new ArrayList<>();
         Name newName = new Name(x);
         newName.setLoc(new CodeLocation(xleft, xright, filename));
         rtn.add(newName);
         RESULT = rtn;
     :}
-    | name_list_oneplus:list COMMA NAME:x  {:
+    | name_list_oneplus:list COMMA identName:x  {:
         Name newName = new Name(x);
         newName.setLoc(new CodeLocation(xleft, xright, filename));
         list.add(newName);
@@ -1469,7 +1482,7 @@ expr ::=
         RESULT.setLoc(new CodeLocation(nleft, nright, filename));
     :}
     |
-    NAME:a EQUALGREATER NAME:b {:
+    identName:a EQUALGREATER identName:b {:
         RESULT = new FlowsToExp(new Name(a), new Name(b));
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
@@ -1686,8 +1699,8 @@ atom ::=
         RESULT = new Expression();
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}*/
-    | NAME:a {:
-        RESULT = new Name((String)a);
+    | identName:a {:
+        RESULT = new Name(a);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     ;

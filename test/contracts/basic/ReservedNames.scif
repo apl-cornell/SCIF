@@ -1,0 +1,15 @@
+contract ReservedNames {
+    uint{any} counter;
+
+    constructor() { super(); }
+
+    public uint{this} get{sender -> this}() {
+        lock(this) {
+            result = counter;
+        }
+    }
+
+    public address self() {
+        return address(this);
+    }
+}

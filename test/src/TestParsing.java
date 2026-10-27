@@ -26,6 +26,7 @@ public class TestParsing {
             "basic/EndroseIf",
             "basic/ILockManager",
             "basic/ITrustManager",
+            "basic/ReservedNames",
             "regularTypechecking/LocalTrust_W01",
             "regularTypechecking/FinalVarNotInitialized_W01",
             "regularTypechecking/FinalVarNotInitialized_W02",
@@ -78,6 +79,10 @@ public class TestParsing {
     @ParameterizedTest
     @ValueSource(strings = {
             "WrongStateVarDeclaration",
+            "ReservedLocalVar",
+            "ReservedParam",
+            "ReservedStateVar",
+            "ReservedMethodName",
     })
     void testNegative(String contractName) {
         String inputFilePath = "parsing/" + contractName + ".scif";
