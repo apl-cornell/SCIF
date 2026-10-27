@@ -1,7 +1,7 @@
 import { readFileSync } from "fs"
 import { defineConfig } from "vitepress"
 
-const scifGrammar = JSON.parse(readFileSync("./docs/.vitepress/c.tmLanguage.json", "utf-8"))
+const scifGrammar = JSON.parse(readFileSync("./docs/.vitepress/scif.tmLanguage.json", "utf-8"))
 
 export default defineConfig({
     lang: 'en-US',
@@ -17,6 +17,10 @@ export default defineConfig({
                 items: [
                     {
                         text: 'Getting Started',
+                        link: '/Introduction/getting-started'
+                    },
+                    {
+                        text: 'Your First SCIF Contract',
                         link: '/Introduction/Your-First-SCIF-Contract'
                     },
                     {

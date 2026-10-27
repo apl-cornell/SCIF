@@ -6,15 +6,11 @@ contract ContractImp implements Contract {
 
     constructor() {}
 
-    @public
-    @native
-    bool trusts(address a, address b) {
+    public native bool trusts(address a, address b) {
         return a == b || b == address(this);
     }
 
-    @private
-    @native
-    bool bypassLocks(address from) {
+    private native bool bypassLocks(address from) {
         if (m_lock) {
             return trusts(address(this), from);
         } else {
@@ -22,9 +18,7 @@ contract ContractImp implements Contract {
         }
     }
 
-    @private
-    @native
-    bool acquireLock(address l) {
+    private native bool acquireLock(address l) {
         if (l == address(this)) {
             m_lock = true;
             return true;
@@ -33,9 +27,7 @@ contract ContractImp implements Contract {
         }
     }
 
-    @private
-    @native
-    bool releaseLock(address l) {
+    private native bool releaseLock(address l) {
         if (l == address(this)) {
             m_lock = false;
             return true;
@@ -48,22 +40,16 @@ contract ContractImp implements Contract {
 
 
 interface ExternallyManagedContract extends ManagedContract {
-    @public
-    bool directlyTrusts(address trustee);
-    @public
-    address[] directTrustees();
+    public bool directlyTrusts(address trustee);
+    public address[] directTrustees();
 
-    @public
-    TrustManager trustManager();
-    @public
-    LockManager lockManager();
+    public TrustManager trustManager();
+    public LockManager lockManager();
 }
 
 interface ManagedContract extends Contract {
-    @public
-    bool addTrust{this}(address trustee);
-    @public
-    bool revokeTrust{this}(address trustee);
+    public bool addTrust{this}(address trustee);
+    public bool revokeTrust{this}(address trustee);
 }
 ```
 

@@ -1,0 +1,18 @@
+contract SimpleStorage {
+  uint{this} storedData;
+  
+  exception X();
+	exception Y(uint aug1, bool aug2);
+
+	constructor() {
+		super();
+	}
+
+	void set{this}(uint x) {
+		storedData = x;
+	}
+
+	public uint get() {
+		return storedData;
+	}
+}

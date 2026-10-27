@@ -81,7 +81,7 @@ to specify the standard ERC-20 token interface.
 contract Uniswap {
   IERC20 tX, tY;
 
-  @public uint sellXForY(final address buyer, uint xSold) {
+  public uint sellXForY(final address buyer, uint xSold) {
     uint prod = tX.getBal(this) * tY.getBal(this);
     uint yKept = prod / (tX.getBal(this) + xSold);
     uint yBought = endorse(tY.getBal(this) - yKept, sender -> this);
@@ -94,9 +94,9 @@ contract Uniswap {
 }
 
 interface IERC20 {
-  @public bool{this} transfer{from -> this; any}(final address from,
+  public bool{this} transfer{from -> this; any}(final address from,
     address to, uint amount);
-  @public bool{from} transferFrom{sender -> from; any}(final address from,
+  public bool{from} transferFrom{sender -> from; any}(final address from,
     address to, uint amount);
 }
 ```
@@ -116,7 +116,7 @@ methods provided by contracts `from` and `to`, the reentrancy lock label
 for both methods is `any`.
 
 In Uniswap, `sellXForY` is meant to be a publicly-accessible method
-that must modify trusted state, so we annotate it as `@public`
+that must modify trusted state, so we annotate it as `public`
 and the default labels for public methods: `{sender -> this; this}`.
 That is, `sellXForY` is an entry point anyone can call that auto-endorses to `this`,
 and it promises not to call untrusted code without a dynamic lock
@@ -133,8 +133,7 @@ To see how SCIF improves flexibility over prior approaches, consider the
 following implementation of the IERC20 `transfer` method.
 
 ```
-@public
-bool transfer{from -> this; any}(final address from, final address to, uint amount) {
+public bool transfer{from -> this; any}(final address from, final address to, uint amount) {
   ... // check and update balances
   result = true;
   assert from.confirmSent(to, amount);

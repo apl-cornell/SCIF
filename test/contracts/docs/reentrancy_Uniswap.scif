@@ -1,0 +1,21 @@
+contract Uniswap {
+  IERC20 tX, tY;
+
+  public uint sellXForY(final address buyer, uint xSold) {
+    uint prod = tX.getBal(this) * tY.getBal(this);
+    uint yKept = prod / (tX.getBal(this) + xSold);
+    uint yBought = endorse(tY.getBal(this) - yKept, sender -> this);
+    lock (this) {
+      assert tX.transferFrom(buyer, this, xSold);
+      assert tY.transfer(this, buyer, yBought);
+    }
+    return yBought;
+  }
+}
+
+interface IERC20 {
+  public bool{this} transfer{from -> this; any}(final address from,
+    address to, uint amount);
+  public bool{from} transferFrom{sender -> from; any}(final address from,
+    address to, uint amount);
+}

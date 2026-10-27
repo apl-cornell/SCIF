@@ -1,0 +1,22 @@
+contract Wallet {
+    map(address, uint) balances;
+    
+    constructor() {
+    	super();
+    }
+
+    public void withdraw(uint amount) {
+        endorse(amount, any -> this) when (balances[sender] >= amount) {
+            lock(this) {
+                send(sender, amount);
+                balances[sender] -= amount;
+            }
+        } else {
+            revert "insufficient funds";
+        }
+    }
+
+    public payable void deposit() {
+        balances[sender] += value;
+    }
+}
