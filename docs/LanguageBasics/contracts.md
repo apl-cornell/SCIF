@@ -36,12 +36,12 @@ contract ContractName[this] {
     // methods
     @public 
     void transfer(address to, uint amount) throws (TransferFailure) {
-        if (balances[msg.sender] >= amount) {
-            balances[msg.sender] = balance[msg.sender] - amount;
+        if (balances[sender] >= amount) {
+            balances[sender] = balance[sender] - amount;
             balances[to] = balance[to] + amount;
             emit Transfer(to, amount);
         } else {
-            throw TransferFailure(msg.sender, to, amount);
+            throw TransferFailure(sender, to, amount);
         }
     }
 }
