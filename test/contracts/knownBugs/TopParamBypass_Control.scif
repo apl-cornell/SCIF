@@ -1,0 +1,15 @@
+// Control for TopParamBypass.scif: identical except that the parameter is an
+// ordinary name, p, used as the method label {p}. A caller-chosen principal
+// must not be able to write {this} data, and the compiler correctly rejects
+// this with an integrity error on the assignment to `secret`.
+//
+// Expected: rejected. Actual: rejected (correct).
+contract TopParamBypass_Control {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void set{p}(final address p, uint v) {
+        secret = v;
+    }
+}

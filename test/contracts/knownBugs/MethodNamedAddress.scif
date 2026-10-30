@@ -1,0 +1,12 @@
+// Known bug: built-in type names are not reserved. A method named `address`
+// crashes the compiler with "Unexpected exception: RuntimeException: Already
+// defined: address" from FunctionSig.java:188 instead of reporting an error.
+//
+// Expected: a clear error message. Actual: RuntimeException.
+contract MethodNamedAddress {
+    constructor() { super(); }
+
+    public bool address() {
+        return true;
+    }
+}

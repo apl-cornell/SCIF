@@ -1,0 +1,12 @@
+// Control for ResultSkipsIntegrity.scif: identical except that it uses
+// `return v;` instead of `result = v;`. Returning untrusted input as a {this}
+// value is an integrity violation, and the compiler correctly rejects it.
+//
+// Expected: rejected. Actual: rejected (correct).
+contract ResultSkipsIntegrity_Control {
+    constructor() { super(); }
+
+    public uint{this} get(uint v) {
+        return v;
+    }
+}

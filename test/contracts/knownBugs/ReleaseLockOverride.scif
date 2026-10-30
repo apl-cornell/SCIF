@@ -1,0 +1,25 @@
+// Known bug: a contract can redefine the built-in releaseLock() without
+// `override`.
+//
+// lock(this) { ... } is compiled to acquireLock(address(this)) before the block
+// and releaseLock(address(this)) after it. The user-written releaseLock() below
+// silently replaces the built-in one and never clears m_lock, so the lock stays
+// held after the block. m_lock is transient, so it resets at the end of the
+// transaction; within the transaction, later calls behave as if still locked.
+//
+// Expected: rejected. Actual: compiles.
+contract ReleaseLockOverride {
+    uint{this} counter;
+
+    constructor() { super(); }
+
+    public void inc{this}() {
+        lock(this) {
+            counter = counter + 1;
+        }
+    }
+
+    bool releaseLock(address l) {
+        return true;
+    }
+}

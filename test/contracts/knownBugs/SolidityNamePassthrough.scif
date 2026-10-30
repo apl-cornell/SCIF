@@ -1,0 +1,19 @@
+// Known bug: names that are special in Solidity but not in SCIF are passed
+// through unchanged. Here a state variable named `msg` becomes
+// `uint256 msg;`, and every generated function starts with
+// `address sender = msg.sender;`, which now refers to that uint, so solc
+// should reject the output. The same happens with `block` (breaks
+// `now` -> `block.timestamp`), `type` (breaks `UINT_MAX` ->
+// `type(uint256).max`), and Solidity keywords such as `memory`.
+//
+// Expected: rejected by SCIF. Actual: SCIF accepts it and emits Solidity that
+// should fail to compile.
+contract SolidityNamePassthrough {
+    uint msg;
+
+    constructor() { super(); }
+
+    public uint get() {
+        return msg;
+    }
+}

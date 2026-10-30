@@ -1,0 +1,11 @@
+// Known bug: built-in type names (uint, address, bool, ...) are not reserved.
+// A state variable named `uint` crashes the compiler with
+// "Unexpected exception: RuntimeException ... Identifier not found: uint"
+// from StateVariableDeclaration.java:78 instead of reporting an error.
+//
+// Expected: a clear error message. Actual: RuntimeException.
+contract StateVarNamedUint {
+    bool uint;
+
+    constructor() { super(); }
+}

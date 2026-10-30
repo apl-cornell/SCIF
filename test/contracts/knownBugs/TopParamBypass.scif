@@ -1,0 +1,26 @@
+// Known bug: TOP is not reserved, so a parameter can be named TOP, and the
+// type checker and the generated code then disagree about what {TOP} means.
+//
+// The type checker treats the method label {TOP} as the built-in most-trusted
+// principal, so it accepts the write to the {this}-labelled `secret`. (The same
+// method with an ordinary parameter `final address p` and label {p} is
+// correctly rejected.) The generated public wrapper checks
+// `assert(trusts(TOP, msg.sender))`, but in Solidity that TOP is the
+// caller-supplied parameter. The built-in trusts(a, b) is true when a == b, so
+// any caller passes by calling set(<their own address>, v), and can overwrite
+// `secret`.
+//
+// Related: the built-in TOP is never declared in the generated Solidity, so a
+// method labelled {TOP} without such a parameter produces code that refers to
+// an undeclared `TOP`.
+//
+// Expected: rejected (TOP should be reserved like this/any). Actual: compiles.
+contract TopParamBypass {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void set{TOP}(final address TOP, uint v) {
+        secret = v;
+    }
+}

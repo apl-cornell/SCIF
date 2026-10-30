@@ -1,0 +1,17 @@
+// Known bug: the built-in TOP principal is never declared in the generated
+// Solidity. A method labelled {TOP} gets the run-time check
+// `assert(trusts(TOP, msg.sender))`, which refers to an identifier that does
+// not exist, so the output should not compile with solc. (TopParamBypass.scif
+// shows what happens when a parameter supplies the missing `TOP`.)
+//
+// Expected: valid Solidity, or a compile-time error. Actual: SCIF accepts it
+// and emits Solidity that refers to an undeclared `TOP`.
+contract TopLabelUndeclared {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void set{TOP}(uint v) {
+        secret = v;
+    }
+}

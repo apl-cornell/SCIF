@@ -1,0 +1,19 @@
+// Known bug: the type checker gives every method a built-in `value`
+// (msg.value), but code generation declares `uint256 value = msg.value;` only
+// in public methods and constructors (compile/Utils.java:202). helper() is
+// private, so its generated Solidity is `return value;` with no `value` in
+// scope, which solc should reject as an undeclared identifier.
+//
+// Expected: rejected by SCIF, or valid Solidity. Actual: SCIF accepts it and
+// emits Solidity that refers to an undeclared `value`.
+contract PrivateValueUndeclared {
+    constructor() { super(); }
+
+    uint helper() {
+        return value;
+    }
+
+    public uint foo() {
+        return helper();
+    }
+}

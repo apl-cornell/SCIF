@@ -1,0 +1,11 @@
+// Known bug: a state variable named after an inherited built-in method
+// (trusts, bypassLocks, acquireLock, releaseLock) crashes the compiler with a
+// bare AssertionError at Contract.java:587 (the `assert false` under
+// "TODO: var overridden by func") instead of reporting an error.
+//
+// Expected: a clear error message. Actual: AssertionError.
+contract StateVarNamedTrusts {
+    bool trusts;
+
+    constructor() { super(); }
+}

@@ -1,0 +1,17 @@
+// Known bug: assigning to the built-in return variable `result` skips the
+// integrity check that `return` gets.
+//
+// get() promises a {this} (trusted) result, but `v` comes from any caller, so
+// this should be an integrity error, exactly as in
+// ResultSkipsIntegrity_Control.scif, which differs only in using
+// `return v;`. With `result = v;` the type checker accepts it, so untrusted
+// input is returned labelled as trusted.
+//
+// Expected: rejected. Actual: compiles.
+contract ResultSkipsIntegrity {
+    constructor() { super(); }
+
+    public uint{this} get(uint v) {
+        result = v;
+    }
+}

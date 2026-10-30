@@ -1,0 +1,25 @@
+// Known bug: a contract can redefine the built-in bypassLocks() without
+// `override`.
+//
+// inc() has no method label, so its public wrapper is guarded by
+// `assert((bypassLocks(address(this)) || trusts(address(this), sender)))`.
+// The built-in bypassLocks() returns true only while the contract's lock
+// (m_lock) is not held, so while the contract is inside a lock(this) block an
+// untrusted re-entrant call to inc() is refused. The user-written bypassLocks()
+// below silently replaces the built-in one and always returns true, so
+// re-entrant calls are let through even while the lock is held.
+//
+// Expected: rejected. Actual: compiles.
+contract BypassLocksOverride {
+    uint counter;
+
+    constructor() { super(); }
+
+    public void inc() {
+        counter = counter + 1;
+    }
+
+    bool bypassLocks(address from) {
+        return true;
+    }
+}

@@ -1,0 +1,23 @@
+// Known bug: a contract can redefine the built-in trusts() without `override`.
+//
+// set() is labelled {this}, so only callers trusted by this contract should be
+// able to change `secret`. The compiler enforces that at run time with
+// `assert(trusts(address(this), msg.sender))` in set()'s public wrapper. The
+// user-written trusts() below silently replaces the built-in one from
+// ContractImp.scif, so the check passes for every caller: anyone can call set().
+//
+// Expected: rejected (trusts is built-in and should not be redefinable, or at
+// least not without `override`). Actual: compiles.
+contract TrustsOverride {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void set{this}(uint v) {
+        secret = v;
+    }
+
+    public bool trusts(address a, address b) {
+        return true;
+    }
+}

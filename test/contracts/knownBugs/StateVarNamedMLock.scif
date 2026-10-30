@@ -1,0 +1,11 @@
+// Known bug: m_lock is the name of the reentrancy-lock flag that every contract
+// inherits from ContractImp.scif. Declaring a state variable with that name
+// crashes the compiler with "AssertionError: m_lock" at Contract.java:517
+// instead of reporting an error.
+//
+// Expected: a clear error message. Actual: AssertionError.
+contract StateVarNamedMLock {
+    bool m_lock;
+
+    constructor() { super(); }
+}

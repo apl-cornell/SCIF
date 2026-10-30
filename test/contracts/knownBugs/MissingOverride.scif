@@ -1,0 +1,23 @@
+// Known bug: the compiler never requires `override`. B redefines A's foo()
+// without the `override` decorator, and B's version silently replaces A's
+// (Contract.java:581 only asserts that the signatures match). This is the
+// root cause of TrustsOverride, BypassLocksOverride, AcquireLockOverride and
+// ReleaseLockOverride, where the method being replaced is a built-in from
+// ContractImp.scif.
+//
+// Expected: rejected, because foo() is missing `override`. Actual: compiles.
+contract A {
+    constructor() { super(); }
+
+    public uint foo() {
+        return 1;
+    }
+}
+
+contract B extends A {
+    constructor() { super(); }
+
+    public uint foo() {
+        return 2;
+    }
+}

@@ -1,0 +1,18 @@
+// Known bug: a `return` inside a lock(...) block in a method with a label
+// crashes the type checker with a NullPointerException in
+// typecheck.Utils.genConsStmtsWithException (Utils.java:826), called from
+// GuardBlock.java:73 ("Cannot read field "c" because the return value of
+// "typecheck.PathOutcome.getNormalPath()" is null").
+//
+// Expected: either accepted or a clear error message. Actual: crash.
+contract ReturnInLockCrash {
+    uint{this} counter;
+
+    constructor() { super(); }
+
+    public uint{this} get{sender -> this}() {
+        lock(this) {
+            return counter;
+        }
+    }
+}

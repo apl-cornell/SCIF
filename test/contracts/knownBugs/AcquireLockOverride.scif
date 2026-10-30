@@ -1,0 +1,25 @@
+// Known bug: a contract can redefine the built-in acquireLock() without
+// `override`.
+//
+// lock(this) { ... } is compiled to a call to acquireLock(address(this)) before
+// the block. The built-in acquireLock() sets the reentrancy flag m_lock; the
+// user-written one below silently replaces it, returns true and sets nothing,
+// so the block runs unlocked and the static reentrancy guarantee does not hold
+// at run time.
+//
+// Expected: rejected. Actual: compiles.
+contract AcquireLockOverride {
+    uint{this} counter;
+
+    constructor() { super(); }
+
+    public void inc{this}() {
+        lock(this) {
+            counter = counter + 1;
+        }
+    }
+
+    bool acquireLock(address l) {
+        return true;
+    }
+}
