@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -152,9 +150,8 @@ public class Subscript extends TrailerExpr {
             String ifNameIndex = io.valueLabelName;
             //ifNameRtnValue =
             //        scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
-            env.cons.add(new Constraint(new Inequality(ifNameValue, Relation.EQ, ifNameRtnValue),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    "Integrity level of the subscript value is not trustworthy enough"));
+            env.checkEqual(ifNameValue, ifNameRtnValue, location,
+                    "Integrity level of the subscript value is not trustworthy enough");
 
             // env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
             // ifNameRtnLock = indexContext.lambda;
@@ -186,10 +183,8 @@ public class Subscript extends TrailerExpr {
                 dependentMapping.put(depMapTypeSym.key().toSHErrLocFmt(), ifNameIndex);
                 rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
                         rtnTypeSym.defContext(), false, false, false);
-                env.cons.add(
-                        new Constraint(new Inequality(depMapTypeSym.label().toSHErrLocFmt(dependentMapping), rtnVarSym.labelNameSLC()), env.hypothesis(), location,
-                                env.curContractSym().getName(),
-                                "Label of the subscript value"));
+                env.checkFlow(depMapTypeSym.label().toSHErrLocFmt(dependentMapping),
+                        rtnVarSym.labelNameSLC(), location, "Label of the subscript value");
 
 //                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(valueVarSym.typeSym.name(),
 //                        ifNameIndex);
@@ -212,15 +207,11 @@ public class Subscript extends TrailerExpr {
             TypeSym rtnTypeSym = new BuiltinTypeSym(ifNameRtn);
             rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
                     valueVarSym.defContext(), false, false, false);
-            env.cons.add(
-                    new Constraint(new Inequality(ifNameValue, rtnVarSym.labelNameSLC()), env.hypothesis(), location,
-                            env.curContractSym().getName(),
-                            "Label of the subscript value"));
+            env.checkFlow(ifNameValue, rtnVarSym.labelNameSLC(), location,
+                    "Label of the subscript value");
 
-            env.cons.add(
-                    new Constraint(new Inequality(ifNameIndex, rtnVarSym.labelNameSLC()), env.hypothesis(), location,
-                            env.curContractSym().getName(),
-                            "Label of the subscript index value"));
+            env.checkFlow(ifNameIndex, rtnVarSym.labelNameSLC(), location,
+                    "Label of the subscript index value");
 
         }
         return rtnVarSym;

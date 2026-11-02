@@ -24,7 +24,6 @@ import typecheck.Utils;
 import typecheck.VarSym;
 import typecheck.VisitEnv;
 import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.exceptions.SemanticException;
 
@@ -259,31 +258,22 @@ public class ClosureCreation extends Expression {
             }
 
             // argLabel[i] => paramLabel[i]
-            env.cons.add(new Constraint(
-                    new Inequality(ao.valueLabelName, Relation.LEQ, argLabelStr),
-                    env.hypothesis(), a.location, env.curContractSym().getName(),
-                    "Input to the " + Utils.ordNumString(i + 1)
-                            + " bound closure argument must be trusted enough"));
+            env.checkFlow(ao.valueLabelName, argLabelStr, a.location, "Input to the "
+                    + Utils.ordNumString(i + 1) + " bound closure argument must be trusted enough");
 
             // pc => paramLabel[i]
-            env.cons.add(new Constraint(
-                    new Inequality(ifNamePc, Relation.LEQ, argLabelStr),
-                    env.hypothesis(), a.location, env.curContractSym().getName(),
-                    "Current control flow must be trusted to bind the "
-                            + Utils.ordNumString(i + 1) + " closure argument"));
+            env.checkFlow(ifNamePc, argLabelStr, a.location,
+                    "Current control flow must be trusted to bind the " + Utils.ordNumString(i + 1)
+                    + " closure argument");
         }
 
         // pc => closureValueLabel
-        env.cons.add(new Constraint(
-                new Inequality(ifNamePc, Relation.LEQ, ifNameRtn),
-                env.hypothesis(), location, env.curContractSym().getName(),
-                "Closure value integrity is bounded by the binding control flow"));
+        env.checkFlow(ifNamePc, ifNameRtn, location,
+                "Closure value integrity is bounded by the binding control flow");
 
         // sourceClosureLabel => closureValueLabel
-        env.cons.add(new Constraint(
-                new Inequality(ifSrcRtn, Relation.LEQ, ifNameRtn),
-                env.hypothesis(), location, env.curContractSym().getName(),
-                "Closure value integrity is bounded by the closure it binds"));
+        env.checkFlow(ifSrcRtn, ifNameRtn, location,
+                "Closure value integrity is bounded by the closure it binds");
 
         // The result's labels are the source's under the substitution
         // above; only the slots that stayed open keep a parameter label.
@@ -407,31 +397,22 @@ public class ClosureCreation extends Expression {
             }
 
             // argLabel[i] => paramLabel[i]
-            env.cons.add(new Constraint(
-                    new Inequality(ao.valueLabelName, Relation.LEQ, argLabelStr),
-                    env.hypothesis(), a.location, env.curContractSym().getName(),
-                    "Input to the " + Utils.ordNumString(i + 1)
-                            + " bound closure argument must be trusted enough"));
+            env.checkFlow(ao.valueLabelName, argLabelStr, a.location, "Input to the "
+                    + Utils.ordNumString(i + 1) + " bound closure argument must be trusted enough");
             
             // pc => paramLabel[i]
-            env.cons.add(new Constraint(
-                    new Inequality(ifNamePc, Relation.LEQ, argLabelStr),
-                    env.hypothesis(), a.location, env.curContractSym().getName(),
-                    "Current control flow must be trusted to bind the "
-                            + Utils.ordNumString(i + 1) + " closure argument"));
+            env.checkFlow(ifNamePc, argLabelStr, a.location,
+                    "Current control flow must be trusted to bind the " + Utils.ordNumString(i + 1)
+                    + " closure argument");
         }
 
         // pc => closureValueLabel
-        env.cons.add(new Constraint(
-                new Inequality(ifNamePc, Relation.LEQ, ifNameRtn),
-                env.hypothesis(), location, env.curContractSym().getName(),
-                "Closure value integrity is bounded by the creating control flow"));
+        env.checkFlow(ifNamePc, ifNameRtn, location,
+                "Closure value integrity is bounded by the creating control flow");
         
         // recv..lbl => closureValueLabel
-        env.cons.add(new Constraint(
-                new Inequality(ifContRtn, Relation.LEQ, ifNameRtn),
-                env.hypothesis(), location, env.curContractSym().getName(),
-                "Closure value integrity is bounded by the target"));
+        env.checkFlow(ifContRtn, ifNameRtn, location,
+                "Closure value integrity is bounded by the target");
 
         List<String> realParamLabels = new ArrayList<>();
         for (int i = 0; i < args.size(); ++i) {

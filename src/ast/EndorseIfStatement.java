@@ -8,7 +8,6 @@ import java.util.Map;
 
 import typecheck.*;
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 
@@ -83,9 +82,8 @@ public class EndorseIfStatement extends Statement {
 //                // logger.debug("testing label");
             }
         }
-        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis(),
-                location, env.curContractSym().getName(),
-                "Control flow integrity before this if condition doesn't flow to the one after this condition"));
+        env.checkFlow(IfNamePcBefore, IfNamePcAfter, location,
+                "Control flow integrity before this if condition doesn't flow to the one after this condition");
         /*env.cons.add(
                 new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis(), location,
                         env.curContractSym().getName(),
@@ -106,8 +104,8 @@ public class EndorseIfStatement extends Statement {
         for (Name name: expressionList) {
             String id = name.id;
             VarSym sym = env.getVar(id);
-            env.cons.add(new Constraint(new Inequality(sym.labelNameSLC(), fromLabel.toSHErrLocFmt()), env.hypothesis(), name.location, env.curContractSym().getName(),
-            "Variables to be endorsed must flows to from-label"));
+            env.checkFlow(sym.labelNameSLC(), fromLabel.toSHErrLocFmt(), name.location,
+                    "Variables to be endorsed must flows to from-label");
         }
 
         // create new identical variables in the same scope with to-label
@@ -116,16 +114,11 @@ public class EndorseIfStatement extends Statement {
             VarSym sym = env.getVar(id);
             VarSym newSym = new VarSym(sym, scopeContext);
             newSym.ifl = toLabel;
-            env.cons.add(new Constraint(
-                    new Inequality(newSym.labelNameSLC(), Relation.EQ, newSym.labelValueSLC()),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    "Variable " + newSym.getName() + " may be endorsed incorrectly"));
+            env.checkEqual(newSym.labelNameSLC(), newSym.labelValueSLC(), location, "Variable "
+                    + newSym.getName() + " may be endorsed incorrectly");
             if (sym.isPrincipalVar()) {
-                env.addTrustConstraint(new Constraint(
-                        new Inequality(sym.toSHErrLocFmt(), Relation.EQ, newSym.toSHErrLocFmt()),
-                        env.hypothesis(), location, env.curContractSym().getName(),
-                        "final variable " + newSym.getName() + " may be endorsed incorrectly"
-                ));
+                env.checkTrustEqual(sym.toSHErrLocFmt(), newSym.toSHErrLocFmt(), location,
+                        "final variable " + newSym.getName() + " may be endorsed incorrectly");
             }
             try {
                 env.addVar(newSym.getName(), newSym);

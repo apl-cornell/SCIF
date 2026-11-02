@@ -22,8 +22,6 @@ import typecheck.Utils;
 import typecheck.VarSym;
 import typecheck.VisitEnv;
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 
 public class New extends Expression {
@@ -121,9 +119,8 @@ public class New extends Expression {
                 env.inContext = new Context(
                         Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
                         beginContext.lambda);
-                env.addTrustConstraint(new Constraint(new Inequality(ao.valueLabelName, ifNameRtn), env.hypothesis(), location,
-                        env.curContractSym().getName(),
-                        "Integrity of left hand expression doesn't flow to value of this binary operation"));
+                env.checkTrustedBy(ao.valueLabelName, ifNameRtn, location,
+                        "Integrity of left hand expression doesn't flow to value of this binary operation");
             }
 
             return new ExpOutcome(ifNameRtn, psi);
@@ -189,28 +186,12 @@ public class New extends Expression {
                 String ifNameArgValue = argValueLabelNames.get(i);
                 Label ifArgLabel = funcSym.getLabelArg(i);
                 assert ifArgLabel != null : argSym.getName();
-                env.cons.add(
-                        new Constraint(
-                                new Inequality(
-                                        ifNameArgValue,
-                                        Relation.LEQ,
-                                        ifArgLabel.toSHErrLocFmt(dependentLabelMapping)
-                                ),
-                                env.hypothesis(), arg.location, env.curContractSym().getName(),
-                                "Input to the " + Utils.ordNumString(i + 1)
-                                        + " argument must be trusted enough")
-                );
-                env.cons.add(
-                        new Constraint(
-                                new Inequality(
-                                        ifNamePc,
-                                        Relation.LEQ,
-                                        ifArgLabel.toSHErrLocFmt(dependentLabelMapping)),
-                                env.hypothesis(), arg.location, env.curContractSym().getName(),
-                                "Current control flow must be trusted to feed the "
-                                        + Utils.ordNumString(i + 1)
-                                        + "-th argument value")
-                );
+                env.checkFlow(ifNameArgValue, ifArgLabel.toSHErrLocFmt(dependentLabelMapping),
+                        arg.location, "Input to the " + Utils.ordNumString(i + 1)
+                        + " argument must be trusted enough");
+                env.checkFlow(ifNamePc, ifArgLabel.toSHErrLocFmt(dependentLabelMapping),
+                        arg.location, "Current control flow must be trusted to feed the "
+                        + Utils.ordNumString(i + 1) + "-th argument value");
             }
 
             // pc_2 dropped
@@ -226,12 +207,8 @@ public class New extends Expression {
             )));
 
             typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
-            env.cons.add(
-                    new Constraint(new Inequality(ifNamePc,
-                            ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping)),
-                            env.hypothesis(),
-                            location, env.curContractSym().getName(),
-                            "Current control flow must be trusted to call this method"));
+            env.checkFlow(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
+                    location, "Current control flow must be trusted to call this method");
             // pc_2 dropped
             // env.cons.add(new Constraint(
             //         new Inequality(ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
@@ -248,18 +225,13 @@ public class New extends Expression {
             //                 Relation.EQ, endContext.lambda), env.hypothesis(), location,
             //         env.curContractSym().getName(),
             //         typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-            env.cons.add(new Constraint(
-                    new Inequality(
-                            ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping),
-                            Relation.EQ, endContext.lambda), env.hypothesis(), location,
-                    env.curContractSym().getName(),
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkEqual(ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping),
+                    endContext.lambda, location,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
 
             if (!tail_position) {
-                env.cons.add(new Constraint(
-                        new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
-                        env.hypothesis(), location, env.curContractSym().getName(),
-                        typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
+                        typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
             }
 
             String ifNameFuncRtnValue = funcSym.rtn.toSHErrLocFmt(dependentLabelMapping);

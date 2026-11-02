@@ -12,16 +12,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sherrloc.constraint.ast.Constructor;
 import sherrloc.constraint.ast.Hypothesis;
-import sherrloc.diagnostic.ConstraintCheck;
 import sherrloc.diagnostic.DiagnosticOptions;
-import sherrloc.diagnostic.ErrorDiagnosis;
 import sherrloc.diagnostic.SherrlocDiagnoser;
 import sherrloc.diagnostic.explanation.Entity;
 import sherrloc.diagnostic.explanation.Explanation;
 import sherrloc.graph.Variance;
 import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 
 import java.io.*;
 import java.util.*;
@@ -650,13 +647,10 @@ public class Utils {
 
     public static void contextFlow(VisitEnv env, Context outContext, Context endContext,
             CodeLocation location) {
-        env.addTrustConstraint(new Constraint(new Inequality(outContext.lambda, endContext.lambda),
-                env.hypothesis(), location, env.curContractSym().getName(),
-                "actually maintained lock of final sub-statement must flow to that of parent statement"));
-        env.addTrustConstraint(
-                new Constraint(new Inequality(outContext.pc, endContext.pc), env.hypothesis(),
-                        location, env.curContractSym().getName(),
-                        "Normal-termination control flow of final sub-statement must flow to that of parent statement"));
+        env.checkTrustedBy(outContext.lambda, endContext.lambda, location,
+                "actually maintained lock of final sub-statement must flow to that of parent statement");
+        env.checkTrustedBy(outContext.pc, endContext.pc, location,
+                "Normal-termination control flow of final sub-statement must flow to that of parent statement");
     }
 
     public static ExceptionTypeSym getNormalPathException() {
@@ -824,10 +818,9 @@ public class Utils {
     }
 
     public static void genSequenceConstraints(VisitEnv env, String prevLambda, String lastPc, String lastLambda, String newPc, CodeLocation location) {
-        env.cons.add(new Constraint(new Inequality(lastPc, newPc), env.hypothesis(), location, env.curContractSym().getName(),
-                Utils.ERROR_MESSAGE_PC_IN_NONLAST_OPERATION));
-        env.cons.add(new Constraint(new Inequality(lastLambda, joinLabels(prevLambda, newPc)), env.hypothesis(), location, env.curContractSym().getName(),
-                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        env.checkFlow(lastPc, newPc, location, Utils.ERROR_MESSAGE_PC_IN_NONLAST_OPERATION);
+        env.checkFlow(lastLambda, joinLabels(prevLambda, newPc), location,
+                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
     }
 
     /**
@@ -835,8 +828,8 @@ public class Utils {
      If s is not the last op, prepare and generate the input context for the next op.
      */
     public static Context genNewContextAndConstraints(VisitEnv env, boolean tail_position, Context c, String prevLambda, String newPc, CodeLocation location) {
-        env.cons.add(new Constraint(new Inequality(prevLambda, c.lambda), env.hypothesis(), location, env.curContractSym().getName(),
-                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        env.checkFlow(prevLambda, c.lambda, location,
+                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         if (tail_position) return c;
         assert c != null: location.errString();
         genSequenceConstraints(env, prevLambda, c.pc, c.lambda, newPc, location);

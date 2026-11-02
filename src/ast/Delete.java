@@ -19,8 +19,6 @@ import typecheck.VisitEnv;
 import java.util.ArrayList;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 
 public class Delete extends Statement {
 
@@ -52,18 +50,15 @@ public class Delete extends Statement {
             //TODO: error handling
         }
 
-        env.cons.add(
-                new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis(), target.location,
-                        env.curContractSym().getName(),
-                        "Integrity of control flow must be trusted to allow this assignment"));
+        env.checkFlow(ifNamePc, ifNameTgt, target.location,
+                "Integrity of control flow must be trusted to allow this assignment");
 
         typecheck.Utils.contextFlow(env, env.inContext, endContext, target.location);
         // env.outContext = endContext;
 
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkFlow(endContext.lambda, beginContext.lambda, location,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         }
 
         if (to != null) {
