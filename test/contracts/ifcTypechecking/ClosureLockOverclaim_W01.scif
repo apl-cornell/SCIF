@@ -1,0 +1,29 @@
+// IFC negative: the declared closure type over-claims the lock label.
+// The target `notify{this; any}` respects no reentrancy locks, but the
+// closure is declared `(fun {this} ...)`, which desugars to
+// `{this -> this; this}` and so promises lock {this}. The invoke site
+// derives its post-call lock from the declared type, so with the
+// over-claim the {this} state write after `pay.invoke` would be
+// accepted even though the same call made directly
+// (`receiver.notify(amount)`) is rejected for breaking withdraw's
+// {this} lock promise. The creation-site gamma covariance check
+// (real {any} => declared {this}) must reject.
+interface IReceiver {
+    closurable public void notify{this; any}(uint amount);
+}
+
+contract Vault {
+    IReceiver receiver;
+    uint{this} paidOut;
+
+    constructor() {
+        super();
+    }
+
+    public void withdraw{this}(uint{this} amount) {
+        (fun {this} (uint) -> void) {this} pay =
+            closure receiver.notify(_);
+        pay.invoke(amount);
+        paidOut = paidOut + amount;
+    }
+}
