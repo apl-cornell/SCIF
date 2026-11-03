@@ -256,9 +256,9 @@ public class ClosureTypeSym extends TypeSym {
             //             pcIn, Relation.LEQ, target.pcIn.toSHErrLocFmt(targetMap)));
             // }
             if (gamma != null && target.gamma != null) {
-                // gamma contravariant
+                // gamma covariant
                 emit.accept(new Inequality(
-                        target.gamma.toSHErrLocFmt(targetMap), Relation.LEQ, gamma));
+                        gamma, Relation.LEQ, target.gamma.toSHErrLocFmt(targetMap)));
             }
             if (retLabel != null && target.retLabel != null) {
                 // return label covariant

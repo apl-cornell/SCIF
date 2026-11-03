@@ -51,6 +51,7 @@ public class TestIfcTypechecking {
             "ifcTypechecking/ClosureTargetMember",
             "ifcTypechecking/ClosureInvokePostPcAutoendorse",
             "ifcTypechecking/ClosurePcExStronger",
+            "ifcTypechecking/ClosureLockWeaken",
     })
     void testPositive(String contractName) throws Exception {
         File logDir = new File("./.scif");
@@ -98,6 +99,7 @@ public class TestIfcTypechecking {
             "ifcTypechecking/ClosureBinderBoundDependent_W01",
             "ifcTypechecking/ClosureBindArgLow_W01",
             "ifcTypechecking/ClosureBindBoundDependent_W01",
+            "ifcTypechecking/ClosureLockOverclaim_W01",
             // "examples/ERC20",
     })
     void testNegative(String contractName) throws Exception {
