@@ -1,7 +1,5 @@
 package ast;
 
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -11,9 +9,8 @@ public abstract class Literal extends Expression {
     public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
         String ifNameRtn = "LITERAL..." + location.toString();
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-        env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtn), env.hypothesis(), location,
-                env.curContractSym().getName(),
-                "Control flow must be trusted to use this literal"));
+        env.checkFlow(ifNamePc, ifNameRtn, location,
+                "Control flow must be trusted to use this literal");
 
         return new ExpOutcome(ifNameRtn,
                 new PathOutcome(new PsiUnit(new Context(ifNamePc, env.inContext.lambda))));

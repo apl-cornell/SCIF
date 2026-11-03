@@ -20,8 +20,6 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -343,16 +341,12 @@ public class Call extends TrailerExpr {
                     // requires pc => integrity of the array var
                     Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
                     ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-                    env.cons.add(
-                            new Constraint(new Inequality(ifNamePc, ifContRtn), env.hypothesis(),
-                                    location,
-                                    "Current control flow must be trusted to call this method"));
+                    env.checkFlow(ifNamePc, ifContRtn, location,
+                            "Current control flow must be trusted to call this method");
                     // pc => l
                     if (!tail_position) {
-                        env.cons.add(new Constraint(
-                                new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
-                                env.hypothesis(), location,
-                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                        env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
+                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
                     }
                     return new ExpOutcome(ifNamePc, psi);
                 } else if (funcName.equals("push")) {
@@ -364,20 +358,14 @@ public class Call extends TrailerExpr {
                     String argLabel = argOutcome.valueLabelName;
                     Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
                     ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-                    env.cons.add(
-                            new Constraint(new Inequality(ifNamePc, var.ifl.toSHErrLocFmt()), env.hypothesis(),
-                                    location, env.curContractSym().getName(),
-                                    "Current control flow must be trusted to call this method"));
+                    env.checkFlow(ifNamePc, var.ifl.toSHErrLocFmt(), location,
+                            "Current control flow must be trusted to call this method");
                     // pc => ?
-                    env.cons.add(
-                            new Constraint(new Inequality(argLabel, var.ifl.toSHErrLocFmt()), env.hypothesis(),
-                                    location, env.curContractSym().getName(),
-                                    "Current control flow must be trusted to call this method"));
+                    env.checkFlow(argLabel, var.ifl.toSHErrLocFmt(), location,
+                            "Current control flow must be trusted to call this method");
                     if (!tail_position) {
-                        env.cons.add(new Constraint(
-                                new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
-                                env.hypothesis(), location, env.curContractSym().getName(),
-                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                        env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
+                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
                     }
                     return new ExpOutcome(ifNamePc, psi);
                 } else if (funcName.equals("length")) {
@@ -385,10 +373,8 @@ public class Call extends TrailerExpr {
                     Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
                     ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
                     if (!tail_position) {
-                        env.cons.add(new Constraint(
-                                new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
-                                env.hypothesis(), location, env.curContractSym().getName(),
-                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                        env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
+                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
                     }
                     return new ExpOutcome(var.ifl.toSHErrLocFmt(), psi);
                 } else {
@@ -452,33 +438,25 @@ public class Call extends TrailerExpr {
                     String argValue = argValueLabelNames.get(i);
                     String argLabelStr = cs.getLabelArg(i).toSHErrLocFmt(dependentLabelMapping);
                     // argValue => paramLabel[i]
-                    env.cons.add(new Constraint(
-                            new Inequality(argValue, Relation.LEQ, argLabelStr),
-                            env.hypothesis(), arg.location, env.curContractSym().getName(),
-                            "Input to the " + Utils.ordNumString(i + 1)
-                                    + " invoke argument must be trusted enough"));
+                    env.checkFlow(argValue, argLabelStr, arg.location, "Input to the "
+                            + Utils.ordNumString(i + 1)
+                            + " invoke argument must be trusted enough");
                     
                     // pc => paramLabel[i]
-                    env.cons.add(new Constraint(
-                            new Inequality(ifNamePc, Relation.LEQ, argLabelStr),
-                            env.hypothesis(), arg.location, env.curContractSym().getName(),
+                    env.checkFlow(ifNamePc, argLabelStr, arg.location,
                             "Current control flow must be trusted to feed the "
-                                    + Utils.ordNumString(i + 1) + "-th invoke argument"));
+                            + Utils.ordNumString(i + 1) + "-th invoke argument");
                 }
 
                 // Authorization to make the call
 
                 // closureValueLabel => pc_ex
-                env.cons.add(new Constraint(
-                        new Inequality(ifContRtn, pcExStr),
-                        env.hypothesis(), location, env.curContractSym().getName(),
-                        "Closure value must be trusted enough to invoke"));
+                env.checkFlow(ifContRtn, pcExStr, location,
+                        "Closure value must be trusted enough to invoke");
 
                 // pc => pc_ex
-                env.cons.add(new Constraint(
-                        new Inequality(ifNamePc, pcExStr),
-                        env.hypothesis(), location, env.curContractSym().getName(),
-                        "Current control flow must be trusted to invoke this closure"));
+                env.checkFlow(ifNamePc, pcExStr, location,
+                        "Current control flow must be trusted to invoke this closure");
 
                 // pc_2 dropped
                 // // pc_ex => pc_in ∨ lambda_caller
@@ -504,18 +482,12 @@ public class Call extends TrailerExpr {
 
                 // TODO: 
                 // closureValueLabel ⊔ gamma == post-call lambda
-                env.cons.add(new Constraint(
-                        new Inequality(Utils.joinLabels(ifContRtn, gammaStr),
-                                Relation.EQ, endContext.lambda),
-                        env.hypothesis(), location, env.curContractSym().getName(),
-                        "Invoking this closure does not respect static reentrancy locks"));
+                env.checkEqual(Utils.joinLabels(ifContRtn, gammaStr), endContext.lambda, location,
+                        "Invoking this closure does not respect static reentrancy locks");
 
                 if (!tail_position) {
-                    env.cons.add(new Constraint(
-                            new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
-                            env.hypothesis(), location, env.curContractSym().getName(),
-                            Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION)
-                        ); // normal psi.lock => pre-call lamnbda
+                    env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
+                            Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION); // normal psi.lock => pre-call lamnbda
                 }
 
                 // Finalize
@@ -527,29 +499,19 @@ public class Call extends TrailerExpr {
                 // floor was unenforced for every call). Emit the lock edge on
                 // the usual assumption channel but the pc floor as a CHECKED
                 // constraint.
-                env.addTrustConstraint(new Constraint(
-                        new Inequality(psi.getNormalPath().c.lambda, endContext.lambda),
-                        env.hypothesis(), location, env.curContractSym().getName(),
-                        "actually maintained lock of final sub-statement must flow to that of parent statement"));
+                env.checkTrustedBy(psi.getNormalPath().c.lambda, endContext.lambda, location,
+                        "actually maintained lock of final sub-statement must flow to that of parent statement");
                 // Emitted component-wise: a join on the left of ≤ can slip
                 // through the solver unchecked (see IMPLEMENTATION.md,
                 // string-emission landmines).
-                env.cons.add(new Constraint(
-                        new Inequality(preCallPc, endContext.pc),
-                        env.hypothesis(), location, env.curContractSym().getName(),
-                        "Post-invocation control flow must carry the pre-call control flow"));
-                env.cons.add(new Constraint(
-                        new Inequality(retStr, endContext.pc),
-                        env.hypothesis(), location, env.curContractSym().getName(),
-                        "Post-invocation control flow must carry the closure's return label"));
-                env.cons.add(new Constraint(
-                        new Inequality(ifContRtn, endContext.pc),
-                        env.hypothesis(), location, env.curContractSym().getName(),
-                        "Post-invocation control flow must carry the closure's value label"));
+                env.checkFlow(preCallPc, endContext.pc, location,
+                        "Post-invocation control flow must carry the pre-call control flow");
+                env.checkFlow(retStr, endContext.pc, location,
+                        "Post-invocation control flow must carry the closure's return label");
+                env.checkFlow(ifContRtn, endContext.pc, location,
+                        "Post-invocation control flow must carry the closure's value label");
                 psi.setNormalPath(endContext);
-                env.cons.add(new Constraint(
-                        new Inequality(psi.getNormalPath().c.pc, ifNameFuncRtnValue),
-                        env.hypothesis(), location, env.curContractSym().getName(), "ln_to_t"));
+                env.checkFlow(psi.getNormalPath().c.pc, ifNameFuncRtnValue, location, "ln_to_t");
                 return new ExpOutcome(ifNameFuncRtnValue, psi);
             }
 
@@ -596,10 +558,8 @@ public class Call extends TrailerExpr {
                             args.get(0).location);
                     // env.outContext = endContext;
                     if (!tail_position) {
-                        env.cons.add(new Constraint(
-                                new Inequality(psi.getNormalPath().c.lambda, beginContext.lambda),
-                                env.hypothesis(), location, env.curContractSym().getName(),
-                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+                        env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
+                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
                     }
                     return new ExpOutcome(ifNameArgValue, psi);
                 } else {
@@ -671,27 +631,12 @@ public class Call extends TrailerExpr {
             String ifNameArgValue = argValueLabelNames.get(i); // argument's label name
             Label ifArgLabel = funcSym.getLabelArg(i); // parameter's label
             assert ifArgLabel != null : argSym.getName();
-            env.cons.add(
-                    new Constraint(
-                            new Inequality(
-                                    ifNameArgValue,
-                                    Relation.LEQ,
-                                    ifArgLabel.toSHErrLocFmt(dependentLabelMapping)
-                            ),
-                            env.hypothesis(), arg.location, env.curContractSym().getName(),
-                            "Input to the " + Utils.ordNumString(i + 1)
-                                    + " argument must be trusted enough")
-            ); // arglbl => paramlbl
-            env.cons.add(
-                    new Constraint(
-                            new Inequality(
-                                    ifNamePc,
-                                    Relation.LEQ,
-                                    ifArgLabel.toSHErrLocFmt(dependentLabelMapping)),
-                            env.hypothesis(), arg.location, env.curContractSym().getName(),
-                            "Current control flow must be trusted to feed the " + Utils.ordNumString(i + 1)
-                            + "-th argument value")
-            ); // pc => paramlbl
+            env.checkFlow(ifNameArgValue, ifArgLabel.toSHErrLocFmt(dependentLabelMapping),
+                    arg.location, "Input to the " + Utils.ordNumString(i + 1)
+                    + " argument must be trusted enough"); // arglbl => paramlbl
+            env.checkFlow(ifNamePc, ifArgLabel.toSHErrLocFmt(dependentLabelMapping), arg.location,
+                    "Current control flow must be trusted to feed the " + Utils.ordNumString(i + 1)
+                    + "-th argument value"); // pc => paramlbl
 
             if (argSym.typeSym instanceof ClosureTypeSym paramCs) {
                 ClosureCreation.checkFlowInto(arg, paramCs, dependentLabelMapping, env, arg.location,
@@ -703,12 +648,8 @@ public class Call extends TrailerExpr {
 
         if (externalCall) {
 //            String tem = ((Attribute) value).value.toSHErrLocFmt();
-            env.cons.add(
-                    new Constraint(
-                            new Inequality(ifContRtn, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping)),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    "Target contract must be trusted to call this method")
-                ); // target address..lbl => pc_ex
+            env.checkFlow(ifContRtn, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
+                    location, "Target contract must be trusted to call this method"); // target address..lbl => pc_ex
         }
 
 
@@ -745,11 +686,8 @@ public class Call extends TrailerExpr {
 
         //TODO
 
-        env.cons.add(
-                new Constraint(new Inequality(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping)), env.hypothesis(),
-                        location, env.curContractSym().getName(),
-                        "Current control flow must be trusted to call this method")
-                    ); // current pc => pc_ex
+        env.checkFlow(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping), location,
+                "Current control flow must be trusted to call this method"); // current pc => pc_ex
         // pc_2 dropped
         // env.cons.add(new Constraint(new Inequality(ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
         //         Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), beginContext.lambda)), env.hypothesis(),
@@ -758,13 +696,11 @@ public class Call extends TrailerExpr {
         //     ); // pc_ex => pc_in ⊔ caller's lambda
 
         if (externalCall) {
-            env.cons.add(new Constraint(
-                    new Inequality(Utils.joinLabels(ifContRtn,
-                            ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
-                            Relation.EQ, endContext.lambda), env.hypothesis(), location,
-                    env.curContractSym().getName(),
-                    "Calling this function does not respect static reentrancy locks")
-                ); // target address..lbl ⊔ gamma == post-call lambda
+            // target address..lbl ⊔ gamma == post-call lambda
+            env.checkEqual(
+                    Utils.joinLabels(ifContRtn, ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
+                    endContext.lambda, location,
+                    "Calling this function does not respect static reentrancy locks");
         }
 
         if (!tail_position) {
@@ -793,10 +729,9 @@ public class Call extends TrailerExpr {
         psi.joinExe(expPsi);
         Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
         psi.setNormalPath(endContext);
-        Constraint ln_to_t = new Constraint(new Inequality(psi.getNormalPath().c.pc, ifNameFuncRtnValue),
-                env.hypothesis(), location, env.curContractSym().getName(), "Control flow after this call must be trusted by the function's return value label"
-            ); // post-call pc (normal) => function return label(l_n)
-        env.cons.add(ln_to_t);
+        // post-call pc (normal) => function return label (l_n)
+        env.checkFlow(psi.getNormalPath().c.pc, ifNameFuncRtnValue, location,
+                "Control flow after this call must be trusted by the function's return value label");
         return new ExpOutcome(ifNameFuncRtnValue, psi);
     }
 

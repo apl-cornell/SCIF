@@ -19,8 +19,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -175,10 +173,8 @@ public class Try extends Statement {
             PsiUnit u = psi.psi.get(expSym);
 
             if (u != null) {
-                env.cons.add(
-                        new Constraint(new Inequality(u.c.lambda, beginContext.lambda), env.hypothesis(),
-                                location, env.curContractSym().getName(),
-                                "Try clause should maintain locks when throwing exception " + h.name()));
+                env.checkFlow(u.c.lambda, beginContext.lambda, location,
+                        "Try clause should maintain locks when throwing exception " + h.name());
             /*env.cons.add(new Constraint(new Inequality(u.c.pc, h.), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));*/
 
@@ -210,10 +206,8 @@ public class Try extends Statement {
         /*Utils.contextFlow(env, cTry, endContext, location);
         env.outContext = endContext;*/
         if (!tail_position) {
-            env.cons.add(new Constraint(
-                    new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkFlow(endContext.lambda, beginContext.lambda, location,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         }
 
         return psi;

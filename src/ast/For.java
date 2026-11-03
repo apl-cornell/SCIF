@@ -14,8 +14,6 @@ import typecheck.ScopeContext;
 import typecheck.Utils;
 import typecheck.VisitEnv;
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 
 public class For extends Statement {
@@ -69,13 +67,11 @@ public class For extends Statement {
         String ifNamePcBefore = Utils.getLabelNamePc(scopeContext.getParent().getSHErrLocName());
         String ifNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
-        env.cons.add(new Constraint(new Inequality(ifNamePcBefore, ifNamePcAfter), env.hypothesis(),
-                location, env.curContractSym().getName(),
-                "Control flow before this for statement contributes to the one in its scope"));
+        env.checkFlow(ifNamePcBefore, ifNamePcAfter, location,
+                "Control flow before this for statement contributes to the one in its scope");
 
-        env.cons.add(new Constraint(new Inequality(ifNameTest, ifNamePcAfter), env.hypothesis(),
-                location, env.curContractSym().getName(),
-                "Integrity of the test condition contributes to control flow of this for statement"));
+        env.checkFlow(ifNameTest, ifNamePcAfter, location,
+                "Integrity of the test condition contributes to control flow of this for statement");
 
 
         env.inContext = new Context(ifNamePcAfter, beginContext.lambda);

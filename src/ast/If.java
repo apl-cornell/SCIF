@@ -97,13 +97,10 @@ public class If extends Statement {
                 // logger.debug("testing label");
             }
         }
-        env.cons.add(new Constraint(new Inequality(IfNamePcBefore, IfNamePcAfter), env.hypothesis(),
-                location, env.curContractSym().getName(),
-                "Control flow integrity before this if condition doesn't flow to the one after this condition"));
-        env.cons.add(
-                new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis(), location,
-                        env.curContractSym().getName(),
-                        "Integrity of this condition doesn't flow to the control flow in this if branch"));
+        env.checkFlow(IfNamePcBefore, IfNamePcAfter, location,
+                "Control flow integrity before this if condition doesn't flow to the one after this condition");
+        env.checkFlow(IfNameTest, IfNamePcAfter, location,
+                "Integrity of this condition doesn't flow to the control flow in this if branch");
 
         if (body.size() > 0 || orelse.size() > 0) {
             Utils.genSequenceConstraints(env, beginContext.lambda, IfTestNormalPc, IfTestNormalLambda, IfNamePcAfter, test.location);
