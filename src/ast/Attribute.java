@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -101,9 +99,8 @@ public class Attribute extends TrailerExpr {
 //                env.curContractSym().getName(),
 //                "Integrity of the member"));
 //        if (!ifAttLabel.equals(attrValueLabel)) {
-            env.cons.add(new Constraint(new Inequality(attrValueLabel, Relation.EQ, ifNameRnt), env.hypothesis(),
-                    location, env.curContractSym().getName(),
-                    "Integrity of the index value must be trusted to indicate the attribute"));
+            env.checkEqual(attrValueLabel, ifNameRnt, location,
+                    "Integrity of the index value must be trusted to indicate the attribute");
 //        }
 
         return new ExpOutcome(ifNameRnt, vo.psi);

@@ -6,8 +6,6 @@ import compile.ast.Statement;
 import java.util.List;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -50,21 +48,16 @@ public class Endorse extends Expression {
         String toLabel = toNameSLC();
                 //to.toSherrlocFmt(scopeContext);
 
-        env.cons.add(
-                new Constraint(new Inequality(ifNameValue, fromLabel), env.hypothesis(), location,
-                        env.curContractSym().getName(),
-                        "The expression must be trusted to be endorsed"));
+        env.checkFlow(ifNameValue, fromLabel, location,
+                "The expression must be trusted to be endorsed");
 
-        env.cons.add(new Constraint(new Inequality(toLabel, ifNameRtn), env.hypothesis(), location,
-                env.curContractSym().getName(),
-                "The integrity level of this expression would be endorsed"));
+        env.checkFlow(toLabel, ifNameRtn, location,
+                "The integrity level of this expression would be endorsed");
 
         //env.outContext = endContext;
 
-        env.addTrustConstraint(
-                new Constraint(new Inequality(beginContext.pc, endContext.pc), env.hypothesis(),
-                        location, env.curContractSym().getName(),
-                        "The control flow of this expression would be endorsed"));
+        env.checkTrustedBy(beginContext.pc, endContext.pc, location,
+                "The control flow of this expression would be endorsed");
 
         // if (value instanceof Name n && env.getVar(n.id) != null
         //         && env.getVar(n.id).typeSym instanceof ClosureTypeSym cs) {

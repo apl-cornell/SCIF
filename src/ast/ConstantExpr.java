@@ -5,8 +5,6 @@ import compile.ast.Literal;
 import compile.ast.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -33,13 +31,11 @@ public class ConstantExpr extends Expression {
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         //env.outContext = endContext;
-        env.cons.add(new Constraint(new Inequality(beginContext.pc, endContext.pc), env.hypothesis(),
-                location, env.curContractSym().getName(),
-                "Integrity of the control flow doesn't flow to value of this constant"));
+        env.checkFlow(beginContext.pc, endContext.pc, location,
+                "Integrity of the control flow doesn't flow to value of this constant");
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkFlow(endContext.lambda, beginContext.lambda, location,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         }
         return new ExpOutcome(endContext.pc, new PathOutcome(new PsiUnit(endContext)));
     }

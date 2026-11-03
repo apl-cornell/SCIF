@@ -2,7 +2,6 @@ package typecheck;
 
 import ast.ComplexIfLabel;
 import ast.IfLabel;
-import ast.Interface;
 import ast.PrimitiveIfLabel;
 import ast.SourceFile;
 import java.util.ArrayList;
@@ -11,6 +10,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Hypothesis;
+import typecheck.sherrlocUtils.Inequality;
+import typecheck.sherrlocUtils.Relation;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -177,6 +178,42 @@ public class VisitEnv {
 
     public void addTrustConstraint(Constraint constraint) {
         trustCons.add(constraint);
+    }
+
+    /**
+     * Adds the constraint {@code from <= to} under the current hypothesis.
+     * If it cannot be satisfied, the violation is reported at {@code location}
+     * with {@code explanation}.
+     */
+    public void checkFlow(String from, String to, CodeLocation location,
+                          String explanation) {
+        cons.add(new Constraint(new Inequality(from, Relation.LEQ, to),
+                hypothesis, location, explanation));
+    }
+
+    /**
+     * Adds the constraint {@code a == b} under the current hypothesis.
+     * If it cannot be satisfied, the violation is reported at {@code location}
+     * with {@code explanation}.
+     */
+    public void checkEqual(String a, String b, CodeLocation location,
+                           String explanation) {
+        cons.add(new Constraint(new Inequality(a, Relation.EQ, b), hypothesis,
+                location, explanation));
+    }
+
+    /** Like {@link #checkFlow}, but adds a trust constraint. */
+    public void checkTrustedBy(String from, String to, CodeLocation location,
+                               String explanation) {
+        trustCons.add(new Constraint(new Inequality(from, Relation.LEQ, to),
+                hypothesis, location, explanation));
+    }
+
+    /** Like {@link #checkEqual}, but adds a trust constraint. */
+    public void checkTrustEqual(String a, String b, CodeLocation location,
+                                String explanation) {
+        trustCons.add(new Constraint(new Inequality(a, Relation.EQ, b),
+                hypothesis, location, explanation));
     }
 
     public void addPrincipal(VarSym varSym) {

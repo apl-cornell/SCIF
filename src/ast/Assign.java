@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -73,15 +71,11 @@ public class Assign extends Statement {
         String ifNameValue = vo.valueLabelName;
         // prevContext = valueContext;
 
-        env.cons.add(
-                new Constraint(new Inequality(ifNameValue, ifNameTgt), env.hypothesis(), value.location,
-                        env.curContractSym().getName(),
-                        "Integrity of the value being assigned must be trusted to allow this assignment"));
+        env.checkFlow(ifNameValue, ifNameTgt, value.location,
+                "Integrity of the value being assigned must be trusted to allow this assignment");
 
-        env.cons.add(
-                new Constraint(new Inequality(ifNamePc, ifNameTgt), env.hypothesis(), value.location,
-                        env.curContractSym().getName(),
-                        "Integrity of control flow must be trusted to allow this assignment"));
+        env.checkFlow(ifNamePc, ifNameTgt, value.location,
+                "Integrity of control flow must be trusted to allow this assignment");
 
   
         if (target instanceof Name tgtName && env.getVar(tgtName.id).typeSym instanceof typecheck.ClosureTypeSym targetCs) {
@@ -93,9 +87,8 @@ public class Assign extends Statement {
         // env.outContext = endContext;
 
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkFlow(endContext.lambda, beginContext.lambda, location,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         }
 
         if (to != null) {

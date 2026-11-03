@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -55,9 +53,8 @@ public class Return extends Statement {
         String ifRtnLockName = funcSym.getLabelNameCallGamma();
         PathOutcome psi = new PathOutcome();
         if (value == null) {
-            env.cons.add(new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis(),
-                    location, env.curContractSym().getName(),
-                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkFlow(ifNamePc, ifNameRtnValue, location,
+                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
             psi.setReturnPath(env.inContext);
             return psi;
         }
@@ -65,23 +62,18 @@ public class Return extends Statement {
         ExpOutcome vo = value.genIFConstraints(env, true);
         Context expContext = vo.psi.getNormalPath().c;
         String ifNameValue = vo.valueLabelName;
-        env.cons.add(new Constraint(new Inequality(ifNameValue, ifNameRtnValue), env.hypothesis(),
-                location, env.curContractSym().getName(),
-                "Value must be trusted to be returned"));
-        env.cons.add(
-                new Constraint(new Inequality(ifNamePc, ifNameRtnValue), env.hypothesis(), location,
-                        env.curContractSym().getName(),
-                        "Control flow must be trusted to return"));
+        env.checkFlow(ifNameValue, ifNameRtnValue, location,
+                "Value must be trusted to be returned");
+        env.checkFlow(ifNamePc, ifNameRtnValue, location,
+                "Control flow must be trusted to return");
 
         if (funcSym.returnType instanceof typecheck.ClosureTypeSym targetCs) {
             ClosureCreation.checkFlowInto(value, targetCs, new java.util.HashMap<>(), env, location,
                 "Returned closure value must subtype the declared return closure type");
         }
 
-        env.cons.add(new Constraint(
-                new Inequality(Utils.joinLabels(endContext.lambda, beginContext.lambda),
-                        ifRtnLockName), env.hypothesis(), location, env.curContractSym().getName(),
-                "Reentrancy locks must be respected to return"));
+        env.checkFlow(Utils.joinLabels(endContext.lambda, beginContext.lambda), ifRtnLockName,
+                location, "Reentrancy locks must be respected to return");
         PsiUnit pathn = vo.psi.getNormalPath();
         vo.psi.removeNormalPath();
         vo.psi.setReturnPath(pathn.c);
