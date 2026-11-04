@@ -85,9 +85,8 @@ public class Throw extends Statement {
         // env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
 
         if (!parent.isCheckedException(exceptionSym, false)) {
-            System.err.println("Unchecked exception " + exceptionSym.getName() + " at " + "location: "
-                    + location.errString());
-            throw new RuntimeException();
+            throw new SemanticException("exception " + exceptionSym.getName()
+                    + " must be caught or declared to be thrown", location);
         }
         return now;
     }

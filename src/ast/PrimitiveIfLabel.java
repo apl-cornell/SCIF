@@ -175,14 +175,13 @@ public class PrimitiveIfLabel extends IfLabel {
             if (!typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.PRINCIPAL))
                     && !typeSym.getName().equals(Utils.BuiltinType2ID(BuiltInT.ADDRESS))
                     && !(typeSym instanceof InterfaceSym)) {
-                throw new RuntimeException("Primitive non-address/principal ifc label " + value.id + " at " + "location: "
-                        + location.toString());
+                throw new SemanticException("label " + value.id
+                        + " must name a principal, address, or contract variable", location);
             }
             // logger.debug(now.toString());
             return now;
         } else {
-            throw new RuntimeException("Primitive undefined ifc label " + value.id + " at " + "location: "
-                    + location.toString());
+            throw new AssertionError("label names a non-variable: " + value.id);
         }
     }
 

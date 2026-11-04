@@ -94,7 +94,7 @@ public class Subscript extends TrailerExpr {
             env.addCons(now.genTypeConstraints(typeInfo.valueType.getName(), Relation.EQ, env, location));
             return now;
         } else {
-            throw new RuntimeException("Subscript: value type not found: " + value);
+            throw new SemanticException("only maps and arrays can be subscripted", value.location);
         }
     }
 

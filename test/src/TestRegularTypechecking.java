@@ -131,6 +131,9 @@ public class TestRegularTypechecking {
             "regularTypechecking/ThrowsUnknownException_W01",
             "regularTypechecking/EmptyFile_W01",
             "regularTypechecking/DepMapNonFinalIndex_W01",
+            "regularTypechecking/ThrowUndeclared_W01",
+            "regularTypechecking/SubscriptNonCollection_W01",
+            "regularTypechecking/LabelNonPrincipalVar_W01",
     })
     void testReportedError(String contractName) throws Exception {
         URL input = ClassLoader.getSystemResource(contractName + ".scif");

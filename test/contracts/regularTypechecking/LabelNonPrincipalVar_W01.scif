@@ -1,0 +1,6 @@
+// A label names a uint variable.
+contract LabelNonPrincipalVar_W01 {
+    uint n;
+    uint{n} x;
+    constructor() { super(); }
+}
