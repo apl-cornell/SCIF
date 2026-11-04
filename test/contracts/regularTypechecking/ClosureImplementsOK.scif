@@ -1,0 +1,23 @@
+// Regular TC positive: an interface declares a method whose parameter
+// is a closure type, and a contract that implements the interface
+// declares the same method with a closure-typed parameter that
+// matches structurally (same unbound arity, same positional types,
+// same return, same labels). The implements relationship must be
+// accepted.
+interface IRunner {
+    public void exec{this -> this; this}(
+        (fun {this -> this; this} (uint) -> void) {this} c
+    );
+}
+
+contract Runner implements IRunner {
+    constructor() {
+        super();
+    }
+
+    public void exec{this -> this; this}(
+        (fun {this -> this; this} (uint) -> void) {this} c
+    ) {
+        c.invoke(0);
+    }
+}

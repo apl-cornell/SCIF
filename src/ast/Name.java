@@ -60,9 +60,8 @@ public class Name extends Variable {
 
     @Override
     public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
-        // assuming the name would be a variable name
-        // logger.debug("Name: " + id);
-        String ifNameRtn = env.getVar(id).labelNameSLC();
+        VarSym var = env.getVar(id);
+        String ifNameRtn = var.labelNameSLC();
         return new ExpOutcome(ifNameRtn, new PathOutcome(new PsiUnit(env.inContext)));
     }
 

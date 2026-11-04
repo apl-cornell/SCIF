@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -61,22 +59,17 @@ public class BinOp extends Expression {
 
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bin" + location.toString();
 
-        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis(), left.location,
-                env.curContractSym().getName(),
-                "Integrity of left hand expression doesn't flow to value of this binary operation"));
-        env.cons.add(
-                new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis(), right.location,
-                        env.curContractSym().getName(),
-                        "Integrity of right hand expression doesn't flow to value of this binary operation"));
+        env.checkFlow(ifNameLeft, ifNameRtn, left.location,
+                "Integrity of left hand expression doesn't flow to value of this binary operation");
+        env.checkFlow(ifNameRight, ifNameRtn, right.location,
+                "Integrity of right hand expression doesn't flow to value of this binary operation");
 
         typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, right.location);
         // env.outContext = endContext;
 
         if (!tail_position) {
-            env.cons.add(new Constraint(
-                    new Inequality(ro.psi.getNormalPath().c.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkFlow(ro.psi.getNormalPath().c.lambda, beginContext.lambda, location,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         }
 
         ro.psi.join(lo.psi);

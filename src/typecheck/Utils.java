@@ -12,16 +12,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import sherrloc.constraint.ast.Constructor;
 import sherrloc.constraint.ast.Hypothesis;
-import sherrloc.diagnostic.ConstraintCheck;
 import sherrloc.diagnostic.DiagnosticOptions;
-import sherrloc.diagnostic.ErrorDiagnosis;
 import sherrloc.diagnostic.SherrlocDiagnoser;
 import sherrloc.diagnostic.explanation.Entity;
 import sherrloc.diagnostic.explanation.Explanation;
 import sherrloc.graph.Variance;
 import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 
 import java.io.*;
 import java.util.*;
@@ -41,6 +38,8 @@ public class Utils {
     public static final String LABEL_BOTTOM = "any";
     public static final String LABEL_THIS = "this";
     public static final String LABEL_SENDER = "sender";
+    public static final String LABEL_INVOKER = "invoker";
+    public static final String CLOSURE_TARGET_MEMBER = "target";
     public static final String DEAD = "---DEAD---";
     public static final String KEY = "KEY";
     public static final String SHERRLOC_TOP = LABEL_TOP;
@@ -272,6 +271,13 @@ public class Utils {
 
     public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors, List<Constraint> assumptions,
             List<Constraint> constraints, boolean isIFC, InterfaceSym contractSym) {
+        return createDiagnoser(constructors, assumptions, constraints, isIFC, contractSym,
+                java.util.Set.of(), List.of());
+    }
+
+    public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors, List<Constraint> assumptions,
+            List<Constraint> constraints, boolean isIFC, InterfaceSym contractSym,
+            Set<String> rigidAtoms, List<String[]> atomAssumptions) {
 
         SherrlocDiagnoser diagnoser = new SherrlocDiagnoser(DiagnosticOptions.Mode.CONS, true, false);
 
@@ -311,6 +317,20 @@ public class Utils {
                 diagnoser.addAssumedInequality(diagnoser.createEqualityConstraint(
                         diagnoser.createElement(top.toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition()),
                         diagnoser.createElement(contractSym.thisSym().toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition())));
+            }
+            if (isIFC) {
+                for (String atom : rigidAtoms) {
+                    diagnoser.defineConstructor(atom, 0);
+                    // bottom bound only: atom ⇒ any
+                    diagnoser.addAssumedInequality(diagnoser.createGreaterThanConstraint(
+                            diagnoser.createElement(bot.toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition()),
+                            diagnoser.createElement(atom, sherrloc.constraint.ast.Position.EmptyPosition())));
+                }
+                for (String[] pair : atomAssumptions) {
+                    diagnoser.addAssumedInequality(diagnoser.createEqualityConstraint(
+                            diagnoser.createElement(pair[0], sherrloc.constraint.ast.Position.EmptyPosition()),
+                            diagnoser.createElement(pair[1], sherrloc.constraint.ast.Position.EmptyPosition())));
+                }
             }
         }
 
@@ -627,13 +647,10 @@ public class Utils {
 
     public static void contextFlow(VisitEnv env, Context outContext, Context endContext,
             CodeLocation location) {
-        env.addTrustConstraint(new Constraint(new Inequality(outContext.lambda, endContext.lambda),
-                env.hypothesis(), location, env.curContractSym().getName(),
-                "actually maintained lock of final sub-statement must flow to that of parent statement"));
-        env.addTrustConstraint(
-                new Constraint(new Inequality(outContext.pc, endContext.pc), env.hypothesis(),
-                        location, env.curContractSym().getName(),
-                        "Normal-termination control flow of final sub-statement must flow to that of parent statement"));
+        env.checkTrustedBy(outContext.lambda, endContext.lambda, location,
+                "actually maintained lock of final sub-statement must flow to that of parent statement");
+        env.checkTrustedBy(outContext.pc, endContext.pc, location,
+                "Normal-termination control flow of final sub-statement must flow to that of parent statement");
     }
 
     public static ExceptionTypeSym getNormalPathException() {
@@ -680,6 +697,14 @@ public class Utils {
         return methodNameHash(funName, functionSig.signature());
     }
     public static String methodNameHash(String funName, String plainSignature) {
+        return funName + "_" + signatureHashHex(plainSignature);
+    }
+
+    public static String closureMethodNameHash(String funName, String plainSignature) {
+        return funName + "_closure_" + signatureHashHex(plainSignature);
+    }
+
+    private static String signatureHashHex(String plainSignature) {
         // SHA256
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -697,8 +722,7 @@ public class Utils {
                 hexString.insert(0, '0');
             }
 
-            return funName + "_" + hexString.toString();
-            // return plainSignature;
+            return hexString.toString();
         } catch (NoSuchAlgorithmException exc) {
             throw new RuntimeException();
         }
@@ -794,10 +818,9 @@ public class Utils {
     }
 
     public static void genSequenceConstraints(VisitEnv env, String prevLambda, String lastPc, String lastLambda, String newPc, CodeLocation location) {
-        env.cons.add(new Constraint(new Inequality(lastPc, newPc), env.hypothesis(), location, env.curContractSym().getName(),
-                Utils.ERROR_MESSAGE_PC_IN_NONLAST_OPERATION));
-        env.cons.add(new Constraint(new Inequality(lastLambda, joinLabels(prevLambda, newPc)), env.hypothesis(), location, env.curContractSym().getName(),
-                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        env.checkFlow(lastPc, newPc, location, Utils.ERROR_MESSAGE_PC_IN_NONLAST_OPERATION);
+        env.checkFlow(lastLambda, joinLabels(prevLambda, newPc), location,
+                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
     }
 
     /**
@@ -805,8 +828,8 @@ public class Utils {
      If s is not the last op, prepare and generate the input context for the next op.
      */
     public static Context genNewContextAndConstraints(VisitEnv env, boolean tail_position, Context c, String prevLambda, String newPc, CodeLocation location) {
-        env.cons.add(new Constraint(new Inequality(prevLambda, c.lambda), env.hypothesis(), location, env.curContractSym().getName(),
-                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        env.checkFlow(prevLambda, c.lambda, location,
+                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         if (tail_position) return c;
         assert c != null: location.errString();
         genSequenceConstraints(env, prevLambda, c.pc, c.lambda, newPc, location);

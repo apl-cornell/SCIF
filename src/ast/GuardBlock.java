@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.*;
 
 import java.util.ArrayList;
@@ -59,9 +57,8 @@ public class GuardBlock extends Statement {
         Label label = env.curContractSym().newLabel(l);
         String guardLabel = label.toSHErrLocFmt();
 
-        env.cons.add(new Constraint(new Inequality(Utils.meetLabels(guardLabel, curContext.lambda),
-                beginContext.lambda), env.hypothesis(), location, env.curContractSym().getName(),
-                "Cannot grant a dynamic reentrancy lock"));
+        env.checkFlow(Utils.meetLabels(guardLabel, curContext.lambda), beginContext.lambda,
+                location, "Cannot grant a dynamic reentrancy lock");
         // String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
         PathOutcome psi = new PathOutcome(new PsiUnit(curContext));
@@ -94,19 +91,15 @@ public class GuardBlock extends Statement {
             String newPathLabel =
                     scopeContext.getSHErrLocName() + "." + "lock" + location.toString() + "."
                             + entry.getKey().getName();
-            env.cons.add(new Constraint(new Inequality(newPathLabel, CompareOperator.Eq,
-                    Utils.meetLabels(value.c.lambda, guardLabel)), env.hypothesis(), location,
-                    env.curContractSym().getName(),
-                    "Operations inside lock clause does't respect locks"));
+            env.checkEqual(newPathLabel, Utils.meetLabels(value.c.lambda, guardLabel), location,
+                    "Operations inside lock clause does't respect locks");
             psiOutcome.set(entry.getKey(),
                     new PsiUnit(new Context(value.c.pc, newPathLabel), value.catchable));
         }
 
         if (!tail_position) {
-            env.cons.add(new Constraint(
-                    new Inequality(psiOutcome.getNormalPath().c.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkFlow(psiOutcome.getNormalPath().c.lambda, beginContext.lambda, location,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         }
         /*env.cons.add(new Constraint(new Inequality(Utils.meetLabels(curContext.lockName, guardLabel), context.lockName), env.hypothesis, location, env.curContractSym.name,
                 "Cannot release a dynamic reentrancy lock"));*/

@@ -1,0 +1,31 @@
+// IFC positive: pc_ex contravariance (decision 2026-07-19, supersedes
+// the D-P2 equality).
+//
+// The believed closure type strengthens the target's entry requirement
+// from {any} to {this}. A believed external label may be stronger than
+// the real one, never weaker: the holder then passes a stricter static
+// gate than the target demands, and the one-sided runtime chain
+// msg.sender => lExtBef => lExt still discharges the target's real
+// entry check. The weaker direction stays rejected
+// (ClosureDeclaredWeakerThanFunc_W01).
+//
+// Non-void deliberately: a void closure type's return label defaults
+// to its pc_ex, which would drag the (covariant) return-label check
+// into this test and mask the pc_ex direction.
+contract Endorser {
+    uint{this} count;
+
+    constructor() {
+        super();
+    }
+
+    closurable public uint{this} poke{any -> this; this}() {
+        return 1;
+    }
+
+    public void run{this -> this; this}() {
+        (fun {this -> this; this} () -> uint{this}) {this} f = closure this.poke();
+        uint{this} y = f.invoke();
+        count = y;
+    }
+}

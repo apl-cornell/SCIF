@@ -136,10 +136,8 @@ public class FunctionDef extends FunctionSig {
         Context curContext = new Context(ifNamePc, inLockName);
 
         String ifNameCall = funcSym.internalPcSLC();
-        env.addTrustConstraint(
-                new Constraint(new Inequality(ifNameCall, Relation.EQ, ifNamePc), env.hypothesis(),
-                        funcLabels.to_pc.location,
-                        "Control flow of this method start with its call-after(second) label"));
+        env.checkTrustEqual(ifNameCall, ifNamePc, funcLabels.to_pc.location,
+                "Control flow of this method start with its call-after(second) label");
 
 //        String ifNameContract = env.curContractSym().getLabelNameContract();
 //        env.addTrustConstraint(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis(),
@@ -147,13 +145,11 @@ public class FunctionDef extends FunctionSig {
 //                "This contract should be trusted enough to call this method"));
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
-        env.addTrustConstraint(new Constraint(new Inequality(inLockName, ifNamePc), env.hypothesis(),
-                funcLabels.to_pc.location,
-                "The statically locked integrity must be at least as trusted as initial pc integrity"));
-        env.cons.add(
-                new Constraint(new Inequality(Utils.joinLabels(inLockName, outLockName), ifNameGamma),
-                        env.hypothesis(), funcLabels.gamma_label.location,
-                        "This function does not maintain reentrancy locks as specified in signature"));
+        env.checkTrustedBy(inLockName, ifNamePc, funcLabels.to_pc.location,
+                "The statically locked integrity must be at least as trusted as initial pc integrity");
+        env.checkFlow(Utils.joinLabels(inLockName, outLockName), ifNameGamma,
+                funcLabels.gamma_label.location,
+                "This function does not maintain reentrancy locks as specified in signature");
 
         HashMap<ExceptionTypeSym, PsiUnit> psi = new HashMap<>();
         for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
@@ -291,6 +287,31 @@ public class FunctionDef extends FunctionSig {
                 code.addTemporaryFunction(new Function(name, arguments, returnType, false, false, statements));
                 wapperStatements.add(new Return(new Call(name, arguments.stream().map(arg -> new SingleVar(arg.name())).collect(
                         Collectors.toList()))));
+
+                if (isClosurable() && !isNative()) {
+                    code.enterNewVarScope();
+                    code.pushScope(ScopeType.METHOD);
+
+                    List<compile.ast.Statement> closureStatements = new ArrayList<>();
+                    compile.Utils.addBuiltInVars(true, closureStatements, code);
+                    closureStatements.addAll(code.enterClosureFuncCheck(funcLabels, args));
+                    closureStatements.add(new Return(new Call(name,
+                            arguments.stream().map(arg -> new SingleVar(arg.name()))
+                                    .collect(Collectors.toList()))));
+                    
+                    List<Argument> closureArguments = new ArrayList<>(arguments);
+                    closureArguments.add(new Argument(
+                            new compile.ast.ArrayType(new compile.ast.PrimitiveType(compile.Utils.PRIMITIVE_TYPE_ADDRESS_NAME)),
+                            "lExtBef"));
+                    
+                    code.markLabelRuntimeRequired();
+                    code.addTemporaryFunction(new Function(
+                            typecheck.Utils.closureMethodNameHash(name, signature()),
+                            closureArguments, returnType, pub, payable, closureStatements));
+                    
+                    code.exitVarScope();
+                    code.popScope();
+                }
                 return new Function(methodName, arguments, returnType, pub, payable, wapperStatements);
             } else {
                 return new Function(methodName, arguments, returnType, pub, payable, statements);

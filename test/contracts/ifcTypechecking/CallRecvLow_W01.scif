@@ -1,0 +1,34 @@
+// IFC negative — non-closure twin of ClosureCreateRecvLow_W01.
+//
+// The receiver `t` is held in a state field labeled {any} (any code
+// could have written its current value), so the receiver itself is
+// least-trusted. The caller's pc is {this} so the caller has full
+// authority, but it then directly calls `t.op()`, whose declared
+// pc_ex is {this} (the callee expects high-trust entry). A least-
+// trusted receiver cannot dispatch into a most-trusted callee, and
+// in addition the call's reentrancy-lock outcome cannot then match
+// the surrounding function's declared lock signature. The call is
+// rejected.
+//
+// The closure version (ClosureCreateRecvLow_W01) isolates the
+// receiver-trust constraint cleanly because closure *creation* does
+// not perform the call and so does not emit the reentrancy-lock
+// match constraints. The direct-call site here emits the full
+// external-call bundle (receiver-trust + caller authority +
+// reentrancy lock match), so SHErrLoc's blame analysis here surfaces
+// the lock match as the headline cause.
+interface IT {
+    public void op{this -> this}();
+}
+
+contract Bad {
+    IT{any} t;
+
+    constructor() {
+        super();
+    }
+
+    public void run{this -> this; this}() {
+        t.op();
+    }
+}

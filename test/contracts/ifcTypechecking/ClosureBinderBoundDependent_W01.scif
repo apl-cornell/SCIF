@@ -1,0 +1,25 @@
+// IFC negative — binding an argument whose slot label depends on a
+// still-unbound parameter.
+//
+// `amount`'s label is the first parameter `from`, which stays a hole,
+// so at creation time there is no principal to check the bound `100`
+// against. Such a slot can only be bound together with (or after) the
+// parameter its label depends on; here the creation is rejected.
+interface IToken {
+    closurable public void transfer{from -> this; from}(
+        final address from, address{this} to, uint{from} amount
+    );
+}
+
+contract Bad {
+    IToken token;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        (fun {payer}(final address payer) -> void) {this} clo =
+            closure token.transfer(_, address(this), 100);
+    }
+}

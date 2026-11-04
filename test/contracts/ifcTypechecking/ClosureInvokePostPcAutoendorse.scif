@@ -1,0 +1,37 @@
+// B.8 discriminating test (advisor item (3)): post-call pc of a closure
+// invoke must NOT join pc_ex.
+//
+// poke is an ANY-entry method that autoendorses to {this}: the callee
+// vouches for untrusted control at its own entry, and its return label
+// is {this}. The closure is created by this contract itself, so its
+// value label is {this}.
+//
+// After f.invoke(), the post-call pc is
+//   pc ⊔ l_nθ ⊔ ℓ      = this ⊔ this ⊔ this = this   (ℓ-version: accepts)
+//   pc ⊔ l_nθ ⊔ pc_exθ = this ⊔ this ⊔ any  = any    (pc_ex-join: rejects)
+// so the write to the {this} field count discriminates the two versions.
+// Joining pc_ex here would nullify the autoendorsement the callee
+// declared: every invoke of an any-entry method would taint the
+// continuation to any.
+//
+// The closure is non-void deliberately: a void closure type has no
+// return-label slot, and the believed return label then defaults to
+// pc_ex, which would taint the continuation through l_nθ regardless
+// of the B.8 direction.
+contract SelfKeeper {
+    uint{this} count;
+
+    constructor() {
+        super();
+    }
+
+    closurable public uint{this} poke{any -> this; this}() {
+        return 1;
+    }
+
+    public void run{this -> this; this}() {
+        (fun {any -> this; this} () -> uint{this}) {this} f = closure this.poke();
+        uint{this} y = f.invoke();
+        count = y;
+    }
+}

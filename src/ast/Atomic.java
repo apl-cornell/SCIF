@@ -17,8 +17,6 @@ import compile.ast.Revert;
 import compile.ast.Type;
 import typecheck.*;
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 
 public class Atomic extends Statement {
 
@@ -258,10 +256,8 @@ public class Atomic extends Statement {
             PsiUnit u = psi.psi.get(expSym);
 
             if (u != null) {
-                env.cons.add(
-                        new Constraint(new Inequality(u.c.lambda, beginContext.lambda), env.hypothesis(),
-                                location, env.curContractSym().getName(),
-                                "Try clause should maintain locks when throwing exception " + h.name()));
+                env.checkFlow(u.c.lambda, beginContext.lambda, location,
+                        "Try clause should maintain locks when throwing exception " + h.name());
             /*env.cons.add(new Constraint(new Inequality(u.c.pc, h.), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));*/
 
@@ -292,10 +288,8 @@ public class Atomic extends Statement {
         /*Utils.contextFlow(env, cTry, endContext, location);
         env.outContext = endContext;*/
         if (!tail_position) {
-            env.cons.add(new Constraint(
-                    new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkFlow(endContext.lambda, beginContext.lambda, location,
+                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         }
 
         return psi;

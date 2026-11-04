@@ -1,4 +1,4 @@
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import ast.SourceFile;
 import java.io.File;
@@ -19,6 +19,15 @@ public class TestCompilation {
             "basic/StructEx03",
             "basic/StructEx02",
             "basic/StructEx01",
+            "basic/ClosureFieldSmoke",
+            "basic/ClosurableEntrySmoke",
+            "basic/ClosureCreateSmoke",
+            "basic/ClosureInvokeArgsSmoke",
+            "basic/ClosureInvokeBinderSmoke",
+            "basic/ClosureDynArgSmoke",
+            "basic/ClosureBindSmoke",
+            "basic/ClosureTargetSmoke",
+            "basic/IRouterClosureCompile",
             "applications/EthCrossChainManager",
             "applications/HODLWallet",
             "applications/SysEscrow",
@@ -42,50 +51,75 @@ public class TestCompilation {
             "multiContract/importTest/import1",
             "multiContract/DexibleWithEvents",
     })
-    void testPositive(String contractName) {
+    void testPositive(String contractName) throws Exception {
         File logDir = new File("./.scif");
         logDir.mkdirs();
         String inputFilePath = contractName + ".scif";
         URL input = ClassLoader.getSystemResource(inputFilePath);
         System.out.println(inputFilePath + ": " + input);
-//        File ntcConsFile = new File(logDir, "ntc.cons");
         List<File> files = new ArrayList<>();
         files.add(new File(input.getFile()));
-        try {
-            List<SourceFile> roots = Preprocessor.preprocess(files);
-            assertNotNull(roots);
-            assert (TypeChecker.regularTypecheck(roots, m_debug));
 
-            // System.out.println("["+ outputFileName + "]");
-            //        ArrayList<File> ifcConsFiles = new ArrayList<>();
-            //        for (int i = 0; i < roots.size(); ++i) {
-            //            File IFCConsFile;
-            //            IFCConsFile = new File(logDir, "ifc" + i + ".cons");
-            //            ifcConsFiles.add(IFCConsFile);
-            //        }
+        List<SourceFile> roots = Preprocessor.preprocess(files);
+        assertNotNull(roots, contractName);
+        assertTrue(TypeChecker.regularTypecheck(roots, m_debug),
+                "expected " + contractName + " to regular-typecheck");
+        System.out.println("\nInformation Flow Typechecking:");
+        assertTrue(TypeChecker.ifcTypecheck(roots, m_debug),
+                "expected " + contractName + " to IFC-typecheck");
 
-            System.out.println("\nInformation Flow Typechecking:");
-
-            assert (TypeChecker.ifcTypecheck(roots, m_debug));
-            // System.out.println("["+ outputFileName + "]" + "Information Flow Typechecking finished");
-            // logger.debug("running SHErrLoc...");
-            // boolean passIFC = runSLC(outputFileName);
-
-            SourceFile root = null;
-            for (SourceFile r: roots) {
-                if (r.getSourceFilePath().equals(input.getPath())) {
-                    root = r;
-                    break;
-                }
+        List<SourceFile> fileRoots = new ArrayList<>();
+        for (SourceFile r : roots) {
+            if (r.getSourceFilePath().equals(input.getPath())) {
+                fileRoots.add(r);
             }
-            assert root != null: input.getPath();
-
-            File outputFile = File.createTempFile("tmp", "sol");
-            outputFile.deleteOnExit();
-            SolCompiler.compile(List.of(root), outputFile);
-        } catch (Exception e) {
-            e.printStackTrace();
-            assert false;
         }
+        assertFalse(fileRoots.isEmpty(), "root not found for " + input.getPath());
+
+        File outputFile = File.createTempFile("tmp", "sol");
+        outputFile.deleteOnExit();
+        SolCompiler.compile(fileRoots, outputFile);
+        String dump = System.getenv("SCIF_SOL_DUMP_DIR");
+        if (dump != null) {
+            java.nio.file.Files.copy(outputFile.toPath(),
+                    java.nio.file.Path.of(dump,
+                            contractName.replace('/', '_') + ".sol"),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    /**
+     * Shapes that typecheck but have no code generation yet must stop
+     * with an explicit error, rather than emit Solidity that only solc
+     * will reject.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "basic/ClosureNonVoidGated",
+    })
+    void testUnsupportedCodegen(String contractName) throws Exception {
+        String inputFilePath = contractName + ".scif";
+        URL input = ClassLoader.getSystemResource(inputFilePath);
+        List<File> files = new ArrayList<>();
+        files.add(new File(input.getFile()));
+
+        List<SourceFile> roots = Preprocessor.preprocess(files);
+        assertNotNull(roots, contractName);
+        assertTrue(TypeChecker.regularTypecheck(roots, m_debug),
+                "expected " + contractName + " to regular-typecheck");
+        assertTrue(TypeChecker.ifcTypecheck(roots, m_debug),
+                "expected " + contractName + " to IFC-typecheck");
+
+        List<SourceFile> fileRoots = new ArrayList<>();
+        for (SourceFile r : roots) {
+            if (r.getSourceFilePath().equals(input.getPath())) {
+                fileRoots.add(r);
+            }
+        }
+        File outputFile = File.createTempFile("tmp", "sol");
+        outputFile.deleteOnExit();
+        assertThrows(UnsupportedOperationException.class,
+                () -> SolCompiler.compile(fileRoots, outputFile),
+                "expected " + contractName + " to be rejected by code generation");
     }
 }

@@ -1,0 +1,23 @@
+// IFC negative: the method's control flow (pc) is {any}-trusted but
+// the closure value being created is declared with the most-trusted
+// label {this}. A closure value cannot be more trusted than the
+// context that decided to create it — otherwise low-trust code could
+// promote arbitrary closures into high-trust slots. The target's
+// pc_ex is {any} and there are no bound arguments, so every other
+// creation-time constraint is satisfied; only pc => closureValueLabel
+// forces the rejection.
+interface IT {
+    closurable public void op{any -> any}();
+}
+
+contract Bad {
+    IT t;
+
+    constructor() {
+        super();
+    }
+
+    public void bind{any -> any; this}() {
+        (fun {any -> any; this} () -> void) {this} c = closure t.op();
+    }
+}

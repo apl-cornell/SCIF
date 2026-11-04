@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -132,6 +130,10 @@ public class AnnAssign extends Statement {
 //        }
         varSym = env.curContractSym().newVarSym(id, annotation, isStatic, isFinal, isBuiltIn, loc,
                 scopeContext);
+        if (varSym.typeSym instanceof typecheck.ClosureTypeSym cs
+                && annotation.type() instanceof ast.ClosureType astClosure) {
+            cs.resolveLabels(env, astClosure);
+        }
         try {
             env.addVar(id, varSym);
         } catch (SymTab.AlreadyDefined e) {
@@ -141,10 +143,8 @@ public class AnnAssign extends Statement {
             if (annotation.label() != null) {
                 varSym.setLabel(env.toLabel(annotation.label()));
             }
-            env.cons.add(new Constraint(
-                    new Inequality(varSym.labelNameSLC(), Relation.EQ, varSym.labelValueSLC()),
-                    env.hypothesis(), location,
-                    "Variable " + varSym.getName() + " may be labeled incorrectly"));
+            env.checkEqual(varSym.labelNameSLC(), varSym.labelValueSLC(), location, "Variable "
+                    + varSym.getName() + " may be labeled incorrectly");
         }
 //        // logger.debug(varSym.getName());
         SLCNameVar = varSym.toSHErrLocFmt();
@@ -182,13 +182,8 @@ public class AnnAssign extends Statement {
 
             if (correctInit) {
                 // add equivalence assumption to the trust set
-                env.addTrustConstraint(
-                        new Constraint(
-                                new Inequality(SLCNameVar, CompareOperator.Eq, equalPrincipal.toSHErrLocFmt()),
-                                env.hypothesis(),
-                                location,
-                                "New principal declaration"
-                        ));
+                env.checkTrustEqual(SLCNameVar, equalPrincipal.toSHErrLocFmt(), location,
+                        "New principal declaration");
             } else {
                 throw new SemanticException("A final address/Contract must be initialized to another final address/Contract: " + id, location);
             }
@@ -196,21 +191,24 @@ public class AnnAssign extends Statement {
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
-        env.cons.add(
-                new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis(), location,
-                        "Integrity of control flow must be trusted to allow this assignment"));
+        env.checkFlow(ifNamePc, SLCNameVarLbl, location,
+                "Integrity of control flow must be trusted to allow this assignment");
 
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location,
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkFlow(endContext.lambda, beginContext.lambda, location,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         }
         if (value != null) {
             env.inContext = beginContext;
             ExpOutcome valueOutcome = value.genIFConstraints(env, scopeContext.isContractLevel());
-            env.cons.add(new Constraint(new Inequality(valueOutcome.valueLabelName, SLCNameVarLbl),
-                    env.hypothesis(), value.location,
-                    "Integrity of the value being assigned must be trusted to allow this assignment"));
+            env.checkFlow(valueOutcome.valueLabelName, SLCNameVarLbl, value.location,
+                    "Integrity of the value being assigned must be trusted to allow this assignment");
+
+            if (varSym.typeSym instanceof typecheck.ClosureTypeSym targetCs) {
+                ClosureCreation.checkFlowInto(value, targetCs, new java.util.HashMap<>(), env,
+                        value.location,
+                        "Closure value flowing into the declared variable type must subtype its slot");
+            }
             typecheck.Utils.contextFlow(env, valueOutcome.psi.getNormalPath().c, endContext,
                     value.location);
             valueOutcome.psi.set(Utils.getNormalPathException(), endContext);
@@ -230,9 +228,6 @@ public class AnnAssign extends Statement {
     public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
         Type varType =
                 annotation.type().solidityCodeGen(code);
-        if (varType instanceof StructType) {
-            ((StructType) varType).setStorage();
-        }
 //            isContractType ? new ContractType(annotation.type().name) :
 //                new PrimitiveType(annotation.type().name);
         String varName = target.id;
@@ -240,9 +235,15 @@ public class AnnAssign extends Statement {
         if (value != null) {
             compile.ast.Expression valueExp;
             valueExp = value.solidityCodeGen(result, code);
+            if (varType instanceof StructType && !(valueExp instanceof compile.ast.Call)) {
+                ((StructType) varType).setStorage();
+            }
             result.add(new VarDec(varType, varName,
                      valueExp));
         } else {
+            if (varType instanceof StructType) {
+                ((StructType) varType).setStorage();
+            }
             result.add(new VarDec(varType, varName));
         }
         code.addLocalVar(varName, varType);

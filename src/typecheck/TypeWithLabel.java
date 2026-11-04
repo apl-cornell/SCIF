@@ -3,6 +3,9 @@ package typecheck;
 import ast.IfLabel;
 
 public class TypeWithLabel {
+
+    // TODO: this seems to be unused. AST node LabeledType and VarSym are the alternatives.
+
     public TypeSym type;
     IfLabel label;
 
@@ -11,3 +14,4 @@ public class TypeWithLabel {
         this.label = label;
     }
 }
+

@@ -9,8 +9,6 @@ import java.util.List;
 
 import typecheck.*;
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 
 /**
@@ -161,13 +159,8 @@ public class StateVariableDeclaration extends TopLayerNode {
 
             if (correctInit) {
                 // add equivalence assumption to the trust set
-                env.addTrustConstraint(
-                        new Constraint(
-                                new Inequality(SLCNameVar, CompareOperator.Eq, equalPrincipal.toSHErrLocFmt()),
-                                env.hypothesis(),
-                                location,
-                                "New principal declaration"
-                        ));
+                env.checkTrustEqual(SLCNameVar, equalPrincipal.toSHErrLocFmt(), location,
+                        "New principal declaration");
             } else if (!isBuiltin) {
                 throw new SemanticException("A final address/Contract must be initialized to another final address/Contract: " + id,
                     location);
@@ -182,23 +175,20 @@ public class StateVariableDeclaration extends TopLayerNode {
         // String ifNameTgtLbl = ifNameTgt + "..lbl";
         // Context prevContext = env.prevContext;
 
-        env.cons.add(
-                new Constraint(new Inequality(ifNamePc, SLCNameVarLbl), env.hypothesis(), location,
-                        "Integrity of control flow must be trusted to allow this assignment"));
+        env.checkFlow(ifNamePc, SLCNameVarLbl, location,
+                "Integrity of control flow must be trusted to allow this assignment");
 
         //env.outContext = endContext;
 
         if (!tail_position) {
-            env.cons.add(new Constraint(new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location,
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkFlow(endContext.lambda, beginContext.lambda, location,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         }
         if (value != null) {
             env.inContext = beginContext;
             ExpOutcome valueOutcome = value.genIFConstraints(env, scopeContext.isContractLevel());
-            env.cons.add(new Constraint(new Inequality(valueOutcome.valueLabelName, SLCNameVarLbl),
-                    env.hypothesis(), value.location,
-                    "Integrity of the value being assigned must be trusted to allow this assignment"));
+            env.checkFlow(valueOutcome.valueLabelName, SLCNameVarLbl, value.location,
+                    "Integrity of the value being assigned must be trusted to allow this assignment");
             typecheck.Utils.contextFlow(env, valueOutcome.psi.getNormalPath().c, endContext,
                     value.location);
             valueOutcome.psi.set(Utils.getNormalPathException(), endContext);

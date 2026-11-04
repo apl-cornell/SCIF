@@ -37,6 +37,54 @@ public class CompileEnv {
     List<Function> temporaryFunctions;
     Stats stats = new Stats();
 
+    private boolean requiresClosureStruct = false;
+
+    public void markClosureStructRequired() {
+        requiresClosureStruct = true;
+    }
+
+    public boolean closureStructRequired() {
+        return requiresClosureStruct;
+    }
+
+    public void clearClosureStructFlag() {
+        requiresClosureStruct = false;
+    }
+
+    private boolean requiresLabelRuntime = false;
+
+    public void markLabelRuntimeRequired() {
+        requiresLabelRuntime = true;
+    }
+
+    public boolean labelRuntimeRequired() {
+        return requiresLabelRuntime;
+    }
+
+    public void clearLabelRuntimeFlag() {
+        requiresLabelRuntime = false;
+    }
+
+    private boolean requiresClosureLib = false;
+
+    public void markClosureLibRequired() {
+        requiresClosureLib = true;
+    }
+
+    public boolean closureLibRequired() {
+        return requiresClosureLib;
+    }
+
+    public void clearClosureLibFlag() {
+        requiresClosureLib = false;
+    }
+
+    private int closureTempCounter = 0;
+
+    public int nextClosureTempId() {
+        return closureTempCounter++;
+    }
+
 
     /**
         Wrap up statements in body as a method.
@@ -479,6 +527,90 @@ public class CompileEnv {
         // addLine(assertExp(checkIfTrustSender(funcLabels.begin_pc)) + ";");
         return result;
 
+    }
+
+    private List<String> materializeLabel(IfLabel l) {
+        List<String> leaves = new ArrayList<>();
+        if (l instanceof PrimitiveIfLabel) {
+            String addr = materializePrincipalName(((PrimitiveIfLabel) l).toString());
+            if (addr != null) {
+                leaves.add(addr);
+            }
+        } else if (l instanceof ComplexIfLabel && ((ComplexIfLabel) l).getOp() == IfOperator.JOIN) {
+            leaves.addAll(materializeLabel(((ComplexIfLabel) l).getLeft()));
+            leaves.addAll(materializeLabel(((ComplexIfLabel) l).getRight()));
+        } else {
+            // meet labels are rejected before codegen
+            assert false;
+        }
+        return leaves;
+    }
+
+    private String materializePrincipalName(String name) {
+        if (name.equals(typecheck.Utils.LABEL_SENDER)) {
+            return "msg.sender";
+        } else if (name.equals(typecheck.Utils.LABEL_THIS) || name.equals(typecheck.Utils.LABEL_INVOKER)) {
+            return "address(this)";
+        } else if (name.equals(typecheck.Utils.LABEL_BOTTOM)) {
+            return "address(0)";
+        } else if (name.equals(typecheck.Utils.LABEL_TOP)) {
+            return null;
+        } else {
+            return labelTable.containsKey(name) ? labelTable.get(name) : name;
+        }
+    }
+
+    public List<compile.ast.Statement> buildLExtBef(String name, List<String> pcExLeaves) {
+        return buildLExtBef(name, pcExLeaves, java.util.Map.of());
+    }
+
+    public List<compile.ast.Statement> buildLExtBef(String name, List<String> pcExLeaves,
+            java.util.Map<String, String> bound) {
+        List<String> addrs = new ArrayList<>();
+        for (String leaf : pcExLeaves) {
+            String addr = bound.containsKey(leaf)
+                    ? bound.get(leaf) : materializePrincipalName(leaf);
+            if (addr != null) {
+                addrs.add(addr);
+            }
+        }
+        return buildLabelArray(name, addrs);
+    }
+
+    private List<compile.ast.Statement> buildLabelArray(String name, List<String> leaves) {
+        List<compile.ast.Statement> result = new ArrayList<>();
+        result.add(new VarDec(
+                new compile.ast.ArrayType(
+                        new compile.ast.PrimitiveType(compile.Utils.PRIMITIVE_TYPE_ADDRESS_NAME)),
+                name,
+                new compile.ast.Literal("new address[](" + leaves.size() + ")")));
+        for (int i = 0; i < leaves.size(); i++) {
+            result.add(new compile.ast.Assign(
+                    new compile.ast.Subscript(new SingleVar(name),
+                            new compile.ast.Literal(String.valueOf(i))),
+                    new compile.ast.Literal(leaves.get(i))));
+        }
+        return result;
+    }
+
+    public List<compile.ast.Statement> enterClosureFuncCheck(FuncLabels funcLabels, Arguments args) {
+        List<compile.ast.Statement> result = new ArrayList<>();
+
+        if (!funcLabels.begin_pc.typeMatch(funcLabels.to_pc)) {
+            result.add(new compile.ast.Assert(checkIfUnlocked(funcLabels.begin_pc, funcLabels.to_pc)));
+        }
+
+        result.addAll(buildLabelArray("lExt", materializeLabel(funcLabels.begin_pc)));
+        result.addAll(buildLabelArray("lCaller", List.of("msg.sender")));
+
+        // lExtBef => lExt
+        result.add(new compile.ast.Assert(new compile.ast.Call("actsFor",
+                List.of(new SingleVar("lExtBef"), new SingleVar("lExt")))));
+
+        // msg.sender => lExtBef
+        result.add(new compile.ast.Assert(new compile.ast.Call("actsFor",
+                List.of(new SingleVar("lCaller"), new SingleVar("lExtBef")))));
+        return result;
     }
 
     private compile.ast.Expression checkIfTrustSender(IfLabel l) {

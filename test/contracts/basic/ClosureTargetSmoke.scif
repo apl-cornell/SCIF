@@ -1,0 +1,19 @@
+// Compilation smoke — `c.target` lowers to reading the closure
+// struct's addr field.
+interface IT {
+    closurable public void op{sender -> sender}();
+}
+
+contract ClosureTargetSmoke {
+    IT t;
+    address{this} seen;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        (fun {invoker; invoker} () -> void) {this} c = closure t.op();
+        seen = c.target;
+    }
+}

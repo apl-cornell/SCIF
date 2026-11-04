@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
 import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
@@ -54,22 +52,17 @@ public class BoolOp extends Expression {
 
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bool" + location.toString();
 
-        env.cons.add(new Constraint(new Inequality(ifNameLeft, ifNameRtn), env.hypothesis(), location,
-                env.curContractSym().getName(),
-                "Integrity of left hand expression doesn't flow to value of this boolean operation"));
-        env.cons.add(
-                new Constraint(new Inequality(ifNameRight, ifNameRtn), env.hypothesis(), location,
-                        env.curContractSym().getName(),
-                        "Integrity of right hand expression doesn't flow to value of this boolean operation"));
+        env.checkFlow(ifNameLeft, ifNameRtn, location,
+                "Integrity of left hand expression doesn't flow to value of this boolean operation");
+        env.checkFlow(ifNameRight, ifNameRtn, location,
+                "Integrity of right hand expression doesn't flow to value of this boolean operation");
 
         typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, right.location);
         // env.outContext = endContext;
 
         if (!tail_position) {
-            env.cons.add(new Constraint(
-                    new Inequality(endContext.lambda, beginContext.lambda),
-                    env.hypothesis(), location, env.curContractSym().getName(),
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+            env.checkFlow(endContext.lambda, beginContext.lambda, location,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
         }
 
         ro.psi.join(lo.psi);

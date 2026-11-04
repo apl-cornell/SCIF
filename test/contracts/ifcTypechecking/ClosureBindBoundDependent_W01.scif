@@ -1,0 +1,24 @@
+// IFC negative — binding a slot whose label names another slot that is
+// still open. `amount` is guarded by `payer`, which this bind leaves
+// unbound, so there is no principal to check the bound value against.
+// The bind-form analogue of ClosureBinderBoundDependent_W01.
+interface IToken {
+    closurable public void transfer{from -> this; from}(
+        final address from, address{this} to, uint{from} amount
+    );
+}
+
+contract Bad {
+    IToken token;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        (fun {payer; payer}(final address payer, uint{payer} amount) -> void) {this} half =
+            closure token.transfer(_, address(this), _);
+        (fun {payer; payer}(final address payer) -> void) {this} bad =
+            closure half(_, 100);
+    }
+}

@@ -73,7 +73,7 @@ reading the generated code, not an observed `solc` error.
   - The `fatJar` task packages `configurations.runtimeClasspath`, which excludes Cornell CUP (`lib/java_cup.jar`).
   - So the only CUP runtime in the jar is an old copy bundled inside `SHErrLoc.jar`.
   - CI publishes this jar, so the release jar is probably affected (not verified).
-- **`TestParsing.testPositive` swallows `SyntaxError`**, so a positive parsing test passes even if the file doesn't parse.
+- **Fixed by the `closures` branch, merged here:** `TestParsing.testPositive` used to swallow `SyntaxError`, so a positive parsing test passed even if the file didn't parse. It now lets the error fail the test.
 - **`test/contracts/basic/DynamicTest.scif` uses `msg.sender`**, which isn't SCIF, and no longer parses. No test runs it.
 - **The "Structure of a contract" example in `docs/LanguageBasics/contracts.md` is invalid**: `contract ContractName[this]`, and `balance` instead of `balances`.
 - **The error for a parameter named `balance` is confusing.** Calling `balance(...)` in that method reports "contract not found: balance".
@@ -103,7 +103,9 @@ cd - && git worktree remove --force /tmp/scif-old
 ## Each built-in name at each declaration site
 
 From compiling a small probe for every combination, with `-ea`, at commit
-`7bd1dbc`. The compiler source is identical at `fbe48c2`.
+`7bd1dbc`, before `closures` was merged. After the merge, every demo file in
+this folder was re-run and behaves the same: the same 10 compile, and the same
+7 fail for the same reasons. This table itself was not re-run.
 
 | Name | State variable | Local variable | Parameter | Method |
 |---|---|---|---|---|

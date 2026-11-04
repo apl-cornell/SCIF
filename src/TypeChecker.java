@@ -47,7 +47,7 @@ public class TypeChecker {
             assert root.ntcGlobalInfo(ntcEnv, null) : "Must succeed or throw a semantic exception";
         }
 
-        // Generate constraints
+        // Generate type constraints.s
         for (SourceFile root : roots) {
             if (!root.isBuiltIn() && root instanceof ContractFile) {
                 root.genTypeConstraints(ntcEnv, null);
@@ -315,8 +315,14 @@ public class TypeChecker {
             trustCons.addAll(contractTrustCons);
             trustCons.addAll(env.getTrustCons(methodName));
 
+            if (System.getenv("SCIF_DUMP_CONS") != null) {
+                for (Constraint c : cons) System.err.println("DBGCONS[" + methodName + "] " + c.toSherrlocFmt(true));
+                for (Constraint c : trustCons) System.err.println("DBGTRUST[" + methodName + "] " + c.toSherrlocFmt(true));
+                for (Sym s : env.principalSet()) System.err.println("DBGCTOR[" + methodName + "] " + s.toSHErrLocFmt());
+                for (String a : env.rigidAtoms()) System.err.println("DBGATOM[" + methodName + "] " + a);
+            }
             SherrlocDiagnoser sherrlocDiagnoser = Utils.createDiagnoser(env.principalSet(), trustCons, cons,
-                    true, contractSym);
+                    true, contractSym, env.rigidAtoms(), env.atomAssumptions());
             boolean result;
             try {
                 result = runSLC(env.programMap, sherrlocDiagnoser, DEBUG);

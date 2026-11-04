@@ -1,0 +1,38 @@
+interface IToken {
+    closurable public void transfer{from -> this}(final address from, address to, uint amount);
+}
+
+interface IAggregator {
+    public void run{sender -> this; this}(
+        final address routerAddr,
+        (fun {sender -> routerAddr; sender} () -> void) {sender} routerCall
+    );
+}
+
+contract Payer {
+    IToken token;
+
+    constructor() {
+        super();
+    }
+
+    public void make{this -> this; this}(address recipient, uint amount) {
+        (fun {this -> token; this} (uint) -> void) {this} payment =
+            closure token.transfer(address(this), recipient, _);
+        payment.invoke(amount);
+    }
+}
+
+contract Aggregator {
+
+    constructor() {
+        super();
+    }
+
+    public void run{sender -> this; this}(
+        final address routerAddr,
+        (fun {sender -> routerAddr; sender} () -> void) {sender} routerCall
+    ) {
+        routerCall.invoke();
+    }
+}

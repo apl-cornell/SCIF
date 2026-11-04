@@ -1,0 +1,63 @@
+// Execution test for the bind form. One closure with two open slots is
+// narrowed twice, with different recipients, and both results are
+// invoked -- then the original is invoked directly with both slots
+// supplied. All three land, which is only possible if binding fills
+// the slots in a copy and leaves its source intact.
+
+interface IBindTarget {
+    closurable public void credit{payer -> this; payer}(
+        final address payer, uint{payer} who, uint{payer} amount
+    );
+}
+
+contract BindTarget {
+    uint{this} total;
+    uint{this} lastWho;
+
+    constructor() {
+        super();
+    }
+
+    closurable public void credit{payer -> this; payer}(
+        final address payer, uint{payer} who, uint{payer} amount
+    ) {
+        endorse([payer, who, amount], payer -> this)
+        when (true) {
+            total = total + amount;
+            lastWho = who;
+        }
+    }
+
+    public uint{this} getTotal{this -> this; this}() {
+        return total;
+    }
+
+    public uint{this} getLastWho{this -> this; this}() {
+        return lastWho;
+    }
+}
+
+contract BindUser {
+
+    constructor() {
+        super();
+    }
+
+    public void creditTwo{this -> this; this}(
+        IBindTarget target, uint{this} firstWho, uint{this} secondWho, uint{this} amount
+    ) {
+        (fun {this; this} (uint{this}, uint{this}) -> void) {this} open =
+            closure target.credit(address(this), _, _);
+
+        (fun {this; this} (uint{this}) -> void) {this} first =
+            closure open(firstWho, _);
+        (fun {this; this} (uint{this}) -> void) {this} second =
+            closure open(secondWho, _);
+
+        first.invoke(amount);
+        second.invoke(amount);
+
+        // The twice-narrowed source must still be a two-slot closure.
+        open.invoke(secondWho, amount);
+    }
+}

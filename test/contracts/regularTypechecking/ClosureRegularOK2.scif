@@ -1,0 +1,40 @@
+interface IBank {
+    closurable public void transfer{from -> this}(final address from, address to, uint amount);
+    closurable public uint balanceOf{owner -> this}(final address owner);
+}
+
+contract Client {
+    IBank bank;
+
+    constructor() {
+        super();
+    }
+
+    // fully bound at creation, then zero-arg invoke
+    public void payAll{this -> this; this}(address from, address to, uint amount) {
+        (fun {from -> bank; this} () -> void) {this} c =
+            closure bank.transfer(from, to, amount);
+        c.invoke();
+    }
+
+    // non-void closure: invoke result feeds a uint binding
+    public void readBal{this -> this; this}(address owner) {
+        (fun {owner -> bank; this} () -> uint) {this} g =
+            closure bank.balanceOf(owner);
+        uint x = g.invoke();
+    }
+}
+
+contract Agg {
+    constructor() {
+        super();
+    }
+
+    // closure flowing in as a parameter, then invoked
+    public void run{sender -> this; this}(
+        (fun {sender -> this; sender} (uint) -> void) {sender} c,
+        uint amt
+    ) {
+        c.invoke(amt);
+    }
+}

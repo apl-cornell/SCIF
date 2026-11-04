@@ -1,0 +1,54 @@
+// Execution test for a closure whose external label names one of its
+// own unbound slots. The believed label handed to the callee is built
+// from the argument supplied at the invoke site, so the entry check
+// `lExtBef => lExt` compares the payer the invoker claims against the
+// payer the callee actually received.
+//
+// Both slots stay open at creation: `amount`'s label names `payer`, so
+// binding it any earlier than `payer` itself is ill-typed.
+
+interface IBinderTarget {
+    closurable public void pay{payer -> this; payer}(
+        final address payer, uint{payer} amount
+    );
+}
+
+contract BinderTarget {
+    uint{this} total;
+
+    constructor() {
+        super();
+    }
+
+    closurable public void pay{payer -> this; payer}(
+        final address payer, uint{payer} amount
+    ) {
+        endorse([payer, amount], payer -> this)
+        when (true) {
+            total = total + amount;
+        }
+    }
+
+    public uint{this} getTotal{this -> this; this}() {
+        return total;
+    }
+}
+
+contract BinderUser {
+
+    constructor() {
+        super();
+    }
+
+    public void payTwice{this -> this; this}(
+        IBinderTarget target,
+        uint{this} firstAmount,
+        uint{this} secondAmount
+    ) {
+        (fun {payer; payer}(final address payer, uint{payer} amount) -> void) {this} c =
+            closure target.pay(_, _);
+
+        c.invoke(address(this), firstAmount);
+        c.invoke(address(this), secondAmount);
+    }
+}

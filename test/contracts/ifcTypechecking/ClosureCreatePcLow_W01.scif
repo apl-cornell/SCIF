@@ -1,0 +1,24 @@
+// IFC negative: the method's control flow (pc) is {any}-trusted but
+// the closure target's parameter slot demands {this}-trusted input.
+// Even though the bound argument itself has high integrity, the
+// decision to bind it was made under a low-trust control flow, which
+// the parameter slot cannot accept. The closure's value label is
+// left at {any} so the assignment into the local variable still
+// type-checks; the only failing constraint is the bind-time control
+// flow vs. parameter slot.
+interface IT {
+    closurable public void op{this -> this}(uint{this} v);
+}
+
+contract Bad {
+    IT t;
+    uint{this} clean;
+
+    constructor() {
+        super();
+    }
+
+    public void bind{any -> any; this}() {
+        (fun {this -> this; this} () -> void) {any} c = closure t.op(clean);
+    }
+}

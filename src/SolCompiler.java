@@ -27,6 +27,7 @@ public class SolCompiler {
         }
 
 //        System.out.println("\nCompiled Solidity code:");
+        boolean needClosureStruct = false;
         for (int i = 0; i < roots.size(); i++) {
             SourceFile root = roots.get(i);
             if (i == 0) {
@@ -40,6 +41,14 @@ public class SolCompiler {
 
             node.addStats(env);
             Utils.writeToFile(node, outputFile);
+            needClosureStruct |= env.closureStructRequired();
+        }
+        if (needClosureStruct) {
+            // One file-level definition; Solidity puts no ordering
+            // requirement on top-level declarations, so appending works
+            // for the interfaces above that reference it.
+            compile.ast.StructDef closureStruct = ast.Contract.buildClosureStruct();
+            Utils.writeToFile(closureStruct::toSolCode, outputFile);
         }
         // Utils.printCode(node);
 

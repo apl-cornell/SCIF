@@ -1,0 +1,18 @@
+// Parsing: a 3-arg closurable target with two holes interleaved with one
+// bound argument. The resulting closure type has two unbound slots.
+interface IT {
+    closurable public void op{this -> this}(uint a, uint b, uint c);
+}
+
+contract C {
+    IT t;
+
+    constructor() {
+        super();
+    }
+
+    public void make{this -> this; this}(uint mid) {
+        (fun {this -> this; this} (uint, uint) -> void) {this} f =
+            closure t.op(_, mid, _);
+    }
+}

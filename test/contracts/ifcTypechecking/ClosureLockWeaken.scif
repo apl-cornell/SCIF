@@ -1,0 +1,27 @@
+// IFC positive: gamma covariance (lock-label weakening).
+// The target `op{this; this}` promises lock {this}; the declared
+// closure type under-claims it as {any}. A lock promise may be
+// under-declared, never over-declared (real {this} => declared {any}),
+// so the creation must be accepted. The holder method itself promises
+// only lock {any}, and the invoke is its last operation, so the weak
+// believed post-call lock is fine where it is used. The contravariant
+// direction wrongly rejected this (any <= t..lbl); the over-claim
+// direction stays rejected (ClosureLockOverclaim_W01).
+interface ITarget {
+    closurable public void op{this; this}();
+}
+
+contract Holder {
+    ITarget t;
+    uint{this} n;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; any}() {
+        n = n + 1;
+        (fun {this; any} () -> void) {this} c = closure t.op();
+        c.invoke();
+    }
+}

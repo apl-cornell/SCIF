@@ -1,0 +1,31 @@
+// IFC positive — a closure type naming its own unbound parameters and
+// using them in its labels (binders, like a dependent map's key name).
+//
+// The target's entry and its `amount` slot are guarded by `from`,
+// which stays unbound at creation, so the closure's real labels
+// reference its own first unbound slot. The declared type names that
+// slot `payer` — a different name than the target's `from`, which
+// must not matter: binder names are sugar over positions. At the
+// invoke site the binder resolves to the actual argument, which must
+// name a principal (here `address(this)`), exactly like a dependent
+// map access; the second argument's label check then runs against
+// that principal.
+interface IToken {
+    closurable public void transfer{from -> this; from}(
+        final address from, address{this} to, uint{from} amount
+    );
+}
+
+contract User {
+    IToken token;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        (fun {payer}(final address payer, uint{payer} amount) -> void) {this} clo =
+            closure token.transfer(_, address(this), _);
+        clo.invoke(address(this), 100);
+    }
+}

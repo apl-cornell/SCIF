@@ -1,0 +1,55 @@
+// Execution test for invocation arguments: the amount is left open at
+// creation and supplied at each invocation, so one closure value drives
+// two different swaps. Invoking must not consume the closure -- the
+// second invocation would revert if the first had bound the slot in
+// place rather than in a copy.
+import "./IRouterClosureCompile_IERC20.scif";
+
+interface IAmountRouter {
+    closurable public void swap{user -> this; user}(
+        final address user,
+        IERC20 tokenIn, IERC20 tokenOut,
+        uint{user} amountIn
+    );
+}
+
+contract AmountRouter {
+
+    constructor() {
+        super();
+    }
+
+    closurable public void swap{user -> this; user}(
+        final address user,
+        IERC20 tokenIn, IERC20 tokenOut,
+        uint{user} amountIn
+    ) {
+        endorse([user, tokenIn, tokenOut, amountIn], user -> this)
+        when (true) {
+            tokenIn.transferFrom(user, address(this), amountIn);
+            uint amountOut = amountIn * 99 / 100;
+            tokenOut.transfer(address(this), user, amountOut);
+        }
+    }
+}
+
+contract UserTwoSwaps {
+
+    constructor() {
+        super();
+    }
+
+    public void doTwoSwaps{this -> this; this}(
+        IAmountRouter amountRouter,
+        IERC20 tokenIn,
+        IERC20 tokenOut,
+        uint{this} firstAmount,
+        uint{this} secondAmount
+    ) {
+        (fun {this; this} (uint{this}) -> void) {this} routerCall =
+            closure amountRouter.swap(address(this), tokenIn, tokenOut, _);
+
+        routerCall.invoke(firstAmount);
+        routerCall.invoke(secondAmount);
+    }
+}

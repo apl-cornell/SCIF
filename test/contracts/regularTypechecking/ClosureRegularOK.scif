@@ -1,0 +1,25 @@
+interface IToken {
+    closurable public void transfer{from -> this}(final address from, address to, uint amount);
+}
+
+contract Payer {
+    IToken token;
+
+    constructor() {
+        super();
+    }
+
+    public void make{this -> this; this}(address from, address recipient, uint amount) {
+        (fun {from -> token; this} (uint) -> void) {this} payment =
+            closure token.transfer(from, recipient, _);
+        payment.invoke(amount);
+    }
+
+    public void makeBound{this -> this; this}(address from, address recipient, uint amount) {
+        (fun {from -> token; this} (address, uint) -> void) {this} half =
+            closure token.transfer(from, _, _);
+        (fun {from -> token; this} (uint) -> void) {this} done =
+            closure half(recipient, _);
+        done.invoke(amount);
+    }
+}

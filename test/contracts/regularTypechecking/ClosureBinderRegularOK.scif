@@ -1,0 +1,24 @@
+// Regular-TC positive — closure types with named unbound parameters.
+// Binder names are sugar over positions: the two closure-typed
+// variables below have the same type despite different binder names,
+// so the second declaration accepts the first's value. Unnamed and
+// named entries may mix.
+interface IToken {
+    closurable public void transfer{from -> this}(
+        final address from, address{this} to, uint{from} amount
+    );
+}
+
+contract Ok {
+    IToken token;
+
+    constructor() {
+        super();
+    }
+
+    public void go{this -> this; this}() {
+        (fun {payer}(final address payer, uint{payer} amount) -> void) {this} a =
+            closure token.transfer(_, address(this), _);
+        (fun {sponsor}(final address sponsor, uint{sponsor} x) -> void) {this} b = a;
+    }
+}
