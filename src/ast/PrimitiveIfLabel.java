@@ -19,9 +19,7 @@ import typecheck.VisitEnv;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Inequality;
-import typecheck.sherrlocUtils.Relation;
+import typecheck.exceptions.SemanticException;
 
 public class PrimitiveIfLabel extends IfLabel {
 
@@ -156,16 +154,18 @@ public class PrimitiveIfLabel extends IfLabel {
     }
 
     @Override
-    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
 //        if (value.id.equals(Utils.LABEL_BOTTOM) || value.id.equals(Utils.LABEL_TOP) || value.id.equals(Utils.LABEL_SENDER) || value.id.equals(Utils.LABEL_THIS)) {
 //            return null;
 //        }
         if (value.id.equals(Utils.LABEL_INVOKER) && !parent.insideClosureType()) {
-            throw new RuntimeException(
-                    "label `invoker` is only valid inside closure types, at " + location.toString());
+            throw new SemanticException(
+                    "label `invoker` is only valid inside closure types", location);
         }
         Sym s = env.getCurSym(value.id);
-        assert s != null: value.id;
+        if (s == null) {
+            throw new SemanticException("principal not found: " + value.id, location);
+        }
         if (s instanceof VarSym) {
             valueSym = (VarSym) s;
             ScopeContext now = new ScopeContext(this, parent);

@@ -37,7 +37,7 @@ public class Throw extends Statement {
                 exceptionName = att.attr.id;
                 ContractSym s = env.getContract(contractTypeName);
                 // logger.debug("contract " + contractTypeName + ": " + s.getName());
-                if (!(env.getExtSym(contractTypeName, exceptionName) == null)) {
+                if (!(env.getExtSym(contractTypeName, exceptionName, att.location) == null)) {
                     System.err.println("a.b not found");
                     return null;
                 }
@@ -65,8 +65,11 @@ public class Throw extends Statement {
             exceptionSym = ((ExceptionTypeSym) s);
         }
         // check if the parameter number matches
-        assert exceptionSym.parameters().size() == exception.args.size() : "Throwing an exception " + exceptionSym.getName() + " with unmatched parameter number at " + "location: "
-                + location.errString();
+        if (exceptionSym.parameters().size() != exception.args.size()) {
+            throw new SemanticException("exception " + exceptionSym.getName() + " takes "
+                    + exceptionSym.parameters().size() + " arguments, but "
+                    + exception.args.size() + " were given", location);
+        }
 
         // typecheck arguments
         for (int i = 0; i < exception.args.size(); ++i) {

@@ -30,7 +30,7 @@ public class ExceptionDef extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
+    public void ntcGlobalInfo(NTCEnv env, ScopeContext parent)
         throws SemanticException
     {
         // exceptionType.setContractName(env.curContractSym().getName());
@@ -41,7 +41,6 @@ public class ExceptionDef extends TopLayerNode {
             throw new SemanticException("Exception already defined: " + exceptionName,
                     location);
         }
-        return true;
     }
 
     /**

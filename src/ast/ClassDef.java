@@ -22,8 +22,7 @@ public class ClassDef extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
-        return false;
+    public void ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
     }
     @Override
     public List<Node> children() {

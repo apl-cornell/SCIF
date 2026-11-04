@@ -172,10 +172,6 @@ public class VisitEnv {
         return principalSet;
     }
 
-    public List<Constraint> trustCons() {
-        return Collections.unmodifiableList(trustCons);
-    }
-
     public void addTrustConstraint(Constraint constraint) {
         trustCons.add(constraint);
     }

@@ -94,9 +94,12 @@ public class NTCEnv {
         }
 
         if (astType instanceof ExtType extType) {
-            Sym s = getExtSym(extType.contractName(), extType.name());
-            assert s instanceof StructTypeSym;
-            return (TypeSym) s;
+            if (!(getExtSym(extType.contractName(), extType.name(), extType.getLocation())
+                    instanceof StructTypeSym s)) {
+                throw new SemanticException(extType.contractName() + "." + extType.name()
+                        + " is not a struct type", extType.getLocation());
+            }
+            return s;
         }
 
         if (astType instanceof ast.ClosureType closure) {
@@ -206,14 +209,18 @@ public class NTCEnv {
     }
 
     /**
-     * Look up a symbol in another contract
-     * @param contractName
-     * @param funcName
-     * @return
+     * Returns the symbol {@code funcName} declared in contract or interface
+     * {@code contractName}, or null if it declares no such symbol.
+     *
+     * @throws SemanticException if there is no contract or interface named
+     *         {@code contractName}; it is reported at {@code location}
      */
-    public Sym getExtSym(String contractName, String funcName) {
+    public Sym getExtSym(String contractName, String funcName, CodeLocation location)
+            throws SemanticException {
         InterfaceSym extST = getInterface(contractName);
-        assert extST != null: "external interface not found: " + contractName;
+        if (extST == null) {
+            throw new SemanticException("contract not found: " + contractName, location);
+        }
         return extST.lookupSym(funcName);
     }
 

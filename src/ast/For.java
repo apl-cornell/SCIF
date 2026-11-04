@@ -104,8 +104,7 @@ public class For extends Statement {
 
     @Override
     public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
-        assert false;
-        return null;
+        throw new AssertionError();
     }
 
     @Override

@@ -77,7 +77,7 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public void codePasteContract(String name, java.util.Map<String, List<TopLayerNode>> sourceFileMap) {
+    public void codePasteContract(String name, java.util.Map<String, List<TopLayerNode>> sourceFileMap) throws SemanticException {
         assert sourceFilePath.toString().equals(name);
 
         // construct contract table and interface table this contract imported
@@ -96,7 +96,7 @@ public class InterfaceFile extends SourceFile {
                     importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
                     iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Interface) source).getContractName());
                 } else {
-                    assert false;
+                    throw new AssertionError();
                 }
             }
         }
@@ -115,7 +115,7 @@ public class InterfaceFile extends SourceFile {
                 importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
                 iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Interface) source).getContractName());
             } else {
-                assert false;
+                throw new AssertionError();
             }
         }
 
@@ -123,7 +123,7 @@ public class InterfaceFile extends SourceFile {
     }
 
     @Override
-    public boolean ntcAddImportEdges(InheritGraph graph) {
+    public void ntcAddImportEdges(InheritGraph graph) {
         Set<String> resolvedIptContracts = new HashSet<>();
         for (String contract: iptContracts) {
             Path path = Paths.get(contract);
@@ -136,12 +136,11 @@ public class InterfaceFile extends SourceFile {
             graph.addEdge(path.toString(), getSourceFilePath());
         }
         iptContracts = resolvedIptContracts;
-        return true;
         // return itrface.ntcInherit(graph);
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public void ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterSourceFile(getSourceFilePath(), getContractName());
         env.setNewCurSymTab();
@@ -160,11 +159,7 @@ public class InterfaceFile extends SourceFile {
             }
         }
 
-        if (!itrface.ntcGlobalInfo(env, now)) {
-            // logger.debug("GlobalInfo failed with: " + itrface);
-            return false;
-        }
-        return true;
+        itrface.ntcGlobalInfo(env, now);
     }
 
     @Override
