@@ -1,0 +1,6 @@
+// An exception is thrown with the wrong number of arguments.
+contract ThrowArity_W01 {
+    exception X(uint a);
+    constructor() { super(); }
+    public void f() throws (X) { throw X(1, 2); }
+}

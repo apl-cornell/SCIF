@@ -1,0 +1,6 @@
+// An exception is thrown but neither caught nor declared.
+contract ThrowUndeclared_W01 {
+    exception X();
+    constructor() { super(); }
+    public void f() { throw X(); }
+}

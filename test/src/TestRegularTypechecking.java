@@ -107,4 +107,44 @@ public class TestRegularTypechecking {
         }
         assertFalse(accepted, "expected " + contractName + " to be rejected by regular typecheck");
     }
+
+    /**
+     * Each contract must be rejected with a reported error: a SemanticException or
+     * a failed constraint check. Any other exception fails the test.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "regularTypechecking/AttributeOfUndefined_W01",
+            "regularTypechecking/AttributeNoMember_W01",
+            "regularTypechecking/EmitArity_W01",
+            "regularTypechecking/ThrowArity_W01",
+            "regularTypechecking/TrustQueryNonFinal_W01",
+            "regularTypechecking/MethodAsValue_W01",
+            "regularTypechecking/CatchUnknownException_W01",
+            "regularTypechecking/CallReceiverUndefined_W01",
+            "regularTypechecking/CallReceiverNotVariable_W01",
+            "regularTypechecking/DeleteNonLvalue_W01",
+            "regularTypechecking/PublicMeetExternalPc_W01",
+            "regularTypechecking/PublicJoinInternalPc_W01",
+            "regularTypechecking/ImplementsMissingMethod_W01",
+            "regularTypechecking/CallOptionUnsupported_W01",
+            "regularTypechecking/ThrowsUnknownException_W01",
+            "regularTypechecking/EmptyFile_W01",
+            "regularTypechecking/DepMapNonFinalIndex_W01",
+            "regularTypechecking/ThrowUndeclared_W01",
+            "regularTypechecking/SubscriptNonCollection_W01",
+            "regularTypechecking/LabelNonPrincipalVar_W01",
+    })
+    void testReportedError(String contractName) throws Exception {
+        URL input = ClassLoader.getSystemResource(contractName + ".scif");
+        List<File> files = List.of(new File(input.getFile()));
+        boolean accepted;
+        try {
+            List<SourceFile> roots = Preprocessor.preprocess(files);
+            accepted = roots != null && TypeChecker.regularTypecheck(roots, m_debug);
+        } catch (SemanticException e) {
+            accepted = false;
+        }
+        assertFalse(accepted, "expected " + contractName + " to be rejected by regular typecheck");
+    }
 }

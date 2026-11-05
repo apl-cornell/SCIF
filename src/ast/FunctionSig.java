@@ -118,8 +118,6 @@ public class FunctionSig extends TopLayerNode {
             }
             if (!(isPrivate || isPublic)) {
                 decoratorList.add(Utils.PRIVATE_DECORATOR);
-            } else if (isPrivate && isPublic) {
-                assert false : "method " + name + " can not be both public and private";
             }
 
             return decoratorList;
@@ -169,7 +167,12 @@ public class FunctionSig extends TopLayerNode {
 
     /** Build this method's FuncSym (labels, params, return, exceptions) and register it in the contract scope. */
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public void ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
+        if (decoratorList.contains(Utils.PUBLIC_DECORATOR)
+                && decoratorList.contains(Utils.PRIVATE_DECORATOR)) {
+            throw new SemanticException("method " + name + " cannot be both public and private",
+                    location);
+        }
         if (isClosurable && funcLabels.begin_pc != null
                 && !isJoinOfPrimitives(funcLabels.begin_pc)) {
             throw new SemanticException(
@@ -177,6 +180,20 @@ public class FunctionSig extends TopLayerNode {
                             + " requires a primitive or join-of-primitives external pc "
                             + "label (meet is not supported)",
                     location);
+        }
+        // The run-time entry checks of public methods can express only these label forms.
+        if (isPublic && !isNative && funcLabels.begin_pc != null) {
+            if (!isJoinOfPrimitives(funcLabels.begin_pc)) {
+                throw new SemanticException("public method " + name
+                        + " requires a primitive or join-of-primitives external pc label",
+                        funcLabels.begin_pc.location);
+            }
+            if (!funcLabels.begin_pc.typeMatch(funcLabels.to_pc)
+                    && !(funcLabels.to_pc instanceof PrimitiveIfLabel)) {
+                throw new SemanticException("public method " + name
+                        + " that auto-endorses requires a primitive internal pc label",
+                        funcLabels.to_pc.location);
+            }
         }
         SymTab contractSymTab = env.curSymTab();
         env.enterNewScope();
@@ -188,7 +205,9 @@ public class FunctionSig extends TopLayerNode {
         Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
         for (LabeledType t : exceptionList) {
             ExceptionTypeSym t1 = env.getExceptionTypeSym(t.type());
-            assert t1 != null: t.type().name;
+            if (t1 == null) {
+                throw new SemanticException("exception not found: " + t.type().name, t.location);
+            }
             exceptions.put(t1, null);
         }
         funcSym = new FuncSym(name,
@@ -212,7 +231,6 @@ public class FunctionSig extends TopLayerNode {
             throw new RuntimeException("Already defined: " + name); // can't happen?
         }
         env.exitNewScope();
-        return true;
     }
 
     @Override
@@ -298,9 +316,7 @@ public class FunctionSig extends TopLayerNode {
         }
 
         if (isConstructor) {
-            assert false;
-            code.exitVarScope();
-            return null;
+            throw new AssertionError("constructor signature compiled without a body: " + name);
         } else {
             String methodName = isPublic ? typecheck.Utils.methodNameHash(name, this) : name;
             List<Argument> arguments = args.solidityCodeGen(code);
@@ -338,8 +354,7 @@ public class FunctionSig extends TopLayerNode {
 
     public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException {
 
-        assert false;
-        return null;
+        throw new AssertionError();
     }
 
     @Override
@@ -394,7 +409,9 @@ public class FunctionSig extends TopLayerNode {
 
 
     protected void addBuiltInVars(SymTab curSymTab, ScopeContext now) {
-        // final address{this} sender;
+        // final address{TOP} sender;
+        // The address is trusted data because the runtime authenticates it;
+        // the contract it names is not thereby trusted.
         try {
             VarSym varSender =
                     new VarSym(
@@ -408,7 +425,9 @@ public class FunctionSig extends TopLayerNode {
                             true
                     );
             PrimitiveLabel labelSender = new PrimitiveLabel(varSender, typecheck.Utils.BUILTIN_LOCATION);
-            varSender.setLabel(labelSender);
+            varSender.setLabel(new PrimitiveLabel(
+                    (VarSym) curSymTab.lookup(typecheck.Utils.LABEL_TOP),
+                    typecheck.Utils.BUILTIN_LOCATION));
             curSymTab.add(typecheck.Utils.LABEL_SENDER, varSender);
 
             // final uint{sender} value;

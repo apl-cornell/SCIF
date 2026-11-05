@@ -1,0 +1,7 @@
+// A struct has no member with the accessed name.
+contract AttributeNoMember_W01 {
+    struct S { uint a; }
+    S s;
+    uint x;
+    constructor() { super(); x = s.b; }
+}

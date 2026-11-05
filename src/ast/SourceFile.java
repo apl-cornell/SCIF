@@ -110,13 +110,19 @@ public abstract class SourceFile extends Node {
 
     abstract public void codePasteContract(String name, Map<String, List<TopLayerNode>> sourceFileMap) throws SemanticException;
 
-    abstract public boolean ntcAddImportEdges(InheritGraph graph);
-
     /**
-     *  Generate constraints for regular typechecking in the current source file.
+     * Resolves this file's import paths to absolute paths and adds to
+     * {@code graph} an edge from each imported file to this file.
      */
+    abstract public void ntcAddImportEdges(InheritGraph graph);
+
     // abstract public ScopeContext ntcGenCons(NTCEnv env, ScopeContext parent);
-    abstract public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException;
+    /**
+     * Records in {@code env} the symbols this file declares.
+     *
+     * @throws SemanticException if a declaration is ill-formed
+     */
+    abstract public void ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException;
 
     abstract public void globalInfoVisit(InterfaceSym contractSym) throws SemanticException;
 
@@ -169,7 +175,7 @@ public abstract class SourceFile extends Node {
         for (String x: iptContracts) {
             List<SourceFile> sourceList = fileMap.get(x);
             if (sourceList == null || sourceList.isEmpty()) {
-                assert false;
+                throw new AssertionError();
             }
             newIptContracts.addAll((sourceList.get(0)).iptContracts);
         }

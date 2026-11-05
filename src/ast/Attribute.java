@@ -34,18 +34,27 @@ public class Attribute extends TrailerExpr {
     // steph: if this represents "a.b", then value = a and attr = b.
 
     @Override
-    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         VarSym varSym = getVarInfo(env);
-        assert varSym != null: "attribute value not found: " + location.errString();
         ScopeContext now = new ScopeContext(this, parent);
         env.addCons(now.genTypeConstraints(varSym.typeSym.getName(), Relation.EQ, env, location));
         return now;
     }
 
-    public VarSym getVarInfo(NTCEnv env) {
+    /**
+     * Returns the member variable this attribute denotes.
+     *
+     * @throws SemanticException if the value is not a variable, or its type
+     *         has no member with this name
+     */
+    @Override
+    public VarSym getVarInfo(NTCEnv env) throws SemanticException {
         VarSym rtnVarSym;
         VarSym parentVarSym = value.getVarInfo(env);
-        assert parentVarSym != null: "at " + location.errString();
+        if (parentVarSym == null) {
+            throw new SemanticException("not a variable: "
+                    + (value instanceof Name n ? n.id : "expression"), value.location);
+        }
         if (parentVarSym.typeSym instanceof ClosureTypeSym
                 && attr.id.equals(Utils.CLOSURE_TARGET_MEMBER)) {
             // c.target: the closure's target address, read-only.
@@ -66,8 +75,12 @@ public class Attribute extends TrailerExpr {
             rtnVarSym = parentTypeInfo.getMemberVarInfo(parentVarSym.toSHErrLocFmt(), attr.id);
         }
         else {
-            assert false: "unknown types for attribute: " + value.toString() + " at " + location.errString();
-            return null;
+            throw new SemanticException("type " + parentVarSym.typeSym.getName()
+                    + " has no members", location);
+        }
+        if (rtnVarSym == null) {
+            throw new SemanticException("no member named " + attr.id + " in type "
+                    + parentVarSym.typeSym.getName(), attr.location);
         }
         return rtnVarSym;
     }
