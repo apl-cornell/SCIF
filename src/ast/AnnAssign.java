@@ -151,13 +151,8 @@ public class AnnAssign extends Statement {
         SLCNameVarLbl = varSym.labelNameSLC();
 //        // logger.debug(varSym.typeSym.getName());
 
-        // A principal-typed variable starts out naming the principal it is initialized to.
         if (varSym.isPrincipalTyped()) {
             env.addPrincipal(varSym);
-            String init = value == null ? null : value.principalName(env);
-            if (init != null) {
-                env.assumeSamePrincipal(SLCNameVar, init);
-            }
         }
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
@@ -172,6 +167,11 @@ public class AnnAssign extends Statement {
         if (value != null) {
             env.inContext = beginContext;
             ExpOutcome valueOutcome = value.genIFConstraints(env, scopeContext.isContractLevel());
+            // A principal-typed variable starts out naming the principal it is initialized to.
+            String init = varSym.isPrincipalTyped() ? value.principalName(env) : null;
+            if (init != null) {
+                env.assumeSamePrincipal(SLCNameVar, init);
+            }
             env.checkFlow(valueOutcome.valueLabelName, SLCNameVarLbl, value.location,
                     "Integrity of the value being assigned must be trusted to allow this assignment");
 

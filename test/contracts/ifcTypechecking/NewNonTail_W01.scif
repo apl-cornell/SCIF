@@ -1,0 +1,15 @@
+// Creating a contract runs code with the new contract's authority, which
+// nothing trusts. Without a dynamic lock, it must be the last operation.
+contract Child {
+    constructor() { super(); }
+}
+
+contract NewNonTail_W01 {
+    uint{this} count;
+    constructor() { super(); }
+
+    public void f{this}() {
+        Child{any} c = new Child();
+        count = count + 1;
+    }
+}

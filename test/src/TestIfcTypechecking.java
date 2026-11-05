@@ -59,6 +59,12 @@ public class TestIfcTypechecking {
             "ifcTypechecking/InterfaceLocalPrincipal",
             "ifcTypechecking/EndorseLabels",
             "ifcTypechecking/EmitIFC",
+            "ifcTypechecking/JoinLabelPrincipal",
+            "ifcTypechecking/CallTrustedReference",
+            "ifcTypechecking/TrustTestTwoBranches",
+            "ifcTypechecking/NewTail",
+            "ifcTypechecking/NewEndorseTail",
+            "ifcTypechecking/NewLocked",
     })
     void testPositive(String contractName) throws Exception {
         File logDir = new File("./.scif");
@@ -119,6 +125,15 @@ public class TestIfcTypechecking {
             "ifcTypechecking/EmitArgLow_W01",
             "ifcTypechecking/EmitPcLow_W01",
             "ifcTypechecking/EmitDependentLow_W01",
+            "ifcTypechecking/JoinLabelPrincipal_W01",
+            "ifcTypechecking/CastUnknownContract_W01",
+            "ifcTypechecking/CallLendsAuthority_W01",
+            "ifcTypechecking/ClosureCrossContractUntrustedSink_W01",
+            "ifcTypechecking/TrustTestAfterBranch_W01",
+            "ifcTypechecking/TrustTestBeforeBranch_W01",
+            "ifcTypechecking/TrustTestTwoBranches_W01",
+            "ifcTypechecking/NewUntrusted_W01",
+            "ifcTypechecking/NewNonTail_W01",
             // "examples/ERC20",
     })
     void testNegative(String contractName) throws Exception {

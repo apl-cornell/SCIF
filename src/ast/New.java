@@ -28,6 +28,8 @@ public class New extends Expression {
     Call constructor_call;
 
     boolean isConstructor = false;
+    /** The principal of the contract this expression creates, once IFC-visited. */
+    private String createdPrincipal = null;
 
     public New(Call constructor_call) {
         this.constructor_call = constructor_call;
@@ -109,6 +111,11 @@ public class New extends Expression {
         return result;
     }
 
+    @Override
+    public String principalName(VisitEnv env) {
+        return createdPrincipal;
+    }
+
     private ExpOutcome newIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         if (!isConstructor) {
             // creating a struct var returns a join of its arg values
@@ -175,6 +182,12 @@ public class New extends Expression {
             ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
             dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(),
                     env.thisSym().toSHErrLocFmt());
+            // The new contract is a principal about which nothing is known; in the
+            // constructor's labels, its `this` is that principal.
+            createdPrincipal = env.freshPrincipal(toSHErrLocFmt() + "..new");
+            typecheck.InterfaceSym createdSym =
+                    env.getContract(((Name) constructor_call.value).id);
+            dependentLabelMapping.put(createdSym.thisSym().toSHErrLocFmt(), createdPrincipal);
 
             ifFuncCallPcBefore = funcSym.externalPc();
             ifFuncCallPcAfter = funcSym.internalPc();
@@ -239,11 +252,13 @@ public class New extends Expression {
                         typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
             }
 
-            String ifNameFuncRtnValue = funcSym.rtn.toSHErrLocFmt(dependentLabelMapping);
-            // String ifNameFuncRtnLock = funcSym.getLabelNameRtnLock();
+            // Creating a contract does not make it trusted: the reference is trusted
+            // no more than the new contract, and no more than the control flow that
+            // decided to create it.
+            String ifNameRtn = Utils.joinLabels(ifNamePc, createdPrincipal);
             psi.joinExe(expPsi);
 
-            return new ExpOutcome(ifNameFuncRtnValue, psi);
+            return new ExpOutcome(ifNameRtn, psi);
 
         }
     }

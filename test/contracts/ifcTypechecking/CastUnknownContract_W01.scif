@@ -1,0 +1,10 @@
+import "./IOracle.scif";
+// A reference is trusted no more than the contract it names: a trusted address
+// may still name an untrusted contract.
+contract CastUnknownContract_W01 {
+    constructor() { super(); }
+
+    public void f{this}(address{this} a) {
+        IOracle{this} o = IOracle(a);
+    }
+}

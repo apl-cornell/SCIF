@@ -1,0 +1,14 @@
+// The trust test justifies the flow inside its branch only; the same flow
+// after the branch must still be rejected.
+contract TrustTestAfterBranch_W01 {
+    uint{this} secret;
+    uint{this} other;
+    constructor() { super(); }
+
+    public void f{this}(address{this} a, uint{a} x) {
+        if (a => this) {
+            other = x;
+        }
+        secret = x;
+    }
+}

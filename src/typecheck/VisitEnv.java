@@ -258,6 +258,15 @@ public class VisitEnv {
         addAtomAssumption(a, b);
     }
 
+    /**
+     * Registers {@code name} as a principal about which nothing is known, such as a
+     * newly created contract, and returns it.
+     */
+    public String freshPrincipal(String name) {
+        versionNames.add(name);
+        return name;
+    }
+
     /** The SHErrLoc names of all versions created so far. Each names a principal. */
     public Set<String> versionNames() {
         return versionNames;
