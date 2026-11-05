@@ -115,13 +115,17 @@ public class FunctionDef extends FunctionSig {
         if (!returnVoid()) {
             addBuiltInResult(env.curSymTab, scopeContext);
         }
-        VarSym sender = env.getVar(Utils.LABEL_SENDER);
-        env.checkEqual(sender.labelNameSLC(), sender.labelValueSLC(), location,
-                "Label of sender may be incorrect");
+        List<String> builtInNames = new ArrayList<>(List.of(Utils.LABEL_SENDER, Utils.LABEL_PAYVALUE));
+        builtInNames.addAll(Utils.BUILTIN_INMETHOD_VARS.keySet());
+        for (String builtInName : builtInNames) {
+            VarSym builtIn = env.getVar(builtInName);
+            env.checkEqual(builtIn.labelNameSLC(), builtIn.labelValueSLC(), location,
+                    "Label of " + builtInName + " may be incorrect");
+        }
 
         for (Entry<String, VarSym> entry: env.curSymTab.getVars().entrySet()) {
             VarSym varSym = entry.getValue();
-            if (varSym.isFinal && (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE))) {
+            if (varSym.isPrincipalTyped()) {
                 env.addPrincipal(varSym);
             }
         }

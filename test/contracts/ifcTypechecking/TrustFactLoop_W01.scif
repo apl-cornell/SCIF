@@ -1,0 +1,17 @@
+// a may be reassigned in the loop, so after the loop {a} names an unknown principal.
+contract TrustFactLoop_W01 {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(address{this} a, address{this} b, uint{this} n) {
+        if (a => this) {
+            while (n > 0) {
+                a = b;
+                n = n - 1;
+            }
+            uint{a} w = 1;
+            secret = w;
+        }
+    }
+}

@@ -1,0 +1,6 @@
+// A final field may be initialized by the constructor and named in another field's label.
+contract FinalFieldInitOK {
+    final address owner;
+    uint{owner} amount;
+    constructor() { super(); owner = sender; }
+}

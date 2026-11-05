@@ -271,11 +271,17 @@ public class Utils {
 
     public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors, List<Constraint> assumptions,
             List<Constraint> constraints, boolean isIFC, InterfaceSym contractSym) {
-        return createDiagnoser(constructors, assumptions, constraints, isIFC, contractSym,
-                java.util.Set.of(), List.of());
+        return createDiagnoser(constructors, java.util.Set.of(), assumptions, constraints, isIFC,
+                contractSym, java.util.Set.of(), List.of());
     }
 
-    public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors, List<Constraint> assumptions,
+    /**
+     * A diagnoser for {@code constraints} under {@code assumptions}. The principals named by
+     * {@code constructors} and {@code principalNames} are constants rather than variables to
+     * solve for; in IFC mode, each lies between the top and bottom principals.
+     */
+    public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors,
+            Set<String> principalNames, List<Constraint> assumptions,
             List<Constraint> constraints, boolean isIFC, InterfaceSym contractSym,
             Set<String> rigidAtoms, List<String[]> atomAssumptions) {
 
@@ -317,6 +323,15 @@ public class Utils {
                 diagnoser.addAssumedInequality(diagnoser.createEqualityConstraint(
                         diagnoser.createElement(top.toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition()),
                         diagnoser.createElement(contractSym.thisSym().toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition())));
+                for (String x : principalNames) {
+                    diagnoser.defineConstructor(x, 0);
+                    diagnoser.addAssumedInequality(diagnoser.createGreaterThanConstraint(
+                            diagnoser.createElement(bot.toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition()),
+                            diagnoser.createElement(x, sherrloc.constraint.ast.Position.EmptyPosition())));
+                    diagnoser.addAssumedInequality(diagnoser.createLessThanConstraint(
+                            diagnoser.createElement(top.toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition()),
+                            diagnoser.createElement(x, sherrloc.constraint.ast.Position.EmptyPosition())));
+                }
             }
             if (isIFC) {
                 for (String atom : rigidAtoms) {

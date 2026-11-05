@@ -75,8 +75,8 @@ public class EndorseIfStatement extends Statement {
 //                // logger.debug(l.toString());
 //                // logger.debug(r.toString());
                 createdHypo = true;
-                Inequality hypo = new Inequality(l.toSHErrLocFmt(), Relation.LEQ,
-                        r.toSHErrLocFmt());
+                Inequality hypo = new Inequality(env.principalName(l), Relation.LEQ,
+                        env.principalName(r));
 
                 env.hypothesis().add(hypo);
 //                // logger.debug("testing label");
@@ -96,6 +96,7 @@ public class EndorseIfStatement extends Statement {
         if (ifStatement.body.size() > 0 || ifStatement.orelse.size() > 0) {
             Utils.genSequenceConstraints(env, beginContext.lambda, IfTestNormalPc, IfTestNormalLambda, IfNamePcAfter, ifStatement.test.location);
         }
+        Map<String, String> versionsBefore = env.saveVersions();
         env.incScopeLayer();
 
         Label fromLabel = env.toLabel(from);
@@ -116,9 +117,9 @@ public class EndorseIfStatement extends Statement {
             newSym.ifl = toLabel;
             env.checkEqual(newSym.labelNameSLC(), newSym.labelValueSLC(), location, "Variable "
                     + newSym.getName() + " may be endorsed incorrectly");
-            if (sym.isPrincipalVar()) {
-                env.checkTrustEqual(sym.toSHErrLocFmt(), newSym.toSHErrLocFmt(), location,
-                        "final variable " + newSym.getName() + " may be endorsed incorrectly");
+            if (sym.isPrincipalTyped()) {
+                env.addPrincipal(newSym);
+                env.assumeSamePrincipal(env.principalName(sym), newSym.toSHErrLocFmt());
             }
             try {
                 env.addVar(newSym.getName(), newSym);
@@ -157,6 +158,8 @@ public class EndorseIfStatement extends Statement {
 //        // logger.debug("finished if branch");
         //System.err.println("finished if branch");
         // env.prevContext.lambda = curContext.lambda;
+        Map<String, String> versionsThen = env.saveVersions();
+        env.restoreVersions(versionsBefore);
         env.incScopeLayer();
 //        index = 0;
         PathOutcome elseo = toOutCome.psi;
@@ -173,6 +176,10 @@ public class EndorseIfStatement extends Statement {
 //            // env.prevContext.lambda = rightContext.lambda;
 //        }
         env.decScopeLayer();
+        env.mergeVersions(List.of(versionsThen, env.saveVersions()));
+        // Assignments in the then branch go to the endorsed copies, which share storage
+        // with the original variables.
+        env.havoc(Assign.assignedNames(ifStatement.body));
 
         ifo.join(elseo);
         // env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, Utils.joinLabels(leftContext.lambda, rightContext.lambda)), env.hypothesis, location));

@@ -1,0 +1,7 @@
+// A final parameter cannot be reassigned.
+contract FinalParamReassign_W01 {
+    constructor() { super(); }
+    public void f(final address a) {
+        a = sender;
+    }
+}

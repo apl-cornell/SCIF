@@ -1,0 +1,16 @@
+// a may be reassigned on one branch, so after the merge {a} names an unknown principal.
+contract TrustFactBranch_W01 {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(address{this} a, address{this} b, bool{this} c) {
+        if (a => this) {
+            if (c) {
+                a = b;
+            }
+            uint{a} w = 1;
+            secret = w;
+        }
+    }
+}

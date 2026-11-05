@@ -22,6 +22,9 @@ abstract public class Label {
     /** The local names of this label's principal leaves (flattening joins). */
     abstract public List<String> principalLeaves();
 
+    /** The variables naming this label's principal leaves (flattening joins). */
+    abstract public List<VarSym> principalSyms();
+
     public CodeLocation location() {
         return location;
     }

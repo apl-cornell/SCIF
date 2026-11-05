@@ -34,6 +34,15 @@ public abstract class Expression extends Node {
     public abstract ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
             throws SemanticException;
 
+    /**
+     * If this expression is a principal-typed variable, or a cast of one to a contract or
+     * address type, the SHErrLoc name of the principal it holds at the current program point.
+     * Otherwise null.
+     */
+    public String principalName(VisitEnv env) {
+        return null;
+    }
+
     /*
         Check whether there are non-exception-free calls inside the expression.
         If so, create temporary variables and statements to eventually evaluate the expression.

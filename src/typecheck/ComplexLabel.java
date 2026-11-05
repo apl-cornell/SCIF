@@ -16,6 +16,13 @@ public class ComplexLabel extends Label {
         return leaves;
     }
 
+    @Override
+    public List<VarSym> principalSyms() {
+        List<VarSym> syms = new ArrayList<>(left.principalSyms());
+        syms.addAll(right.principalSyms());
+        return syms;
+    }
+
     public ComplexLabel(Label left, IfOperator op, Label right, CodeLocation location) {
         super(location);
         this.left = left;
