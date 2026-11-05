@@ -50,9 +50,9 @@ contract ERC20 {
     }
 
     public void approveFrom{from->this}(final address from, address spender, uint val) {
-        address _from = endorse(from, sender->this);
-        address _to = endorse(spender, sender->this);
-        uint _val = endorse(val, sender->this);
+        address _from = endorse(from, from->this);
+        address _to = endorse(spender, from->this);
+        uint _val = endorse(val, from->this);
         _allowances[from][spender] = val;
     }
 

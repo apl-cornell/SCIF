@@ -18,7 +18,7 @@ interface IExchange {
 contract Dexible {
     exception FailedSwap();
 
-    event Swap(IERC20 tokenIn, IERC20 tokenOut, IExchange router, uint amount);
+    event Swap(IERC20{any} tokenIn, IERC20{any} tokenOut, IExchange{any} router, uint{any} amount);
 
     constructor() { super(); }
 

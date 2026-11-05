@@ -1,0 +1,10 @@
+// The endorsed value must flow to the from-label: v is not trusted by sender.
+contract EndorseFromLabel_W01 {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(uint{any} v) {
+        secret = endorse(v, sender -> this);
+    }
+}

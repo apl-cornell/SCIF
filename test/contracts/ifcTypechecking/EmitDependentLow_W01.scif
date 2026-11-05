@@ -1,0 +1,10 @@
+// amount is labeled by who, so data trusted only by sender cannot be reported as trusted by this.
+contract EmitDependentLow_W01 {
+    event Claimed(address who, uint{who} amount);
+
+    constructor() { super(); }
+
+    public void g{sender -> this; any}(uint{sender} amount) {
+        emit Claimed(address(this), amount);
+    }
+}

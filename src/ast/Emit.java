@@ -7,7 +7,9 @@ import typecheck.sherrlocUtils.Constraint;
 import typecheck.sherrlocUtils.Relation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Emit extends Statement {
 
@@ -83,10 +85,54 @@ public class Emit extends Statement {
 
     @Override
     public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException {
-        // TODO placeholder
+        Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
-        return new PathOutcome(new PsiUnit(endContext));
+        EventTypeSym eventTypeSym = (EventTypeSym) env.getCurSym(((Name) event.value).id);
+
+        // Evaluate the arguments from left to right.
+        PathOutcome psi = new PathOutcome(new PsiUnit(beginContext));
+        List<String> argValueLabelNames = new ArrayList<>();
+        List<String> argPrincipalNames = new ArrayList<>();
+        for (Expression arg : event.args) {
+            ExpOutcome ao = arg.genIFConstraints(env, false);
+            psi.joinExe(ao.psi);
+            argValueLabelNames.add(ao.valueLabelName);
+            argPrincipalNames.add(arg.principalName(env));
+            env.inContext = Utils.genNewContextAndConstraints(env, false,
+                    ao.psi.getNormalPath().c, beginContext.lambda, arg.nextPcSHL(), arg.location);
+        }
+
+        // A parameter label naming another parameter names the principal passed for it.
+        Map<String, String> dependentLabelMapping = new HashMap<>();
+        for (int i = 0; i < event.args.size(); i++) {
+            VarSym param = eventTypeSym.parameters().get(i);
+            if (param.isPrincipalTyped() && argPrincipalNames.get(i) != null) {
+                dependentLabelMapping.put(param.toSHErrLocFmt(), argPrincipalNames.get(i));
+            }
+        }
+
+        // Each argument, and the control flow that emits it, must be trusted at the
+        // parameter's label, as for the arguments of a call.
+        String ifNamePc = env.inContext.pc;
+        for (int i = 0; i < event.args.size(); i++) {
+            Expression arg = event.args.get(i);
+            String paramLabel = eventTypeSym.parameters().get(i).ifl.toSHErrLocFmt(dependentLabelMapping);
+            env.checkFlow(argValueLabelNames.get(i), paramLabel, arg.location,
+                    "Input to the " + Utils.ordNumString(i + 1)
+                            + " argument of the event must be trusted enough");
+            env.checkFlow(ifNamePc, paramLabel, arg.location,
+                    "Current control flow must be trusted to emit the "
+                            + Utils.ordNumString(i + 1) + " argument of the event");
+        }
+
+        Utils.contextFlow(env, env.inContext, endContext, location);
+        if (!tail_position) {
+            env.checkFlow(endContext.lambda, beginContext.lambda, location,
+                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
+        }
+        psi.setNormalPath(endContext);
+        return psi;
     }
 
     @Override
