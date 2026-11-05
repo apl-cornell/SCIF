@@ -63,6 +63,14 @@ public class Name extends Variable {
     }
 
     @Override
+    public String principalName(VisitEnv env) {
+        if (env.getCurSym(id) instanceof VarSym v && v.isPrincipalTyped()) {
+            return env.principalName(v);
+        }
+        return null;
+    }
+
+    @Override
     public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
         return new SingleVar(id);
     }

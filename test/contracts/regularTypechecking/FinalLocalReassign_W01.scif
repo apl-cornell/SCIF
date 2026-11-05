@@ -1,0 +1,8 @@
+// A final local cannot be reassigned.
+contract FinalLocalReassign_W01 {
+    constructor() { super(); }
+    public void f() {
+        final uint a = 1;
+        a = 2;
+    }
+}

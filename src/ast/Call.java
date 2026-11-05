@@ -278,6 +278,18 @@ public class Call extends TrailerExpr {
     @Override
     public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
             throws SemanticException {
+        ExpOutcome result = callIFConstraints(env, tail_position);
+        // A call may assign to any field, so fields hold new principals afterwards.
+        boolean cast = value instanceof Name n && (env.getCurSym(n.id) instanceof InterfaceSym
+                || env.getCurSym(n.id) instanceof BuiltinTypeSym);
+        if (!cast) {
+            env.havocFields();
+        }
+        return result;
+    }
+
+    private ExpOutcome callIFConstraints(VisitEnv env, boolean tail_position)
+            throws SemanticException {
         //TODO: Assuming value is a Name for now
         Context beginContext = env.inContext; // (pc, lambda)
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
@@ -285,6 +297,8 @@ public class Call extends TrailerExpr {
         Map<String, String> dependentLabelMapping = new HashMap<>();
 
         List<String> argValueLabelNames = new ArrayList<>();
+        // The principal each argument holds when it is evaluated, or null.
+        List<String> argPrincipalNames = new ArrayList<>();
 
         PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
 
@@ -294,6 +308,7 @@ public class Call extends TrailerExpr {
             ao = arg.genIFConstraints(env, false);
             psi.joinExe(ao.psi);
             argValueLabelNames.add(ao.valueLabelName);
+            argPrincipalNames.add(arg.principalName(env));
 
             env.inContext = Utils.genNewContextAndConstraints(env, false,
                     ao.psi.getNormalPath().c, beginContext.lambda, arg.nextPcSHL(), arg.location);
@@ -415,17 +430,12 @@ public class Call extends TrailerExpr {
                     if (binder == null) {
                         continue;
                     }
-                    Expression principalExp = args.get(i);
-                    if (principalExp instanceof Call cast && cast.isCast(env)) {
-                        principalExp = cast.getArgAt(0);
-                    }
-                    VarSym actual = principalExp instanceof Name an ? env.getVar(an.id) : null;
-                    if (actual != null && actual.isPrincipalVar()) {
-                        dependentLabelMapping.put(binder.toSHErrLocFmt(),
-                                actual.toSHErrLocFmt());
+                    String actual = argPrincipalNames.get(i);
+                    if (actual != null) {
+                        dependentLabelMapping.put(binder.toSHErrLocFmt(), actual);
                     } else if (cs.referencesBinder(binder)) {
                         throw new SemanticException(
-                                "must use a final address/contract for the "
+                                "must use an address or contract variable for the "
                                         + Utils.ordNumString(i + 1)
                                         + " invoke argument: the closure's labels depend on it",
                                 args.get(i).location);
@@ -620,16 +630,8 @@ public class Call extends TrailerExpr {
         for (int i = 0; i < args.size(); ++i) {
             Expression arg = args.get(i);
             VarSym argSym = funcSym.parameters.get(i);
-            if (argSym.isPrincipalVar()) {
-
-                if (arg instanceof Name) {
-                    VarSym valueSym = (VarSym) env.getVar(((Name) arg).id);
-                    if (valueSym.isPrincipalVar()) {
-//                        System.err.println("dependent " + argSym.typeSym + " -> " + valueSym.toSHErrLocFmt());
-                        dependentLabelMapping.put(argSym.toSHErrLocFmt(), valueSym.toSHErrLocFmt());
-                    }
-                }
-                // TODO: Do we throw exception if arg is not a Name?
+            if (argSym.isPrincipalTyped() && argPrincipalNames.get(i) != null) {
+                dependentLabelMapping.put(argSym.toSHErrLocFmt(), argPrincipalNames.get(i));
             }
 
             // env.prevContext = prevContext = tmp;
@@ -978,6 +980,17 @@ public class Call extends TrailerExpr {
         }
 
         return true;
+    }
+
+    @Override
+    public String principalName(VisitEnv env) {
+        if (args.size() == 1 && isCast(env)) {
+            String type = ((Name) value).id;
+            if (env.containsContract(type) || type.equals(Utils.ADDRESS_TYPE)) {
+                return args.get(0).principalName(env);
+            }
+        }
+        return null;
     }
 
     /**
