@@ -61,6 +61,10 @@ public class For extends Statement {
         env.incScopeLayer();
         PathOutcome newVarOut = newVars.IFCVisit(env, false);
         beginContext = newVarOut.getNormalPath().c;
+        // The loop head is reached from before the loop and from the end of an iteration.
+        java.util.Set<String> assigned = Assign.assignedNames(body);
+        assigned.addAll(Assign.assignedNames(iter));
+        env.havoc(assigned);
         ExpOutcome to = test.genIFConstraints(env, false);
 
         String ifNameTest = to.valueLabelName;
@@ -96,6 +100,8 @@ public class For extends Statement {
             loc = s.location;
         }
 
+        // The loop exits from its head or from a break in the body.
+        env.havoc(assigned);
         env.decScopeLayer();
 
         return ifo;

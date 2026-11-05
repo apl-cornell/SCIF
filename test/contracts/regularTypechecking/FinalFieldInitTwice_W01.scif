@@ -1,0 +1,5 @@
+// A final field is initialized exactly once.
+contract FinalFieldInitTwice_W01 {
+    final address owner;
+    constructor() { super(); owner = sender; owner = this; }
+}

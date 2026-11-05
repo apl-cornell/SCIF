@@ -1,0 +1,5 @@
+// A final field must be initialized by the constructor.
+contract FinalFieldUninitialized_W01 {
+    final address owner;
+    constructor() { super(); }
+}

@@ -159,6 +159,7 @@ public class Try extends Statement {
         //env.psi = newPsi;
         PathOutcome psi = new PathOutcome();
         PathOutcome input = new PathOutcome();
+        Map<String, String> versionsBefore = env.saveVersions();
         env.incScopeLayer();
         PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
         Utils.genConsStmtsWithException(body, env, so, psi, false);
@@ -188,7 +189,13 @@ public class Try extends Statement {
         //Context cTry = env.outContext;
 
         //env.psi = oldPsi;
+        // A handler may be entered from any point in the body.
+        List<Map<String, String>> exitVersions = new ArrayList<>();
+        exitVersions.add(env.saveVersions());
+        java.util.Set<String> assignedInBody = ast.Assign.assignedNames(body);
         for (ExceptHandler h : handlers) {
+            env.restoreVersions(versionsBefore);
+            env.havoc(assignedInBody);
             env.incScopeLayer();
             //env.inContext = new Context(h.getHandlerPcLabelName(), beginContext.lambda);
             ExceptionTypeSym expSym = env.getExp(h.name());
@@ -198,10 +205,12 @@ public class Try extends Statement {
 //                env.inContext = new Context(expUnit.c.pc, beginContext.lambda);
                 PathOutcome ho = h.genConsVisit(env, tail_position);
                 psi.join(ho);
+                exitVersions.add(env.saveVersions());
             }
             env.decScopeLayer();
             // cTry = new Context(Utils.makeJoin(cTry.pc, env.outContext.outPcName), Utils.makeJoin(cTry.lambda, env.outContext.lockName));
         }
+        env.mergeVersions(exitVersions);
 
         typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
 

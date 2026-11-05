@@ -1,0 +1,10 @@
+// x is not final, but it still names a principal: data trusted by it is not trusted by this.
+contract NonFinalPrincipalLabel_W01 {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(address{this} x, uint{x} v) {
+        secret = v;
+    }
+}

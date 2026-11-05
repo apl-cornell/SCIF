@@ -54,7 +54,7 @@ public class GuardBlock extends Statement {
 
         // env.prevContext.lambda = newLockLabel;
 
-        Label label = env.curContractSym().newLabel(l);
+        Label label = env.toLabel(l);
         String guardLabel = label.toSHErrLocFmt();
 
         env.checkFlow(Utils.meetLabels(guardLabel, curContext.lambda), beginContext.lambda,

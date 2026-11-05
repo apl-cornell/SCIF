@@ -82,9 +82,9 @@ public class FlowsToExp extends Expression {
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         for (Name operand : List.of((Name) lhs, (Name) rhs)) {
-            if (!(env.getCurSym(operand.id) instanceof VarSym v) || !v.isPrincipalVar()) {
+            if (!(env.getCurSym(operand.id) instanceof VarSym v) || !v.isPrincipalTyped()) {
                 throw new SemanticException(
-                        "dynamic trust queries can only happen between final address variables: "
+                        "dynamic trust queries can only happen between address or contract variables: "
                                 + operand.id, location);
             }
         }

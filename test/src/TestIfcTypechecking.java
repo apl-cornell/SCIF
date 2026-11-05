@@ -53,6 +53,9 @@ public class TestIfcTypechecking {
             "ifcTypechecking/ClosurePcExStronger",
             "ifcTypechecking/ClosureLockWeaken",
             "ifcTypechecking/SenderTrustedAddress",
+            "ifcTypechecking/ValueNowTrusted",
+            "ifcTypechecking/TrustFactKept",
+            "ifcTypechecking/FinalFieldInit",
     })
     void testPositive(String contractName) throws Exception {
         File logDir = new File("./.scif");
@@ -101,6 +104,11 @@ public class TestIfcTypechecking {
             "ifcTypechecking/ClosureBindArgLow_W01",
             "ifcTypechecking/ClosureBindBoundDependent_W01",
             "ifcTypechecking/ClosureLockOverclaim_W01",
+            "ifcTypechecking/TrustFactReassign_W01",
+            "ifcTypechecking/TrustFactBranch_W01",
+            "ifcTypechecking/TrustFactLoop_W01",
+            "ifcTypechecking/TrustFactFieldCall_W01",
+            "ifcTypechecking/NonFinalPrincipalLabel_W01",
             // "examples/ERC20",
     })
     void testNegative(String contractName) throws Exception {
