@@ -1,0 +1,6 @@
+// A variable that is neither a map nor an array is subscripted.
+contract SubscriptNonCollection_W01 {
+    uint x;
+    uint y;
+    constructor() { super(); y = x[1]; }
+}

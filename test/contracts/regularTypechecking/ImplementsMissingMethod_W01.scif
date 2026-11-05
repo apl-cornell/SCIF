@@ -1,0 +1,8 @@
+// A contract does not implement a method of its interface.
+interface IRun {
+    public void run{this -> this; this}();
+}
+
+contract ImplementsMissingMethod_W01 implements IRun {
+    constructor() { super(); }
+}

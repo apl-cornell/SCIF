@@ -54,8 +54,7 @@ public class Type extends Node {
     }
 
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        assert false;
-        return null;
+        throw new AssertionError();
     }
 
     public boolean typeMatch(Type expression) {

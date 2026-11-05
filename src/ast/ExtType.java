@@ -6,12 +6,12 @@ import compile.ast.PrimitiveType;
 import java.util.ArrayList;
 import java.util.List;
 import typecheck.ExpOutcome;
-import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
-import typecheck.TypeSym;
 import typecheck.Utils;
 import typecheck.VisitEnv;
+import typecheck.StructTypeSym;
+import typecheck.exceptions.SemanticException;
 
 public class ExtType extends Type {
 
@@ -23,10 +23,11 @@ public class ExtType extends Type {
     }
 
     @Override
-    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-        TypeSym typeSym = (TypeSym) env.getExtSym(contractName, name);
-        assert !(typeSym instanceof InterfaceSym);
+        if (!(env.getExtSym(contractName, name, location) instanceof StructTypeSym typeSym)) {
+            throw new SemanticException(contractName + "." + name + " is not a struct type", location);
+        }
         isContractType = false;
         env.addCons(now.genEqualCons(typeSym, env, location, "Improper type is specified"));
         return now;
@@ -37,8 +38,7 @@ public class ExtType extends Type {
     }
 
     public ExpOutcome genConsVisit(VisitEnv env, boolean tail_position) {
-        assert false;
-        return null;
+        throw new AssertionError();
     }
 
     public boolean typeMatch(Type expression) {

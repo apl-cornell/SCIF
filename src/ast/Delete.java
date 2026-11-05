@@ -46,8 +46,7 @@ public class Delete extends Statement {
             ifNameTgt = to.valueLabelName;
             env.inContext = Utils.genNewContextAndConstraints(env, false, to.psi.getNormalPath().c, beginContext.lambda, target.nextPcSHL(), location);
         } else {
-            assert false;
-            //TODO: error handling
+            throw new AssertionError("delete target was not rejected by type checking: " + target);
         }
 
         env.checkFlow(ifNamePc, ifNameTgt, target.location,
@@ -88,9 +87,13 @@ public class Delete extends Statement {
             } else {
                 deletable = false;
             }
+        } else if (!(target instanceof Subscript)) {
+            throw new SemanticException(
+                    "only state variables, struct fields, and map or array elements can be deleted",
+                    target.location);
         }
         if (!deletable) {
-            throw new RuntimeException("variable not deletable");
+            throw new SemanticException("only state variables can be deleted", target.location);
         }
         return null;
     }

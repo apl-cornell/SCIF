@@ -108,8 +108,7 @@ public class ComplexIfLabel extends IfLabel {
 
     @Override
     public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
-        assert false;
-        return null;
+        throw new AssertionError();
     }
 
     @Override

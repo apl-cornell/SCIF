@@ -27,7 +27,7 @@ public class Subscript extends TrailerExpr {
     }
 
     @Override
-    public VarSym getVarInfo(NTCEnv env) {
+    public VarSym getVarInfo(NTCEnv env) throws SemanticException {
         VarSym valueVarSym = value.getVarInfo(env);
         VarSym subscriptVarSym = null;
         if (valueVarSym.typeSym instanceof MapTypeSym) {
@@ -76,8 +76,9 @@ public class Subscript extends TrailerExpr {
                 validIndex = false;
             }
             if (!validIndex) {
-                // TODO(steph): fix exceptions
-                throw new RuntimeException("Must use a final address/contract to access a dependent map: " + ((Name) index).id + " at " + location.errString());
+                throw new SemanticException(
+                        "the index of a dependent map must be a final address or contract variable",
+                        index.location);
             }
             return now;
         } else if (valueVarSym.typeSym instanceof MapTypeSym) {
@@ -93,7 +94,7 @@ public class Subscript extends TrailerExpr {
             env.addCons(now.genTypeConstraints(typeInfo.valueType.getName(), Relation.EQ, env, location));
             return now;
         } else {
-            throw new RuntimeException("Subscript: value type not found: " + value);
+            throw new SemanticException("only maps and arrays can be subscripted", value.location);
         }
     }
 
@@ -142,8 +143,7 @@ public class Subscript extends TrailerExpr {
                 return new ExpOutcome(ifDepMapValue, io.psi);
 
             } else {
-                assert false;
-                return null;
+                throw new AssertionError();
             }
         } else {
             Context indexContext = io.psi.getNormalPath().c;
@@ -197,9 +197,8 @@ public class Subscript extends TrailerExpr {
             } else {
 //                logger.error(,
 //                        locToString());
-                assert false: "non-address type variable as index to access a dependent map: at " + location.errString();
-                //System.out.println("ERROR: non-address type variable as index to access DEPMAP @" + locToString());
-                return null;
+                throw new SemanticException(
+                        "the index of a dependent map must be a final address variable", index.location);
             }
         } else {
             String ifNameIndex = index.genIFConstraints(env, tail_position).valueLabelName;

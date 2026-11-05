@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 import typecheck.exceptions.NameNotFoundException;
 
@@ -37,8 +36,7 @@ public class Name extends Variable {
         // logger.debug("Name: " + id);
         // // logger.debug(s.toString());
         if (s instanceof FuncSym) {
-            assert false : id + " at " + location.errString();
-            return null;
+            throw new SemanticException("method " + id + " cannot be used as a value", location);
         } else if (s instanceof VarSym) {
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
@@ -47,8 +45,7 @@ public class Name extends Variable {
             // logger.debug(now.toString());
             return now;
         } else if (s instanceof TypeSym) {
-            assert false;
-            return null;
+            throw new SemanticException("type " + id + " cannot be used as a value", location);
         }
         throw new NameNotFoundException(id, location);
     }
@@ -72,7 +69,7 @@ public class Name extends Variable {
 
     @Override
     public VarSym getVarInfo(NTCEnv env) {
-        return ((VarSym) env.getCurSym(id));
+        return env.getCurSym(id) instanceof VarSym v ? v : null;
     }
 
     @Override

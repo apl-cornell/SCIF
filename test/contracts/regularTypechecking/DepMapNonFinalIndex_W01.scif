@@ -1,0 +1,9 @@
+// A dependent map is indexed by a non-final address.
+contract DepMapNonFinalIndex_W01 {
+    map(address x, uint{x}) m;
+    uint{this} y;
+    constructor() { super(); }
+    public void f{this}(address a) {
+        y = endorse(m[a], any -> this);
+    }
+}
