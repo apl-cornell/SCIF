@@ -46,6 +46,9 @@ public class While extends Statement {
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
                 Utils.getLabelNameLock(toSHErrLocFmt()));
 
+        // The loop head is reached from before the loop and from the end of the body.
+        java.util.Set<String> assigned = Assign.assignedNames(body);
+        env.havoc(assigned);
         ExpOutcome to = test.genIFConstraints(env, false);
 
         String ifNameTest = to.valueLabelName;
@@ -75,6 +78,8 @@ public class While extends Statement {
 //        }
 
         env.decScopeLayer();
+        // The loop exits from its head or from a break in the body.
+        env.havoc(assigned);
 
         return ifo;
 

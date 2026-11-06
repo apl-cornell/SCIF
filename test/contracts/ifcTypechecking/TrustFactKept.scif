@@ -1,0 +1,21 @@
+// A trust test on a variable holds for its uses until the variable is reassigned.
+contract TrustFactKept {
+    uint{this} secret;
+    address{this} owner;
+
+    constructor() { super(); owner = sender; }
+
+    public void local{this}(address{this} a) {
+        if (a => this) {
+            uint{a} w = 1;
+            secret = w;
+        }
+    }
+
+    public void field{this}() {
+        if (owner => this) {
+            uint{owner} w = 1;
+            secret = w;
+        }
+    }
+}

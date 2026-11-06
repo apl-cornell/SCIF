@@ -100,6 +100,16 @@ public class New extends Expression {
 
     @Override
     public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
+        ExpOutcome result = newIFConstraints(env, tail_position);
+        // A contract's constructor may call back and assign to any field, so fields hold
+        // new principals afterwards.
+        if (isConstructor) {
+            env.havocFields();
+        }
+        return result;
+    }
+
+    private ExpOutcome newIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         if (!isConstructor) {
             // creating a struct var returns a join of its arg values
             Context beginContext = env.inContext;
@@ -136,10 +146,12 @@ public class New extends Expression {
             PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
             ExpOutcome ao = null;
 
+            List<String> argPrincipalNames = new ArrayList<>();
             for (Expression arg : constructor_call.args) {
                 ao = arg.genIFConstraints(env, false);
                 psi.joinExe(ao.psi);
                 argValueLabelNames.add(ao.valueLabelName);
+                argPrincipalNames.add(arg.principalName(env));
                 env.inContext = new Context(
                         Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
                         beginContext.lambda);
@@ -171,15 +183,8 @@ public class New extends Expression {
             for (int i = 0; i < constructor_call.args.size(); ++i) {
                 Expression arg = constructor_call.args.get(i);
                 VarSym argSym = funcSym.parameters.get(i);
-                if (argSym.isPrincipalVar()) {
-
-                    if (arg instanceof Name) {
-                        VarSym valueSym = (VarSym) env.getVar(((Name) arg).id);
-                        if (valueSym.isPrincipalVar()) {
-                            dependentLabelMapping.put(argSym.toSHErrLocFmt(),
-                                    valueSym.toSHErrLocFmt());
-                        }
-                    }
+                if (argSym.isPrincipalTyped() && argPrincipalNames.get(i) != null) {
+                    dependentLabelMapping.put(argSym.toSHErrLocFmt(), argPrincipalNames.get(i));
                 }
 
                 // env.prevContext = prevContext = tmp;
