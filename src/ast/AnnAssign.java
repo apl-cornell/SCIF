@@ -151,42 +151,8 @@ public class AnnAssign extends Statement {
         SLCNameVarLbl = varSym.labelNameSLC();
 //        // logger.debug(varSym.typeSym.getName());
 
-        // If the declared variable is a principal (final address/contract), add it to the principal list
-        if ((varSym.isFinal &&
-                (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))
-                // || varSym.typeSym.name().equals(Utils.PRINCIPAL_TYPE)) Invalid to declare a non-global principal
-                ) {
+        if (varSym.isPrincipalTyped()) {
             env.addPrincipal(varSym);
-
-            VarSym equalPrincipal = null;
-            boolean correctInit = true;
-            if (value instanceof Name) { // assigned as another variable
-                // Nothing to check
-                equalPrincipal = env.getVar(((Name) value).id);
-            } else if (value instanceof Call call && call.isCast(env)) { // assigned as another contract
-                // check if it is a cast to a final address variable
-                Expression arg = call.getArgAt(0);
-                if (arg instanceof Name) {
-                    VarSym sym = env.getVar(((Name) arg).id);
-                    if (!sym.isFinal) {
-                        correctInit = false;
-                    } else {
-                        equalPrincipal = sym;
-                    }
-                } else {
-                    correctInit = false;
-                }
-            } else if (!isBuiltIn) {
-                correctInit = false;
-            }
-
-            if (correctInit) {
-                // add equivalence assumption to the trust set
-                env.checkTrustEqual(SLCNameVar, equalPrincipal.toSHErrLocFmt(), location,
-                        "New principal declaration");
-            } else {
-                throw new SemanticException("A final address/Contract must be initialized to another final address/Contract: " + id, location);
-            }
         }
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
@@ -201,6 +167,11 @@ public class AnnAssign extends Statement {
         if (value != null) {
             env.inContext = beginContext;
             ExpOutcome valueOutcome = value.genIFConstraints(env, scopeContext.isContractLevel());
+            // A principal-typed variable starts out naming the principal it is initialized to.
+            String init = varSym.isPrincipalTyped() ? value.principalName(env) : null;
+            if (init != null) {
+                env.assumeSamePrincipal(SLCNameVar, init);
+            }
             env.checkFlow(valueOutcome.valueLabelName, SLCNameVarLbl, value.location,
                     "Integrity of the value being assigned must be trusted to allow this assignment");
 

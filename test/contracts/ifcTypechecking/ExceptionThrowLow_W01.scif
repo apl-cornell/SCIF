@@ -1,0 +1,9 @@
+// An exception must be thrown from control flow trusted at its declared label.
+contract ExceptionThrowLow_W01 {
+    exception E();
+    constructor() { super(); }
+
+    public void g{any}() throws (E{this}) {
+        throw E();
+    }
+}

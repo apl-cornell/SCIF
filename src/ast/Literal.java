@@ -6,7 +6,7 @@ import typecheck.*;
 public abstract class Literal extends Expression {
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) {
         String ifNameRtn = "LITERAL..." + location.toString();
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
         env.checkFlow(ifNamePc, ifNameRtn, location,
@@ -31,5 +31,10 @@ public abstract class Literal extends Expression {
     public String toSHErrLocFmt() {
         String ifNameRtn = "LITERAL..." + location.toString();
         return ifNameRtn;
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return env.builtinType(this instanceof Num ? BuiltInT.UINT : BuiltInT.STRING);
     }
 }

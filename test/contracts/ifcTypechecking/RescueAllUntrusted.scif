@@ -1,0 +1,13 @@
+// A handler for failures can update untrusted state.
+contract RescueAllUntrusted {
+    uint{any} count;
+    constructor() { super(); }
+
+    public void f{this; any}(address{this} to) {
+        atomic {
+            send(to, 1);
+        } rescue * {
+            count = 0;
+        }
+    }
+}

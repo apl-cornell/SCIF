@@ -1,0 +1,18 @@
+// An exception from an earlier statement of a branch may leave the method when
+// it is declared untrusted.
+contract IfEarlierThrowUntrusted {
+    uint{this} count;
+    exception E();
+    constructor() { super(); }
+
+    void g{this}() throws (E{any}) {
+        throw E();
+    }
+
+    public void f{this}(uint{this} n) throws (E{any}) {
+        if (n > 0) {
+            g();
+            count = 1;
+        }
+    }
+}

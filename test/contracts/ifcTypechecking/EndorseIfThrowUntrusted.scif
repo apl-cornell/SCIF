@@ -1,0 +1,12 @@
+// An exception thrown in a branch of an endorse-if may be declared untrusted.
+contract EndorseIfThrowUntrusted {
+    exception E();
+    constructor() { super(); }
+
+    public void f{any}(uint{any} n) throws (E{any}) {
+        endorse(n, any -> this) when (n > 0) {
+        } else {
+            throw E();
+        }
+    }
+}

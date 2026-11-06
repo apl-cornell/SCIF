@@ -1,0 +1,14 @@
+// Both flows are justified by the trust tests that guard them.
+contract TrustTestTwoBranches {
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}(address{this} a, uint{a} x) {
+        if (a => this) {
+            secret = x;
+        }
+        if (a => this) {
+            secret = x + 1;
+        }
+    }
+}

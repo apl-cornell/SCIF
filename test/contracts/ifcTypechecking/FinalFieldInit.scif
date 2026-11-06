@@ -1,0 +1,13 @@
+// A final field initialized in the constructor names a fixed principal in every method.
+contract FinalFieldInit {
+    final address{this} owner;
+    uint{this} secret;
+
+    constructor() { super(); owner = sender; }
+
+    public void f{this}(uint{owner} v) {
+        if (owner => this) {
+            secret = v;
+        }
+    }
+}

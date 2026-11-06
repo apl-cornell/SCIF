@@ -1,0 +1,10 @@
+// The result of an endorsement is trusted only at its to-label.
+contract EndorseToLabel_W01 {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(uint{any} v) {
+        secret = endorse(v, any -> sender);
+    }
+}

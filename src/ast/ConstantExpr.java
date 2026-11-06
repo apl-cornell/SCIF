@@ -25,7 +25,7 @@ public class ConstantExpr extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) {
 
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
@@ -59,5 +59,10 @@ public class ConstantExpr extends Expression {
     public List<Node> children() {
         List<Node> rtn = new ArrayList<>();
         return rtn;
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return env.builtinType(BuiltInT.BOOL);
     }
 }

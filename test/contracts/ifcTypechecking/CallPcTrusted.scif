@@ -1,0 +1,13 @@
+import "./ISelfVouching.scif";
+// Control flow after a call through a trusted reference stays trusted.
+contract CallPcTrusted {
+    uint{this} count;
+    constructor() { super(); }
+
+    public void f{this}(ISelfVouching{this} x) {
+        lock(this) {
+            x.get();
+        }
+        count = count + 1;
+    }
+}

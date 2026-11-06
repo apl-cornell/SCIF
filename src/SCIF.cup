@@ -269,7 +269,6 @@ nonterminal List<LabeledType> except_types;
 nonterminal Throw throw_stmt;
 nonterminal List<FunctionDef> constructors;
 nonterminal FunctionDef constructor;
-//nonterminal EndorseStatement endorse_stmt;
 nonterminal EndorseIfStatement endorseIf_stmt;
 nonterminal Call call_expr;
 nonterminal Revert revert_stmt;
@@ -666,10 +665,10 @@ plain_var_dec ::=
 //        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
 //
 //    :}
-    type:t NAME:a SEMI {:
+    maybeLabeledType:t NAME:a SEMI {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
-        StateVariableDeclaration rnt = new StateVariableDeclaration(name, new LabeledType(t, null), null, false, false, false);
+        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, false, false);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
@@ -1158,9 +1157,6 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     | throw_stmt:a {: RESULT = a;:}
     | revert_stmt:a {: RESULT = a;:}
     | emit_stmt:a {: RESULT = a; :}
-//    | endorse_stmt:a {:
-//        RESULT = a;
-//    :}
     | endorseIf_stmt:a {:
         RESULT = a;
     :}
@@ -1172,14 +1168,6 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
         // syntax_error((Symbol) err);
     :}
     ;
-
-//endorse_stmt ::=
-//    ENDORSEIF:x LPAR name_list:exprList COMMA ifLabel:from RIGHT_ARROW ifLabel:to RPAR IN suite:s {:
-//        EndorseStatement statement = new EndorseStatement(exprList, from, to, s);
-//        RESULT = statement;
-//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-//    :}
-//    ;
 
 emit_stmt ::=
     EMIT:x call_expr:e SEMI {:

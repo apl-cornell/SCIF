@@ -1,0 +1,10 @@
+import "./ISelfVouching.scif";
+// A callee's return label is a claim trusted no more than the reference used to
+// call it: an untrusted contract cannot vouch for its result on its caller's behalf.
+contract CallResultUntrusted_W01 {
+    constructor() { super(); }
+
+    public uint{this} f{this}(ISelfVouching{any} x) {
+        return x.get();
+    }
+}

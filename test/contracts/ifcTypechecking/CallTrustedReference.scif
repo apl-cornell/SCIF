@@ -1,0 +1,13 @@
+import "./IOracle.scif";
+// Endorsing a reference states that the contract it names is trusted; the
+// results of calls through it are then trusted as much as the reference.
+contract CallTrustedReference {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(address{this} a) {
+        IOracle{this} o = endorse(IOracle(a), a -> this);
+        secret = o.price();
+    }
+}

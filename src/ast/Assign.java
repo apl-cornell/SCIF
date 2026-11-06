@@ -16,15 +16,46 @@ public class Assign extends Statement {
 
     Expression target;
     Expression value;
+    /** Whether this assignment is a constructor's initialization of a final field. */
+    private boolean initializesFinalField = false;
 
     public Assign(Expression target, Expression value) {
         this.target = target;
         this.value = value;
     }
 
+    /** The names of the variables assigned by assignments within {@code nodes}. */
+    static java.util.Set<String> assignedNames(List<? extends Node> nodes) {
+        java.util.Set<String> names = new java.util.HashSet<>();
+        for (Node node : nodes) {
+            collectAssignedNames(node, names);
+        }
+        return names;
+    }
+
+    private static void collectAssignedNames(Node node, java.util.Set<String> names) {
+        if (node instanceof Assign a && a.target instanceof Name n) {
+            names.add(n.id);
+        }
+        for (Node child : node.children()) {
+            if (child != null) {
+                collectAssignedNames(child, names);
+            }
+        }
+    }
+
+    /** Marks this assignment as a constructor's initialization of a final field. */
+    void markFinalFieldInit() {
+        initializesFinalField = true;
+    }
+
     @Override
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
+        if (target instanceof Name n && env.getCurSym(n.id) instanceof VarSym v && v.isFinal
+                && !(initializesFinalField && v.isGlobal())) {
+            throw new SemanticException("cannot assign to final variable " + n.id, location);
+        }
         if (target instanceof Attribute att && att.value.getVarInfo(env) != null
                 && att.value.getVarInfo(env).typeSym instanceof typecheck.ClosureTypeSym
                 && att.attr.id.equals(typecheck.Utils.CLOSURE_TARGET_MEMBER)) {
@@ -58,7 +89,7 @@ public class Assign extends Statement {
             // env.prevContext = valueContext;
             /*env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, valueContext.lambda), env.hypothesis, value.location, env.curContractSym.name,
                     "Lock should be maintained before execution of this operation"));*/
-            to = target.genIFConstraints(env, false);
+            to = target.genLocationConstraints(env);
             ifNameTgt = to.valueLabelName;
 //            env.inContext = new Context(to.psi.getNormalPath().c.lambda, beginContext.lambda);
             env.inContext = Utils.genNewContextAndConstraints(env, false, to.psi.getNormalPath().c, beginContext.lambda, target.nextPcSHL(), location);
@@ -81,6 +112,16 @@ public class Assign extends Statement {
         if (target instanceof Name tgtName && env.getVar(tgtName.id).typeSym instanceof typecheck.ClosureTypeSym targetCs) {
             ClosureCreation.checkFlowInto(value, targetCs, new java.util.HashMap<>(), env,
                 value.location, "Closure value flowing into the assignment target must subtype its slot");
+        }
+
+        // The target names the assigned principal from here on.
+        if (target instanceof Name tgtName && env.getVar(tgtName.id) instanceof VarSym tgtSym
+                && tgtSym.isPrincipalTyped()) {
+            String source = value.principalName(env);
+            String dest = tgtSym.isMutablePrincipal() ? env.newVersion(tgtSym) : tgtSym.toSHErrLocFmt();
+            if (source != null) {
+                env.assumeSamePrincipal(dest, source);
+            }
         }
 
         typecheck.Utils.contextFlow(env, vo.psi.getNormalPath().c, endContext, value.location);

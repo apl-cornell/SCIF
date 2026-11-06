@@ -1,0 +1,10 @@
+// An event parameter labeled {this} (the default) cannot carry untrusted data.
+contract EmitArgLow_W01 {
+    event Paid(address to, uint amount);
+
+    constructor() { super(); }
+
+    public void f{this}(address{this} to, uint{any} amount) {
+        emit Paid(to, amount);
+    }
+}

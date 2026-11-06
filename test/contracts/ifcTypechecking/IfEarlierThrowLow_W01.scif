@@ -1,0 +1,18 @@
+// An exception from any statement of a branch, not only the last, leaves the
+// method on its path.
+contract IfEarlierThrowLow_W01 {
+    uint{this} count;
+    exception E();
+    constructor() { super(); }
+
+    void g{this}() throws (E{any}) {
+        throw E();
+    }
+
+    public void f{this}(uint{this} n) throws (E{this}) {
+        if (n > 0) {
+            g();
+            count = 1;
+        }
+    }
+}
