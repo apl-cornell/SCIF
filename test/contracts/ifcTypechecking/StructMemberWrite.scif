@@ -1,0 +1,13 @@
+// Untrusted data can be written to an untrusted member of a trusted struct.
+contract StructMemberWrite {
+    struct S {
+        uint{any} v;
+        uint w;
+    }
+    S s;
+    constructor() { super(); }
+
+    public void f{this}(uint{any} x) {
+        s.v = x;
+    }
+}

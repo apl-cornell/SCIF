@@ -244,6 +244,9 @@ public class Contract extends TopLayerNode {
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.globalInfoVisit(contractSym);
         }
+        for (StructDef def: structDefs) {
+            def.resolveMemberLabels(contractSym);
+        }
 
         trustSetting.globalInfoVisit(contractSym);
 

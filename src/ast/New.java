@@ -101,7 +101,7 @@ public class New extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         ExpOutcome result = newIFConstraints(env, tail_position);
         // A contract's constructor may call back and assign to any field, so fields hold
         // new principals afterwards.
@@ -118,29 +118,34 @@ public class New extends Expression {
 
     private ExpOutcome newIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         if (!isConstructor) {
-            // creating a struct var returns a join of its arg values
+            // Each member is checked like an argument of a call, against the member's label.
+            // The struct value itself is trusted as much as the control flow creating it.
             Context beginContext = env.inContext;
             Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                     typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
-
-            List<String> argValueLabelNames = new ArrayList<>();
-            String ifNameRtn = scopeContext.getSHErrLocName() + "." + "newStruct" + location.toString();
+            StructTypeSym structSym =
+                    (StructTypeSym) env.getCurSym(((Name) constructor_call.value).id);
 
             PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
             ExpOutcome ao = null;
 
-            for (Expression arg : constructor_call.args) {
+            for (int i = 0; i < constructor_call.args.size(); ++i) {
+                Expression arg = constructor_call.args.get(i);
                 ao = arg.genIFConstraints(env, false);
                 psi.joinExe(ao.psi);
-                argValueLabelNames.add(ao.valueLabelName);
                 env.inContext = new Context(
                         Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
                         beginContext.lambda);
-                env.checkTrustedBy(ao.valueLabelName, ifNameRtn, location,
-                        "Integrity of left hand expression doesn't flow to value of this binary operation");
+                String memberLabel = structSym.members().get(i).ifl.toSHErrLocFmt();
+                env.checkFlow(ao.valueLabelName, memberLabel, arg.location,
+                        "Input to member " + structSym.members().get(i).getName()
+                                + " must be trusted at its label");
+                env.checkFlow(env.inContext.pc, memberLabel, arg.location,
+                        "Current control flow must be trusted to set member "
+                                + structSym.members().get(i).getName());
             }
 
-            return new ExpOutcome(ifNameRtn, psi);
+            return new ExpOutcome(env.inContext.pc, psi);
         } else {
             // creating contract requires pc and arguments to be of integirty level `this`
             Context beginContext = env.inContext;
@@ -282,5 +287,11 @@ public class New extends Expression {
     @Override
     public List<Node> children() {
         return List.of(constructor_call);
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        String name = ((Name) constructor_call.value).id;
+        return isConstructor ? env.getContract(name) : (StructTypeSym) env.getCurSym(name);
     }
 }

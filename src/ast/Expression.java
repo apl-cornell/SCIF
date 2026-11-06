@@ -31,8 +31,50 @@ public abstract class Expression extends Node {
 //        return "unknown";
 //    }
 
-    public abstract ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
+    /** The static type of this expression, once it has been checked for information flow. */
+    private TypeSym type;
+
+    /**
+     * Generates the information-flow constraints for this expression, evaluated in the context
+     * {@code env.inContext}, and returns the label of its value and the paths by which its
+     * evaluation can end. Afterwards {@link #type()} is defined.
+     */
+    public final ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
+            throws SemanticException {
+        ExpOutcome outcome = genFlowConstraints(env, tail_position);
+        type = staticType(env);
+        if (type == null) {
+            throw new AssertionError("no static type for " + getClass().getSimpleName()
+                    + " at " + location);
+        }
+        return outcome;
+    }
+
+    /**
+     * Generates the information-flow constraints for this expression, as specified for
+     * {@link #genIFConstraints}.
+     */
+    protected abstract ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position)
             throws SemanticException;
+
+    /**
+     * The static type of this expression in {@code env}, called once its information-flow
+     * constraints have been generated in {@code env}.
+     */
+    protected abstract TypeSym staticType(VisitEnv env) throws SemanticException;
+
+    /**
+     * The static type of this expression.
+     *
+     * @throws AssertionError if this expression has not been checked for information flow
+     */
+    public TypeSym type() {
+        if (type == null) {
+            throw new AssertionError("no static type for " + getClass().getSimpleName()
+                    + " at " + location);
+        }
+        return type;
+    }
 
     /**
      * If this expression is a principal-typed variable, or a cast of one to a contract or

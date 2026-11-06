@@ -14,6 +14,7 @@ import typecheck.Context;
 import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
+import typecheck.TypeSym;
 import typecheck.VarSym;
 import typecheck.VisitEnv;
 import typecheck.exceptions.SemanticException;
@@ -28,7 +29,8 @@ public class FlowsToExp extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position)
+            throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -104,5 +106,10 @@ public class FlowsToExp extends Expression {
         Map<String, Type> result = lhs.readMap(code);
         result.putAll(rhs.readMap(code));
         return result;
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return env.builtinType(BuiltInT.BOOL);
     }
 }

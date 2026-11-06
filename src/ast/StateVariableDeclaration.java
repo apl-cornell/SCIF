@@ -229,6 +229,11 @@ public class StateVariableDeclaration extends TopLayerNode {
         return new VarDec(varType, varName);
     }
 
+    /** The declared label of this variable. */
+    IfLabel label() {
+        return type.label();
+    }
+
     public VarSym toVarInfo(InterfaceSym interfaceSym) throws SemanticException {
         IfLabel ifl = null;
         if (type != null) {

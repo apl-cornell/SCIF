@@ -1,0 +1,14 @@
+import "./IPointSource.scif";
+// A struct declared by another contract labels its members in that contract's
+// terms. A member it trusts is trusted here as much as the struct value.
+contract StructForeignMember {
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}(IPointSource{this} x) {
+        lock(this) {
+            P@IPointSource p = x.get();
+            secret = p.v;
+        }
+    }
+}

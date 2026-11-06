@@ -44,6 +44,21 @@ public class StructTypeSym extends TypeSym {
         return rtn;
     }
 
+    /** The member named {@code name}, or null if there is none. */
+    public VarSym member(String name) {
+        for (VarSym mb : members) {
+            if (mb.getName().equals(name)) {
+                return mb;
+            }
+        }
+        return null;
+    }
+
+    /** The members of this struct type, in order. */
+    public List<VarSym> members() {
+        return members;
+    }
+
     public int merberSize() {
         return members.size();
     }

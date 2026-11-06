@@ -80,6 +80,10 @@ public class TestIfcTypechecking {
             "ifcTypechecking/HandlerThrowUntrusted",
             "ifcTypechecking/RescueAllUntrusted",
             "ifcTypechecking/AssertFalseHandler",
+            "ifcTypechecking/StructMemberInput",
+            "ifcTypechecking/StructMemberRead",
+            "ifcTypechecking/StructMemberWrite",
+            "ifcTypechecking/StructForeignMember",
     })
     void testPositive(String contractName) throws Exception {
         File logDir = new File("./.scif");
@@ -164,6 +168,10 @@ public class TestIfcTypechecking {
             "ifcTypechecking/WhileThrowLow_W01",
             "ifcTypechecking/HandlerThrowLow_W01",
             "ifcTypechecking/RescueAllLow_W01",
+            "ifcTypechecking/StructMemberInputLow_W01",
+            "ifcTypechecking/StructMemberReadLow_W01",
+            "ifcTypechecking/StructMemberWriteLow_W01",
+            "ifcTypechecking/StructForeignMemberLow_W01",
             // "examples/ERC20",
     })
     void testNegative(String contractName) throws Exception {

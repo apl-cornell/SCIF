@@ -36,7 +36,7 @@ public class Endorse extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         ExpOutcome vo = value.genIFConstraints(env, tail_position);
         String ifNameValue = vo.valueLabelName;
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "endorse" + location.toString();
@@ -99,5 +99,10 @@ public class Endorse extends Expression {
     @Override
     public java.util.Map<String, compile.ast.Type> readMap(CompileEnv code) {
         return value.readMap(code);
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return value.type();
     }
 }

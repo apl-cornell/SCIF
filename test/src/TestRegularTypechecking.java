@@ -51,6 +51,7 @@ public class TestRegularTypechecking {
             "regularTypechecking/ClosureBinderRegularOK",
             "regularTypechecking/FinalFieldInitOK",
             "regularTypechecking/ExceptionParamLabels",
+            "regularTypechecking/StructMemberLabels",
             "regularTypechecking/TrustQueryNonFinal",
     })
     void testPositive(String contractName) throws Exception {
@@ -144,6 +145,8 @@ public class TestRegularTypechecking {
             "regularTypechecking/FinalParamReassign_W01",
             "regularTypechecking/FieldLabelNonFinal_W01",
             "regularTypechecking/ExceptionParamLabelNotPrincipal_W01",
+            "regularTypechecking/StructMemberLabelNonFinal_W01",
+            "regularTypechecking/StructMemberLabelNotPrincipal_W01",
     })
     void testReportedError(String contractName) throws Exception {
         URL input = ClassLoader.getSystemResource(contractName + ".scif");

@@ -50,6 +50,8 @@ public class Call extends TrailerExpr {
     private List<String> closurePcExLeaves = null;
     /** The invoked closure's declared type, kept for codegen. */
     private ClosureTypeSym closureSym = null;
+    /** The type of this call's result, once it has been IFC-checked. */
+    private TypeSym resultType;
 
     public Call() {
         this.args = new ArrayList<>();
@@ -276,7 +278,7 @@ public class Call extends TrailerExpr {
      *         operator other than {@code invoke}
      */
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position)
             throws SemanticException {
         ExpOutcome result = callIFConstraints(env, tail_position);
         // A call may assign to any field, so fields hold new principals afterwards.
@@ -370,6 +372,7 @@ public class Call extends TrailerExpr {
                         env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
                                 Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
                     }
+                    resultType = env.builtinType(BuiltInT.VOID);
                     return new ExpOutcome(ifNamePc, psi);
                 } else if (funcName.equals("push")) {
                     // require pc => integrity of the array var
@@ -389,6 +392,7 @@ public class Call extends TrailerExpr {
                         env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
                                 Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
                     }
+                    resultType = env.builtinType(BuiltInT.VOID);
                     return new ExpOutcome(ifNamePc, psi);
                 } else if (funcName.equals("length")) {
                     // return uint the same as
@@ -398,6 +402,7 @@ public class Call extends TrailerExpr {
                         env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
                                 Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
                     }
+                    resultType = env.builtinType(BuiltInT.UINT);
                     return new ExpOutcome(var.ifl.toSHErrLocFmt(), psi);
                 } else {
                     throw new SemanticException("Unrecognized operator", location);
@@ -529,6 +534,7 @@ public class Call extends TrailerExpr {
                         "Post-invocation control flow must carry the closure's value label");
                 psi.setNormalPath(endContext);
                 env.checkFlow(psi.getNormalPath().c.pc, ifNameFuncRtnValue, location, "ln_to_t");
+                resultType = cs.returnType;
                 return new ExpOutcome(ifNameFuncRtnValue, psi);
             }
 
@@ -586,6 +592,8 @@ public class Call extends TrailerExpr {
                         env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
                                 Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
                     }
+                    resultType = env.containsContract(funcName) ? env.getContract(funcName)
+                            : (TypeSym) env.getCurSym(funcName);
                     return new ExpOutcome(ifNameArgValue, psi);
                 } else {
                     throw new SemanticException("method not found: " + funcName, location);
@@ -745,6 +753,7 @@ public class Call extends TrailerExpr {
         // post-call pc (normal) => function return label (l_n)
         env.checkFlow(psi.getNormalPath().c.pc, ifNameFuncRtnValue, location,
                 "Control flow after this call must be trusted by the function's return value label");
+        resultType = funcSym.returnType;
         return new ExpOutcome(ifNameFuncRtnValue, psi);
     }
 
@@ -1083,5 +1092,10 @@ public class Call extends TrailerExpr {
                 name.id = Utils.genSuperName(extendsContractName);
             }
         }
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return resultType;
     }
 }

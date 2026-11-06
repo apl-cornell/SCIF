@@ -286,7 +286,7 @@ public class ClosureCreation extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position)
             throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
@@ -560,5 +560,31 @@ public class ClosureCreation extends Expression {
         if (callee != null) rtn.add(callee);
         rtn.addAll(args);
         return rtn;
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        List<TypeSym> declaredParams = new ArrayList<>();
+        TypeSym retSym;
+        if (callee instanceof Attribute att && att.value instanceof Name recvName) {
+            FuncSym target = ((InterfaceSym) env.getVar(recvName.id).typeSym)
+                    .getFunc(att.attr.id);
+            for (VarSym p : target.parameters) {
+                declaredParams.add(p.typeSym);
+            }
+            retSym = target.returnType;
+        } else {
+            ClosureTypeSym source =
+                    (ClosureTypeSym) env.getVar(((Name) callee).id).typeSym;
+            declaredParams.addAll(source.unboundParams);
+            retSym = source.returnType;
+        }
+        List<TypeSym> stillUnbound = new ArrayList<>();
+        for (int i = 0; i < args.size(); ++i) {
+            if (args.get(i) instanceof Hole) {
+                stillUnbound.add(declaredParams.get(i));
+            }
+        }
+        return new ClosureTypeSym(stillUnbound, retSym, new ArrayList<>(), scopeContext);
     }
 }

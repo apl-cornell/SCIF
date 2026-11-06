@@ -125,6 +125,11 @@ public class VisitEnv {
         return getFunc(id) != null;
     }
 
+    /** The built-in type {@code t}. */
+    public TypeSym builtinType(BuiltInT t) {
+        return (TypeSym) curSymTab.lookup(Utils.BuiltinType2ID(t));
+    }
+
     public boolean containsContract(String funcName) {
         return getContract(funcName) != null;
     }
