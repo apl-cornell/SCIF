@@ -1,0 +1,13 @@
+// Untrusted data cannot be pushed onto a trusted array held in a struct
+// member.
+contract MemberArrayPushLow_W01 {
+    struct Log {
+        uint[] entries;
+    }
+    Log log;
+    constructor() { super(); }
+
+    public void f{this}(uint{any} x) {
+        log.entries.push(x);
+    }
+}

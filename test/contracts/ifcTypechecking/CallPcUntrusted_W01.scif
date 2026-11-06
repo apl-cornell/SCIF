@@ -1,0 +1,14 @@
+import "./ISelfVouching.scif";
+// Control flow after a call is trusted no more than the reference used to make
+// it, whatever the callee's labels claim.
+contract CallPcUntrusted_W01 {
+    uint{this} count;
+    constructor() { super(); }
+
+    public void f{this}(ISelfVouching{any} x) {
+        lock(this) {
+            x.get();
+        }
+        count = count + 1;
+    }
+}

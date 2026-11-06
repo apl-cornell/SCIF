@@ -1,0 +1,13 @@
+// Untrusted data cannot be written to a trusted member.
+contract StructMemberWriteLow_W01 {
+    struct S {
+        uint{any} v;
+        uint w;
+    }
+    S s;
+    constructor() { super(); }
+
+    public void f{this}(uint{any} x) {
+        s.w = x;
+    }
+}

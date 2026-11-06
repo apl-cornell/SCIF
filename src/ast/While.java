@@ -17,11 +17,11 @@ import java.util.ArrayList;
 public class While extends Statement {
 
     Expression test;
-    List<Statement> body;
+    Block body;
 
     public While(Expression test, List<Statement> body) {
         this.test = test;
-        this.body = body;
+        this.body = new Block(body);
     }
 
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
@@ -32,9 +32,7 @@ public class While extends Statement {
         ScopeContext rtn = test.genTypeConstraints(env, now);
         env.addCons(rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
 
-        for (Statement s : body) {
-            ScopeContext tmp = s.genTypeConstraints(env, now);
-        }
+        body.genTypeConstraints(env, now);
         env.exitNewScope();
         env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
         return now;
@@ -46,6 +44,9 @@ public class While extends Statement {
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
                 Utils.getLabelNameLock(toSHErrLocFmt()));
 
+        // The loop head is reached from before the loop and from the end of the body.
+        java.util.Set<String> assigned = Assign.assignedNames(body.statements());
+        env.havoc(assigned);
         ExpOutcome to = test.genIFConstraints(env, false);
 
         String ifNameTest = to.valueLabelName;
@@ -62,8 +63,15 @@ public class While extends Statement {
 
         env.inContext = new Context(ifNamePcAfter, beginContext.lambda);
         CodeLocation loc = null;
-        PathOutcome ifo = to.psi;
-        Utils.genConsStmts(body, env, ifo, false);
+        PathOutcome bodyOutcome = body.IFCVisit(env, false);
+        // The loop exits only from its head, which is also reached from the end of the body.
+        PathOutcome ifo = to.psi.withoutNormalPath();
+        ifo.join(bodyOutcome.withoutNormalPath());
+        if (bodyOutcome.getNormalPath() instanceof PsiUnit bodyEnd) {
+            env.checkFlow(bodyEnd.c.pc, ifNamePcAfter, location,
+                    "Control flow at the end of the loop body contributes to the control flow of this while statement");
+        }
+        ifo.setNormalPath(new Context(ifNamePcAfter, to.psi.getNormalPath().c.lambda));
 //        for (Statement stmt : body) {
 //            ifo = stmt.genConsVisit(env, false);
 //
@@ -75,6 +83,8 @@ public class While extends Statement {
 //        }
 
         env.decScopeLayer();
+        // The loop exits from its head or from a break in the body.
+        env.havoc(assigned);
 
         return ifo;
 
@@ -88,9 +98,7 @@ public class While extends Statement {
         compile.ast.Expression cond = test.solidityCodeGen(condPrep, code);
         result.addAll(condPrep);
         code.enterNewVarScope();
-        for (Statement stmt : body) {
-            whileBody.addAll(stmt.solidityCodeGen(code));
-        }
+        whileBody.addAll(body.solidityCodeGen(code));
 
         // add prep the end of whileBody excluding declarations
         for (compile.ast.Statement s: condPrep) {
@@ -115,34 +123,23 @@ public class While extends Statement {
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(test);
-        rtn.addAll(body);
+        rtn.add(body);
         return rtn;
     }
     @Override
     public boolean exceptionHandlingFree() {
-        for (Statement s: body) {
-            if (!s.exceptionHandlingFree()) {
-                return false;
-            }
-        }
-        return true;
+        return body.exceptionHandlingFree();
     }
 
     @Override
     protected java.util.Map<String,? extends Type> readMap(CompileEnv code) {
         java.util.Map<String, Type> result = test.readMap(code);
-        for (Statement s: body) {
-            result.putAll(s.readMap(code));
-        }
+        result.putAll(body.readMap(code));
         return result;
     }
 
     @Override
     protected java.util.Map<String,? extends Type> writeMap(CompileEnv code) {
-        Map<String, Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.writeMap(code));
-        }
-        return result;
+        return body.writeMap(code);
     }
 }

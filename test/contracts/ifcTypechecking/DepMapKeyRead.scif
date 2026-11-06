@@ -1,0 +1,10 @@
+// When an element's label names its key, the element is trusted by the
+// principal the index holds, whoever chose the index.
+contract DepMapKeyRead {
+    map(address a, uint{a}) m;
+    constructor() { super(); }
+
+    public uint{k} f{this}(final address{any} k) {
+        return m[k];
+    }
+}

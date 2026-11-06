@@ -1,0 +1,11 @@
+// An empty unchecked block completes normally.
+contract UncheckedEmpty {
+    uint{this} count;
+    constructor() { super(); }
+
+    public void f{this}() {
+        unchecked {
+        }
+        count = count + 1;
+    }
+}

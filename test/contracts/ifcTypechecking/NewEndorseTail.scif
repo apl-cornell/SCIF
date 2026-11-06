@@ -1,0 +1,13 @@
+// A trusted control flow can endorse a reference to a contract it has just
+// created.
+contract Child {
+    constructor() { super(); }
+}
+
+contract NewEndorseTail {
+    constructor() { super(); }
+
+    public Child{this} f{this}() {
+        return endorse(new Child(), any -> this);
+    }
+}

@@ -1,0 +1,8 @@
+// A struct member's label may name only principals.
+contract StructMemberLabelNotPrincipal_W01 {
+    struct S {
+        uint{n} v;
+    }
+    uint n;
+    constructor() { super(); }
+}

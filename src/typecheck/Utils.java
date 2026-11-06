@@ -237,10 +237,6 @@ public class Utils {
         return funcName + "." + arg.getName() + ".lbl";
     }
 
-    public static String getLabelNameFuncExpLabel(String funcName, String name) {
-        return funcName + "." + name + ".lbl";
-    }
-
     public static String joinLabels(String lhs, String rhs) {
         return "(" + lhs + " ⊔ " + rhs + ")";
     }
@@ -271,11 +267,17 @@ public class Utils {
 
     public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors, List<Constraint> assumptions,
             List<Constraint> constraints, boolean isIFC, InterfaceSym contractSym) {
-        return createDiagnoser(constructors, assumptions, constraints, isIFC, contractSym,
-                java.util.Set.of(), List.of());
+        return createDiagnoser(constructors, java.util.Set.of(), assumptions, constraints, isIFC,
+                contractSym, java.util.Set.of(), List.of());
     }
 
-    public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors, List<Constraint> assumptions,
+    /**
+     * A diagnoser for {@code constraints} under {@code assumptions}. The principals named by
+     * {@code constructors} and {@code principalNames} are constants rather than variables to
+     * solve for; in IFC mode, each lies between the top and bottom principals.
+     */
+    public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors,
+            Set<String> principalNames, List<Constraint> assumptions,
             List<Constraint> constraints, boolean isIFC, InterfaceSym contractSym,
             Set<String> rigidAtoms, List<String[]> atomAssumptions) {
 
@@ -317,6 +319,15 @@ public class Utils {
                 diagnoser.addAssumedInequality(diagnoser.createEqualityConstraint(
                         diagnoser.createElement(top.toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition()),
                         diagnoser.createElement(contractSym.thisSym().toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition())));
+                for (String x : principalNames) {
+                    diagnoser.defineConstructor(x, 0);
+                    diagnoser.addAssumedInequality(diagnoser.createGreaterThanConstraint(
+                            diagnoser.createElement(bot.toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition()),
+                            diagnoser.createElement(x, sherrloc.constraint.ast.Position.EmptyPosition())));
+                    diagnoser.addAssumedInequality(diagnoser.createLessThanConstraint(
+                            diagnoser.createElement(top.toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition()),
+                            diagnoser.createElement(x, sherrloc.constraint.ast.Position.EmptyPosition())));
+                }
             }
             if (isIFC) {
                 for (String atom : rigidAtoms) {
@@ -835,41 +846,6 @@ public class Utils {
         genSequenceConstraints(env, prevLambda, c.pc, c.lambda, newPc, location);
         return new Context(newPc, c.lambda);
     }
-
-    public static void genConsStmtsWithException(List<Statement> body, VisitEnv env, PathOutcome so, PathOutcome psi, boolean tail_positon) throws SemanticException {
-        int index = 0;
-        for (Statement s : body) {
-            ++index;
-            String prevLambda = env.inContext.lambda;
-            boolean isTail = index == body.size() && tail_positon;
-            so = s.IFCVisit(env, isTail);
-            psi.joinExe(so);
-            // env.inContext = new Context(so.getNormalPath().c.pc, beginContext.lambda);
-//            boolean nextIsTail = index + 1 == body.size() && tail_positon;
-            env.inContext = Utils.genNewContextAndConstraints(env, isTail, so.getNormalPath().c, prevLambda, s.nextPcSHL(), s.location());
-//                    new Context(so.getNormalPath().c);
-
-        }
-    }
-    public static void genConsStmts(List<Statement> body, VisitEnv env, PathOutcome so, boolean tail_posn) throws SemanticException {
-        int index = 0;
-        for (Statement s : body) {
-            ++index;
-            String prevLambda = env.inContext.lambda;
-            boolean isTail = index == body.size() && tail_posn;
-            so = s.IFCVisit(env, isTail);
-            PsiUnit normalUnit = so.getNormalPath();
-            if (normalUnit == null) {
-                break;
-            }
-            // env.inContext = new Context(so.getNormalPath().c.pc, beginContext.lambda);
-//            boolean nextIsTail = (index + 1 == body.size() && tail_positon);
-            env.inContext = Utils.genNewContextAndConstraints(env, isTail, so.getNormalPath().c, prevLambda, s.nextPcSHL(), s.location());
-//                    new Context(so.getNormalPath().c);
-
-        }
-    }
-
 
     static int inferredLabelCount = 0;
     public static IfLabel newInferredLabel() {

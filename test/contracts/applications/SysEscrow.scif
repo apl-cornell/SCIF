@@ -38,9 +38,8 @@ contract SysEscrow {
       address _buyer, // The buying party of the trade
       uint _paymentWindowInSeconds // The time in seconds from Escrow creation that the buyer can return money
     ) {
-        Escrow currentEscrow = escrows[_tradeHash];
-        endorse([_seller, _buyer, _paymentWindowInSeconds], any -> this)
-        when (value >= MinDeposit && !(currentEscrow.exists)) {
+        endorse([_tradeHash, _seller, _buyer, _paymentWindowInSeconds], any -> this)
+        when (value >= MinDeposit && !(escrows[_tradeHash].exists)) {
             uint _buyerCanCancelAfter =  now + _paymentWindowInSeconds;
             escrows[_tradeHash] = new Escrow(true, _seller, _buyer, value, _buyerCanCancelAfter, false, false);
         }
@@ -63,24 +62,27 @@ contract SysEscrow {
       address _buyer, // The buying party of the trade
       uint _value //
     )  {
+        // Anyone may cancel an escrow that exists once its buyer can cancel it.
+        endorse(_tradeHash, sender -> this)
+        when (escrows[_tradeHash].exists && escrows[_tradeHash].buyerCanCancelAfter < now) {
+            Escrow currentEscrow = escrows[_tradeHash];
 
-        Escrow currentEscrow = escrows[_tradeHash];
-        assert(currentEscrow.exists);
-        assert(currentEscrow.buyerCanCancelAfter<now);
+            uint arbitratorValue;
+            uint buyerValue;
+            unchecked {
+                arbitratorValue = currentEscrow.summ*ARBITRATOR_PERCENT/100;
+                buyerValue = currentEscrow.summ - arbitratorValue;
+            }
 
-        uint arbitratorValue;
-        uint buyerValue;
-        unchecked {
-            arbitratorValue = currentEscrow.summ*ARBITRATOR_PERCENT/100;
-            buyerValue = currentEscrow.summ - arbitratorValue;
+            lock(this) {
+                send(currentEscrow.buyer, buyerValue);
+                send(arbitrator, arbitratorValue);
+            }
+
+            delete escrows[_tradeHash];
+        } else {
+            assert false;
         }
-
-        lock(this) {
-            send(currentEscrow.buyer, buyerValue);
-            send(arbitrator, arbitratorValue);
-        }
-
-        delete escrows[_tradeHash];
     }
 
     public void approveEscrow(
@@ -92,10 +94,13 @@ contract SysEscrow {
       address _buyer, // The buying party of the trade
       uint _value // Trade value
     )  {
-        Escrow currentEscrow = escrows[_tradeHash];
-        assert(currentEscrow.exists);
-        assert(currentEscrow.buyer==sender);
-        currentEscrow.buyerApprovedTheTransaction = true;
+        // Only the buyer of an escrow may approve it.
+        endorse(_tradeHash, sender -> this)
+        when (escrows[_tradeHash].exists && escrows[_tradeHash].buyer == sender) {
+            escrows[_tradeHash].buyerApprovedTheTransaction = true;
+        } else {
+            assert false;
+        }
     }
 
     public void releaseEscrow(
@@ -107,24 +112,28 @@ contract SysEscrow {
       address _buyer, // The buying party of the trade
       uint _value // Trade value
     )  {
-        Escrow currentEscrow = escrows[_tradeHash];
-        assert(currentEscrow.exists);
-        assert(currentEscrow.buyerApprovedTheTransaction);
+        // Anyone may release an escrow that exists and that its buyer approved.
+        endorse(_tradeHash, sender -> this)
+        when (escrows[_tradeHash].exists && escrows[_tradeHash].buyerApprovedTheTransaction) {
+            Escrow currentEscrow = escrows[_tradeHash];
 
 
-        uint arbitratorValue;
-        uint buyerValue;
-        unchecked {
-            arbitratorValue = currentEscrow.summ*ARBITRATOR_PERCENT/100;
-            buyerValue = currentEscrow.summ - arbitratorValue;
+            uint arbitratorValue;
+            uint buyerValue;
+            unchecked {
+                arbitratorValue = currentEscrow.summ*ARBITRATOR_PERCENT/100;
+                buyerValue = currentEscrow.summ - arbitratorValue;
+            }
+
+            lock(this) {
+                send(currentEscrow.buyer, buyerValue);
+                send(arbitrator, arbitratorValue);
+            }
+
+            delete escrows[_tradeHash];
+        } else {
+            assert false;
         }
-
-        lock(this) {
-            send(currentEscrow.buyer, buyerValue);
-            send(arbitrator, arbitratorValue);
-        }
-
-        delete escrows[_tradeHash];
 
     }
 

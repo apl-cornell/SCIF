@@ -1,0 +1,3 @@
+interface ISelfVouching {
+    public uint{sender} get{any}();
+}

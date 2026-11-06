@@ -1,0 +1,13 @@
+// A reference to a newly created contract is trusted by nobody, and can be
+// returned as such.
+contract Child {
+    constructor() { super(); }
+}
+
+contract NewTail {
+    constructor() { super(); }
+
+    public Child{any} f{this}() {
+        return new Child();
+    }
+}

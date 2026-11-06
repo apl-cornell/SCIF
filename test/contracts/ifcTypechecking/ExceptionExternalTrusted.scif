@@ -1,0 +1,17 @@
+import "./ICrossThrower.scif";
+// An exception from a trusted contract is trusted at its declared label.
+contract ExceptionExternalTrusted {
+    uint{this} secret;
+    exception Oops();
+    constructor() { super(); }
+
+    public void f{this}(ICrossThrower{this} x) {
+        lock(this) {
+            try {
+                x.boom();
+            } catch (Oops e) {
+                secret = 1;
+            }
+        }
+    }
+}

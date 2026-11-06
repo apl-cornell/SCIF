@@ -1,0 +1,12 @@
+// Once a is known to be trusted, data labeled with a join of a and this is trusted.
+contract JoinLabelPrincipal {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(address{this} a, uint{a ⨆ this} x) {
+        if (a => this) {
+            secret = x;
+        }
+    }
+}

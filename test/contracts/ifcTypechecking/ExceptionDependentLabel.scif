@@ -1,0 +1,22 @@
+// An exception's data may be labeled by a principal it carries. A handler can
+// use the data as trusted once it knows that principal is trusted.
+contract ExceptionDependentLabel {
+    uint{this} secret;
+    exception E(address owner, uint{owner} v);
+    constructor() { super(); }
+
+    void g{this}(final address a, uint{a} x) throws (E{this}) {
+        throw E(a, x);
+    }
+
+    public void f{this}(final address a, uint{a} x) {
+        try {
+            g(a, x);
+        } catch (E e) {
+            final address owner = e.owner;
+            if (owner => this) {
+                secret = e.v;
+            }
+        }
+    }
+}

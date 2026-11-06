@@ -1,0 +1,9 @@
+// A trusted map can be written at a trusted index.
+contract MapIndexWrite {
+    map(address, uint) m;
+    constructor() { super(); }
+
+    public void f{this}(address{this} k) {
+        m[k] = 1;
+    }
+}

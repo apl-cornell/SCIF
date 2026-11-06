@@ -1,0 +1,17 @@
+// A trusted member of a nested struct can be used as trusted.
+contract StructNestedRead {
+    struct In {
+        uint{any} v;
+        uint w;
+    }
+    struct Out {
+        In i;
+    }
+    Out o;
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}() {
+        secret = o.i.w;
+    }
+}

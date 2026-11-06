@@ -1,0 +1,19 @@
+// Data labeled by a principal an exception carries is trusted only as much as
+// that principal.
+contract ExceptionDependentLabelLow_W01 {
+    uint{this} secret;
+    exception E(address owner, uint{owner} v);
+    constructor() { super(); }
+
+    void g{this}(final address a, uint{a} x) throws (E{this}) {
+        throw E(a, x);
+    }
+
+    public void f{this}(final address a, uint{a} x) {
+        try {
+            g(a, x);
+        } catch (E e) {
+            secret = e.v;
+        }
+    }
+}

@@ -1,0 +1,6 @@
+// A field's label may name only final variables.
+contract FieldLabelNonFinal_W01 {
+    address owner;
+    uint{owner} amount;
+    constructor() { super(); }
+}
