@@ -56,10 +56,18 @@ public class Name extends Variable {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) {
         VarSym var = env.getVar(id);
         String ifNameRtn = var.labelNameSLC();
         return new ExpOutcome(ifNameRtn, new PathOutcome(new PsiUnit(env.inContext)));
+    }
+
+    @Override
+    public String principalName(VisitEnv env) {
+        if (env.getCurSym(id) instanceof VarSym v && v.isPrincipalTyped()) {
+            return env.principalName(v);
+        }
+        return null;
     }
 
     @Override
@@ -105,5 +113,10 @@ public class Name extends Variable {
 
     public Map<String,? extends Type> writeMap(CompileEnv code) {
         return readMap(code);
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return env.getVar(id).typeSym;
     }
 }

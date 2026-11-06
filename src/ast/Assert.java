@@ -35,14 +35,19 @@ public class Assert extends Statement {
                 VarSym l = env.getVar(left.id), r = env.getVar(right.id);
 //                // logger.debug(l.toString());
 //                // logger.debug(r.toString());
-                Inequality hypo = new Inequality(l.toSHErrLocFmt(), Relation.LEQ,
-                        r.toSHErrLocFmt());
+                Inequality hypo = new Inequality(env.principalName(l), Relation.LEQ,
+                        env.principalName(r));
 
                 env.hypothesis().add(hypo);
             }
 
         }
-        return test.genIFConstraints(env, tail_position).psi;
+        PathOutcome result = test.genIFConstraints(env, tail_position).psi;
+        if (test instanceof ConstantExpr c && c.value == Constant.FALSE) {
+            // An assertion of false always fails, so it never completes normally.
+            return result.withoutNormalPath();
+        }
+        return result;
     }
 
     @Override

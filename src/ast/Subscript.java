@@ -18,6 +18,8 @@ import java.util.ArrayList;
  * value is of type map or array, and index's type should be right accordingly.
  */
 public class Subscript extends TrailerExpr {
+    /** The type of the collection subscripted, once this expression has been IFC-checked. */
+    private TypeSym collectionType;
 
     Expression index;
 
@@ -99,13 +101,14 @@ public class Subscript extends TrailerExpr {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         Map<String, String> dependentMapping = new HashMap<>();
         VarSym valueVarSym = value.getVarInfo(env, false, dependentMapping);
+        collectionType = valueVarSym.typeSym;
 
         String ifNameValue = valueVarSym.labelNameSLC();
         // String ifNameRtnValue = ifNameValue + "." + "Subscript" + location.toString();
@@ -203,7 +206,8 @@ public class Subscript extends TrailerExpr {
         } else {
             String ifNameIndex = index.genIFConstraints(env, tail_position).valueLabelName;
 
-            TypeSym rtnTypeSym = new BuiltinTypeSym(ifNameRtn);
+            TypeSym rtnTypeSym = valueVarSym.typeSym instanceof ArrayTypeSym arrayType
+                    ? arrayType.valueType : ((MapTypeSym) valueVarSym.typeSym).valueType;
             rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
                     valueVarSym.defContext(), false, false, false);
             env.checkFlow(ifNameValue, rtnVarSym.labelNameSLC(), location,
@@ -248,5 +252,15 @@ public class Subscript extends TrailerExpr {
     @Override
     public Map<String,? extends Type> writeMap(CompileEnv code) {
         return value.writeMap(code);
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        if (collectionType instanceof ArrayTypeSym arrayType) {
+            return arrayType.valueType;
+        } else if (collectionType instanceof MapTypeSym mapType) {
+            return mapType.valueType;
+        }
+        throw new AssertionError("subscript of " + collectionType.getName());
     }
 }

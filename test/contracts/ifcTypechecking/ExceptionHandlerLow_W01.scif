@@ -1,0 +1,19 @@
+// A handler runs on the exception's path, so it is trusted no more than the
+// exception's declared label.
+contract ExceptionHandlerLow_W01 {
+    uint{this} secret;
+    exception E();
+    constructor() { super(); }
+
+    void g{this}() throws (E{any}) {
+        throw E();
+    }
+
+    public void f{this}() {
+        try {
+            g();
+        } catch (E e) {
+            secret = 1;
+        }
+    }
+}

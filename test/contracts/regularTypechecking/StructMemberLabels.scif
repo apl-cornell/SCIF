@@ -1,0 +1,13 @@
+// Struct members may be unlabeled, or labeled with principals that cannot change.
+contract StructMemberLabels {
+    struct S {
+        uint{owner} v;
+        uint{any} u;
+        uint w;
+    }
+    final address{any} owner;
+    constructor(address o) {
+        owner = o;
+        super();
+    }
+}

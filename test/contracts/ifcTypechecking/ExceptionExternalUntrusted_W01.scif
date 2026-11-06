@@ -1,0 +1,18 @@
+import "./ICrossThrower.scif";
+// An exception from another contract is trusted no more than the reference used
+// to call it, whatever label the callee declares.
+contract ExceptionExternalUntrusted_W01 {
+    uint{this} secret;
+    exception Oops();
+    constructor() { super(); }
+
+    public void f{this}(ICrossThrower{any} x) {
+        lock(this) {
+            try {
+                x.boom();
+            } catch (Oops e) {
+                secret = 1;
+            }
+        }
+    }
+}

@@ -49,6 +49,10 @@ public class TestRegularTypechecking {
             "regularTypechecking/ClosureNoOuterLabelOK",
             "regularTypechecking/ClosureJoinPcEx",
             "regularTypechecking/ClosureBinderRegularOK",
+            "regularTypechecking/FinalFieldInitOK",
+            "regularTypechecking/ExceptionParamLabels",
+            "regularTypechecking/StructMemberLabels",
+            "regularTypechecking/TrustQueryNonFinal",
     })
     void testPositive(String contractName) throws Exception {
         File logDir = new File("./.scif");
@@ -118,7 +122,6 @@ public class TestRegularTypechecking {
             "regularTypechecking/AttributeNoMember_W01",
             "regularTypechecking/EmitArity_W01",
             "regularTypechecking/ThrowArity_W01",
-            "regularTypechecking/TrustQueryNonFinal_W01",
             "regularTypechecking/MethodAsValue_W01",
             "regularTypechecking/CatchUnknownException_W01",
             "regularTypechecking/CallReceiverUndefined_W01",
@@ -134,6 +137,16 @@ public class TestRegularTypechecking {
             "regularTypechecking/ThrowUndeclared_W01",
             "regularTypechecking/SubscriptNonCollection_W01",
             "regularTypechecking/LabelNonPrincipalVar_W01",
+            "regularTypechecking/FinalFieldUninitialized_W01",
+            "regularTypechecking/FinalFieldInitTwice_W01",
+            "regularTypechecking/FinalFieldInitNested_W01",
+            "regularTypechecking/FinalFieldAssignInMethod_W01",
+            "regularTypechecking/FinalLocalReassign_W01",
+            "regularTypechecking/FinalParamReassign_W01",
+            "regularTypechecking/FieldLabelNonFinal_W01",
+            "regularTypechecking/ExceptionParamLabelNotPrincipal_W01",
+            "regularTypechecking/StructMemberLabelNonFinal_W01",
+            "regularTypechecking/StructMemberLabelNotPrincipal_W01",
     })
     void testReportedError(String contractName) throws Exception {
         URL input = ClassLoader.getSystemResource(contractName + ".scif");

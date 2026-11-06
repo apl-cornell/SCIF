@@ -1,0 +1,12 @@
+// Each member of a new struct is checked against its declared label.
+contract StructMemberInputLow_W01 {
+    struct S {
+        uint{this} v;
+    }
+    S s;
+    constructor() { super(); }
+
+    public void f{this}(uint{any} x) {
+        s = new S(x);
+    }
+}

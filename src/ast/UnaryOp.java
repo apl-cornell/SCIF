@@ -36,7 +36,7 @@ public class UnaryOp extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         return operand.genIFConstraints(env, tail_position);
     }
 
@@ -61,5 +61,11 @@ public class UnaryOp extends Expression {
     @Override
     public java.util.Map<String, compile.ast.Type> readMap(CompileEnv code) {
         return operand.readMap(code);
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return env.builtinType(op == UnaryOperator.USub || op == UnaryOperator.UAdd
+                ? BuiltInT.UINT : BuiltInT.BOOL);
     }
 }

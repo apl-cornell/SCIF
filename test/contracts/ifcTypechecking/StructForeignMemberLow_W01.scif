@@ -1,0 +1,13 @@
+import "./IPointSource.scif";
+// A member that the declaring contract labels untrusted is untrusted here too.
+contract StructForeignMemberLow_W01 {
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}(IPointSource{this} x) {
+        lock(this) {
+            P@IPointSource p = x.get();
+            secret = p.u;
+        }
+    }
+}

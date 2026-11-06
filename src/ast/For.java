@@ -61,6 +61,10 @@ public class For extends Statement {
         env.incScopeLayer();
         PathOutcome newVarOut = newVars.IFCVisit(env, false);
         beginContext = newVarOut.getNormalPath().c;
+        // The loop head is reached from before the loop and from the end of an iteration.
+        java.util.Set<String> assigned = Assign.assignedNames(body);
+        assigned.addAll(Assign.assignedNames(iter));
+        env.havoc(assigned);
         ExpOutcome to = test.genIFConstraints(env, false);
 
         String ifNameTest = to.valueLabelName;
@@ -76,26 +80,21 @@ public class For extends Statement {
 
         env.inContext = new Context(ifNamePcAfter, beginContext.lambda);
         CodeLocation loc = null;
-        PathOutcome ifo = to.psi;
-        for (Statement stmt : body) {
-            ifo = stmt.IFCVisit(env, false);
-
-            PsiUnit normalUnit = ifo.getNormalPath();
-            if (normalUnit == null) break;
-
-            env.inContext = normalUnit.c;
-            loc = stmt.location;
+        List<Statement> iteration = new ArrayList<>(body);
+        iteration.addAll(iter);
+        PathOutcome iterOutcome = Utils.genConsStmtSeq(iteration, env, false);
+        // The loop exits only from its head, which is also reached from the end of an
+        // iteration.
+        PathOutcome ifo = to.psi.withoutNormalPath();
+        ifo.join(iterOutcome.withoutNormalPath());
+        if (iterOutcome.getNormalPath() instanceof PsiUnit iterEnd) {
+            env.checkFlow(iterEnd.c.pc, ifNamePcAfter, location,
+                    "Control flow at the end of the loop body contributes to the control flow of this for statement");
         }
-        for (Statement s: iter) {
-            ifo = s.IFCVisit(env, false);
+        ifo.setNormalPath(new Context(ifNamePcAfter, to.psi.getNormalPath().c.lambda));
 
-            PsiUnit normalUnit = ifo.getNormalPath();
-            if (normalUnit == null) break;
-
-            env.inContext = normalUnit.c;
-            loc = s.location;
-        }
-
+        // The loop exits from its head or from a break in the body.
+        env.havoc(assigned);
         env.decScopeLayer();
 
         return ifo;

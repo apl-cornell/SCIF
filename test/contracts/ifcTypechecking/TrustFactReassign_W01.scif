@@ -1,0 +1,14 @@
+// After a is reassigned, {a} names the new principal, which the trust test did not cover.
+contract TrustFactReassign_W01 {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(address{this} a, address{this} b) {
+        if (a => this) {
+            a = b;
+            uint{a} w = 1;
+            secret = w;
+        }
+    }
+}

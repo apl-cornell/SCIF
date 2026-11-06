@@ -666,10 +666,10 @@ plain_var_dec ::=
 //        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
 //
 //    :}
-    type:t NAME:a SEMI {:
+    maybeLabeledType:t NAME:a SEMI {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
-        StateVariableDeclaration rnt = new StateVariableDeclaration(name, new LabeledType(t, null), null, false, false, false);
+        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, false, false);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};

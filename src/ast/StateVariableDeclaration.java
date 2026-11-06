@@ -91,8 +91,16 @@ public class StateVariableDeclaration extends TopLayerNode {
         if (value != null) {
             ScopeContext v = value.genTypeConstraints(env, now);
             env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location));
-        } else if (isFinal && !isBuiltin) {
-            throw new SemanticException("final variable " + name.id + " not initialized", location);
+        }
+        // The label must mean the same thing wherever the field is used, so it may not
+        // name a principal that can change.
+        if (env.getCurSym(name.id) instanceof VarSym field && field.ifl != null) {
+            for (VarSym p : field.ifl.principalSyms()) {
+                if (p.isMutablePrincipal()) {
+                    throw new SemanticException("the label of field " + name.id
+                            + " names " + p.getName() + ", which is not final", field.ifl.location());
+                }
+            }
         }
         return now;
     }
@@ -127,45 +135,14 @@ public class StateVariableDeclaration extends TopLayerNode {
         SLCNameVar = varSym.toSHErrLocFmt();
         SLCNameVarLbl = varSym.labelNameSLC();
         // logger.debug(varSym.typeSym.getName());
-        if ((varSym.isFinal &&
-                (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))) {
+        // A field initialized here starts out naming the principal it is initialized to.
+        // Only built-in fields have initializers; others are initialized in a constructor.
+        if (varSym.isPrincipalTyped()) {
             env.addPrincipal(varSym);
-
-            VarSym equalPrincipal = null;
-            boolean correctInit = true;
-            if (value instanceof Name) { // assigned as another variable
-                // Nothing to check
-                equalPrincipal = env.getVar(((Name) value).id);
-                assert equalPrincipal != null : ((Name) value).id;
-            } else if (value instanceof Call && ((Call) value).isCast(env)) { // assigned as another contract
-                // check if it is a cast to a final address variable
-                Call cast = (Call) value;
-                Expression arg = cast.getArgAt(0);
-                if (arg instanceof Name) {
-                    VarSym sym = env.getVar(((Name) arg).id);
-                    if (!sym.isFinal) {
-                        correctInit = false;
-                    } else {
-                        equalPrincipal = sym;
-                    }
-                } else {
-                    correctInit = false;
-                }
-            } else {
-                correctInit = false;
+            String init = value == null ? null : value.principalName(env);
+            if (init != null) {
+                env.assumeSamePrincipal(SLCNameVar, init);
             }
-
-
-            if (correctInit) {
-                // add equivalence assumption to the trust set
-                env.checkTrustEqual(SLCNameVar, equalPrincipal.toSHErrLocFmt(), location,
-                        "New principal declaration");
-            } else if (!isBuiltin) {
-                throw new SemanticException("A final address/Contract must be initialized to another final address/Contract: " + id,
-                    location);
-            }
-
-
         } else if (varSym.typeSym.getName().equals(Utils.PRINCIPAL_TYPE)) {
             env.addPrincipal(varSym);
         }
@@ -226,6 +203,11 @@ public class StateVariableDeclaration extends TopLayerNode {
         return name;
     }
 
+    /** Whether this field is final. */
+    public boolean isFinal() {
+        return isFinal;
+    }
+
     public boolean isBuiltIn() {
         return isBuiltin;
     }
@@ -245,6 +227,11 @@ public class StateVariableDeclaration extends TopLayerNode {
         Type varType = type.type().solidityCodeGen(code);
         String varName = name.id;
         return new VarDec(varType, varName);
+    }
+
+    /** The declared label of this variable. */
+    IfLabel label() {
+        return type.label();
     }
 
     public VarSym toVarInfo(InterfaceSym interfaceSym) throws SemanticException {

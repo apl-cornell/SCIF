@@ -90,8 +90,8 @@ public class If extends Statement {
 //                // logger.debug(l.toString());
 //                // logger.debug(r.toString());
                 createdHypo = true;
-                Inequality hypo = new Inequality(l.toSHErrLocFmt(), Relation.LEQ,
-                        r.toSHErrLocFmt());
+                Inequality hypo = new Inequality(env.principalName(l), Relation.LEQ,
+                        env.principalName(r));
 
                 env.hypothesis().add(hypo);
                 // logger.debug("testing label");
@@ -107,28 +107,14 @@ public class If extends Statement {
 //            env.cons.add(new Constraint(new Inequality(IfTestNormalPc, IfNamePcAfter), env.hypothesis(), test.location, env.curContractSym().getName(),
 //                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
+        Map<String, String> versionsBefore = env.saveVersions();
         env.incScopeLayer();
 
         // Context leftContext = new Context(curContext), rightContext = new Context(curContext);
         CodeLocation loc = null;
-        PathOutcome ifo = to.psi;
+        PathOutcome ifo = to.psi.withoutNormalPath();
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        int index = 0;
-        for (Statement stmt : body) {
-            ++index;
-            String prevLambda = env.inContext.lambda;
-            ifo = stmt.IFCVisit(env, index == body.size() && tail_position);
-            // env.prevContext = tmp;
-            // prev2 = leftContext;
-            //env.context = context;
-            PsiUnit normalUnit = ifo.getNormalPath();
-            if (normalUnit == null) {
-                break;
-            }
-            env.inContext = Utils.genNewContextAndConstraints(env, index == body.size() && tail_position, normalUnit.c, prevLambda, stmt.nextPcSHL(), stmt.location);
-            loc = stmt.location;
-            // leftContext = new Context(tmp);
-        }
+        ifo.join(Utils.genConsStmtSeq(body, env, tail_position));
         env.decScopeLayer();
 
         if (createdHypo) {
@@ -138,22 +124,13 @@ public class If extends Statement {
         // logger.debug("finished if branch");
         //System.err.println("finished if branch");
         // env.prevContext.lambda = curContext.lambda;
+        Map<String, String> versionsThen = env.saveVersions();
+        env.restoreVersions(versionsBefore);
         env.incScopeLayer();
-        index = 0;
-        PathOutcome elseo = to.psi;
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        for (Statement stmt : orelse) {
-            ++index;
-            String prevLambda = env.inContext.lambda;
-            elseo = stmt.IFCVisit(env, index == orelse.size() && tail_position);
-            PsiUnit normalUnit = elseo.getNormalPath();
-            if (normalUnit == null) {
-                break;
-            }
-            env.inContext = Utils.genNewContextAndConstraints(env, index == body.size() && tail_position, normalUnit.c, prevLambda, stmt.nextPcSHL(), stmt.location);
-            // env.prevContext.lambda = rightContext.lambda;
-        }
+        PathOutcome elseo = Utils.genConsStmtSeq(orelse, env, tail_position);
         env.decScopeLayer();
+        env.mergeVersions(List.of(versionsThen, env.saveVersions()));
 
         ifo.join(elseo);
         // env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, Utils.joinLabels(leftContext.lambda, rightContext.lambda)), env.hypothesis, location));

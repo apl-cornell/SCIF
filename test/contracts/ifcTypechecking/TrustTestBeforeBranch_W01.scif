@@ -1,0 +1,13 @@
+// The same flow before the branch is not justified by the trust test.
+contract TrustTestBeforeBranch_W01 {
+    uint{this} secret;
+    uint{this} other;
+    constructor() { super(); }
+
+    public void f{this}(address{this} a, uint{a} x) {
+        secret = x;
+        if (a => this) {
+            other = x;
+        }
+    }
+}

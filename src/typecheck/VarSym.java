@@ -133,8 +133,22 @@ public class VarSym extends Sym {
         ifl = label;
     }
 
+    /** Whether this variable holds an address or a contract reference, and so names a principal. */
+    public boolean isPrincipalTyped() {
+        return typeSym instanceof InterfaceSym || typeSym.getName().equals(Utils.ADDRESS_TYPE);
+    }
+
+    /** Whether this variable is final and names a principal. */
     public boolean isPrincipalVar() {
-        return isFinal && (typeSym instanceof ContractSym || typeSym instanceof InterfaceSym || typeSym.getName().equals(Utils.ADDRESS_TYPE));
+        return isFinal && isPrincipalTyped();
+    }
+
+    /**
+     * Whether this variable names a principal that can change during execution, so that
+     * different occurrences of it may name different principals.
+     */
+    public boolean isMutablePrincipal() {
+        return !isFinal && isPrincipalTyped();
     }
 
     @Override

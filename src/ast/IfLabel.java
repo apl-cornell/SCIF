@@ -1,7 +1,9 @@
 package ast;
 
 import java.util.Map;
+import typecheck.BuiltInT;
 import typecheck.Label;
+import typecheck.TypeSym;
 import typecheck.ScopeContext;
 import typecheck.VarSym;
 import typecheck.VisitEnv;
@@ -33,4 +35,8 @@ public abstract class IfLabel extends Expression {
         throw new AssertionError();
     }
 
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return env.builtinType(BuiltInT.PRINCIPAL);
+    }
 }

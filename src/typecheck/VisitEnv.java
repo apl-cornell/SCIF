@@ -35,6 +35,15 @@ public class VisitEnv {
     public Map<String, String> sigReq = new HashMap<>();
     public Map<String, List<SourceFile>> programMap;
 
+    /**
+     * The current version of each mutable principal variable that has been versioned in
+     * the current method, keyed by the variable's SHErrLoc name. A variable absent from
+     * the map is at its initial version, which is named by the variable itself.
+     */
+    private Map<String, String> versions = new HashMap<>();
+    private final Set<String> versionNames = new java.util.LinkedHashSet<>();
+    private int versionCount = 0;
+
     private final Set<String> rigidAtoms = new java.util.LinkedHashSet<>();
     private final List<String[]> atomAssumptions = new ArrayList<>();
 
@@ -114,6 +123,11 @@ public class VisitEnv {
 
     public boolean containsFunc(String id) {
         return getFunc(id) != null;
+    }
+
+    /** The built-in type {@code t}. */
+    public TypeSym builtinType(BuiltInT t) {
+        return (TypeSym) curSymTab.lookup(Utils.BuiltinType2ID(t));
     }
 
     public boolean containsContract(String funcName) {
@@ -216,6 +230,111 @@ public class VisitEnv {
         principalSet.add(varSym);
     }
 
+    /**
+     * The SHErrLoc name of the principal that {@code v} holds at the current program point.
+     * For a variable that is not a mutable principal, this is the variable's own name.
+     */
+    public String principalName(VarSym v) {
+        String base = v.toSHErrLocFmt();
+        return versions.getOrDefault(base, base);
+    }
+
+    /**
+     * Starts a new version of the mutable principal variable {@code v}, about which nothing
+     * is known, and returns its SHErrLoc name.
+     */
+    public String newVersion(VarSym v) {
+        assert v.isMutablePrincipal() : v.getName();
+        return newVersion(v.toSHErrLocFmt());
+    }
+
+    private String newVersion(String base) {
+        String version = base + "..v" + (++versionCount);
+        versions.put(base, version);
+        versionNames.add(version);
+        return version;
+    }
+
+    /**
+     * Assumes that the principals named {@code a} and {@code b} are the same, as when one
+     * variable is assigned the principal held by another.
+     */
+    public void assumeSamePrincipal(String a, String b) {
+        addAtomAssumption(a, b);
+    }
+
+    /**
+     * Registers {@code name} as a principal about which nothing is known, such as a
+     * newly created contract, and returns it.
+     */
+    public String freshPrincipal(String name) {
+        versionNames.add(name);
+        return name;
+    }
+
+    /** The SHErrLoc names of all versions created so far. Each names a principal. */
+    public Set<String> versionNames() {
+        return versionNames;
+    }
+
+    /** The current versions, for restoring with {@link #restoreVersions}. */
+    public Map<String, String> saveVersions() {
+        return new HashMap<>(versions);
+    }
+
+    /** Makes {@code saved} the current versions. */
+    public void restoreVersions(Map<String, String> saved) {
+        versions = new HashMap<>(saved);
+    }
+
+    /**
+     * Makes the current versions those at a point where the control-flow paths ending in
+     * {@code branches} merge. A variable whose version differs among the branches gets a
+     * new version (a phi-version), about which nothing is known.
+     */
+    public void mergeVersions(List<Map<String, String>> branches) {
+        Set<String> keys = new java.util.HashSet<>();
+        for (Map<String, String> b : branches) keys.addAll(b.keySet());
+        Map<String, String> merged = new HashMap<>();
+        for (String base : keys) {
+            Set<String> seen = new java.util.HashSet<>();
+            for (Map<String, String> b : branches) seen.add(b.getOrDefault(base, base));
+            if (seen.size() == 1) {
+                String only = seen.iterator().next();
+                if (!only.equals(base)) merged.put(base, only);
+            } else {
+                merged.put(base, base + "..v" + (++versionCount));
+                versionNames.add(merged.get(base));
+            }
+        }
+        versions = merged;
+    }
+
+    /**
+     * Gives a new version to each mutable principal variable visible here whose name is in
+     * {@code names}, and to each mutable principal field of the current contract.
+     */
+    public void havoc(Set<String> names) {
+        for (String name : names) {
+            if (curSymTab.lookup(name) instanceof VarSym v && v.isMutablePrincipal()) {
+                newVersion(v);
+            }
+        }
+        havocFields();
+    }
+
+    /**
+     * Gives a new version to each mutable principal field of the current contract, as
+     * needed after any call, which may assign to fields.
+     */
+    public void havocFields() {
+        for (VarSym v : curContractSym.symTab.getVars().values()) {
+            if (v.isMutablePrincipal()) {
+                newVersion(v);
+            }
+        }
+    }
+
     public VarSym thisSym() {
         return curContractSym.thisSym();
     }
@@ -237,11 +356,15 @@ public class VisitEnv {
         curFuncSym = funcSym;
     }
 
+    /**
+     * Resolves {@code ifl} at the current program point: a mutable principal variable in it
+     * names the version it holds here.
+     */
     public Label toLabel(IfLabel ifl) {
         if (ifl instanceof PrimitiveIfLabel) {
-            VarSym label = (VarSym) getVar(((PrimitiveIfLabel) ifl).value().id);
-            if (label == null) return null;
-            return new PrimitiveLabel(label, ifl.getLocation());
+            VarSym label = getVar(((PrimitiveIfLabel) ifl).value().id);
+            return new PrimitiveLabel(label,
+                    label.isMutablePrincipal() ? principalName(label) : null, ifl.getLocation());
         } else if (ifl instanceof ComplexIfLabel) {
             return new ComplexLabel(toLabel(((ComplexIfLabel) ifl).getLeft()),
                     ((ComplexIfLabel) ifl).getOp(),
@@ -262,6 +385,7 @@ public class VisitEnv {
     }
 
     public void enterNewMethod(String name) {
+        versions = new HashMap<>();
         cons = new ArrayList<>();
         trustCons = new ArrayList<>();
         conMap.put(name, cons);

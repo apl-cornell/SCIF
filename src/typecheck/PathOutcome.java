@@ -73,6 +73,13 @@ public class PathOutcome {
         set(Utils.getReturnPathException(), inContext);
     }
 
+    /** The paths of this outcome other than its normal path. */
+    public PathOutcome withoutNormalPath() {
+        PathOutcome result = new PathOutcome(new HashMap<>(psi));
+        result.psi.remove(Utils.getNormalPathException());
+        return result;
+    }
+
     public boolean existsNormalPath() {
         return getNormalPath() != null;
     }

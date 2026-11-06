@@ -202,13 +202,13 @@ public class FunctionSig extends TopLayerNode {
         VarSym sender = (VarSym) env.getCurSym(typecheck.Utils.LABEL_SENDER);
 
         List<VarSym> argsInfo = args.parseArgs(env, now);
-        Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
+        Map<ExceptionTypeSym, Label> exceptions = new HashMap<>();
         for (LabeledType t : exceptionList) {
             ExceptionTypeSym t1 = env.getExceptionTypeSym(t.type());
             if (t1 == null) {
                 throw new SemanticException("exception not found: " + t.type().name, t.location);
             }
-            exceptions.put(t1, null);
+            exceptions.put(t1, env.newLabel(t.label()));
         }
         funcSym = new FuncSym(name,
                 isPublic,
@@ -245,16 +245,14 @@ public class FunctionSig extends TopLayerNode {
         if (rtn != null) {
             ifl = contractSym.newLabel(rtn.label());
         }
-        Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
+        Map<ExceptionTypeSym, Label> exceptions = new HashMap<>();
         for (LabeledType t : exceptionList) {
             IfLabel label = null;
             /*if (t.type instanceof  LabeledType)
                 label = ((LabeledType) t.type).ifl;*/
             ExceptionTypeSym exceptionTypeSym = contractSym.getExceptionSym(t.type().name);
             assert exceptionTypeSym != null;
-            exceptions.put(exceptionTypeSym,
-                    typecheck.Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(),
-                            t.type().name()));
+            exceptions.put(exceptionTypeSym, contractSym.newLabel(t.label()));
         }
 //      System.err.println("adding method: " + name);
         funcSym =
@@ -409,10 +407,13 @@ public class FunctionSig extends TopLayerNode {
 
 
     protected void addBuiltInVars(SymTab curSymTab, ScopeContext now) {
-        // final address{TOP} sender;
-        // The address is trusted data because the runtime authenticates it;
-        // the contract it names is not thereby trusted.
+        // final address{TOP} sender; final uint{TOP} value; final uint{TOP} now;
+        // These values are established by the runtime, so they are trusted data.
+        // The contract that sender names is not thereby trusted.
         try {
+            PrimitiveLabel labelTop = new PrimitiveLabel(
+                    (VarSym) curSymTab.lookup(typecheck.Utils.LABEL_TOP),
+                    typecheck.Utils.BUILTIN_LOCATION);
             VarSym varSender =
                     new VarSym(
                             typecheck.Utils.LABEL_SENDER,
@@ -424,31 +425,26 @@ public class FunctionSig extends TopLayerNode {
                             true,
                             true
                     );
-            PrimitiveLabel labelSender = new PrimitiveLabel(varSender, typecheck.Utils.BUILTIN_LOCATION);
-            varSender.setLabel(new PrimitiveLabel(
-                    (VarSym) curSymTab.lookup(typecheck.Utils.LABEL_TOP),
-                    typecheck.Utils.BUILTIN_LOCATION));
+            varSender.setLabel(labelTop);
             curSymTab.add(typecheck.Utils.LABEL_SENDER, varSender);
 
-            // final uint{sender} value;
             curSymTab.add(typecheck.Utils.LABEL_PAYVALUE,
                     new VarSym(
                             typecheck.Utils.LABEL_PAYVALUE,
                             (TypeSym) curSymTab.lookup(typecheck.Utils.BuiltinType2ID(BuiltInT.UINT)),
-                            labelSender,
+                            labelTop,
                             typecheck.Utils.BUILTIN_LOCATION,
                             now,
                             true,
                             true,
                             true
                     ));
-            // final uint{sender} value;
 
             // other built-in vars
             for (Entry<String, String> entry : typecheck.Utils.BUILTIN_INMETHOD_VARS.entrySet()) {
                 String varName = entry.getKey();
                 String typeName = entry.getValue();
-                VarSym varSym = new VarSym(varName, (TypeSym) curSymTab.lookup(typeName), labelSender,
+                VarSym varSym = new VarSym(varName, (TypeSym) curSymTab.lookup(typeName), labelTop,
                         typecheck.Utils.BUILTIN_LOCATION, now, true, true, true);
                 curSymTab.add(varName, varSym);
             }

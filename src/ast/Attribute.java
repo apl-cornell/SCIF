@@ -86,7 +86,7 @@ public class Attribute extends TrailerExpr {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         //TODO: assuming only one-level attribute access
         // to add support to multi-level access
         String varName = ((Name) value).id;
@@ -97,7 +97,8 @@ public class Attribute extends TrailerExpr {
                 && attr.id.equals(Utils.CLOSURE_TARGET_MEMBER)) {
             return value.genIFConstraints(env, tail_position);
         }
-        if (!(varSym.typeSym instanceof StructTypeSym structType)) {
+        if (!(varSym.typeSym instanceof StructTypeSym
+                || varSym.typeSym instanceof ExceptionTypeSym)) {
             //TODO: throw errors: variable not struct
 //            return null;
             throw new RuntimeException("Variable not a struct: " + varName);
@@ -112,11 +113,76 @@ public class Attribute extends TrailerExpr {
 //                env.curContractSym().getName(),
 //                "Integrity of the member"));
 //        if (!ifAttLabel.equals(attrValueLabel)) {
+            if (varSym.typeSym instanceof StructTypeSym structType) {
+                // A member is trusted at its label and no more than the struct value.
+                attrValueLabel = Utils.joinLabels(attrValueLabel, memberLabel(env,
+                        structType.member(attr.id).ifl, attrValueLabel));
+            } else if (varSym.typeSym instanceof ExceptionTypeSym expType) {
+                // An exception's data is trusted at its parameter's label, in which each
+                // principal parameter stands for the principal in that field.
+                java.util.Map<String, String> mapping = new java.util.HashMap<>();
+                for (VarSym param : expType.parameters()) {
+                    if (param.isPrincipalTyped()) {
+                        mapping.put(param.toSHErrLocFmt(),
+                                exceptionFieldPrincipal(env, varSym, param.getName()));
+                    }
+                }
+                VarSym member = expType.parameters().stream()
+                        .filter(param -> param.getName().equals(attr.id)).findFirst()
+                        .orElseThrow();
+                attrValueLabel = Utils.joinLabels(attrValueLabel,
+                        member.ifl.toSHErrLocFmt(mapping));
+            }
             env.checkEqual(attrValueLabel, ifNameRnt, location,
                     "Integrity of the index value must be trusted to indicate the attribute");
 //        }
 
         return new ExpOutcome(ifNameRnt, vo.psi);
+    }
+
+    @Override
+    public String principalName(VisitEnv env) {
+        if (value instanceof Name n && env.getCurSym(n.id) instanceof VarSym v
+                && v.typeSym instanceof ExceptionTypeSym expType) {
+            for (VarSym param : expType.parameters()) {
+                if (param.getName().equals(attr.id) && param.isPrincipalTyped()) {
+                    return exceptionFieldPrincipal(env, v, attr.id);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The label {@code label} of a struct member, as this contract reads it in a struct value
+     * labeled {@code structLabel}. A struct declared by another contract labels its members in
+     * that contract's terms: its {@code this} is trusted only as much as the value, its top and
+     * bottom principals are this contract's, and any other principal it names is unknown here.
+     */
+    private static String memberLabel(VisitEnv env, Label label, String structLabel) {
+        String own = env.thisSym().toSHErrLocFmt();
+        String namespace = own.substring(0, own.length() - Utils.LABEL_THIS.length());
+        java.util.Map<String, String> mapping = new java.util.HashMap<>();
+        for (VarSym p : label.principalSyms()) {
+            String name = p.toSHErrLocFmt();
+            if (name.startsWith(namespace)) {
+                continue;
+            }
+            mapping.put(name, switch (p.getName()) {
+                case Utils.LABEL_THIS -> structLabel;
+                case Utils.LABEL_TOP -> env.curContractSym().top().toSHErrLocFmt();
+                default -> env.curContractSym().any().toSHErrLocFmt();
+            });
+        }
+        return label.toSHErrLocFmt(mapping);
+    }
+
+    /**
+     * The principal held by the principal-typed field {@code field} of the caught exception
+     * {@code exception}, registered in {@code env}. Nothing is known about it.
+     */
+    private static String exceptionFieldPrincipal(VisitEnv env, VarSym exception, String field) {
+        return env.freshPrincipal(exception.toSHErrLocFmt() + "." + field);
     }
 
     @Override
@@ -171,5 +237,18 @@ public class Attribute extends TrailerExpr {
     @Override
     public Map<String,? extends Type> writeMap(CompileEnv code) {
         return value.writeMap(code);
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        TypeSym base = value.type();
+        if (base instanceof ClosureTypeSym && attr.id.equals(Utils.CLOSURE_TARGET_MEMBER)) {
+            return env.builtinType(BuiltInT.ADDRESS);
+        } else if (base instanceof StructTypeSym structType) {
+            return structType.member(attr.id).typeSym;
+        } else if (base instanceof ExceptionTypeSym expType) {
+            return expType.getMemberVarInfo("", attr.id).typeSym;
+        }
+        throw new AssertionError("no member " + attr.id + " in type " + base.getName());
     }
 }

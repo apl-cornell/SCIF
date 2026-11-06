@@ -11,7 +11,7 @@ contract HODLWallet {
         super();
     }
 
-    public void doWithdraw{from -> this}(final address from, address to, uint amount) {
+    public void doWithdraw{from -> this; any}(final address from, address to, uint amount) {
         endorse([from, to, amount], from -> this)
         when (amount <= MAX_WITHDRAWAL && balances[from] >= amount && withdrawalCount[from] < 3) {
             unchecked {
@@ -37,7 +37,7 @@ contract HODLWallet {
         }
     }
 
-    public void withdrawForTo{sender -> from; sender}(final address from, address to, uint amount) {
+    public void withdrawForTo{sender -> from; any}(final address from, address to, uint amount) {
         endorse([from, to, amount], sender -> from)
         when (approvals[from][sender]) {
             doWithdraw(from, to, amount);
