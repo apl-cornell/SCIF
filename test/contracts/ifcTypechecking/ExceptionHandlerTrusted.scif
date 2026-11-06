@@ -1,0 +1,18 @@
+// A handler for an exception declared trusted runs with trusted control flow.
+contract ExceptionHandlerTrusted {
+    uint{this} secret;
+    exception E();
+    constructor() { super(); }
+
+    void g{this}() throws (E{this}) {
+        throw E();
+    }
+
+    public void f{this}() {
+        try {
+            g();
+        } catch (E e) {
+            secret = 1;
+        }
+    }
+}

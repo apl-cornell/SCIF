@@ -3,22 +3,22 @@ import "./IECCUtils.scif";
 import "./IEthCrossChainData.scif";
 contract EthCrossChainManager {
 
-    address EthCrossChainDataAddress;
-    address EthECCUtilsAddress;
+    final IEthCrossChainData{this} eccd;
+    final IECCUtils{this} cutils;
 
     constructor(address _eccd, address _cutils) {
-        EthCrossChainDataAddress = endorse(_eccd, sender->this);
-        EthECCUtilsAddress = endorse(_cutils, sender->this);
+        eccd = endorse(IEthCrossChainData(_eccd), (sender ⨆ _eccd) -> this);
+        cutils = endorse(IECCUtils(_cutils), (sender ⨆ _cutils) -> this);
         super();
     }
 
     public void initGenesisBlock(Header@IECCUtils header, bytes pubKeyList) {
-        final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
-        final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
         address[] keepers = eccd.getCurEpochConPubKeys();
         assert(keepers.length() == 0);
 
-        // Parse header and convit the public keys into nextBookKeeper and compare it with header.nextBookKeeper to verify the validity of signature
+        // Parse header and convit the public keys into nextBookKeeper
+        // and compare it with header.nextBookKeeper to verify the
+        // validity of signature
         address nextBookkeeper = cutils.verifyPubkey(keepers);
         endorse([header], sender->this)
         when (header.nextBookkeeper == nextBookkeeper) {
@@ -31,8 +31,6 @@ contract EthCrossChainManager {
     }
 
     public void changeBookKeeper(Header@IECCUtils header, address[] polyChainBKs, bytes sigList) {
-        final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
-        final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
         // Make sure rawHeader.height is higher than recorded current epoch start height
         uint curEpochStartHeight = eccd.getCurEpochStartHeight();
 
@@ -42,12 +40,14 @@ contract EthCrossChainManager {
             (header.nextBookkeeper != address(0)) &&
             (cutils.verifySig(header, sigList, polyChainBKs, polyChainBKs.length() - (polyChainBKs.length() - 1) / 3))) {
 
-            // Convert pubKeyList into ethereum address format and make sure the compound address from the converted ethereum addresses
-            // equals passed in header.nextBooker
+            // Convert pubKeyList into ethereum address format and make
+            // sure the compound address from the converted ethereum
+            // addresses equals passed in header.nextBooker
             address nextBookKeeper = cutils.verifyPubkey(polyChainBKs);
             assert(header.nextBookkeeper == nextBookKeeper);
 
-            // update current epoch start height of Poly chain and current epoch consensus peers book keepers addresses
+            // update current epoch start height of Poly chain and current
+            // epoch consensus peers book keepers addresses
             eccd.putCurEpochStartHeight(header.height);
             eccd.putCurEpochConPubKeys(polyChainBKs);
         } else {
@@ -56,8 +56,6 @@ contract EthCrossChainManager {
     }
 
     public void crossChain(uint toChainId, address toContract, bytes txData) {
-        final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
-        final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
         // To help differentiate two txs, the ethTxHashIndex is increasing automatically
         uint txHashIndex = eccd.getEthTxHashIndex();
 
@@ -70,11 +68,15 @@ contract EthCrossChainManager {
         eccd.putEthTxHash(cutils.keccak256(rawParam));
     }
 
-    public void verifyHeaderAndExecuteTx(bytes proof, Header@IECCUtils header, bytes headerProof, Header@IECCUtils curHeader, bytes headerSig) {
-        // Load ehereum cross chain data contract
-        // Get stored consensus public key bytes of current poly chain epoch and deserialize Poly chain consensus public key bytes to address[]
-        final IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
-        final IECCUtils cutils = IECCUtils(EthECCUtilsAddress);
+    public void verifyHeaderAndExecuteTx{sender -> this; any}(bytes proof,
+                                         Header@IECCUtils header,
+                                         bytes headerProof,
+                                         Header@IECCUtils curHeader,
+                                         bytes headerSig)
+    {
+        // Load Ethereum cross-chain data contract.
+        // Get stored consensus public key bytes of current poly chain epoch
+        // and deserialize Poly chain consensus public key bytes to address[]
 
         assert eccd => this;
         assert cutils => this;
@@ -94,7 +96,8 @@ contract EthCrossChainManager {
             assert(cutils.getHeaderHash(header) == proveValue);
         }
 
-        // Parse the toMerkleValue struct and make sure the tx has not been processed, then mark this tx as processed
+        // Parse the toMerkleValue struct and make sure the tx has not been
+        // processed, then mark this tx as processed.
         ToMerkleValue@IECCUtils toMerkleValue = cutils.merkleProve(proof, header.crossStatesRoot);
         assert(!eccd.checkIfFromChainTxExist(toMerkleValue.fromChainID, toMerkleValue.txHash));
         eccd.markFromChainTxExist(toMerkleValue.fromChainID, toMerkleValue.txHash);
@@ -102,10 +105,12 @@ contract EthCrossChainManager {
         // Ethereum ChainId is 2, we need to check the transaction is for Ethereum network
         assert(toMerkleValue.toChainId == 2);
 
-        // Obtain the targeting contract, so that Ethereum cross chain manager contract can trigger the executation of cross chain tx on Ethereum side
+        // Obtain the targeting contract, so that Ethereum cross chain manager
+        // contract can trigger the execution of cross chain tx on Ethereum
+        // side
         address toContract = toMerkleValue.toContract;
 
-        IPolyCallee callee = IPolyCallee(toContract);
+        IPolyCallee{toContract} callee = IPolyCallee(toContract);
         callee.polyCallback(sender, toMerkleValue.args, toMerkleValue.fromContract, toMerkleValue.fromChainID);
     }
 }

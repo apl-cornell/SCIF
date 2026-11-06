@@ -1,0 +1,13 @@
+// A newly created contract is a principal that nothing trusts, so a reference
+// to it cannot be returned as trusted.
+contract Child {
+    constructor() { super(); }
+}
+
+contract NewUntrusted_W01 {
+    constructor() { super(); }
+
+    public Child{this} f{this}() {
+        return new Child();
+    }
+}

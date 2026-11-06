@@ -1,0 +1,10 @@
+// A principal inside a join is the principal itself, not something the solver may choose.
+contract JoinLabelPrincipal_W01 {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(address{this} a, uint{a ⨆ this} x) {
+        secret = x;
+    }
+}

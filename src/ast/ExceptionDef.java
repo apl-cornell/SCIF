@@ -16,16 +16,14 @@ public class ExceptionDef extends TopLayerNode {
     String namespace;
     Arguments arguments;
     boolean isBuiltIn = false;
-
     public ExceptionDef(String name, Arguments members) {
-        exceptionName = name;
-        this.arguments = members;
-        arguments.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
+        this(name, members, false);
     }
     public ExceptionDef(String name, Arguments members, Boolean isBuiltIn) {
         exceptionName = name;
         this.arguments = members;
         this.isBuiltIn = isBuiltIn;
+        // Like fields, unlabeled data is trusted by this contract.
         arguments.setToDefault(new PrimitiveIfLabel(new Name(Utils.LABEL_THIS)));
     }
 
@@ -34,13 +32,27 @@ public class ExceptionDef extends TopLayerNode {
         throws SemanticException
     {
         // exceptionType.setContractName(env.curContractSym().getName());
+        ExceptionTypeSym expSym = env.newExceptionType(namespace, exceptionName, arguments, parent);
         try {
-            env.addSym(exceptionName,
-                    env.newExceptionType(namespace, exceptionName, arguments, parent));
+            env.addSym(exceptionName, expSym);
         } catch (SymTab.AlreadyDefined e) {
             throw new SemanticException("Exception already defined: " + exceptionName,
                     location);
         }
+        // A parameter's label may name principal-typed parameters of the exception.
+        ScopeContext now = new ScopeContext(this, parent);
+        env.enterNewScope();
+        try {
+            for (VarSym param : expSym.parameters()) {
+                env.addSym(param.getName(), param);
+            }
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Parameter already defined: " + e.id, location);
+        }
+        for (Arg arg : arguments.args()) {
+            arg.annotation.label().genTypeConstraints(env, now);
+        }
+        env.exitNewScope();
     }
 
     /**

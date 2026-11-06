@@ -8,8 +8,8 @@ contract ERC20 implements IERC20 {
     bytes _name;
     bytes _symbol;
 
-    exception ERC20InsufficientBalance(address owner, uint cur, uint needed);
-    exception ERC20InsufficientAllowance(address owner, uint cur, uint needed);
+    exception ERC20InsufficientBalance(address{any} owner, uint balance, uint{owner} needed);
+    exception ERC20InsufficientAllowance(address{any} owner, address{owner} spender, uint{owner} allowance, uint{owner ⨆ spender} needed);
 
     constructor(bytes name_, bytes symbol_) {
         _name = endorse(name_, sender -> this);
@@ -65,7 +65,7 @@ contract ERC20 implements IERC20 {
         return _allowances[owner][spender];
     }
 
-    public void transferFrom{sender -> from; sender}(final address from, address to, uint val) throws (ERC20InsufficientAllowance{this}, ERC20InsufficientBalance{this}) {
+    public void transferFrom{sender -> from; sender}(final address from, address to, uint val) throws (ERC20InsufficientAllowance{from}, ERC20InsufficientBalance{from}) {
         endorse([from, to, val], sender -> from)
         when (_allowances[from][sender] >= val) {
             transfer(from, to, val);
@@ -73,7 +73,7 @@ contract ERC20 implements IERC20 {
                 _allowances[from][sender] -= val;
             }
         } else {
-            throw ERC20InsufficientAllowance(to, _allowances[from][sender], val);
+            throw ERC20InsufficientAllowance(from, sender, _allowances[from][sender], val);
         }
     }
 
@@ -82,7 +82,7 @@ contract ERC20 implements IERC20 {
         currentAllowance = allowance(owner, spender);
         if (currentAllowance != UINT_MAX) {
             if (currentAllowance < val) {
-                throw ERC20InsufficientAllowance(spender, currentAllowance, val);
+                throw ERC20InsufficientAllowance(owner, spender, currentAllowance, val);
             }
             unchecked {
                 _allowances[owner][spender] = currentAllowance - val;

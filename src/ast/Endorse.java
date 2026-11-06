@@ -30,23 +30,19 @@ public class Endorse extends Expression {
     }
 
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        from.genTypeConstraints(env, parent);
+        to.genTypeConstraints(env, parent);
         return value.genTypeConstraints(env, parent);
     }
 
     @Override
     public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
-        //TODO: change to conditioned form
-        Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
-                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         ExpOutcome vo = value.genIFConstraints(env, tail_position);
         String ifNameValue = vo.valueLabelName;
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "endorse" + location.toString();
 
-        String fromLabel = fromNameSLC();
-                //from.toSherrlocFmt(scopeContext);
-        String toLabel = toNameSLC();
-                //to.toSherrlocFmt(scopeContext);
+        String fromLabel = env.toLabel(from).toSHErrLocFmt();
+        String toLabel = env.toLabel(to).toSHErrLocFmt();
 
         env.checkFlow(ifNameValue, fromLabel, location,
                 "The expression must be trusted to be endorsed");
@@ -54,10 +50,9 @@ public class Endorse extends Expression {
         env.checkFlow(toLabel, ifNameRtn, location,
                 "The integrity level of this expression would be endorsed");
 
-        //env.outContext = endContext;
-
-        env.checkTrustedBy(beginContext.pc, endContext.pc, location,
-                "The control flow of this expression would be endorsed");
+        // Code can endorse data only up to the integrity of its own control flow.
+        env.checkFlow(vo.psi.getNormalPath().c.pc, toLabel, location,
+                "Control flow must be trusted at the label this expression is endorsed to");
 
         // if (value instanceof Name n && env.getVar(n.id) != null
         //         && env.getVar(n.id).typeSym instanceof ClosureTypeSym cs) {
@@ -82,13 +77,6 @@ public class Endorse extends Expression {
     public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
         code.countEndorse();
         return value.solidityCodeGen(result, code);
-    }
-
-    private String fromNameSLC() {
-        return scopeContext + ".endorse" + "." + "from" + from.location;
-    }
-    private String toNameSLC() {
-        return scopeContext + ".endorse" + "." + "to" + from.location;
     }
 
     @Override

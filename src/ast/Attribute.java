@@ -97,7 +97,8 @@ public class Attribute extends TrailerExpr {
                 && attr.id.equals(Utils.CLOSURE_TARGET_MEMBER)) {
             return value.genIFConstraints(env, tail_position);
         }
-        if (!(varSym.typeSym instanceof StructTypeSym structType)) {
+        if (!(varSym.typeSym instanceof StructTypeSym
+                || varSym.typeSym instanceof ExceptionTypeSym)) {
             //TODO: throw errors: variable not struct
 //            return null;
             throw new RuntimeException("Variable not a struct: " + varName);
@@ -112,11 +113,48 @@ public class Attribute extends TrailerExpr {
 //                env.curContractSym().getName(),
 //                "Integrity of the member"));
 //        if (!ifAttLabel.equals(attrValueLabel)) {
+            if (varSym.typeSym instanceof ExceptionTypeSym expType) {
+                // An exception's data is trusted at its parameter's label, in which each
+                // principal parameter stands for the principal in that field.
+                java.util.Map<String, String> mapping = new java.util.HashMap<>();
+                for (VarSym param : expType.parameters()) {
+                    if (param.isPrincipalTyped()) {
+                        mapping.put(param.toSHErrLocFmt(),
+                                exceptionFieldPrincipal(env, varSym, param.getName()));
+                    }
+                }
+                VarSym member = expType.parameters().stream()
+                        .filter(param -> param.getName().equals(attr.id)).findFirst()
+                        .orElseThrow();
+                attrValueLabel = Utils.joinLabels(attrValueLabel,
+                        member.ifl.toSHErrLocFmt(mapping));
+            }
             env.checkEqual(attrValueLabel, ifNameRnt, location,
                     "Integrity of the index value must be trusted to indicate the attribute");
 //        }
 
         return new ExpOutcome(ifNameRnt, vo.psi);
+    }
+
+    @Override
+    public String principalName(VisitEnv env) {
+        if (value instanceof Name n && env.getCurSym(n.id) instanceof VarSym v
+                && v.typeSym instanceof ExceptionTypeSym expType) {
+            for (VarSym param : expType.parameters()) {
+                if (param.getName().equals(attr.id) && param.isPrincipalTyped()) {
+                    return exceptionFieldPrincipal(env, v, attr.id);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The principal held by the principal-typed field {@code field} of the caught exception
+     * {@code exception}, registered in {@code env}. Nothing is known about it.
+     */
+    private static String exceptionFieldPrincipal(VisitEnv env, VarSym exception, String field) {
+        return env.freshPrincipal(exception.toSHErrLocFmt() + "." + field);
     }
 
     @Override
