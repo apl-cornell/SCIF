@@ -50,12 +50,14 @@ public class ArrayOperation extends Expression {
         }
         ArrayTypeSym arrayType = (ArrayTypeSym) array.getVarInfo(env).typeSym;
         String elementType = arrayType.valueType.toSHErrLocFmt();
+        TypeSym voidType = (TypeSym) env.getSym(BuiltInT.VOID);
         switch (op) {
             case "pop" -> {
                 if (!args.isEmpty()) {
                     throw new SemanticException("pop expects 0 arguments", location);
                 }
-                env.addCons(now.genTypeConstraints(elementType, Relation.EQ, env, location));
+                env.addCons(now.genTypeConstraints(voidType.toSHErrLocFmt(), Relation.EQ, env,
+                        location));
             }
             case "push" -> {
                 if (args.size() != 1) {
@@ -65,7 +67,6 @@ public class ArrayOperation extends Expression {
                 ScopeContext argContext = arg.genTypeConstraints(env, now);
                 env.addCons(argContext.genTypeConstraints(elementType, Relation.GEQ, env,
                         arg.location));
-                TypeSym voidType = (TypeSym) env.getSym(BuiltInT.VOID);
                 env.addCons(now.genTypeConstraints(voidType.toSHErrLocFmt(), Relation.EQ, env,
                         location));
             }

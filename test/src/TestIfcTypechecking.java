@@ -48,6 +48,7 @@ public class TestIfcTypechecking {
             "ifcTypechecking/IRouterClosure",
             "ifcTypechecking/ClosureBinderIFC",
             "ifcTypechecking/ClosureBinderUnnamed",
+            "ifcTypechecking/ArrayPop",
             "ifcTypechecking/ClosureBindIFC",
             "ifcTypechecking/ClosureTargetMember",
             "ifcTypechecking/ClosureInvokePostPcAutoendorse",
