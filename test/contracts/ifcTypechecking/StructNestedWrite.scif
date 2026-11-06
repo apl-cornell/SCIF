@@ -1,0 +1,16 @@
+// Untrusted data can be written to an untrusted member of a nested struct.
+contract StructNestedWrite {
+    struct In {
+        uint{any} v;
+        uint w;
+    }
+    struct Out {
+        In i;
+    }
+    Out o;
+    constructor() { super(); }
+
+    public void f{this}(uint{any} x) {
+        o.i.v = x;
+    }
+}

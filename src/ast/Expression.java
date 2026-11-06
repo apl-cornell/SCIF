@@ -64,6 +64,34 @@ public abstract class Expression extends Node {
     protected abstract TypeSym staticType(VisitEnv env) throws SemanticException;
 
     /**
+     * Generates the information-flow constraints for evaluating this expression as the target
+     * of an assignment, in the context {@code env.inContext}. Returns the label of the location
+     * it denotes, which a value must flow to in order to be stored there, with the paths by
+     * which the evaluation can end. Afterwards {@link #type()} is defined.
+     *
+     * @throws SemanticException if this expression does not denote a location
+     */
+    public final ExpOutcome genLocationConstraints(VisitEnv env) throws SemanticException {
+        ExpOutcome outcome = genLocationFlow(env);
+        type = staticType(env);
+        if (type == null) {
+            throw new AssertionError("no static type for " + getClass().getSimpleName()
+                    + " at " + location);
+        }
+        return outcome;
+    }
+
+    /**
+     * Generates the information-flow constraints for this expression as the target of an
+     * assignment, as specified for {@link #genLocationConstraints}.
+     *
+     * @throws SemanticException if this expression does not denote a location
+     */
+    protected ExpOutcome genLocationFlow(VisitEnv env) throws SemanticException {
+        throw new SemanticException("not an assignable location", location);
+    }
+
+    /**
      * The static type of this expression.
      *
      * @throws AssertionError if this expression has not been checked for information flow

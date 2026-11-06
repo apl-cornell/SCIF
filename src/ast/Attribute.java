@@ -87,56 +87,34 @@ public class Attribute extends TrailerExpr {
 
     @Override
     protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
-        //TODO: assuming only one-level attribute access
-        // to add support to multi-level access
-        String varName = ((Name) value).id;
-        // TODO: steph: needs to check instanceof 
-
-        VarSym varSym = env.getVar(varName);
-        if (varSym != null && varSym.typeSym instanceof ClosureTypeSym
-                && attr.id.equals(Utils.CLOSURE_TARGET_MEMBER)) {
-            return value.genIFConstraints(env, tail_position);
-        }
-        if (!(varSym.typeSym instanceof StructTypeSym
-                || varSym.typeSym instanceof ExceptionTypeSym)) {
-            //TODO: throw errors: variable not struct
-//            return null;
-            throw new RuntimeException("Variable not a struct: " + varName);
-        }
-
-        //String prevLockName = env.prevContext.lambda;
         ExpOutcome vo = value.genIFConstraints(env, tail_position);
+        TypeSym baseType = value.type();
+        if (baseType instanceof ClosureTypeSym && attr.id.equals(Utils.CLOSURE_TARGET_MEMBER)) {
+            return vo;
+        }
+        // A member is trusted at its label and no more than the value it belongs to.
         String attrValueLabel = vo.valueLabelName;
-//        String ifAttLabel = structType.getMemberLabel(attr.id);
-        String ifNameRnt = scopeContext.getSHErrLocName() + ".struct" + location.toString();
-//        env.cons.add(new Constraint(new Inequality(ifNameRnt, ifAttLabel), env.hypothesis(), location,
-//                env.curContractSym().getName(),
-//                "Integrity of the member"));
-//        if (!ifAttLabel.equals(attrValueLabel)) {
-            if (varSym.typeSym instanceof StructTypeSym structType) {
-                // A member is trusted at its label and no more than the struct value.
-                attrValueLabel = Utils.joinLabels(attrValueLabel, memberLabel(env,
-                        structType.member(attr.id).ifl, attrValueLabel));
-            } else if (varSym.typeSym instanceof ExceptionTypeSym expType) {
-                // An exception's data is trusted at its parameter's label, in which each
-                // principal parameter stands for the principal in that field.
-                java.util.Map<String, String> mapping = new java.util.HashMap<>();
-                for (VarSym param : expType.parameters()) {
-                    if (param.isPrincipalTyped()) {
-                        mapping.put(param.toSHErrLocFmt(),
-                                exceptionFieldPrincipal(env, varSym, param.getName()));
-                    }
+        if (baseType instanceof StructTypeSym structType) {
+            attrValueLabel = Utils.joinLabels(attrValueLabel,
+                    memberLabel(env, structType.member(attr.id).ifl, attrValueLabel));
+        } else if (baseType instanceof ExceptionTypeSym expType) {
+            // Each principal parameter in the label stands for the principal in that field.
+            java.util.Map<String, String> mapping = new java.util.HashMap<>();
+            for (VarSym param : expType.parameters()) {
+                if (param.isPrincipalTyped()) {
+                    mapping.put(param.toSHErrLocFmt(), value instanceof Name n
+                            ? exceptionFieldPrincipal(env, env.getVar(n.id), param.getName())
+                            : env.curContractSym().any().toSHErrLocFmt());
                 }
-                VarSym member = expType.parameters().stream()
-                        .filter(param -> param.getName().equals(attr.id)).findFirst()
-                        .orElseThrow();
-                attrValueLabel = Utils.joinLabels(attrValueLabel,
-                        member.ifl.toSHErrLocFmt(mapping));
             }
-            env.checkEqual(attrValueLabel, ifNameRnt, location,
-                    "Integrity of the index value must be trusted to indicate the attribute");
-//        }
-
+            VarSym member = expType.getMemberVarInfo("", attr.id);
+            attrValueLabel = Utils.joinLabels(attrValueLabel, member.ifl.toSHErrLocFmt(mapping));
+        } else {
+            throw new AssertionError("no member " + attr.id + " in type " + baseType.getName());
+        }
+        String ifNameRnt = scopeContext.getSHErrLocName() + ".struct" + location.toString();
+        env.checkEqual(attrValueLabel, ifNameRnt, location,
+                "Integrity of the index value must be trusted to indicate the attribute");
         return new ExpOutcome(ifNameRnt, vo.psi);
     }
 
@@ -250,5 +228,30 @@ public class Attribute extends TrailerExpr {
             return expType.getMemberVarInfo("", attr.id).typeSym;
         }
         throw new AssertionError("no member " + attr.id + " in type " + base.getName());
+    }
+
+    @Override
+    protected ExpOutcome genLocationFlow(VisitEnv env) throws SemanticException {
+        ExpOutcome bo = value.genLocationConstraints(env);
+        TypeSym baseType = value.type();
+        String location = bo.valueLabelName;
+        if (baseType instanceof StructTypeSym structType) {
+            location = Utils.joinLabels(location,
+                    memberLabel(env, structType.member(attr.id).ifl, bo.valueLabelName));
+        } else if (baseType instanceof ExceptionTypeSym expType) {
+            java.util.Map<String, String> mapping = new java.util.HashMap<>();
+            for (VarSym param : expType.parameters()) {
+                if (param.isPrincipalTyped()) {
+                    mapping.put(param.toSHErrLocFmt(), value instanceof Name n
+                            ? exceptionFieldPrincipal(env, env.getVar(n.id), param.getName())
+                            : env.curContractSym().any().toSHErrLocFmt());
+                }
+            }
+            location = Utils.joinLabels(location,
+                    expType.getMemberVarInfo("", attr.id).ifl.toSHErrLocFmt(mapping));
+        } else {
+            throw new SemanticException("member " + attr.id + " cannot be assigned", this.location);
+        }
+        return new ExpOutcome(location, bo.psi);
     }
 }

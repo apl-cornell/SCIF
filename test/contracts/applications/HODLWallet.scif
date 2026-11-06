@@ -2,7 +2,7 @@ contract HODLWallet {
 
     map(address, uint) balances;
     map(address, uint) withdrawalCount;
-    map(address, map(address, bool{owner}){owner}) approvals;
+    map(address owner, map(address, bool{owner}){owner}) approvals;
 
     uint MAX_WITHDRAWAL;
 

@@ -1,0 +1,9 @@
+// Writes through nested subscripts are checked against the map's label.
+contract NestedMapWriteLow_W01 {
+    map(address, map(address, uint)) m;
+    constructor() { super(); }
+
+    public void f{this}(address{this} a, address{this} b, uint{any} x) {
+        m[a][b] = x;
+    }
+}

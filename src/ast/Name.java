@@ -119,4 +119,10 @@ public class Name extends Variable {
     protected TypeSym staticType(VisitEnv env) {
         return env.getVar(id).typeSym;
     }
+
+    @Override
+    protected ExpOutcome genLocationFlow(VisitEnv env) {
+        return new ExpOutcome(env.getVar(id).labelNameSLC(),
+                new PathOutcome(new PsiUnit(env.inContext)));
+    }
 }

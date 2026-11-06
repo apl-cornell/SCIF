@@ -1,0 +1,14 @@
+import "./IOracle.scif";
+// A method can be called on a struct member that holds a contract reference.
+contract CallMemberReceiver {
+    struct Feed {
+        IOracle oracle;
+    }
+    Feed feed;
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}() {
+        secret = feed.oracle.price();
+    }
+}

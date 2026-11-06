@@ -89,7 +89,7 @@ public class Assign extends Statement {
             // env.prevContext = valueContext;
             /*env.cons.add(new Constraint(new Inequality(prevLockName, CompareOperator.Eq, valueContext.lambda), env.hypothesis, value.location, env.curContractSym.name,
                     "Lock should be maintained before execution of this operation"));*/
-            to = target.genIFConstraints(env, false);
+            to = target.genLocationConstraints(env);
             ifNameTgt = to.valueLabelName;
 //            env.inContext = new Context(to.psi.getNormalPath().c.lambda, beginContext.lambda);
             env.inContext = Utils.genNewContextAndConstraints(env, false, to.psi.getNormalPath().c, beginContext.lambda, target.nextPcSHL(), location);

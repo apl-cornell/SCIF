@@ -52,6 +52,7 @@ public class TestRegularTypechecking {
             "regularTypechecking/FinalFieldInitOK",
             "regularTypechecking/ExceptionParamLabels",
             "regularTypechecking/StructMemberLabels",
+            "regularTypechecking/DepMapMutableIndex",
             "regularTypechecking/TrustQueryNonFinal",
     })
     void testPositive(String contractName) throws Exception {
@@ -133,7 +134,6 @@ public class TestRegularTypechecking {
             "regularTypechecking/CallOptionUnsupported_W01",
             "regularTypechecking/ThrowsUnknownException_W01",
             "regularTypechecking/EmptyFile_W01",
-            "regularTypechecking/DepMapNonFinalIndex_W01",
             "regularTypechecking/ThrowUndeclared_W01",
             "regularTypechecking/SubscriptNonCollection_W01",
             "regularTypechecking/LabelNonPrincipalVar_W01",

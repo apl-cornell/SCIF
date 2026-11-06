@@ -1,0 +1,10 @@
+// An element of a trusted map read at a trusted index is trusted.
+contract MapIndexRead {
+    map(address, uint) m;
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}(address{this} k) {
+        secret = m[k];
+    }
+}

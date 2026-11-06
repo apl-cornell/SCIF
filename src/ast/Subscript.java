@@ -18,8 +18,6 @@ import java.util.ArrayList;
  * value is of type map or array, and index's type should be right accordingly.
  */
 public class Subscript extends TrailerExpr {
-    /** The type of the collection subscripted, once this expression has been IFC-checked. */
-    private TypeSym collectionType;
 
     Expression index;
 
@@ -67,19 +65,12 @@ public class Subscript extends TrailerExpr {
         value.genTypeConstraints(env, now);
 
         if (valueVarSym.typeSym instanceof DepMapTypeSym) {
-            // index must match, and must be a final address/contract or a principal
-            boolean validIndex = true;
-            if (index instanceof Name) {
-                VarSym indexSym = index.getVarInfo(env);
-                if (!indexSym.isPrincipalVar()) {
-                    validIndex = false;
-                }
-            } else {
-                validIndex = false;
-            }
-            if (!validIndex) {
+            // The index must be a variable holding a principal, which the element's label
+            // may name.
+            if (!(index instanceof Name && index.getVarInfo(env) instanceof VarSym indexSym
+                    && indexSym.isPrincipalTyped())) {
                 throw new SemanticException(
-                        "the index of a dependent map must be a final address or contract variable",
+                        "the index of a dependent map must be an address or contract variable",
                         index.location);
             }
             return now;
@@ -107,53 +98,29 @@ public class Subscript extends TrailerExpr {
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
 
         Map<String, String> dependentMapping = new HashMap<>();
-        VarSym valueVarSym = value.getVarInfo(env, false, dependentMapping);
-        collectionType = valueVarSym.typeSym;
+        ExpOutcome vo = value.genIFConstraints(env, false);
+        TypeSym collectionType = value.type();
 
-        String ifNameValue = valueVarSym.labelNameSLC();
+        String ifNameValue = vo.valueLabelName;
         // String ifNameRtnValue = ifNameValue + "." + "Subscript" + location.toString();
         String ifNameRtnValue = toSHErrLocFmt();
         ExpOutcome io = index.genIFConstraints(env, tail_position);
 
 
         // String ifNameRtnLock = "";
-        if (valueVarSym.typeSym instanceof DepMapTypeSym depMapTypeSym) {
-            // value[index] where value is of dependent map type
-            // precondition: the type of index and value match; index is a final address/contract or a principal
-            // the result value of this expression has the label dependent to index
-
-            // DepMapTypeSym typeSym = (DepMapTypeSym) valueVarSym.typeSym;
-            Map<String, String> indexMapping = new HashMap<>();
-            VarSym indexVarSym = index.getVarInfo(env, tail_position, indexMapping);
-            // logger.debug("subscript/DepMap:");
-            // logger.debug("lookup at: " + index.toString());
-            // logger.debug(indexVarSym.toString());
-            String ifNameIndex = indexVarSym.toSHErrLocFmt();
-
-            if (indexVarSym.isPrincipalVar()) {
-//                // logger.debug("typename {} to {}", valueVarSym.typeSym.getName(), ifNameIndex);
-                System.err.println("typename " + depMapTypeSym.label() + " to " + ifNameIndex);
-
-                dependentMapping.put(depMapTypeSym.key().toSHErrLocFmt(), ifNameIndex);
-                String ifDepMapValue = depMapTypeSym.label().toSHErrLocFmt(dependentMapping);
-//                String ifDepMapValue = depMapTypeSym.label().toSHErrLocFmt(depMapTypeSym.key().toSHErrLocFmt(),
-//                        ifNameIndex);
-//
-//                env.addTrustConstraint(
-//                        new Constraint(new Inequality(ifDepMapValue, Relation.EQ, ifNameRtnValue),
-//                                env.hypothesis(), location, env.curContractSym().getName(),
-//                                "Integrity level of the subscripted value is not expected"));
-                return new ExpOutcome(ifDepMapValue, io.psi);
-
-            } else {
-                throw new AssertionError();
-            }
+        if (collectionType instanceof DepMapTypeSym depMapTypeSym) {
+            String elementLabel = elementLabel(depMapTypeSym, indexPrincipal(env));
+            // Unless the element's label names its key, the index chooses which element is
+            // read, so the result is trusted no more than the index.
+            return new ExpOutcome(namesKey(depMapTypeSym) ? elementLabel
+                    : Utils.joinLabels(elementLabel, io.valueLabelName), io.psi);
         } else {
             Context indexContext = io.psi.getNormalPath().c;
             String ifNameIndex = io.valueLabelName;
             //ifNameRtnValue =
             //        scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
-            env.checkEqual(ifNameValue, ifNameRtnValue, location,
+            // The index chooses which element is read, so the result is trusted no more than it.
+            env.checkEqual(Utils.joinLabels(ifNameValue, ifNameIndex), ifNameRtnValue, location,
                     "Integrity level of the subscript value is not trustworthy enough");
 
             // env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
@@ -176,32 +143,15 @@ public class Subscript extends TrailerExpr {
 //        String ifNameRtn = ifNameValue + "." + "Subscript" + location.toString();
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
         if (valueVarSym.typeSym instanceof DepMapTypeSym depMapTypeSym) {
-            // check if the index value is a principal
-            Map<String, String> indexMapping = new HashMap<>();
-            VarSym indexVarSym = index.getVarInfo(env, tail_position, indexMapping);
-            String ifNameIndex = indexVarSym.toSHErrLocFmt();
-            if (indexVarSym.isPrincipalVar()) {
-
-                TypeSym rtnTypeSym = depMapTypeSym.valueType;
-                dependentMapping.put(depMapTypeSym.key().toSHErrLocFmt(), ifNameIndex);
-                rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
-                        rtnTypeSym.defContext(), false, false, false);
-                env.checkFlow(depMapTypeSym.label().toSHErrLocFmt(dependentMapping),
-                        rtnVarSym.labelNameSLC(), location, "Label of the subscript value");
-
-//                String ifDepMapValue = (valueVarSym).ifl.toSHErrLocFmt(valueVarSym.typeSym.name(),
-//                        ifNameIndex);
-
-//                env.cons.add(
-//                        new Constraint(new Inequality(ifDepMapValue, ifNameRtn), env.hypothesis,
-//                                location, env.curContractSym.name(),
-//                                "Label of the subscript variable"));
-
-            } else {
-//                logger.error(,
-//                        locToString());
-                throw new SemanticException(
-                        "the index of a dependent map must be a final address variable", index.location);
+            TypeSym rtnTypeSym = depMapTypeSym.valueType;
+            dependentMapping.put(depMapTypeSym.key().toSHErrLocFmt(), indexPrincipal(env));
+            rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
+                    rtnTypeSym.defContext(), false, false, false);
+            env.checkFlow(elementLabel(depMapTypeSym, indexPrincipal(env)),
+                    rtnVarSym.labelNameSLC(), location, "Label of the subscript value");
+            if (!namesKey(depMapTypeSym)) {
+                env.checkFlow(index.genIFConstraints(env, tail_position).valueLabelName,
+                        rtnVarSym.labelNameSLC(), location, "Label of the subscript index value");
             }
         } else {
             String ifNameIndex = index.genIFConstraints(env, tail_position).valueLabelName;
@@ -256,11 +206,65 @@ public class Subscript extends TrailerExpr {
 
     @Override
     protected TypeSym staticType(VisitEnv env) {
+        TypeSym collectionType = value.type();
         if (collectionType instanceof ArrayTypeSym arrayType) {
             return arrayType.valueType;
         } else if (collectionType instanceof MapTypeSym mapType) {
             return mapType.valueType;
         }
         throw new AssertionError("subscript of " + collectionType.getName());
+    }
+
+    @Override
+    protected ExpOutcome genLocationFlow(VisitEnv env) throws SemanticException {
+        ExpOutcome bo = value.genLocationConstraints(env);
+        TypeSym collectionType = value.type();
+        ExpOutcome io = index.genIFConstraints(env, false);
+        PathOutcome psi = io.psi;
+        psi.join(bo.psi.withoutNormalPath());
+        if (collectionType instanceof DepMapTypeSym depMapTypeSym) {
+            String elementLabel = elementLabel(depMapTypeSym, indexPrincipal(env));
+            // If the element's label names its key, it is trusted by the principal the index
+            // holds, whoever chose it. Otherwise the index chooses which element is
+            // overwritten, so it must be trusted at the element's label.
+            if (!namesKey(depMapTypeSym)) {
+                env.checkFlow(io.valueLabelName, elementLabel, index.location,
+                        "The index of an assignment target must be trusted at the label of the element");
+            }
+            return new ExpOutcome(elementLabel, psi);
+        }
+        // The index chooses which element is overwritten, so it must be trusted as much as
+        // the collection.
+        env.checkFlow(io.valueLabelName, bo.valueLabelName, index.location,
+                "The index of an assignment target must be trusted at the label of the collection");
+        return new ExpOutcome(bo.valueLabelName, psi);
+    }
+
+    /**
+     * The principal the index of this subscript holds, which must be a principal-typed
+     * variable.
+     */
+    private String indexPrincipal(VisitEnv env) throws SemanticException {
+        String principal = index.principalName(env);
+        if (principal == null) {
+            throw new SemanticException(
+                    "the index of a dependent map must be an address or contract variable",
+                    index.location);
+        }
+        return principal;
+    }
+
+    /** The label of the element of a map of type {@code type} whose key holds {@code key}. */
+    private static String elementLabel(DepMapTypeSym type, String key) {
+        Map<String, String> mapping = new HashMap<>();
+        mapping.put(type.key().toSHErrLocFmt(), key);
+        return type.label().toSHErrLocFmt(mapping);
+    }
+
+    /** Whether the label of the elements of a map of type {@code type} names its key. */
+    private static boolean namesKey(DepMapTypeSym type) {
+        String key = type.key().toSHErrLocFmt();
+        return type.label().principalSyms().stream()
+                .anyMatch(p -> p.toSHErrLocFmt().equals(key));
     }
 }

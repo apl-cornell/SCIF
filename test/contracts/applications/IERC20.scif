@@ -1,5 +1,5 @@
 interface IERC20 {
-    exception ERC20InsufficientBalance(address{any} owner, uint balance, uint{owner} needed);
+    exception ERC20InsufficientBalance(address{any} owner, uint{owner} balance, uint{owner} needed);
     exception ERC20InsufficientAllowance(address{any} owner, address{owner} spender, uint{owner} allowance, uint{owner ⨆ spender} needed);
     public uint balanceOf(address account);
     public void approve{sender}(address allowed, uint amount);
