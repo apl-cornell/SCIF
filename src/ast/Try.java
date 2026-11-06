@@ -25,14 +25,14 @@ import java.util.ArrayList;
 
 public class Try extends Statement {
 
-    List<Statement> body;
+    Block body;
     List<ExceptHandler> handlers;
 
     // ArrayList<Statement> orelse;
     // ArrayList<Statement> finalbody;
     public Try(List<Statement> body,
             List<ExceptHandler> handlers) {//, ArrayList<Statement> orelse, ArrayList<Statement> finalbody) {
-        this.body = body;
+        this.body = new Block(body);
         this.handlers = handlers;
         // this.orelse = orelse;
         // this.finalbody = finalbody;
@@ -58,9 +58,7 @@ public class Try extends Statement {
             now.addException(t, true);
         }
 
-        for (Statement s : body) {
-            tmp = s.genTypeConstraints(env, now);
-        }
+        body.genTypeConstraints(env, now);
         env.exitNewScope();
 
         for (ExceptHandler h : handlers) {
@@ -79,14 +77,11 @@ public class Try extends Statement {
         writeMap = new HashMap<>();
 
         // find out read and written local variables
-        for (Statement s : body) {
-            readMap.putAll(s.readMap(code));
-            writeMap.putAll(s.writeMap(code));
-            // solBody.addAll(s.solidityCodeGen(code));
-        }
+        readMap.putAll(body.readMap(code));
+        writeMap.putAll(body.writeMap(code));
         readMap.putAll(writeMap);
         code.enterNewVarScope();
-        Function newTempFunction = code.makeMethod(body, readMap, writeMap, ScopeType.TRY);
+        Function newTempFunction = code.makeMethod(body.statements(), readMap, writeMap, ScopeType.TRY);
         code.exitVarScope();
         code.addTemporaryFunction(newTempFunction);
 
@@ -159,9 +154,9 @@ public class Try extends Statement {
         //env.psi = newPsi;
         PathOutcome psi = new PathOutcome();
         PathOutcome input = new PathOutcome();
+        Map<String, String> versionsBefore = env.saveVersions();
         env.incScopeLayer();
-        PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        Utils.genConsStmtsWithException(body, env, so, psi, false);
+        psi.join(body.IFCVisit(env, false));
 //        for (Statement s : body) {
 //            so = s.genConsVisit(env, false);
 //            psi.joinExe(so);
@@ -171,12 +166,12 @@ public class Try extends Statement {
 //        }
         env.decScopeLayer();
         for (ExceptHandler h : handlers) {
-            ExceptionTypeSym expSym = env.getExp(h.name());
+            ExceptionTypeSym expSym = h.exceptionType(env);
             PsiUnit u = psi.psi.get(expSym);
 
             if (u != null) {
                 env.checkFlow(u.c.lambda, beginContext.lambda, location,
-                        "Try clause should maintain locks when throwing exception " + h.name());
+                        "Try clause should maintain locks when throwing exception " + h.type().name());
             /*env.cons.add(new Constraint(new Inequality(u.c.pc, h.), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));*/
 
@@ -188,20 +183,28 @@ public class Try extends Statement {
         //Context cTry = env.outContext;
 
         //env.psi = oldPsi;
+        // A handler may be entered from any point in the body.
+        List<Map<String, String>> exitVersions = new ArrayList<>();
+        exitVersions.add(env.saveVersions());
+        java.util.Set<String> assignedInBody = ast.Assign.assignedNames(body.statements());
         for (ExceptHandler h : handlers) {
+            env.restoreVersions(versionsBefore);
+            env.havoc(assignedInBody);
             env.incScopeLayer();
             //env.inContext = new Context(h.getHandlerPcLabelName(), beginContext.lambda);
-            ExceptionTypeSym expSym = env.getExp(h.name());
+            ExceptionTypeSym expSym = h.exceptionType(env);
             PsiUnit expUnit = input.psi.get(expSym);
             if (expUnit != null) {
                 env.inContext = Utils.genNewContextAndConstraints(env, false, expUnit.c, beginContext.lambda, h.nextPcSHL(), h.location);
 //                env.inContext = new Context(expUnit.c.pc, beginContext.lambda);
                 PathOutcome ho = h.genConsVisit(env, tail_position);
                 psi.join(ho);
+                exitVersions.add(env.saveVersions());
             }
             env.decScopeLayer();
             // cTry = new Context(Utils.makeJoin(cTry.pc, env.outContext.outPcName), Utils.makeJoin(cTry.lambda, env.outContext.lockName));
         }
+        env.mergeVersions(exitVersions);
 
         typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
 
@@ -226,7 +229,7 @@ public class Try extends Statement {
     @Override
     public List<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        rtn.addAll(body);
+        rtn.add(body);
         rtn.addAll(handlers);
         return rtn;
     }
@@ -238,10 +241,7 @@ public class Try extends Statement {
 
     @Override
     protected Map<String,? extends Type> readMap(CompileEnv code) {
-        Map<String, Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.readMap(code));
-        }
+        Map<String, Type> result = new HashMap<>(body.readMap(code));
         for (ExceptHandler s: handlers) {
             result.putAll(s.readMap(code));
         }
@@ -250,10 +250,7 @@ public class Try extends Statement {
 
     @Override
     protected Map<String,? extends Type> writeMap(CompileEnv code) {
-        Map<String, Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.writeMap(code));
-        }
+        Map<String, Type> result = new HashMap<>(body.writeMap(code));
         for (ExceptHandler s: handlers) {
             result.putAll(s.writeMap(code));
         }

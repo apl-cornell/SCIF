@@ -9,6 +9,7 @@ import typecheck.NTCEnv;
 import typecheck.ScopeContext;
 import typecheck.StructTypeSym;
 import typecheck.Sym;
+import typecheck.VarSym;
 import typecheck.exceptions.SemanticException;
 
 import java.util.ArrayList;
@@ -34,6 +35,17 @@ public class StructDef extends TopLayerNode {
                 location);
     }
 
+    /**
+     * Resolves the labels of the members of this struct's type in {@code contractSym}, whose
+     * state variables, including the built-in principals, must already be declared.
+     */
+    public void resolveMemberLabels(InterfaceSym contractSym) throws SemanticException {
+        StructTypeSym structSym = (StructTypeSym) contractSym.lookupSym(structName);
+        for (int i = 0; i < members.size(); ++i) {
+            structSym.members().get(i).setLabel(contractSym.newLabel(members.get(i).label()));
+        }
+    }
+
     @Override
     public void ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
         if (members.isEmpty()) {
@@ -46,9 +58,28 @@ public class StructDef extends TopLayerNode {
         env.addType(structName, env.toStructType(structName, members));
     }
 
-    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
-//        assert false;
-        return null;
+    @Override
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent)
+            throws SemanticException {
+        ScopeContext now = new ScopeContext(this, parent);
+        for (StateVariableDeclaration member : members) {
+            member.label().genTypeConstraints(env, now);
+            // Like the label of a field, a member's label must mean the same thing wherever
+            // the struct is used, so it may not name a principal that can change.
+            checkNamesFinal(member.label(), env);
+        }
+        return now;
+    }
+
+    private void checkNamesFinal(IfLabel label, NTCEnv env) throws SemanticException {
+        if (label instanceof ComplexIfLabel c) {
+            checkNamesFinal(c.getLeft(), env);
+            checkNamesFinal(c.getRight(), env);
+        } else if (label instanceof PrimitiveIfLabel p
+                && env.getCurSym(p.value().id) instanceof VarSym v && v.isMutablePrincipal()) {
+            throw new SemanticException("the label of a member of struct " + structName
+                    + " names " + v.getName() + ", which is not final", label.location());
+        }
     }
 
     public compile.ast.StructDef solidityCodeGen(CompileEnv code) {

@@ -1,0 +1,10 @@
+// The index of a map write chooses which element is overwritten, so it must be
+// trusted at the map's label.
+contract MapIndexWriteLow_W01 {
+    map(address, uint) m;
+    constructor() { super(); }
+
+    public void f{this}(address{any} k) {
+        m[k] = 1;
+    }
+}

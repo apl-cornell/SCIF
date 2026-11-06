@@ -107,7 +107,7 @@ public class PrimitiveIfLabel extends IfLabel {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) {
         return null;
     }
 

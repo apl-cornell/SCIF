@@ -1,0 +1,18 @@
+// Trusted data thrown in a trusted exception can be used as trusted in its handler.
+contract ExceptionData {
+    uint{this} secret;
+    exception E(uint v);
+    constructor() { super(); }
+
+    void g{this}(uint{this} x) throws (E{this}) {
+        throw E(x);
+    }
+
+    public void f{this}(uint{this} x) {
+        try {
+            g(x);
+        } catch (E e) {
+            secret = e.v;
+        }
+    }
+}

@@ -1,0 +1,10 @@
+// A dependent map may be indexed by any address variable, final or not. The
+// element's label names the principal the index holds when the map is read.
+contract DepMapMutableIndex {
+    map(address x, uint{x}) m;
+    uint{this} y;
+    constructor() { super(); }
+    public void f{this}(address a) {
+        y = endorse(m[a], any -> this);
+    }
+}

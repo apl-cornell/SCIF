@@ -1,0 +1,13 @@
+import "./IOracle.scif";
+// An interface-typed local names a principal, so data it trusts is not trusted by this.
+contract InterfaceLocalPrincipal_W01 {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(address{this} a) {
+        final IOracle o = IOracle(a);
+        uint{o} w = 1;
+        secret = w;
+    }
+}

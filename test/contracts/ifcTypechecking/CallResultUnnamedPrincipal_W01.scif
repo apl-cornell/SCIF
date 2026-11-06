@@ -1,0 +1,14 @@
+// The principal the result is labeled by is held by a struct member, which is not a name,
+// so the result is trusted as if labeled by the least trusted principal.
+contract CallResultUnnamedPrincipal_W01 {
+    struct S { address a; }
+    S s;
+
+    constructor() { super(); }
+
+    uint{who} h{this}(address who) { return 0; }
+
+    public uint{this} g{this}() {
+        return h(s.a);
+    }
+}

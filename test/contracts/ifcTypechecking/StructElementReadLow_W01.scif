@@ -1,0 +1,14 @@
+// A member of an array element is read at its own label.
+contract StructElementReadLow_W01 {
+    struct S {
+        uint{any} v;
+        uint w;
+    }
+    S[] ss;
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}(uint{this} k) {
+        secret = ss[k].v;
+    }
+}

@@ -1,0 +1,11 @@
+// The index of a map read chooses which element is read, so the result is
+// trusted no more than the index.
+contract MapIndexReadLow_W01 {
+    map(address, uint) m;
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}(address{any} k) {
+        secret = m[k];
+    }
+}

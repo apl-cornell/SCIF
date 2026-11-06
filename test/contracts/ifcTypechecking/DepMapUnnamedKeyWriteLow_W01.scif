@@ -1,0 +1,10 @@
+// When an element's label does not name its key, the index of a write must be
+// trusted at the element's label.
+contract DepMapUnnamedKeyWriteLow_W01 {
+    map(address a, uint{this}) m;
+    constructor() { super(); }
+
+    public void f{this}(address{any} k) {
+        m[k] = 1;
+    }
+}

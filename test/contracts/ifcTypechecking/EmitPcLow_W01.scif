@@ -1,0 +1,12 @@
+// Emitting under untrusted control flow tells observers something untrusted.
+contract EmitPcLow_W01 {
+    event Paid(address to, uint amount);
+
+    constructor() { super(); }
+
+    public void f{this}(address{this} to, uint{this} amount, bool{any} c) {
+        if (c) {
+            emit Paid(to, amount);
+        }
+    }
+}

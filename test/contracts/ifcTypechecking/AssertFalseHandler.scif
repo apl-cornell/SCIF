@@ -1,0 +1,20 @@
+// An assertion of false never completes normally, so a handler that consists
+// of one does not make control flow after the try untrusted.
+contract AssertFalseHandler {
+    uint{this} count;
+    exception E();
+    constructor() { super(); }
+
+    void g{this}() throws (E{any}) {
+        throw E();
+    }
+
+    public void f{this}() {
+        try {
+            g();
+        } catch (E e) {
+            assert false;
+        }
+        count = count + 1;
+    }
+}

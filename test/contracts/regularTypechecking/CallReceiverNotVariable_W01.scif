@@ -1,8 +1,8 @@
-// The receiver of a method call is not a variable.
+// The receiver of a method call must be a variable, a member, or an element,
+// not the result of another call, even in parentheses.
 contract CallReceiverNotVariable_W01 {
-    struct S { CallReceiverNotVariable_W01 c; }
-    S s;
-    uint x;
-    constructor() { super(); x = s.c.g(); }
-    public uint g() { return 1; }
+    CallReceiverNotVariable_W01 c;
+    constructor() { super(); }
+    public CallReceiverNotVariable_W01 self() { return c; }
+    public uint g() { return (self()).g(); }
 }
