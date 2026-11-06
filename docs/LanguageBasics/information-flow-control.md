@@ -54,7 +54,7 @@ Labels are ordered by trust. Information may flow from a more trusted label to a
 
 `this` flows to every label, and every label flows to `any`. Other principals, such as `sender` and `user`, are incomparable: information cannot flow between them in either direction.
 
-An assignment `x = e` is accepted only if the label of `e` flows to the label of `x`. In the following contract, the parameter `input` of the public function `update` is labeled `{sender}` by default (see [Functions](/LanguageBasics/draft/functions)):
+An assignment `x = e` is accepted only if the label of `e` flows to the label of `x`. In the following contract, the parameter `input` of the public function `update` is labeled `{sender}` by default:
 
 ```scif
 contract Labels {
@@ -91,7 +91,7 @@ contract Labels {
 
 The assigned value `1` is a constant, but whether the `{this}` state variable `trusted` is assigned depends on `input`, which the contract does not trust.
 
-A function's internal begin label sets `pc` at the start of its body. [Functions](/LanguageBasics/draft/functions) and [Exceptions and Failures](/LanguageBasics/exceptions-and-failures) describe how calls, exceptions and failures affect `pc`.
+A function's internal begin label sets `pc` at the start of its body. Functions and [Exceptions and Failures](/LanguageBasics/exceptions-and-failures) describe how calls, exceptions and failures affect `pc`.
 
 ## Endorsement
 
@@ -115,8 +115,8 @@ endorse(input, sender -> this) when (input <= 100) {
 
 Conditional endorsement ties the trust decision to the check that justifies it, which makes it the recommended form. Several variables can be endorsed at once by listing them in brackets, as in `endorse([x, y], sender -> this) when (...)`.
 
-A function can also endorse its control flow on entry, which [Functions](/LanguageBasics/draft/functions) describes as auto-endorsement.
+A function can also endorse its control flow on entry, which Functions describes as auto-endorsement.
 
 ## Default labels
 
-Unlabeled state variables and local variables are labeled `{this}`. A local variable in a function whose body runs with less integrity than the contract therefore needs an explicit label. The defaults for function labels, parameters, return values and exceptions are given in [Functions](/LanguageBasics/draft/functions).
+Unlabeled state variables and local variables are labeled `{this}`. A local variable in a function whose body runs with less integrity than the contract therefore needs an explicit label. The defaults for function labels, parameters, return values and exceptions are given in Functions.

@@ -59,11 +59,11 @@ Struct fields carry no labels of their own: a struct value has the label of the 
 
 ## Closure types
 
-A closure type such as `(fun {this} (uint) -> void) {this}` is the type of a pending call to a closurable function; [Closures](/LanguageBasics/draft/closures) describes its form and labels.
+A closure type such as `(fun {this} (uint) -> void) {this}` is the type of a pending call to a closurable function; Closures describes its form and labels.
 
 ## Labeled types
 
-A label can follow the type in every declaration: state variables, local variables, parameters, return types, and exceptions in a `throws` clause. An omitted label takes the default described in [Information Flow Control](/LanguageBasics/information-flow-control) and [Functions](/LanguageBasics/draft/functions).
+A label can follow the type in every declaration: state variables, local variables, parameters, return types, and exceptions in a `throws` clause. An omitted label takes the default described in [Information Flow Control](/LanguageBasics/information-flow-control) and Functions.
 
 ## Zero values
 
