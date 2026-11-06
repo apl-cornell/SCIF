@@ -98,6 +98,8 @@ public class TestIfcTypechecking {
             "ifcTypechecking/CallElementReceiver",
             "ifcTypechecking/CallMemberReceiver",
             "ifcTypechecking/MemberArrayPush",
+            "ifcTypechecking/UncheckedEarlierThrowUntrusted",
+            "ifcTypechecking/UncheckedEmpty",
     })
     void testPositive(String contractName) throws Exception {
         File logDir = new File("./.scif");
@@ -199,6 +201,7 @@ public class TestIfcTypechecking {
             "ifcTypechecking/CallElementReceiverLow_W01",
             "ifcTypechecking/CallMemberReceiverLow_W01",
             "ifcTypechecking/MemberArrayPushLow_W01",
+            "ifcTypechecking/UncheckedEarlierThrowLow_W01",
             // "examples/ERC20",
     })
     void testNegative(String contractName) throws Exception {

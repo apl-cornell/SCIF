@@ -28,24 +28,24 @@ public class FunctionDef extends FunctionSig {
 
     private static boolean DEBUG = false;
 
-    List<Statement> body;
+    Block body;
 
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
             List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor,
             CodeLocation location) {
         super(name, funcLabels, args, decoratorList, rtn, isConstructor, location);
-        this.body = body;
+        this.body = new Block(body);
     }
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
             List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor, boolean isBuiltIn,
             CodeLocation location) {
         super(name, funcLabels, args, decoratorList, rtn, isConstructor, isBuiltIn, location);
-        this.body = body;
+        this.body = new Block(body);
     }
 
     public FunctionDef(FunctionSig funcSig, List<Statement> body) {
         super(funcSig);
-        this.body = body;
+        this.body = new Block(body);
     }
 
 
@@ -56,7 +56,7 @@ public class FunctionDef extends FunctionSig {
         env.enterNewScope();
         // add args to local sym;
         String funcName = this.name;
-        if (DEBUG) System.err.println("entering method: " + name + " " + body.size());
+        if (DEBUG) System.err.println("entering method: " + name + " " + body.statements().size());
         FuncSym funcSym = ((FuncSym) env.getCurSym(funcName));
         Map<ExceptionTypeSym, Boolean> exceptionTypeSyms = new HashMap<>();
         for (Map.Entry<ExceptionTypeSym, Label> t : funcSym.exceptions.entrySet()) {
@@ -89,10 +89,7 @@ public class FunctionDef extends FunctionSig {
         }
         //if (!isBuiltIn()) {
             // TODO: add support for signatures
-            for (Statement stmt : body) {
-                // // logger.debug("stmt: " + stmt);
-                stmt.genTypeConstraints(env, now);
-            }
+            body.genTypeConstraints(env, now);
         if (isConstructor()) {
             // TODO(steph): fix assert
             if (!env.superCalled()) throw new SemanticException("constructor of super contract is not called in the constructor of " + env.currentSourceFileFullName(), location);
@@ -165,36 +162,15 @@ public class FunctionDef extends FunctionSig {
 
         args.genConsVisit(env, false);
         // Context prev = new Context(env.prevContext);//, prev2 = null;
-        CodeLocation loc = null;
-        PathOutcome CO = null;
         env.inContext = funcBeginContext;
-//        Utils.genConsStatments(body, env, CO, true);
-        int index = 0;
-        PathOutcome escaping = new PathOutcome(); // exception paths leaving the body
-        for (Statement stmt : body) {
-            // Context CO = new Context(Utils.getLabelNamePc(stmt.location), Utils.getLabelNameLock(stmt.location));
-            // env.outContext = CO;
-            ++index;
-            String prevLambda = env.inContext.lambda;
-            boolean isTail = index == body.size() && tail_info;
-            CO = stmt.IFCVisit(env, isTail);
-            PathOutcome thrown = new PathOutcome(new java.util.HashMap<>(CO.psi));
-            thrown.psi.remove(Utils.getNormalPathException());
-            thrown.psi.remove(Utils.getReturnPathException());
-            escaping.join(thrown);
-            //Context CO = env.outContext;
-            if (CO.existsNormalPath()) {
-                env.inContext = Utils.genNewContextAndConstraints(env, isTail, CO.getNormalPath().c, prevLambda, stmt.nextPcSHL(), stmt.location());
-
-//                env.inContext = new Context(CO.getNormalPath().c());
-            } else {
-                break;
-            }
-        }
-        if (body.size() > 0 && CO.existsNormalPath()) {
+        PathOutcome CO = body.IFCVisit(env, tail_info);
+        PathOutcome escaping = CO.withoutNormalPath(); // exception paths leaving the body
+        escaping.psi.remove(Utils.getReturnPathException());
+        if (!body.isEmpty() && CO.existsNormalPath()) {
             if (DEBUG) System.err.println("method: " + funcLocalName);
+            List<Statement> stmts = body.statements();
             Utils.contextFlow(env, CO.getNormalPath().c(), funcEndContext.c(),
-                    body.get(body.size() - 1).location);
+                    stmts.get(stmts.size() - 1).location);
         }
 
         // Each exception that escapes must be trusted at its declared label, and must
@@ -256,9 +232,7 @@ public class FunctionDef extends FunctionSig {
             List<Argument> arguments = args.solidityCodeGen(code);
             List<compile.ast.Statement> statements = new ArrayList<>();
             compile.Utils.addBuiltInVars(true, statements, code);
-            for (Statement s: body) {
-                statements.addAll(s.solidityCodeGen(code));
-            }
+            statements.addAll(body.solidityCodeGen(code));
             code.exitVarScope();
             code.popScope();
             return new Constructor(arguments, statements);
@@ -295,10 +269,7 @@ public class FunctionDef extends FunctionSig {
                 wapperStatements.addAll(code.enterFuncCheck(funcLabels, args));
 //                statements.addAll(code.enterFuncCheck(funcLabels, args));
             }
-            for (Statement s: body) {
-                List<compile.ast.Statement> tmp = s.solidityCodeGen(code);
-                statements.addAll(tmp);
-            }
+            statements.addAll(body.solidityCodeGen(code));
 
             if (!exceptionFree()) {
                 statements.addAll(code.compileReturn(rtn.type().isVoid() ? null : new SingleVar(
@@ -343,23 +314,19 @@ public class FunctionDef extends FunctionSig {
     }
 
     private boolean exceptionHandlingFree() {
-        if (!exceptionFree()) return false;
-        for (Statement s: body) {
-            if (!s.exceptionHandlingFree()) return false;
-        }
-        return true;
+        return exceptionFree() && body.exceptionHandlingFree();
     }
 
     @Override
     public List<Node> children() {
         List<Node> rtn = super.children();
-        rtn.addAll(body);
+        rtn.add(body);
         return rtn;
     }
 
     public void renameSuperCall(String extendsContractName) {
         List<Statement> newBody = new ArrayList<>();
-        for (Statement s: body) {
+        for (Statement s: body.statements()) {
             if (s instanceof ast.CallStatement callStatement) {
                 CallStatement newS = new CallStatement(callStatement);
                 newS.call.checkAndRenameSuper(extendsContractName);

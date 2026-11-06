@@ -202,7 +202,7 @@ public class Contract extends TopLayerNode {
         Set<String> initialized = new HashSet<>();
         for (FunctionDef fDef : methodDeclarations) {
             if (!fDef.isConstructor() && !Utils.isSuperConstructor(fDef.getName())) continue;
-            for (Statement stmt : fDef.body) {
+            for (Statement stmt : fDef.body.statements()) {
                 if (stmt instanceof Assign a && a.target instanceof Name n
                         && finalFields.containsKey(n.id)) {
                     if (!initialized.add(n.id)) {
@@ -668,7 +668,7 @@ public class Contract extends TopLayerNode {
                     continue;
                 if (f.isConstructor()) {
                     // rename
-                    FunctionDef newF = new FunctionDef(f, f.body);
+                    FunctionDef newF = new FunctionDef(f, f.body.statements());
                     newF.changeName(Utils.genSuperName(contractName));
                     newF.makeNonConstructor();
                     newF.renameSuperCall(extendsContractName);

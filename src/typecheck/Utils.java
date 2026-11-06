@@ -847,34 +847,6 @@ public class Utils {
         return new Context(newPc, c.lambda);
     }
 
-    /**
-     * Generates the information-flow constraints for the statement sequence {@code body},
-     * which starts in the context {@code env.inContext}, and returns every way it can
-     * terminate: its exception and return paths, and its normal path if it can complete
-     * normally. The last statement is in tail position if {@code tailPosition} is. On return,
-     * {@code env.inContext} is the context after the last statement that completed normally.
-     */
-    public static PathOutcome genConsStmtSeq(List<ast.Statement> body, VisitEnv env,
-            boolean tailPosition) throws SemanticException {
-        PathOutcome result = new PathOutcome();
-        int index = 0;
-        for (ast.Statement s : body) {
-            ++index;
-            String prevLambda = env.inContext.lambda;
-            boolean isTail = index == body.size() && tailPosition;
-            PathOutcome so = s.IFCVisit(env, isTail);
-            PsiUnit normal = so.getNormalPath();
-            result.join(so.withoutNormalPath());
-            if (normal == null) {
-                return result;
-            }
-            env.inContext = genNewContextAndConstraints(env, isTail, normal.c, prevLambda,
-                    s.nextPcSHL(), s.location());
-        }
-        result.setNormalPath(env.inContext);
-        return result;
-    }
-
     static int inferredLabelCount = 0;
     public static IfLabel newInferredLabel() {
         return new PrimitiveIfLabel(new Name("__inferredLabel" + inferredLabelCount));

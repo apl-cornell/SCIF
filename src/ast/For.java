@@ -19,14 +19,14 @@ import typecheck.sherrlocUtils.Relation;
 public class For extends Statement {
     AnnAssign newVars;
     Expression test;
-    List<Statement> iter;
-    List<Statement> body;
+    Block iter;
+    Block body;
 
     public For(AnnAssign newVars, Expression test, List<Statement> iter, List<Statement> body) {
         this.newVars = newVars;
         this.test = test;
-        this.iter = iter;
-        this.body = body;
+        this.iter = new Block(iter);
+        this.body = new Block(body);
     }
 
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
@@ -40,12 +40,8 @@ public class For extends Statement {
         // the test condition must be boolean
         env.addCons(rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
 
-        for (Statement s: body) {
-            s.genTypeConstraints(env, now);
-        }
-        for (Statement s: iter) {
-            s.genTypeConstraints(env, now);
-        }
+        body.genTypeConstraints(env, now);
+        iter.genTypeConstraints(env, now);
 
         env.exitNewScope();
 
@@ -62,8 +58,7 @@ public class For extends Statement {
         PathOutcome newVarOut = newVars.IFCVisit(env, false);
         beginContext = newVarOut.getNormalPath().c;
         // The loop head is reached from before the loop and from the end of an iteration.
-        java.util.Set<String> assigned = Assign.assignedNames(body);
-        assigned.addAll(Assign.assignedNames(iter));
+        java.util.Set<String> assigned = Assign.assignedNames(List.of(body, iter));
         env.havoc(assigned);
         ExpOutcome to = test.genIFConstraints(env, false);
 
@@ -80,9 +75,9 @@ public class For extends Statement {
 
         env.inContext = new Context(ifNamePcAfter, beginContext.lambda);
         CodeLocation loc = null;
-        List<Statement> iteration = new ArrayList<>(body);
-        iteration.addAll(iter);
-        PathOutcome iterOutcome = Utils.genConsStmtSeq(iteration, env, false);
+        List<Statement> iteration = new ArrayList<>(body.statements());
+        iteration.addAll(iter.statements());
+        PathOutcome iterOutcome = new Block(iteration).IFCVisit(env, false);
         // The loop exits only from its head, which is also reached from the end of an
         // iteration.
         PathOutcome ifo = to.psi.withoutNormalPath();
@@ -119,18 +114,13 @@ public class For extends Statement {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(newVars);
         rtn.add(test);
-        rtn.addAll(iter);
-        rtn.addAll(body);
+        rtn.add(iter);
+        rtn.add(body);
         return rtn;
     }
 
     @Override
     public boolean exceptionHandlingFree() {
-        for (Statement s: body) {
-            if (!s.exceptionHandlingFree()) {
-                return false;
-            }
-        }
-        return true;
+        return body.exceptionHandlingFree();
     }
 }

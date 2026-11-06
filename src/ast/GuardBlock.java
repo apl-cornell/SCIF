@@ -15,12 +15,12 @@ import java.util.HashMap;
 public class GuardBlock extends Statement {
 
     PrimitiveIfLabel l;
-    List<Statement> body;
+    Block body;
     Expression target;
 
     public GuardBlock(PrimitiveIfLabel l, List<Statement> body, Expression target) {
         this.l = l;
-        this.body = body;
+        this.body = new Block(body);
         this.target = target;
     }
 
@@ -30,10 +30,7 @@ public class GuardBlock extends Statement {
         ScopeContext now = new ScopeContext(this, parent);
 
         env.enterNewScope();
-        ScopeContext rtn = null;
-        for (Statement s : body) {
-            rtn = s.genTypeConstraints(env, now);
-        }
+        body.genTypeConstraints(env, now);
         env.exitNewScope();
 
         return now;
@@ -64,7 +61,7 @@ public class GuardBlock extends Statement {
         //Context lastContext = new Context(curContext);//, prev2 = null;
         env.incScopeLayer();
         env.inContext = curContext;
-        PathOutcome psi = Utils.genConsStmtSeq(body, env, tail_position);
+        PathOutcome psi = body.IFCVisit(env, tail_position);
 //        int index = 0;
 //        for (Statement stmt : body) {
 //            ++index;
@@ -144,9 +141,7 @@ public class GuardBlock extends Statement {
         code.enterNewVarScope();
         String lockP = l.value().id;
         result.add(new Assert(code.lock(lockP)));
-        for (Statement stmt : body) {
-            result.addAll(stmt.solidityCodeGen(code));
-        }
+        result.addAll(body.solidityCodeGen(code));
         result.add(new Assert(code.unlock(lockP)));
         code.exitVarScope();
         return result;
@@ -164,7 +159,7 @@ public class GuardBlock extends Statement {
     public ArrayList<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
         rtn.add(l);
-        rtn.addAll(body);
+        rtn.add(body);
         if (target != null) {
             rtn.add(target);
         }
@@ -172,29 +167,16 @@ public class GuardBlock extends Statement {
     }
     @Override
     public boolean exceptionHandlingFree() {
-        for (Statement s: body) {
-            if (!s.exceptionHandlingFree()) {
-                return false;
-            }
-        }
-        return true;
+        return body.exceptionHandlingFree();
     }
 
     @Override
     protected java.util.Map<String,? extends Type> readMap(CompileEnv code) {
-        java.util.Map<String, Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.readMap(code));
-        }
-        return result;
+        return body.readMap(code);
     }
 
     @Override
     protected java.util.Map<String,? extends Type> writeMap(CompileEnv code) {
-        Map<String, Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.writeMap(code));
-        }
-        return result;
+        return body.writeMap(code);
     }
 }

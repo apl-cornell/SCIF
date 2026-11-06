@@ -52,7 +52,7 @@ public class EndorseIfStatement extends Statement {
         String rtnValueLabel;
 
         ExpOutcome toOutCome = ifStatement.test.genIFConstraints(env,
-                ifStatement.body.size() == 0 && ifStatement.orelse.size() == 0 && tail_position);
+                ifStatement.body.isEmpty() && ifStatement.orelse.isEmpty() && tail_position);
         //Context condContext = to.psi
         rtnValueLabel = toOutCome.valueLabelName;
         String IfNameTest = toOutCome.valueLabelName;
@@ -93,7 +93,7 @@ public class EndorseIfStatement extends Statement {
 
         String IfTestNormalPc = beginContext.pc;
         String IfTestNormalLambda = beginContext.lambda;
-        if (ifStatement.body.size() > 0 || ifStatement.orelse.size() > 0) {
+        if (!ifStatement.body.isEmpty() || !ifStatement.orelse.isEmpty()) {
             Utils.genSequenceConstraints(env, beginContext.lambda, IfTestNormalPc, IfTestNormalLambda, IfNamePcAfter, ifStatement.test.location);
         }
         Map<String, String> versionsBefore = env.saveVersions();
@@ -132,7 +132,7 @@ public class EndorseIfStatement extends Statement {
         CodeLocation loc = null;
         PathOutcome ifo = toOutCome.psi.withoutNormalPath();
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        ifo.join(Utils.genConsStmtSeq(ifStatement.body, env, tail_position));
+        ifo.join(ifStatement.body.IFCVisit(env, tail_position));
 
 //        int index = 0;
 //        for (Statement stmt : ifStatement.body) {
@@ -163,7 +163,7 @@ public class EndorseIfStatement extends Statement {
         env.incScopeLayer();
 //        index = 0;
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        PathOutcome elseo = Utils.genConsStmtSeq(ifStatement.orelse, env, tail_position);
+        PathOutcome elseo = ifStatement.orelse.IFCVisit(env, tail_position);
 //        for (Statement stmt : ifStatement.orelse) {
 //            ++index;
 //            elseo = stmt.genConsVisit(env, index == ifStatement.orelse.size() && tail_position);
@@ -178,7 +178,7 @@ public class EndorseIfStatement extends Statement {
         env.mergeVersions(List.of(versionsThen, env.saveVersions()));
         // Assignments in the then branch go to the endorsed copies, which share storage
         // with the original variables.
-        env.havoc(Assign.assignedNames(ifStatement.body));
+        env.havoc(Assign.assignedNames(ifStatement.body.statements()));
 
         ifo.join(elseo);
         // env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, Utils.joinLabels(leftContext.lambda, rightContext.lambda)), env.hypothesis, location));
@@ -197,8 +197,8 @@ public class EndorseIfStatement extends Statement {
     @Override
     public List<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        rtn.addAll(ifStatement.body);
-        rtn.addAll(ifStatement.orelse);
+        rtn.add(ifStatement.body);
+        rtn.add(ifStatement.orelse);
         return rtn;
     }
 

@@ -25,14 +25,14 @@ import java.util.ArrayList;
 
 public class Try extends Statement {
 
-    List<Statement> body;
+    Block body;
     List<ExceptHandler> handlers;
 
     // ArrayList<Statement> orelse;
     // ArrayList<Statement> finalbody;
     public Try(List<Statement> body,
             List<ExceptHandler> handlers) {//, ArrayList<Statement> orelse, ArrayList<Statement> finalbody) {
-        this.body = body;
+        this.body = new Block(body);
         this.handlers = handlers;
         // this.orelse = orelse;
         // this.finalbody = finalbody;
@@ -58,9 +58,7 @@ public class Try extends Statement {
             now.addException(t, true);
         }
 
-        for (Statement s : body) {
-            tmp = s.genTypeConstraints(env, now);
-        }
+        body.genTypeConstraints(env, now);
         env.exitNewScope();
 
         for (ExceptHandler h : handlers) {
@@ -79,14 +77,11 @@ public class Try extends Statement {
         writeMap = new HashMap<>();
 
         // find out read and written local variables
-        for (Statement s : body) {
-            readMap.putAll(s.readMap(code));
-            writeMap.putAll(s.writeMap(code));
-            // solBody.addAll(s.solidityCodeGen(code));
-        }
+        readMap.putAll(body.readMap(code));
+        writeMap.putAll(body.writeMap(code));
         readMap.putAll(writeMap);
         code.enterNewVarScope();
-        Function newTempFunction = code.makeMethod(body, readMap, writeMap, ScopeType.TRY);
+        Function newTempFunction = code.makeMethod(body.statements(), readMap, writeMap, ScopeType.TRY);
         code.exitVarScope();
         code.addTemporaryFunction(newTempFunction);
 
@@ -161,7 +156,7 @@ public class Try extends Statement {
         PathOutcome input = new PathOutcome();
         Map<String, String> versionsBefore = env.saveVersions();
         env.incScopeLayer();
-        psi.join(Utils.genConsStmtSeq(body, env, false));
+        psi.join(body.IFCVisit(env, false));
 //        for (Statement s : body) {
 //            so = s.genConsVisit(env, false);
 //            psi.joinExe(so);
@@ -191,7 +186,7 @@ public class Try extends Statement {
         // A handler may be entered from any point in the body.
         List<Map<String, String>> exitVersions = new ArrayList<>();
         exitVersions.add(env.saveVersions());
-        java.util.Set<String> assignedInBody = ast.Assign.assignedNames(body);
+        java.util.Set<String> assignedInBody = ast.Assign.assignedNames(body.statements());
         for (ExceptHandler h : handlers) {
             env.restoreVersions(versionsBefore);
             env.havoc(assignedInBody);
@@ -234,7 +229,7 @@ public class Try extends Statement {
     @Override
     public List<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        rtn.addAll(body);
+        rtn.add(body);
         rtn.addAll(handlers);
         return rtn;
     }
@@ -246,10 +241,7 @@ public class Try extends Statement {
 
     @Override
     protected Map<String,? extends Type> readMap(CompileEnv code) {
-        Map<String, Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.readMap(code));
-        }
+        Map<String, Type> result = new HashMap<>(body.readMap(code));
         for (ExceptHandler s: handlers) {
             result.putAll(s.readMap(code));
         }
@@ -258,10 +250,7 @@ public class Try extends Statement {
 
     @Override
     protected Map<String,? extends Type> writeMap(CompileEnv code) {
-        Map<String, Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.writeMap(code));
-        }
+        Map<String, Type> result = new HashMap<>(body.writeMap(code));
         for (ExceptHandler s: handlers) {
             result.putAll(s.writeMap(code));
         }

@@ -1,0 +1,18 @@
+// An exception from an earlier statement of an unchecked block may leave the
+// method when it is declared untrusted.
+contract UncheckedEarlierThrowUntrusted {
+    uint{this} count;
+    exception E();
+    constructor() { super(); }
+
+    void g{this}() throws (E{any}) {
+        throw E();
+    }
+
+    public void f{this}() throws (E{any}) {
+        unchecked {
+            g();
+            count = count + 1;
+        }
+    }
+}
