@@ -1,5 +1,5 @@
 // A dynamic trust query between non-final addresses.
-contract TrustQueryNonFinal_W01 {
+contract TrustQueryNonFinal {
     address a;
     address b;
     bool t;

@@ -1,0 +1,15 @@
+// Each branch's flow is checked under its own trust test: the test on b
+// does not justify the flow of data trusted by a.
+contract TrustTestTwoBranches_W01 {
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}(address{this} a, address{this} b, uint{a} x) {
+        if (a => this) {
+            secret = x;
+        }
+        if (b => this) {
+            secret = x;
+        }
+    }
+}

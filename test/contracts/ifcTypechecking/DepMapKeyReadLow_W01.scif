@@ -1,0 +1,10 @@
+// An element whose label names its key is trusted only as much as the
+// principal the index holds.
+contract DepMapKeyReadLow_W01 {
+    map(address a, uint{a}) m;
+    constructor() { super(); }
+
+    public uint{this} f{this}(final address{any} k) {
+        return m[k];
+    }
+}

@@ -1,0 +1,12 @@
+import "./IVault.scif";
+// The callee demands data and control flow trusted by itself. A caller vouches
+// for them with its own authority, so it must trust them itself, whoever chose
+// the reference: otherwise anyone could use relay to set a price in a vault
+// that trusts this contract.
+contract CallLendsAuthority_W01 {
+    constructor() { super(); }
+
+    public void relay{any}(IVault{any} v, uint{any} p) {
+        v.setPrice(p);
+    }
+}

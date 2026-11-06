@@ -1,0 +1,17 @@
+// A call may reassign the field owner, so after it {owner} names an unknown principal.
+contract TrustFactFieldCall_W01 {
+    uint{this} secret;
+    address{this} owner;
+
+    constructor() { super(); owner = sender; }
+
+    public void g{this}() { }
+
+    public void f{this}() {
+        if (owner => this) {
+            g();
+            uint{owner} w = 1;
+            secret = w;
+        }
+    }
+}

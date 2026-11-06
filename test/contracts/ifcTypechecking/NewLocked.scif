@@ -1,0 +1,16 @@
+// Creating a contract under a dynamic lock need not be the last operation.
+contract Child {
+    constructor() { super(); }
+}
+
+contract NewLocked {
+    uint{this} count;
+    constructor() { super(); }
+
+    public void f{this}() {
+        lock(this) {
+            Child{any} c = new Child();
+        }
+        count = count + 1;
+    }
+}

@@ -1,0 +1,12 @@
+import "./IOracle.scif";
+// A reference chosen by an untrusted index is trusted no more than the index,
+// so the results of calls through it are not trusted.
+contract CallElementReceiverLow_W01 {
+    IOracle[] oracles;
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}(uint{any} k) {
+        secret = oracles[k].price();
+    }
+}

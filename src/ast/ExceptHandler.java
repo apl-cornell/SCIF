@@ -129,9 +129,11 @@ public class ExceptHandler extends Node {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
+        if (!acceptall) {
+            declareCaughtVar(env, beginContext.pc);
+        }
         int index = 0;
-        PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        Utils.genConsStmts(body, env, so, tail_position);
+        PathOutcome so = Utils.genConsStmtSeq(body, env, tail_position);
 //        for (Statement stmt : body) {
 //            ++index;
 //            so = stmt.genConsVisit(env, index == body.size() && tail_position);
@@ -149,8 +151,41 @@ public class ExceptHandler extends Node {
         return labeledType.type();
     }
 
+    /**
+     * Declares this handler's variable in the current scope of {@code env}, bound by control
+     * flow at {@code handlerPc}. If the variable's type has a label, that label is its label,
+     * and the control flow must be trusted at it; otherwise its label is {@code handlerPc}.
+     * An exception has a single label, so its fields are read at the variable's label.
+     */
+    private void declareCaughtVar(VisitEnv env, String handlerPc) throws SemanticException {
+        Label declared = labeledType.label() == null ? null : env.toLabel(labeledType.label());
+        VarSym var = new VarSym(name, exceptionType(env), declared, location, scopeContext,
+                false, true, false);
+        try {
+            env.addVar(name, var);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Already defined: " + name, location);
+        }
+        if (declared == null) {
+            env.checkEqual(var.labelNameSLC(), handlerPc, location,
+                    "Label of " + name + " may be incorrect");
+        } else {
+            env.checkEqual(var.labelNameSLC(), declared.toSHErrLocFmt(), location,
+                    "Label of " + name + " may be incorrect");
+            env.checkFlow(handlerPc, declared.toSHErrLocFmt(), location,
+                    "The caught exception must be trusted at the label of " + name);
+        }
+    }
+
     public String name() {
         return name;
+    }
+
+    /**
+     * The exception type this handler catches, or null if it catches every failure.
+     */
+    public ExceptionTypeSym exceptionType(VisitEnv env) {
+        return acceptall ? null : env.getExp(labeledType.type().name());
     }
 
     protected Map<String,? extends compile.ast.Type> readMap(CompileEnv code) {

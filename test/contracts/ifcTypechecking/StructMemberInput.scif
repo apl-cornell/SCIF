@@ -1,0 +1,12 @@
+// Untrusted data can be stored in a member declared untrusted.
+contract StructMemberInput {
+    struct S {
+        uint{any} v;
+    }
+    S s;
+    constructor() { super(); }
+
+    public void f{this}(uint{any} x) {
+        s = new S(x);
+    }
+}

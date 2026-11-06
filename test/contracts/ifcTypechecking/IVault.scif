@@ -1,0 +1,3 @@
+interface IVault {
+    public void setPrice{this}(uint{this} p);
+}

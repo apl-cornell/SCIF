@@ -1,0 +1,38 @@
+// Caller hands Sink a closure that demands control flow trusted by
+// Caller, but Sink promises only control flow trusted by Sink. Without
+// knowing that Sink acts for Caller, this delegates Caller's authority.
+interface IT {
+    closurable public void op{this -> this}();
+}
+
+interface ISink {
+    public void accept{this -> this; this}(
+        (fun {this -> this; this} () -> void) {this} c
+    );
+}
+
+contract Caller {
+    IT t;
+    ISink sink;
+
+    constructor() {
+        super();
+    }
+
+    public void forward{this -> this; this}() {
+        (fun {this -> this; this} () -> void) {this} c = closure t.op();
+        sink.accept(c);
+    }
+}
+
+contract Sink {
+    constructor() {
+        super();
+    }
+
+    public void accept{this -> this; this}(
+        (fun {this -> this; this} () -> void) {this} c
+    ) {
+        c.invoke();
+    }
+}

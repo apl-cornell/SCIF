@@ -28,6 +28,8 @@ public class New extends Expression {
     Call constructor_call;
 
     boolean isConstructor = false;
+    /** The principal of the contract this expression creates, once IFC-visited. */
+    private String createdPrincipal = null;
 
     public New(Call constructor_call) {
         this.constructor_call = constructor_call;
@@ -99,31 +101,51 @@ public class New extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
+        ExpOutcome result = newIFConstraints(env, tail_position);
+        // A contract's constructor may call back and assign to any field, so fields hold
+        // new principals afterwards.
+        if (isConstructor) {
+            env.havocFields();
+        }
+        return result;
+    }
+
+    @Override
+    public String principalName(VisitEnv env) {
+        return createdPrincipal;
+    }
+
+    private ExpOutcome newIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         if (!isConstructor) {
-            // creating a struct var returns a join of its arg values
+            // Each member is checked like an argument of a call, against the member's label.
+            // The struct value itself is trusted as much as the control flow creating it.
             Context beginContext = env.inContext;
             Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                     typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
-
-            List<String> argValueLabelNames = new ArrayList<>();
-            String ifNameRtn = scopeContext.getSHErrLocName() + "." + "newStruct" + location.toString();
+            StructTypeSym structSym =
+                    (StructTypeSym) env.getCurSym(((Name) constructor_call.value).id);
 
             PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
             ExpOutcome ao = null;
 
-            for (Expression arg : constructor_call.args) {
+            for (int i = 0; i < constructor_call.args.size(); ++i) {
+                Expression arg = constructor_call.args.get(i);
                 ao = arg.genIFConstraints(env, false);
                 psi.joinExe(ao.psi);
-                argValueLabelNames.add(ao.valueLabelName);
                 env.inContext = new Context(
                         Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
                         beginContext.lambda);
-                env.checkTrustedBy(ao.valueLabelName, ifNameRtn, location,
-                        "Integrity of left hand expression doesn't flow to value of this binary operation");
+                String memberLabel = structSym.members().get(i).ifl.toSHErrLocFmt();
+                env.checkFlow(ao.valueLabelName, memberLabel, arg.location,
+                        "Input to member " + structSym.members().get(i).getName()
+                                + " must be trusted at its label");
+                env.checkFlow(env.inContext.pc, memberLabel, arg.location,
+                        "Current control flow must be trusted to set member "
+                                + structSym.members().get(i).getName());
             }
 
-            return new ExpOutcome(ifNameRtn, psi);
+            return new ExpOutcome(env.inContext.pc, psi);
         } else {
             // creating contract requires pc and arguments to be of integirty level `this`
             Context beginContext = env.inContext;
@@ -136,10 +158,12 @@ public class New extends Expression {
             PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
             ExpOutcome ao = null;
 
+            List<String> argPrincipalNames = new ArrayList<>();
             for (Expression arg : constructor_call.args) {
                 ao = arg.genIFConstraints(env, false);
                 psi.joinExe(ao.psi);
                 argValueLabelNames.add(ao.valueLabelName);
+                argPrincipalNames.add(arg.principalName(env));
                 env.inContext = new Context(
                         Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
                         beginContext.lambda);
@@ -163,6 +187,12 @@ public class New extends Expression {
             ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
             dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(),
                     env.thisSym().toSHErrLocFmt());
+            // The new contract is a principal about which nothing is known; in the
+            // constructor's labels, its `this` is that principal.
+            createdPrincipal = env.freshPrincipal(toSHErrLocFmt() + "..new");
+            typecheck.InterfaceSym createdSym =
+                    env.getContract(((Name) constructor_call.value).id);
+            dependentLabelMapping.put(createdSym.thisSym().toSHErrLocFmt(), createdPrincipal);
 
             ifFuncCallPcBefore = funcSym.externalPc();
             ifFuncCallPcAfter = funcSym.internalPc();
@@ -171,15 +201,8 @@ public class New extends Expression {
             for (int i = 0; i < constructor_call.args.size(); ++i) {
                 Expression arg = constructor_call.args.get(i);
                 VarSym argSym = funcSym.parameters.get(i);
-                if (argSym.isPrincipalVar()) {
-
-                    if (arg instanceof Name) {
-                        VarSym valueSym = (VarSym) env.getVar(((Name) arg).id);
-                        if (valueSym.isPrincipalVar()) {
-                            dependentLabelMapping.put(argSym.toSHErrLocFmt(),
-                                    valueSym.toSHErrLocFmt());
-                        }
-                    }
+                if (argSym.isPrincipalTyped() && argPrincipalNames.get(i) != null) {
+                    dependentLabelMapping.put(argSym.toSHErrLocFmt(), argPrincipalNames.get(i));
                 }
 
                 // env.prevContext = prevContext = tmp;
@@ -234,11 +257,13 @@ public class New extends Expression {
                         typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
             }
 
-            String ifNameFuncRtnValue = funcSym.rtn.toSHErrLocFmt(dependentLabelMapping);
-            // String ifNameFuncRtnLock = funcSym.getLabelNameRtnLock();
+            // Creating a contract does not make it trusted: the reference is trusted
+            // no more than the new contract, and no more than the control flow that
+            // decided to create it.
+            String ifNameRtn = Utils.joinLabels(ifNamePc, createdPrincipal);
             psi.joinExe(expPsi);
 
-            return new ExpOutcome(ifNameFuncRtnValue, psi);
+            return new ExpOutcome(ifNameRtn, psi);
 
         }
     }
@@ -262,5 +287,11 @@ public class New extends Expression {
     @Override
     public List<Node> children() {
         return List.of(constructor_call);
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        String name = ((Name) constructor_call.value).id;
+        return isConstructor ? env.getContract(name) : (StructTypeSym) env.getCurSym(name);
     }
 }

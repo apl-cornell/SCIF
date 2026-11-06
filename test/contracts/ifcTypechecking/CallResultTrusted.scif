@@ -1,0 +1,9 @@
+import "./ISelfVouching.scif";
+// A callee's return label is a claim trusted as much as the reference used to call it.
+contract CallResultTrusted {
+    constructor() { super(); }
+
+    public uint{this} f{this}(ISelfVouching{this} x) {
+        return x.get();
+    }
+}

@@ -1,0 +1,15 @@
+import "./IOracle.scif";
+// An interface-typed local names the principal it is initialized to.
+contract InterfaceLocalPrincipal {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(address{this} a) {
+        if (a => this) {
+            final IOracle o = IOracle(a);
+            uint{o} w = 1;
+            secret = w;
+        }
+    }
+}

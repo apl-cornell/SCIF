@@ -1,0 +1,13 @@
+// An exception thrown in a branch of an endorse-if must be trusted at its
+// declared label.
+contract EndorseIfThrowLow_W01 {
+    exception E();
+    constructor() { super(); }
+
+    public void f{any}(uint{any} n) throws (E{this}) {
+        endorse(n, any -> this) when (n > 0) {
+        } else {
+            throw E();
+        }
+    }
+}

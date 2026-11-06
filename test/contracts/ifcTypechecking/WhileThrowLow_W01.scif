@@ -1,0 +1,17 @@
+// An exception thrown in a loop body leaves the method on its path.
+contract WhileThrowLow_W01 {
+    uint{this} count;
+    exception E();
+    constructor() { super(); }
+
+    void g{this}() throws (E{any}) {
+        throw E();
+    }
+
+    public void f{this}(uint{this} n) throws (E{this}) {
+        while (n > 0) {
+            g();
+            count = 1;
+        }
+    }
+}

@@ -1,0 +1,9 @@
+// An untrusted control flow can throw an exception declared untrusted.
+contract ExceptionThrowUntrusted {
+    exception E();
+    constructor() { super(); }
+
+    public void g{any}() throws (E{any}) {
+        throw E();
+    }
+}

@@ -100,7 +100,7 @@ public class ComplexIfLabel extends IfLabel {
 //        return rnt;
 //    }
 
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) {
 
         // TODO: deal with dynamic labels
         return null;

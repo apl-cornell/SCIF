@@ -1,0 +1,13 @@
+// Pushing onto an array held in a struct member requires trust at the
+// member's location.
+contract MemberArrayPush {
+    struct Log {
+        uint[] entries;
+    }
+    Log log;
+    constructor() { super(); }
+
+    public void f{this}(uint{this} x) {
+        log.entries.push(x);
+    }
+}

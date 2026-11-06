@@ -1,0 +1,6 @@
+// Exception parameters may be unlabeled, labeled with contract-level principals,
+// or labeled with principal-typed parameters of the exception.
+contract ExceptionParamLabels {
+    exception E(address owner, uint{owner} balance, uint{any} needed, uint plain);
+    constructor() { super(); }
+}

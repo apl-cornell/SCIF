@@ -1,0 +1,10 @@
+// When an element's label names its key, any index may be written, since the
+// element is labeled by the principal the index holds.
+contract DepMapKeyWrite {
+    map(address a, uint{a}) m;
+    constructor() { super(); }
+
+    public void f{this}(address{any} k) {
+        m[k] = 1;
+    }
+}

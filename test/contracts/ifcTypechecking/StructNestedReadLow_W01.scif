@@ -1,0 +1,17 @@
+// A member of a nested struct is read at its own label.
+contract StructNestedReadLow_W01 {
+    struct In {
+        uint{any} v;
+        uint w;
+    }
+    struct Out {
+        In i;
+    }
+    Out o;
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}() {
+        secret = o.i.v;
+    }
+}

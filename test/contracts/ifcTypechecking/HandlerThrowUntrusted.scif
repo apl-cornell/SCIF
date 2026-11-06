@@ -1,0 +1,19 @@
+// An exception thrown in a handler may leave the method when declared as
+// untrusted as the exception the handler caught.
+contract HandlerThrowUntrusted {
+    exception E();
+    exception F();
+    constructor() { super(); }
+
+    void g{this}() throws (E{any}) {
+        throw E();
+    }
+
+    public void f{this}() throws (F{any}) {
+        try {
+            g();
+        } catch (E e) {
+            throw F();
+        }
+    }
+}

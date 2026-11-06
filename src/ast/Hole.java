@@ -7,6 +7,7 @@ import java.util.List;
 import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
+import typecheck.TypeSym;
 import typecheck.VisitEnv;
 import typecheck.exceptions.SemanticException;
 
@@ -25,7 +26,7 @@ public class Hole extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position)
             throws SemanticException {
         throw new UnsupportedOperationException(
                 "hole `_` has no IFC constraints outside closure creation");
@@ -45,5 +46,10 @@ public class Hole extends Expression {
     @Override
     public List<Node> children() {
         return new ArrayList<>();
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        throw new UnsupportedOperationException("hole `_` has no type outside closure creation");
     }
 }
