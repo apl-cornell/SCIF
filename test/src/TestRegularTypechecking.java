@@ -123,6 +123,8 @@ public class TestRegularTypechecking {
             "regularTypechecking/AttributeNoMember_W01",
             "regularTypechecking/EmitArity_W01",
             "regularTypechecking/ThrowArity_W01",
+            "regularTypechecking/ThrowNotException_W01",
+            "regularTypechecking/EmitNotEvent_W01",
             "regularTypechecking/MethodAsValue_W01",
             "regularTypechecking/CatchUnknownException_W01",
             "regularTypechecking/CallReceiverUndefined_W01",

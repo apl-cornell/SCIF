@@ -27,7 +27,12 @@ import typecheck.sherrlocUtils.Relation;
 public class New extends Expression {
     Call constructor_call;
 
-    boolean isConstructor = false;
+    /**
+     * The node this expression resolves to when it builds a struct value instead of creating a
+     * contract, as determined by the regular type check; every later pass is its. Null when it
+     * creates a contract.
+     */
+    private Expression form = null;
     /** The principal of the contract this expression creates, once IFC-visited. */
     private String createdPrincipal = null;
 
@@ -47,67 +52,50 @@ public class New extends Expression {
         if (!(sym instanceof ContractSym) && !(sym instanceof StructTypeSym)) {
             throw new SemanticException("Not a contract or struct type: " + sym, location);
         }
-        if (sym instanceof ContractSym) {
-            isConstructor = true;
-            String contractName = name;
-            FuncSym constructorSym = ((ContractSym) sym).getConstructorSym();
-            if (env.inConstructor()  && !env.superCalled()) {
-                throw new SemanticException("should not call methods before called super in constructor: " + contractName,
-                        location);
-            }
-            if (constructor_call.args.size() != constructorSym.parameters.size()) {
-                throw new SemanticException("number of values provided " + constructor_call.args.size() +
-                        " does not match the number of arguments of the called method: " +
-                        constructorSym.parameters.size(), location);
-            }
-            this.constructor_call.funcSym = constructorSym;
-            if (constructor_call.callSpec != null) {
-                constructor_call.callSpec.genTypeConstraints(env, now);
-            }
-            // type-check arguments
-            for (int i = 0; i < constructor_call.args.size(); ++i) {
-                Expression arg = constructor_call.args.get(i);
-                TypeSym paraInfo = constructorSym.parameters.get(i).typeSym;
-                ScopeContext argContext = arg.genTypeConstraints(env, now);
-                String typeName = paraInfo.toSHErrLocFmt();
-                env.addCons(argContext.genTypeConstraints(typeName, Relation.GEQ, env, arg.location));
-            }
-            String rtnTypeName = sym.toSHErrLocFmt();
-            env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location));
-
-            return now;
-        } else {
-            String structName = name;
-            StructTypeSym structTypeSym = (StructTypeSym) sym;
-            if (constructor_call.args.size() != structTypeSym.merberSize()) {
-                throw new SemanticException("number of arguments does not match the " +
-                        "number of parameters of the called method "
-                        + structTypeSym.getName(), location);
-            }
-            // this.constructor_call.funcSym = structTypeSym;
-            // typecheck arguments
-            for (int i = 0; i < constructor_call.args.size(); ++i) {
-                Expression arg = constructor_call.args.get(i);
-                TypeSym paraInfo = structTypeSym.getMemberVarInfo(structName, i).typeSym;
-                ScopeContext argContext = arg.genTypeConstraints(env, now);
-                String typeName = paraInfo.toSHErrLocFmt();
-                env.addCons(argContext.genTypeConstraints(typeName, Relation.GEQ, env, arg.location));
-            }
-            String rtnTypeName = structTypeSym.toSHErrLocFmt();
-            env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location));
-
-            return now;
+        if (sym instanceof StructTypeSym) {
+            form = new StructConstruction((Name) constructor_call.value, constructor_call.args);
+            form.setLoc(location);
+            form.scopeContext = scopeContext;
+            return form.genTypeConstraints(env, parent);
         }
+        String contractName = name;
+        FuncSym constructorSym = ((ContractSym) sym).getConstructorSym();
+        if (env.inConstructor()  && !env.superCalled()) {
+            throw new SemanticException("should not call methods before called super in constructor: " + contractName,
+                    location);
+        }
+        if (constructor_call.args.size() != constructorSym.parameters.size()) {
+            throw new SemanticException("number of values provided " + constructor_call.args.size() +
+                    " does not match the number of arguments of the called method: " +
+                    constructorSym.parameters.size(), location);
+        }
+        this.constructor_call.funcSym = constructorSym;
+        if (constructor_call.callSpec != null) {
+            constructor_call.callSpec.genTypeConstraints(env, now);
+        }
+        // type-check arguments
+        for (int i = 0; i < constructor_call.args.size(); ++i) {
+            Expression arg = constructor_call.args.get(i);
+            TypeSym paraInfo = constructorSym.parameters.get(i).typeSym;
+            ScopeContext argContext = arg.genTypeConstraints(env, now);
+            String typeName = paraInfo.toSHErrLocFmt();
+            env.addCons(argContext.genTypeConstraints(typeName, Relation.GEQ, env, arg.location));
+        }
+        String rtnTypeName = sym.toSHErrLocFmt();
+        env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location));
+
+        return now;
     }
 
     @Override
     protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
+        if (form != null) {
+            return form.genIFConstraints(env, tail_position);
+        }
         ExpOutcome result = newIFConstraints(env, tail_position);
         // A contract's constructor may call back and assign to any field, so fields hold
         // new principals afterwards.
-        if (isConstructor) {
-            env.havocFields();
-        }
+        env.havocFields();
         return result;
     }
 
@@ -117,166 +105,138 @@ public class New extends Expression {
     }
 
     private ExpOutcome newIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
-        if (!isConstructor) {
-            // Each member is checked like an argument of a call, against the member's label.
-            // The struct value itself is trusted as much as the control flow creating it.
-            Context beginContext = env.inContext;
-            Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
-                    typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
-            StructTypeSym structSym =
-                    (StructTypeSym) env.getCurSym(((Name) constructor_call.value).id);
+        // creating contract requires pc and arguments to be of integirty level `this`
+        Context beginContext = env.inContext;
+        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
+                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
+        Map<String, String> dependentLabelMapping = new HashMap<>();
 
-            PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
-            ExpOutcome ao = null;
+        List<String> argValueLabelNames = new ArrayList<>();
 
-            for (int i = 0; i < constructor_call.args.size(); ++i) {
-                Expression arg = constructor_call.args.get(i);
-                ao = arg.genIFConstraints(env, false);
-                psi.joinExe(ao.psi);
-                env.inContext = new Context(
-                        Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
-                        beginContext.lambda);
-                String memberLabel = structSym.members().get(i).ifl.toSHErrLocFmt();
-                env.checkFlow(ao.valueLabelName, memberLabel, arg.location,
-                        "Input to member " + structSym.members().get(i).getName()
-                                + " must be trusted at its label");
-                env.checkFlow(env.inContext.pc, memberLabel, arg.location,
-                        "Current control flow must be trusted to set member "
-                                + structSym.members().get(i).getName());
-            }
+        PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
+        ExpOutcome ao = null;
 
-            return new ExpOutcome(env.inContext.pc, psi);
-        } else {
-            // creating contract requires pc and arguments to be of integirty level `this`
-            Context beginContext = env.inContext;
-            Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
-                    typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
-            Map<String, String> dependentLabelMapping = new HashMap<>();
+        List<String> argPrincipalNames = new ArrayList<>();
+        for (Expression arg : constructor_call.args) {
+            ao = arg.genIFConstraints(env, false);
+            psi.joinExe(ao.psi);
+            argValueLabelNames.add(ao.valueLabelName);
+            argPrincipalNames.add(arg.principalName(env));
+            env.inContext = new Context(
+                    Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
+                    beginContext.lambda);
+        }
 
-            List<String> argValueLabelNames = new ArrayList<>();
-
-            PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
-            ExpOutcome ao = null;
-
-            List<String> argPrincipalNames = new ArrayList<>();
-            for (Expression arg : constructor_call.args) {
-                ao = arg.genIFConstraints(env, false);
-                psi.joinExe(ao.psi);
-                argValueLabelNames.add(ao.valueLabelName);
-                argPrincipalNames.add(arg.principalName(env));
-                env.inContext = new Context(
-                        Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
-                        beginContext.lambda);
-            }
-
-            if (constructor_call.callSpec != null) {
-                PathOutcome co = constructor_call.callSpec.genIFConstraints(env, false);
-                psi.joinExe(co);
-                env.inContext = typecheck.Utils.genNewContextAndConstraints(env, false, co.getNormalPath().c, beginContext.lambda, constructor_call.callSpec.nextPcSHL(), constructor_call.callSpec.location);
-
-            }
-
-            String ifNamePc;
-            FuncSym funcSym;
-            Label ifFuncCallPcBefore, ifFuncCallPcAfter, ifFuncGammaLock;
-            ExpOutcome vo = null;
-
-            assert constructor_call.value instanceof Name;
-            funcSym = constructor_call.funcSym;
-
-            ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-            dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(),
-                    env.thisSym().toSHErrLocFmt());
-            // The new contract is a principal about which nothing is known; in the
-            // constructor's labels, its `this` is that principal.
-            createdPrincipal = env.freshPrincipal(toSHErrLocFmt() + "..new");
-            typecheck.InterfaceSym createdSym =
-                    env.getContract(((Name) constructor_call.value).id);
-            dependentLabelMapping.put(createdSym.thisSym().toSHErrLocFmt(), createdPrincipal);
-
-            ifFuncCallPcBefore = funcSym.externalPc();
-            ifFuncCallPcAfter = funcSym.internalPc();
-            ifFuncGammaLock = funcSym.callGamma();
-
-            for (int i = 0; i < constructor_call.args.size(); ++i) {
-                Expression arg = constructor_call.args.get(i);
-                VarSym argSym = funcSym.parameters.get(i);
-                if (argSym.isPrincipalTyped() && argPrincipalNames.get(i) != null) {
-                    dependentLabelMapping.put(argSym.toSHErrLocFmt(), argPrincipalNames.get(i));
-                }
-
-                // env.prevContext = prevContext = tmp;
-                String ifNameArgValue = argValueLabelNames.get(i);
-                Label ifArgLabel = funcSym.getLabelArg(i);
-                assert ifArgLabel != null : argSym.getName();
-                env.checkFlow(ifNameArgValue, ifArgLabel.toSHErrLocFmt(dependentLabelMapping),
-                        arg.location, "Input to the " + Utils.ordNumString(i + 1)
-                        + " argument must be trusted enough");
-                env.checkFlow(ifNamePc, ifArgLabel.toSHErrLocFmt(dependentLabelMapping),
-                        arg.location, "Current control flow must be trusted to feed the "
-                        + Utils.ordNumString(i + 1) + "-th argument value");
-            }
-
-            // pc_2 dropped
-            // PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
-            //         Utils.joinLabels(psi.getNormalPath().c.pc,
-            //                 funcSym.endPc().toSHErrLocFmt(dependentLabelMapping)),
-            //         Utils.joinLabels(funcSym.getLabelNameCallGamma(), funcSym.internalPcSLC())
-            // )));
-            PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
-                    Utils.joinLabels(psi.getNormalPath().c.pc,
-                            funcSym.endPc().toSHErrLocFmt(dependentLabelMapping)),
-                    funcSym.getLabelNameCallGamma()
-            )));
-
-            typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
-            env.checkFlow(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
-                    location, "Current control flow must be trusted to call this method");
-            // pc_2 dropped
-            // env.cons.add(new Constraint(
-            //         new Inequality(ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
-            //                 Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping),
-            //                         beginContext.lambda)), env.hypothesis(),
-            //         location, env.curContractSym().getName(),
-            //         "Calling this function does not respect static reentrancy locks"));
-
-            // pc_2 dropped
-            // env.cons.add(new Constraint(
-            //         new Inequality(
-            //                 Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping),
-            //                         ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
-            //                 Relation.EQ, endContext.lambda), env.hypothesis(), location,
-            //         env.curContractSym().getName(),
-            //         typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
-            env.checkEqual(ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping),
-                    endContext.lambda, location,
-                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
-
-            if (!tail_position) {
-                env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
-                        typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
-            }
-
-            // Creating a contract does not make it trusted: the reference is trusted
-            // no more than the new contract, and no more than the control flow that
-            // decided to create it.
-            String ifNameRtn = Utils.joinLabels(ifNamePc, createdPrincipal);
-            psi.joinExe(expPsi);
-
-            return new ExpOutcome(ifNameRtn, psi);
+        if (constructor_call.callSpec != null) {
+            PathOutcome co = constructor_call.callSpec.genIFConstraints(env, false);
+            psi.joinExe(co);
+            env.inContext = typecheck.Utils.genNewContextAndConstraints(env, false, co.getNormalPath().c, beginContext.lambda, constructor_call.callSpec.nextPcSHL(), constructor_call.callSpec.location);
 
         }
+
+        String ifNamePc;
+        FuncSym funcSym;
+        Label ifFuncCallPcBefore, ifFuncCallPcAfter, ifFuncGammaLock;
+        ExpOutcome vo = null;
+
+        assert constructor_call.value instanceof Name;
+        funcSym = constructor_call.funcSym;
+
+        ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
+        dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(),
+                env.thisSym().toSHErrLocFmt());
+        // The new contract is a principal about which nothing is known; in the
+        // constructor's labels, its `this` is that principal.
+        createdPrincipal = env.freshPrincipal(toSHErrLocFmt() + "..new");
+        typecheck.InterfaceSym createdSym =
+                env.getContract(((Name) constructor_call.value).id);
+        dependentLabelMapping.put(createdSym.thisSym().toSHErrLocFmt(), createdPrincipal);
+
+        ifFuncCallPcBefore = funcSym.externalPc();
+        ifFuncCallPcAfter = funcSym.internalPc();
+        ifFuncGammaLock = funcSym.callGamma();
+
+        for (int i = 0; i < constructor_call.args.size(); ++i) {
+            Expression arg = constructor_call.args.get(i);
+            VarSym argSym = funcSym.parameters.get(i);
+            if (argSym.isPrincipalTyped() && argPrincipalNames.get(i) != null) {
+                dependentLabelMapping.put(argSym.toSHErrLocFmt(), argPrincipalNames.get(i));
+            }
+
+            // env.prevContext = prevContext = tmp;
+            String ifNameArgValue = argValueLabelNames.get(i);
+            Label ifArgLabel = funcSym.getLabelArg(i);
+            assert ifArgLabel != null : argSym.getName();
+            env.checkFlow(ifNameArgValue, ifArgLabel.toSHErrLocFmt(dependentLabelMapping),
+                    arg.location, "Input to the " + Utils.ordNumString(i + 1)
+                    + " argument must be trusted enough");
+            env.checkFlow(ifNamePc, ifArgLabel.toSHErrLocFmt(dependentLabelMapping),
+                    arg.location, "Current control flow must be trusted to feed the "
+                    + Utils.ordNumString(i + 1) + "-th argument value");
+        }
+
+        // pc_2 dropped
+        // PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
+        //         Utils.joinLabels(psi.getNormalPath().c.pc,
+        //                 funcSym.endPc().toSHErrLocFmt(dependentLabelMapping)),
+        //         Utils.joinLabels(funcSym.getLabelNameCallGamma(), funcSym.internalPcSLC())
+        // )));
+        PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
+                Utils.joinLabels(psi.getNormalPath().c.pc,
+                        funcSym.endPc().toSHErrLocFmt(dependentLabelMapping)),
+                funcSym.getLabelNameCallGamma()
+        )));
+
+        typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
+        env.checkFlow(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
+                location, "Current control flow must be trusted to call this method");
+        // pc_2 dropped
+        // env.cons.add(new Constraint(
+        //         new Inequality(ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
+        //                 Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping),
+        //                         beginContext.lambda)), env.hypothesis(),
+        //         location, env.curContractSym().getName(),
+        //         "Calling this function does not respect static reentrancy locks"));
+
+        // pc_2 dropped
+        // env.cons.add(new Constraint(
+        //         new Inequality(
+        //                 Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping),
+        //                         ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
+        //                 Relation.EQ, endContext.lambda), env.hypothesis(), location,
+        //         env.curContractSym().getName(),
+        //         typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
+        env.checkEqual(ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping),
+                endContext.lambda, location,
+                typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
+
+        if (!tail_position) {
+            env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
+                    typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
+        }
+
+        // Creating a contract does not make it trusted: the reference is trusted
+        // no more than the new contract, and no more than the control flow that
+        // decided to create it.
+        String ifNameRtn = Utils.joinLabels(ifNamePc, createdPrincipal);
+        psi.joinExe(expPsi);
+
+        return new ExpOutcome(ifNameRtn, psi);
+
     }
 
     @Override
     public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        if (form != null) {
+            return form.solidityCodeGen(result, code);
+        }
         assert constructor_call.value instanceof Name;
         String contractName = ((Name) constructor_call.value).id;
         List<compile.ast.Expression> argExps = new ArrayList<>();
         for (Expression arg: constructor_call.args) {
             argExps.add(arg.solidityCodeGen(result, code));
         }
-        return isConstructor ? new compile.ast.New(contractName, argExps, constructor_call.callSpec != null ? constructor_call.callSpec.solidityCodeGen(result, code) : null) : new compile.ast.Call(contractName, argExps);
+        return new compile.ast.New(contractName, argExps, constructor_call.callSpec != null ? constructor_call.callSpec.solidityCodeGen(result, code) : null);
     }
 
     @Override
@@ -291,7 +251,6 @@ public class New extends Expression {
 
     @Override
     protected TypeSym staticType(VisitEnv env) {
-        String name = ((Name) constructor_call.value).id;
-        return isConstructor ? env.getContract(name) : (StructTypeSym) env.getCurSym(name);
+        return form != null ? form.type() : env.getContract(((Name) constructor_call.value).id);
     }
 }

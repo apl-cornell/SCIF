@@ -1,0 +1,15 @@
+// The principal amount is labeled by is held by a struct member, which is not a name, so
+// the parameter's label is taken to name the most trusted principal; data trusted only by
+// sender cannot be passed at that label.
+contract CallUnnamedPrincipal_W01 {
+    struct S { address a; }
+    S s;
+
+    constructor() { super(); }
+
+    void h{this}(address who, uint{who} amount) { }
+
+    public void g{sender -> this; any}(uint{sender} amount) {
+        h(s.a, amount);
+    }
+}

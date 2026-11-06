@@ -227,7 +227,7 @@ nonterminal TrailerExpr trailer;
 //nonterminal Setmaker setmaker;
 // nonterminal Setmaker setmaker_sub;
 // nonterminal ClassDef classdef;
-nonterminal Call arglist;
+nonterminal List<Expression> arglist, call_args;
 nonterminal LabeledType labeledType, maybeLabeledType;
 nonterminal ast.ClosureType closureType;
 nonterminal List<LabeledType> throwsOpt;
@@ -1170,12 +1170,10 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     ;
 
 emit_stmt ::=
-    EMIT:x call_expr:e SEMI {:
-        if (!(e instanceof Call)) {
-            return null;
-        }
-
-        RESULT = new Emit((Call)e);
+    EMIT:x NAME:n call_args:a SEMI {:
+        Name event = new Name(n);
+        event.setLoc(new CodeLocation(nleft, nright, filename));
+        RESULT = new Emit(event, a);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     ;
@@ -1225,12 +1223,10 @@ atomic_stmt ::= ATOMIC:x suite:s exceptall_stmts:es {:
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
-throw_stmt ::= THROW:x call_expr:e SEMI{:
-        if (!(e instanceof Call)) {
-            return null;
-        }
-
-        RESULT = new Throw((Call)e);
+throw_stmt ::= THROW:x NAME:n call_args:a SEMI{:
+        Name exception = new Name(n);
+        exception.setLoc(new CodeLocation(nleft, nright, filename));
+        RESULT = new Throw(exception, a);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
@@ -1582,9 +1578,9 @@ call_expr ::= trailer_expr:e  LPAR RPAR transaction_spec:ts{:
         RESULT = c;
         RESULT.setLoc(new CodeLocation(eleft, eright, filename));
     :}
-    | trailer_expr:e LPAR arglist:c RPAR transaction_spec:ts{:
-             c.setValue(e);
-            c.setSpec(ts);
+    | trailer_expr:e LPAR arglist:a RPAR transaction_spec:ts{:
+             Call c = new Call(e, a);
+             c.setSpec(ts);
              RESULT = c;
              RESULT.setLoc(new CodeLocation(eleft, eright, filename));
     :}
@@ -1594,9 +1590,8 @@ call_expr ::= trailer_expr:e  LPAR RPAR transaction_spec:ts{:
           RESULT = c;
           RESULT.setLoc(new CodeLocation(eleft, eright, filename));
       :}
-      | trailer_expr:e LPAR arglist:c RPAR {:
-               c.setValue(e);
-               RESULT = c;
+      | trailer_expr:e LPAR arglist:a RPAR {:
+               RESULT = new Call(e, a);
                RESULT.setLoc(new CodeLocation(eleft, eright, filename));
       :}
     | atom:a LPAR RPAR transaction_spec:ts  {:
@@ -1612,15 +1607,14 @@ call_expr ::= trailer_expr:e  LPAR RPAR transaction_spec:ts{:
         RESULT = c;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
-    | atom:a LPAR arglist:c RPAR transaction_spec:ts  {:
-        c.setValue(a);
+    | atom:a LPAR arglist:l RPAR transaction_spec:ts  {:
+        Call c = new Call(a, l);
         c.setSpec(ts);
         RESULT = c;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
-    | atom:a LPAR arglist:c RPAR {:
-        c.setValue(a);
-        RESULT = c;
+    | atom:a LPAR arglist:l RPAR {:
+        RESULT = new Call(a, l);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     ;
@@ -1768,17 +1762,17 @@ trailer ::=
     :};
 arglist ::=
     expr:a {:
-        //System.out.println("parsing first arg for arglist");
-        Call rnt = new Call();
-        rnt.addArg(a);
-        RESULT = rnt;
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+        List<Expression> rtn = new ArrayList<>();
+        rtn.add(a);
+        RESULT = rtn;
     :}
     | arglist:list COMMA expr:a {:
-        //System.out.println("parsing one more arg for arglist");
-        list.addArg(a);
+        list.add(a);
         RESULT = list;
     :};
+call_args ::=
+    LPAR RPAR {: RESULT = new ArrayList<>(); :}
+    | LPAR arglist:a RPAR {: RESULT = a; :};
 //exprlist ::=
 //    exprlist_sub:a {:RESULT = a;:}
 //    | exprlist_sub:a COMMA {:RESULT = a;:};
