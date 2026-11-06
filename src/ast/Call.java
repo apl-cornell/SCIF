@@ -313,20 +313,6 @@ public class Call extends TrailerExpr {
                 this.closureSym = cs;
                 this.closurePcExLeaves = cs.pcEx().principalLeaves();
                 cs.registerAtoms(env);
-                // An invoke argument fills the binder its position names in the closure's
-                // labels, so if the labels name it, its principal must be known.
-                List<VarSym> binders = cs.binderSyms();
-                for (int i = 0; i < args.size() && i < binders.size(); i++) {
-                    VarSym binder = binders.get(i);
-                    if (binder != null && evaluated.principals().get(i) == null
-                            && cs.referencesBinder(binder)) {
-                        throw new SemanticException(
-                                "must use an address or contract variable for the "
-                                        + Utils.ordNumString(i + 1)
-                                        + " invoke argument: the closure's labels depend on it",
-                                args.get(i).location);
-                    }
-                }
                 ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
                 callee = Callee.ofClosure(cs, env.curContractSym().invoker());
                 calleeContract = null;

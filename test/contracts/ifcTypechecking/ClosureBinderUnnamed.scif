@@ -1,0 +1,19 @@
+// A closure's binder is filled by an argument that is not a name, so the principal it
+// holds is unknown and the closure's labels are taken to name the most trusted principal;
+// a trusted argument can still be passed for a slot labeled by it.
+interface IToken {
+    closurable public void transfer{from -> this; from}(
+        final address from, address{this} to, uint{from} amount
+    );
+}
+contract ClosureBinderUnnamed {
+    struct S { address a; }
+    S s;
+    IToken token;
+    constructor() { super(); }
+    public void go{this -> this; any}(uint{any} amt) {
+        (fun {payer}(final address payer, uint{payer} amount) -> void) {this} clo =
+            closure token.transfer(_, address(this), _);
+        clo.invoke(s.a, 100);
+    }
+}
