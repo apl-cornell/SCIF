@@ -65,8 +65,15 @@ public class While extends Statement {
 
         env.inContext = new Context(ifNamePcAfter, beginContext.lambda);
         CodeLocation loc = null;
-        PathOutcome ifo = to.psi;
-        Utils.genConsStmts(body, env, ifo, false);
+        PathOutcome bodyOutcome = Utils.genConsStmtSeq(body, env, false);
+        // The loop exits only from its head, which is also reached from the end of the body.
+        PathOutcome ifo = to.psi.withoutNormalPath();
+        ifo.join(bodyOutcome.withoutNormalPath());
+        if (bodyOutcome.getNormalPath() instanceof PsiUnit bodyEnd) {
+            env.checkFlow(bodyEnd.c.pc, ifNamePcAfter, location,
+                    "Control flow at the end of the loop body contributes to the control flow of this while statement");
+        }
+        ifo.setNormalPath(new Context(ifNamePcAfter, to.psi.getNormalPath().c.lambda));
 //        for (Statement stmt : body) {
 //            ifo = stmt.genConsVisit(env, false);
 //

@@ -1,0 +1,14 @@
+// Nothing is known about where a failure came from, so a handler for failures
+// runs with untrusted control flow.
+contract RescueAllLow_W01 {
+    uint{this} count;
+    constructor() { super(); }
+
+    public void f{this; any}(address{this} to) {
+        atomic {
+            send(to, 1);
+        } rescue * {
+            count = 0;
+        }
+    }
+}

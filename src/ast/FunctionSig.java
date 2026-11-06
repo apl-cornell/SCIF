@@ -202,13 +202,13 @@ public class FunctionSig extends TopLayerNode {
         VarSym sender = (VarSym) env.getCurSym(typecheck.Utils.LABEL_SENDER);
 
         List<VarSym> argsInfo = args.parseArgs(env, now);
-        Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
+        Map<ExceptionTypeSym, Label> exceptions = new HashMap<>();
         for (LabeledType t : exceptionList) {
             ExceptionTypeSym t1 = env.getExceptionTypeSym(t.type());
             if (t1 == null) {
                 throw new SemanticException("exception not found: " + t.type().name, t.location);
             }
-            exceptions.put(t1, null);
+            exceptions.put(t1, env.newLabel(t.label()));
         }
         funcSym = new FuncSym(name,
                 isPublic,
@@ -245,16 +245,14 @@ public class FunctionSig extends TopLayerNode {
         if (rtn != null) {
             ifl = contractSym.newLabel(rtn.label());
         }
-        Map<ExceptionTypeSym, String> exceptions = new HashMap<>();
+        Map<ExceptionTypeSym, Label> exceptions = new HashMap<>();
         for (LabeledType t : exceptionList) {
             IfLabel label = null;
             /*if (t.type instanceof  LabeledType)
                 label = ((LabeledType) t.type).ifl;*/
             ExceptionTypeSym exceptionTypeSym = contractSym.getExceptionSym(t.type().name);
             assert exceptionTypeSym != null;
-            exceptions.put(exceptionTypeSym,
-                    typecheck.Utils.getLabelNameFuncExpLabel(scopeContext.getSHErrLocName(),
-                            t.type().name()));
+            exceptions.put(exceptionTypeSym, contractSym.newLabel(t.label()));
         }
 //      System.err.println("adding method: " + name);
         funcSym =

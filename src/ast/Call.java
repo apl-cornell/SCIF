@@ -246,7 +246,7 @@ public class Call extends TrailerExpr {
         String rtnTypeName = funcSym.returnType.toSHErrLocFmt();
         env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location));
 
-        for (Map.Entry<ExceptionTypeSym, String> tl : funcSym.exceptions.entrySet()) {
+        for (Map.Entry<ExceptionTypeSym, Label> tl : funcSym.exceptions.entrySet()) {
             if (!parent.isCheckedException(tl.getKey(), extern)) {
                 throw new SemanticException("Unchecked exception: " + tl.getKey().getName(),
                     location);
@@ -644,6 +644,9 @@ public class Call extends TrailerExpr {
                     ? receiverPrincipal : env.thisSym().toSHErrLocFmt());
             outputMapping.put(calleeThis, ifContRtn);
         }
+        // Whatever the callee's labels say, its results are trusted no more than the
+        // reference used to call it.
+        String calleeTrust = externalCall ? ifContRtn : null;
 
         // Generate constraints on arguments
 
@@ -674,35 +677,25 @@ public class Call extends TrailerExpr {
         }
 
 
+        String postCallLock = attenuate(ifFuncGammaLock.toSHErrLocFmt(outputMapping), calleeTrust);
         PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
-                Utils.joinLabels(psi.getNormalPath().c.pc, funcSym.endPc().toSHErrLocFmt(outputMapping)),
-//                funcSym.getLabelNameCallGamma()
-                ifFuncGammaLock.toSHErrLocFmt(outputMapping)
-        ))); // post-call psi = (current normal path pc ⊔ function return label, gamma)
+                attenuate(Utils.joinLabels(psi.getNormalPath().c.pc,
+                        funcSym.endPc().toSHErrLocFmt(outputMapping)), calleeTrust),
+                postCallLock
+        ))); // post-call psi = (current normal path pc ⊔ function end pc, gamma), attenuated
 
-        for (Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
-            ExceptionTypeSym curSym = exp.getKey();
-            String expLabelName = exp.getValue();
-            // pc_2 dropped
-            // expPsi.set(curSym, new PsiUnit(
-            //         new Context(
-            //                 Utils.joinLabels(expLabelName, funcSym.externalPcSLC()),
-            //                 Utils.joinLabels(ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping),
-            //                         ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping))),
-            //         true)
-            //     ); // exception-path post-call psi = (function exception-path pc ⊔ pc_ex,
-            //         // gamma ⊔ pc_in)
-            expPsi.set(curSym, new PsiUnit(
+        if (externalCall) {
+            checkExceptionData(env, outputMapping);
+        }
+        for (Entry<ExceptionTypeSym, Label> exp : funcSym.exceptions.entrySet()) {
+            // exception-path post-call psi = (current pc ⊔ declared exception label, gamma),
+            // attenuated like the normal path
+            expPsi.set(exp.getKey(), new PsiUnit(
                     new Context(
-                            Utils.joinLabels(expLabelName, funcSym.externalPcSLC()),
-                            ifFuncGammaLock.toSHErrLocFmt(outputMapping)),
-                    true)
-                ); // exception-path post-call psi = (function exception-path pc ⊔ pc_ex, gamma)
-                    // TODO: should pc label get joined by pc_ex, or psi.normal.pc?
-                    //TODO: dependent
-            //PsiUnit psiUnit = env.psi.get(curSym);
-            //env.cons.add(new Constraint(new Inequality(Utils.makeJoin(expLabelName, ifNameFuncCallPcAfter), psiUnit.pc), env.hypothesis, location, env.curContractSym.name,
-            //"Exception " + curSym.name + " is not trusted enough to throw"));
+                            attenuate(Utils.joinLabels(psi.getNormalPath().c.pc,
+                                    exp.getValue().toSHErrLocFmt(outputMapping)), calleeTrust),
+                            postCallLock),
+                    true));
         }
 
         //TODO
@@ -717,10 +710,8 @@ public class Call extends TrailerExpr {
         //     ); // pc_ex => pc_in ⊔ caller's lambda
 
         if (externalCall) {
-            // target address..lbl ⊔ gamma == post-call lambda
-            env.checkEqual(
-                    Utils.joinLabels(ifContRtn, ifFuncGammaLock.toSHErrLocFmt(outputMapping)),
-                    endContext.lambda, location,
+            // callee trust ⊔ gamma == post-call lambda
+            env.checkEqual(postCallLock, endContext.lambda, location,
                     "Calling this function does not respect static reentrancy locks");
         }
 
@@ -740,7 +731,8 @@ public class Call extends TrailerExpr {
 
         // Finalize
 
-        String ifNameFuncRtnValue = funcSym.rtn.toSHErrLocFmt(outputMapping);
+        String ifNameFuncRtnValue = attenuate(funcSym.rtn.toSHErrLocFmt(outputMapping),
+                calleeTrust);
 
         // realLabels
         if (funcSym.returnType instanceof ClosureTypeSym retCs) {
@@ -754,6 +746,49 @@ public class Call extends TrailerExpr {
         env.checkFlow(psi.getNormalPath().c.pc, ifNameFuncRtnValue, location,
                 "Control flow after this call must be trusted by the function's return value label");
         return new ExpOutcome(ifNameFuncRtnValue, psi);
+    }
+
+    /**
+     * Checks that the data of each exception the external callee may throw is trusted at the
+     * labels this contract's declaration of that exception gives it, since handlers here read
+     * it at those labels. The callee's labels are instantiated with {@code outputMapping},
+     * with its exception's principal parameters standing for the corresponding parameters of
+     * this contract's declaration.
+     */
+    private void checkExceptionData(VisitEnv env, Map<String, String> outputMapping) {
+        // A handler reads each field at its label joined with the label of the exception's
+        // path, which is attenuated by the callee's trust, so the data is too.
+        for (ExceptionTypeSym calleeExp : funcSym.exceptions.keySet()) {
+            ExceptionTypeSym localExp = env.getExp(calleeExp.getName());
+            if (localExp == null) {
+                throw new AssertionError("exception " + calleeExp.getName()
+                        + " of an external call has no local declaration");
+            }
+            Map<String, String> mapping = new HashMap<>(outputMapping);
+            for (int i = 0; i < calleeExp.parameters().size(); ++i) {
+                VarSym calleeParam = calleeExp.parameters().get(i);
+                if (calleeParam.isPrincipalTyped()) {
+                    mapping.put(calleeParam.toSHErrLocFmt(), env.freshPrincipal(
+                            localExp.parameters().get(i).toSHErrLocFmt()));
+                }
+            }
+            for (int i = 0; i < calleeExp.parameters().size(); ++i) {
+                VarSym calleeParam = calleeExp.parameters().get(i);
+                VarSym localParam = localExp.parameters().get(i);
+                env.checkFlow(calleeParam.ifl.toSHErrLocFmt(mapping),
+                        localParam.ifl.toSHErrLocFmt(), location,
+                        "Data of exception " + calleeExp.getName()
+                                + " from this call must be trusted at its declared label here");
+            }
+        }
+    }
+
+    /**
+     * The label {@code label} trusted no more than {@code trust}, or {@code label} itself if
+     * {@code trust} is null. {@code trust} may be null.
+     */
+    private static String attenuate(String label, String trust) {
+        return trust == null ? label : Utils.joinLabels(label, trust);
     }
 
     /**
@@ -906,7 +941,7 @@ public class Call extends TrailerExpr {
             // map exceptionID
             IfStatement mapExpIds = null;
             int i = 1;
-            for (Entry<ExceptionTypeSym, String> entry: funcSym.exceptions.entrySet()) {
+            for (Entry<ExceptionTypeSym, Label> entry: funcSym.exceptions.entrySet()) {
                 IfStatement ifexp = new IfStatement(
                         new BinaryExpression(compile.Utils.SOL_BOOL_EQUAL, statVar, new Literal(String.valueOf(i))),
                         List.of(new Assign(statVar, new Literal(String.valueOf(code.getExceptionId(entry.getKey()))))),

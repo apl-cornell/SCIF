@@ -19,7 +19,8 @@ public class FuncSym extends Sym {
     private VarSym sender;
     public final Label external_pc, internal_pc, gamma, rtn;
 
-    public Map<ExceptionTypeSym, String> exceptions;
+    /** The exceptions this method may throw, each with the declared label of its path. */
+    public Map<ExceptionTypeSym, Label> exceptions;
     public CodeLocation location;
     private boolean isPublic, isBuiltIn, isClosurable;
     private String plainSignature;
@@ -35,7 +36,7 @@ public class FuncSym extends Sym {
                    List<VarSym> parameters,
                    TypeSym returnType,
                    Label returnLabel,
-                   Map<ExceptionTypeSym, String> exceptions,
+                   Map<ExceptionTypeSym, Label> exceptions,
                    ScopeContext defContext,
             VarSym sender, CodeLocation location) {
         super(funcName, defContext);

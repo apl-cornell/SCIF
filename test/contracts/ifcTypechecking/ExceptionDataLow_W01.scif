@@ -1,0 +1,10 @@
+// An exception's label covers its data, so untrusted data cannot be thrown in
+// an exception declared trusted.
+contract ExceptionDataLow_W01 {
+    exception E(uint v);
+    constructor() { super(); }
+
+    public void g{this}(uint{any} x) throws (E{this}) {
+        throw E(x);
+    }
+}

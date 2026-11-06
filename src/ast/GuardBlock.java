@@ -61,13 +61,10 @@ public class GuardBlock extends Statement {
                 location, "Cannot grant a dynamic reentrancy lock");
         // String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
-        PathOutcome psi = new PathOutcome(new PsiUnit(curContext));
-
         //Context lastContext = new Context(curContext);//, prev2 = null;
         env.incScopeLayer();
-        PathOutcome so = null;
-        env.inContext = psi.getNormalPath().c();
-        Utils.genConsStmtsWithException(body, env, so, psi, tail_position);
+        env.inContext = curContext;
+        PathOutcome psi = Utils.genConsStmtSeq(body, env, tail_position);
 //        int index = 0;
 //        for (Statement stmt : body) {
 //            ++index;

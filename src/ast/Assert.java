@@ -42,7 +42,12 @@ public class Assert extends Statement {
             }
 
         }
-        return test.genIFConstraints(env, tail_position).psi;
+        PathOutcome result = test.genIFConstraints(env, tail_position).psi;
+        if (test instanceof ConstantExpr c && c.value == Constant.FALSE) {
+            // An assertion of false always fails, so it never completes normally.
+            return result.withoutNormalPath();
+        }
+        return result;
     }
 
     @Override

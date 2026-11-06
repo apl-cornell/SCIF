@@ -249,16 +249,15 @@ public class Atomic extends Statement {
         PathOutcome input = new PathOutcome();
         Map<String, String> versionsBefore = env.saveVersions();
         env.incScopeLayer();
-        PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        Utils.genConsStmtsWithException(body, env, so, psi, tail_position);
+        psi.join(Utils.genConsStmtSeq(body, env, tail_position));
         env.decScopeLayer();
         for (ExceptHandler h : handlers) {
-            ExceptionTypeSym expSym = env.getExp(h.name());
+            ExceptionTypeSym expSym = h.exceptionType(env);
             PsiUnit u = psi.psi.get(expSym);
 
             if (u != null) {
                 env.checkFlow(u.c.lambda, beginContext.lambda, location,
-                        "Try clause should maintain locks when throwing exception " + h.name());
+                        "Try clause should maintain locks when throwing exception " + h.type().name());
             /*env.cons.add(new Constraint(new Inequality(u.c.pc, h.), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));*/
 
@@ -279,9 +278,16 @@ public class Atomic extends Statement {
             env.havoc(assignedInBody);
             env.incScopeLayer();
             //env.inContext = new Context(h.getHandlerPcLabelName(), beginContext.lambda);
-            ExceptionTypeSym expSym = env.getExp(h.name());
-            PsiUnit expUnit = input.psi.get(expSym);
-            if (expUnit != null) {
+            ExceptionTypeSym expSym = h.exceptionType(env);
+            if (expSym == null) {
+                // Nothing is known about where a failure came from, so a handler for
+                // failures runs with untrusted control flow.
+                env.inContext = new Context(env.curContractSym().any().toSHErrLocFmt(),
+                        beginContext.lambda);
+                PathOutcome ho = h.genConsVisit(env, tail_position);
+                psi.join(ho);
+                exitVersions.add(env.saveVersions());
+            } else if (input.psi.get(expSym) instanceof PsiUnit expUnit) {
                 env.inContext = new Context(expUnit.c.pc, beginContext.lambda);
                 PathOutcome ho = h.genConsVisit(env, tail_position);
                 psi.join(ho);

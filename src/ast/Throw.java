@@ -146,6 +146,10 @@ public class Throw extends Statement {
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         PathOutcome psi = new PathOutcome(new PsiUnit(beginContext));
         ExpOutcome ao = null;
+        String expName = ((Name) exception.value).id;
+        ExceptionTypeSym expSym = env.getExp(expName);
+        java.util.List<String> argLabels = new java.util.ArrayList<>();
+        java.util.List<String> pcs = new java.util.ArrayList<>();
 
         for (int i = 0; i < exception.args.size(); ++i) {
             Expression arg = exception.args.get(i);
@@ -154,10 +158,23 @@ public class Throw extends Statement {
             env.inContext = new Context(
                     Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
                     beginContext.lambda);
+            argLabels.add(ao.valueLabelName);
+            pcs.add(env.inContext.pc);
         }
 
-        String expName = ((Name) exception.value).id;
-        ExceptionTypeSym expSym = env.getExp(expName);
+        // Each argument is checked like an argument of a call, with the exception's
+        // principal parameters standing for the principals passed for them.
+        java.util.Map<String, String> mapping = paramMapping(env, expSym);
+        for (int i = 0; i < exception.args.size(); ++i) {
+            String paramLabel = expSym.parameters().get(i).ifl.toSHErrLocFmt(mapping);
+            CodeLocation argLoc = exception.args.get(i).location;
+            env.checkFlow(argLabels.get(i), paramLabel, argLoc,
+                    "Input to the " + Utils.ordNumString(i + 1)
+                            + " argument of the exception must be trusted enough");
+            env.checkFlow(pcs.get(i), paramLabel, argLoc,
+                    "Current control flow must be trusted to feed the "
+                            + Utils.ordNumString(i + 1) + " argument of the exception");
+        }
 
         PsiUnit expUnit = new PsiUnit(
                 new Context(env.inContext.pc,
@@ -170,6 +187,23 @@ public class Throw extends Statement {
         psi.join(psi2);
 
         return psi;
+    }
+
+    /**
+     * Maps each principal-typed parameter of {@code expSym} to the principal passed for it
+     * here, or to the top principal if the argument does not name one.
+     */
+    private java.util.Map<String, String> paramMapping(VisitEnv env, ExceptionTypeSym expSym) {
+        java.util.Map<String, String> mapping = new java.util.HashMap<>();
+        for (int i = 0; i < exception.args.size(); ++i) {
+            VarSym param = expSym.parameters().get(i);
+            if (param.isPrincipalTyped()) {
+                String principal = exception.args.get(i).principalName(env);
+                mapping.put(param.toSHErrLocFmt(), principal != null
+                        ? principal : env.curContractSym().top().toSHErrLocFmt());
+            }
+        }
+        return mapping;
     }
 
     @Override

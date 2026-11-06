@@ -1,0 +1,4 @@
+interface ICrossThrower {
+    exception Oops();
+    public void boom{any}() throws (Oops{sender});
+}

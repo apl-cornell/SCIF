@@ -1,0 +1,16 @@
+import "./ISelfVouching.scif";
+// Control flow after an endorse-if is trusted no more than control flow at the
+// end of its branches.
+contract EndorseIfBodyPcLow_W01 {
+    uint{this} count;
+    constructor() { super(); }
+
+    public void f{this}(ISelfVouching{any} x, uint{this} n) {
+        lock(this) {
+            endorse(n, this -> this) when (n > 0) {
+                x.get();
+            }
+        }
+        count = count + 1;
+    }
+}

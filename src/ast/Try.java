@@ -161,8 +161,7 @@ public class Try extends Statement {
         PathOutcome input = new PathOutcome();
         Map<String, String> versionsBefore = env.saveVersions();
         env.incScopeLayer();
-        PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        Utils.genConsStmtsWithException(body, env, so, psi, false);
+        psi.join(Utils.genConsStmtSeq(body, env, false));
 //        for (Statement s : body) {
 //            so = s.genConsVisit(env, false);
 //            psi.joinExe(so);
@@ -172,12 +171,12 @@ public class Try extends Statement {
 //        }
         env.decScopeLayer();
         for (ExceptHandler h : handlers) {
-            ExceptionTypeSym expSym = env.getExp(h.name());
+            ExceptionTypeSym expSym = h.exceptionType(env);
             PsiUnit u = psi.psi.get(expSym);
 
             if (u != null) {
                 env.checkFlow(u.c.lambda, beginContext.lambda, location,
-                        "Try clause should maintain locks when throwing exception " + h.name());
+                        "Try clause should maintain locks when throwing exception " + h.type().name());
             /*env.cons.add(new Constraint(new Inequality(u.c.pc, h.), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));*/
 
@@ -198,7 +197,7 @@ public class Try extends Statement {
             env.havoc(assignedInBody);
             env.incScopeLayer();
             //env.inContext = new Context(h.getHandlerPcLabelName(), beginContext.lambda);
-            ExceptionTypeSym expSym = env.getExp(h.name());
+            ExceptionTypeSym expSym = h.exceptionType(env);
             PsiUnit expUnit = input.psi.get(expSym);
             if (expUnit != null) {
                 env.inContext = Utils.genNewContextAndConstraints(env, false, expUnit.c, beginContext.lambda, h.nextPcSHL(), h.location);

@@ -130,9 +130,9 @@ public class EndorseIfStatement extends Statement {
 
         // Context leftContext = new Context(curContext), rightContext = new Context(curContext);
         CodeLocation loc = null;
-        PathOutcome ifo = toOutCome.psi;
+        PathOutcome ifo = toOutCome.psi.withoutNormalPath();
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        Utils.genConsStmts(ifStatement.body, env, ifo, tail_position);
+        ifo.join(Utils.genConsStmtSeq(ifStatement.body, env, tail_position));
 
 //        int index = 0;
 //        for (Statement stmt : ifStatement.body) {
@@ -162,9 +162,8 @@ public class EndorseIfStatement extends Statement {
         env.restoreVersions(versionsBefore);
         env.incScopeLayer();
 //        index = 0;
-        PathOutcome elseo = toOutCome.psi;
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        Utils.genConsStmts(ifStatement.orelse, env, elseo, tail_position);
+        PathOutcome elseo = Utils.genConsStmtSeq(ifStatement.orelse, env, tail_position);
 //        for (Statement stmt : ifStatement.orelse) {
 //            ++index;
 //            elseo = stmt.genConsVisit(env, index == ifStatement.orelse.size() && tail_position);
