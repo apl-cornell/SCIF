@@ -5,7 +5,11 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.nio.file.Files;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public class TestCompilation {
@@ -52,6 +56,36 @@ public class TestCompilation {
             "multiContract/DexibleWithEvents",
     })
     void testPositive(String contractName) throws Exception {
+        compile(contractName);
+    }
+
+    /**
+     * The body of a try statement is compiled into a separate method, which must receive
+     * the local variables the body reads. Each contract has one such method, which must
+     * have the given parameters, separated by semicolons.
+     */
+    @ParameterizedTest
+    @CsvSource({
+            "basic/NewInTry, uint256 a; uint256 b",
+            "basic/CallInTry, ICrossThrower y",
+    })
+    void testTryBodyReceivesLocals(String contractName, String params) throws Exception {
+        String sol = compile(contractName);
+        Matcher m = Pattern.compile("function __tmpvar\\d+\\(([^)]*)\\)").matcher(sol);
+        assertTrue(m.find(), "no method for the try body");
+        for (String param : params.split(";")) {
+            assertTrue(m.group(1).contains(param.trim()),
+                    "the method for the try body does not receive " + param.trim() + ": "
+                            + m.group(1));
+        }
+        assertFalse(m.find(), "more than one method for a try body");
+    }
+
+    /**
+     * Type-checks the contract in {@code contractName}.scif and compiles it to Solidity,
+     * returning the Solidity source; fails the test if it does not type-check.
+     */
+    private String compile(String contractName) throws Exception {
         File logDir = new File("./.scif");
         logDir.mkdirs();
         String inputFilePath = contractName + ".scif";
@@ -86,6 +120,7 @@ public class TestCompilation {
                             contractName.replace('/', '_') + ".sol"),
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         }
+        return Files.readString(outputFile.toPath());
     }
 
     /**

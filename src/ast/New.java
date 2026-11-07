@@ -250,6 +250,21 @@ public class New extends Expression {
     }
 
     @Override
+    public Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        if (form != null) {
+            return form.readMap(code);
+        }
+        Map<String, compile.ast.Type> result = new HashMap<>();
+        for (Expression arg : constructor_call.args) {
+            result.putAll(arg.readMap(code));
+        }
+        if (constructor_call.callSpec != null) {
+            result.putAll(constructor_call.callSpec.readMap(code));
+        }
+        return result;
+    }
+
+    @Override
     protected TypeSym staticType(VisitEnv env) {
         return form != null ? form.type() : env.getContract(((Name) constructor_call.value).id);
     }

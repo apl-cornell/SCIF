@@ -851,8 +851,14 @@ public class Call extends TrailerExpr {
             return form.readMap(code);
         }
         Map<String, Type> result = new HashMap<>();
+        if (value instanceof Attribute att) {
+            result.putAll(att.value.readMap(code));
+        }
         for (Expression arg: args) {
             result.putAll(arg.readMap(code));
+        }
+        if (callSpec != null) {
+            result.putAll(callSpec.readMap(code));
         }
         return result;
     }

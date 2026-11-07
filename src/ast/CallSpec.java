@@ -104,4 +104,13 @@ public class CallSpec extends Node {
         }
         return new compile.ast.CallSpec(specs);
     }
+
+    /** The local variables the expressions in this spec read, with their types. */
+    public Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, compile.ast.Type> result = new HashMap<>();
+        for (Expression spec : specs.values()) {
+            result.putAll(spec.readMap(code));
+        }
+        return result;
+    }
 }

@@ -3,7 +3,9 @@ package ast;
 import compile.CompileEnv;
 import compile.ast.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import typecheck.Context;
 import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
@@ -109,6 +111,15 @@ public class StructConstruction extends Expression {
             }
         }
         return true;
+    }
+
+    @Override
+    public Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, compile.ast.Type> result = new HashMap<>();
+        for (Expression arg : args) {
+            result.putAll(arg.readMap(code));
+        }
+        return result;
     }
 
     @Override
