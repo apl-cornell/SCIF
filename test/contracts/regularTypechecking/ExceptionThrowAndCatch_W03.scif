@@ -2,6 +2,8 @@ contract ExceptionDefinition {
     exception X();
     exception Y(uint aug1, uint aug2);
 
+    constructor() { super(); }
+
     public void foo() throws (X) {
         try {
             bar(1, 2);

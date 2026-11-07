@@ -29,9 +29,9 @@ public class BoolOp extends Expression {
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         ScopeContext l = left.genTypeConstraints(env, now), r = right.genTypeConstraints(env, now);
-        env.addCons(now.genTypeConstraints(l, Relation.LEQ, env, location));
-        env.addCons(now.genTypeConstraints(r, Relation.LEQ, env, location));
-        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(l, Relation.LEQ, env, location, "The operands of a boolean operation must be bool"));
+        env.addCons(now.genTypeConstraints(r, Relation.LEQ, env, location, "The operands of a boolean operation must be bool"));
+        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location, "A boolean operation returns a bool"));
         return now;
     }
 
@@ -53,9 +53,9 @@ public class BoolOp extends Expression {
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bool" + location.toString();
 
         env.checkFlow(ifNameLeft, ifNameRtn, location,
-                "Integrity of left hand expression doesn't flow to value of this boolean operation");
+                "The result of an operation is trusted no more than its left operand");
         env.checkFlow(ifNameRight, ifNameRtn, location,
-                "Integrity of right hand expression doesn't flow to value of this boolean operation");
+                "The result of an operation is trusted no more than its right operand");
 
         typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, right.location);
         // env.outContext = endContext;

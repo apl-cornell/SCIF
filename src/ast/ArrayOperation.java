@@ -57,7 +57,7 @@ public class ArrayOperation extends Expression {
                     throw new SemanticException("pop expects 0 arguments", location);
                 }
                 env.addCons(now.genTypeConstraints(voidType.toSHErrLocFmt(), Relation.EQ, env,
-                        location));
+                        location, "pop() returns no value"));
             }
             case "push" -> {
                 if (args.size() != 1) {
@@ -66,9 +66,9 @@ public class ArrayOperation extends Expression {
                 Expression arg = args.get(0);
                 ScopeContext argContext = arg.genTypeConstraints(env, now);
                 env.addCons(argContext.genTypeConstraints(elementType, Relation.GEQ, env,
-                        arg.location));
+                        arg.location, "The pushed element must have the array's element type"));
                 env.addCons(now.genTypeConstraints(voidType.toSHErrLocFmt(), Relation.EQ, env,
-                        location));
+                        location, "push() returns no value"));
             }
             case "length" -> {
                 if (!args.isEmpty()) {
@@ -76,7 +76,7 @@ public class ArrayOperation extends Expression {
                 }
                 TypeSym uintType = (TypeSym) env.getSym(BuiltInT.UINT);
                 env.addCons(now.genTypeConstraints(uintType.toSHErrLocFmt(), Relation.EQ, env,
-                        location));
+                        location, "length() returns a uint"));
             }
             default -> throw new SemanticException("type error: unknown array operator",
                     location);
@@ -114,10 +114,10 @@ public class ArrayOperation extends Expression {
         } else {
             String arrayLocation = array.genLocationConstraints(env).valueLabelName;
             env.checkFlow(ifNamePc, arrayLocation, location,
-                    "Current control flow must be trusted to modify this array");
+                    "Control flow must be trusted at the label of the array to modify it");
             if (op.equals("push")) {
                 env.checkFlow(argLabels.get(0), arrayLocation, location,
-                        "The element pushed must be trusted at the array's label");
+                        "The pushed element must be trusted at the label of the array");
             }
         }
         Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);

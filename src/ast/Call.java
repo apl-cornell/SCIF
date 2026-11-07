@@ -158,7 +158,7 @@ public class Call extends TrailerExpr {
                 CallArguments.genTypeConstraints(args, closureTypeSym.unboundParams,
                         "closure " + varName, env, now, location);
                 env.addCons(now.genTypeConstraints(
-                        closureTypeSym.returnType.toSHErrLocFmt(), Relation.EQ, env, location));
+                        closureTypeSym.returnType.toSHErrLocFmt(), Relation.EQ, env, location, "Invoking a closure returns the closure's return type"));
                 return now;
             } else {
                 throw new SemanticException("type error: " + varName + "." + funcName + "() " + varSym.typeSym.toSHErrLocFmt() + (varSym.typeSym instanceof ContractSym),
@@ -220,7 +220,7 @@ public class Call extends TrailerExpr {
                 funcSym.parameters.stream().map(p -> p.typeSym).toList(),
                 "method " + funcName, env, now, location);
         String rtnTypeName = funcSym.returnType.toSHErrLocFmt();
-        env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location, "A call returns the return type of method " + funcName));
 
         for (Map.Entry<ExceptionTypeSym, Label> tl : funcSym.exceptions.entrySet()) {
             if (!parent.isCheckedException(tl.getKey(), extern)) {
@@ -422,14 +422,14 @@ public class Call extends TrailerExpr {
             Expression arg = args.get(i);
             if (callee.paramTypes().get(i) instanceof ClosureTypeSym paramCs) {
                 ClosureCreation.checkFlowInto(arg, paramCs, inputMapping, env, arg.location,
-                        "Closure value flowing into the " + Utils.ordNumString(i + 1) + " argument must subtype its slot");
+                        "The closure passed as the " + Utils.ordNumString(i + 1) + " argument must be compatible with the type of its parameter");
             }
         }
 
         // Generate pre-call and post-call constraints and contexts
 
         env.checkFlow(ifContRtn, ifFuncCallPcBefore.toSHErrLocFmt(inputMapping),
-                location, "Target contract must be trusted to call this method"); // target address..lbl => pc_ex
+                location, "The reference used to call this method must be trusted at its external begin label"); // target address..lbl => pc_ex
 
 
         String postCallLock = attenuate(ifFuncGammaLock.toSHErrLocFmt(outputMapping), calleeTrust);
@@ -454,17 +454,17 @@ public class Call extends TrailerExpr {
         //TODO
 
         env.checkFlow(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(inputMapping), location,
-                "Current control flow must be trusted to call this method"); // current pc => pc_ex
+                "Control flow must be trusted at the external begin label of the method called"); // current pc => pc_ex
         // pc_2 dropped
         // env.cons.add(new Constraint(new Inequality(ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
         //         Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), beginContext.lambda)), env.hypothesis(),
         //         location, env.curContractSym().getName(),
-        //         "Calling this function does not respect static reentrancy locks")
+        //         "The method called maintains only its reentrancy lock label, trusted no more than the reference used to call it")
         //     ); // pc_ex => pc_in ⊔ caller's lambda
 
         // callee trust ⊔ gamma == post-call lambda
         env.checkEqual(postCallLock, endContext.lambda, location,
-                "Calling this function does not respect static reentrancy locks");
+                "The method called maintains only its reentrancy lock label, trusted no more than the reference used to call it");
 
         if (!tail_position) {
 //            env.cons.add(new Constraint(
@@ -495,7 +495,7 @@ public class Call extends TrailerExpr {
         psi.setNormalPath(endContext);
         // post-call pc (normal) => function return label (l_n)
         env.checkFlow(psi.getNormalPath().c.pc, ifNameFuncRtnValue, location,
-                "Control flow after this call must be trusted by the function's return value label");
+                "The result of a call is trusted no more than control flow after the call");
         resultType = callee.returnType();
         return new ExpOutcome(ifNameFuncRtnValue, psi);
     }

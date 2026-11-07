@@ -71,49 +71,6 @@ public class TestRegularTypechecking {
                 "expected " + contractName + " to regular-typecheck");
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {
-            "basic/StructEx_W01",
-//            "basic/Assignment_W01",
-            "regularTypechecking/ExceptionThrowAndCatch_W01",
-            "regularTypechecking/ExceptionThrowAndCatch_W02",
-            "regularTypechecking/ExceptionThrowAndCatch_W03",
-            // "regularTypechecking/LocalTrust_W01",
-            "regularTypechecking/FinalVarNotInitialized_W01",
-            "regularTypechecking/FinalVarNotInitialized_W02",
-            "regularTypechecking/Constructor1",
-            "regularTypechecking/Constructor2",
-            "regularTypechecking/Constructor3",
-            "regularTypechecking/ClosureNotClosurable",
-            "regularTypechecking/ClosureInvokeArity",
-            "regularTypechecking/ClosureCreateArity",
-            "regularTypechecking/ClosureInvokeNonClosure",
-            "regularTypechecking/ClosureBindNonClosure",
-            "regularTypechecking/ClosureImplementsParamMismatch",
-            "regularTypechecking/ClosureLabelNonPrincipal",
-            "regularTypechecking/ClosureMeetPcEx",
-            "regularTypechecking/ClosureTargetWrite",
-//            "regularTypechecking/Constructor4",
-    })
-    void testNegative(String contractName) {
-        File logDir = new File("./.scif");
-        logDir.mkdirs();
-        String inputFilePath = contractName + ".scif";
-        URL input = ClassLoader.getSystemResource(inputFilePath);
-        System.out.println(inputFilePath + ": " + input);
-        ArrayList<File> files = new ArrayList<>();
-        files.add(new File(input.getFile()));
-        boolean accepted;
-        try {
-            List<SourceFile> roots = Preprocessor.preprocess(files);
-            accepted = roots != null && TypeChecker.regularTypecheck(roots, m_debug);
-        } catch (Throwable t) {
-            // Any error means the bad input was correctly not accepted.
-            accepted = false;
-        }
-        assertFalse(accepted, "expected " + contractName + " to be rejected by regular typecheck");
-    }
-
     /**
      * Each contract must be rejected with a reported error: a SemanticException or
      * a failed constraint check. Any other exception fails the test.
@@ -154,6 +111,27 @@ public class TestRegularTypechecking {
             "regularTypechecking/ExceptionParamLabelNotPrincipal_W01",
             "regularTypechecking/StructMemberLabelNonFinal_W01",
             "regularTypechecking/StructMemberLabelNotPrincipal_W01",
+            "basic/StructEx_W01",
+            "regularTypechecking/ExceptionThrowAndCatch_W01",
+            "regularTypechecking/ExceptionThrowAndCatch_W02",
+            "regularTypechecking/ExceptionThrowAndCatch_W03",
+            "regularTypechecking/FinalVarNotInitialized_W01",
+            "regularTypechecking/FinalVarNotInitialized_W02",
+            "regularTypechecking/Constructor1",
+            "regularTypechecking/Constructor2",
+            "regularTypechecking/Constructor3",
+            "regularTypechecking/ClosureNotClosurable",
+            "regularTypechecking/ClosureInvokeArity",
+            "regularTypechecking/ClosureCreateArity",
+            "regularTypechecking/ClosureInvokeNonClosure",
+            "regularTypechecking/ClosureBindNonClosure",
+            "regularTypechecking/ClosureImplementsParamMismatch",
+            "regularTypechecking/ClosureLabelNonPrincipal",
+            "regularTypechecking/ClosureMeetPcEx",
+            "regularTypechecking/ClosureTargetWrite",
+            "regularTypechecking/LocalTrust_W01",
+//            "basic/Assignment_W01",
+//            "regularTypechecking/Constructor4",
     })
     void testReportedError(String contractName) throws Exception {
         URL input = ClassLoader.getSystemResource(contractName + ".scif");

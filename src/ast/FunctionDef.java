@@ -79,7 +79,7 @@ public class FunctionDef extends FunctionSig {
         if (funcSym.returnType != null) {
             env.addCons(new Constraint(new Inequality(funcSym.returnTypeSLC(), Relation.EQ,
                     funcSym.returnType.toSHErrLocFmt()), env.globalHypothesis(), location,
-                    "Label of this method's return value"));
+                    "The return type of the method is its declared return type"));
         }
 
 //        env.enterMethod(getName());
@@ -117,7 +117,7 @@ public class FunctionDef extends FunctionSig {
         for (String builtInName : builtInNames) {
             VarSym builtIn = env.getVar(builtInName);
             env.checkEqual(builtIn.labelNameSLC(), builtIn.labelValueSLC(), location,
-                    "Label of " + builtInName + " may be incorrect");
+                    "The label of built-in variable " + builtInName + " may be wrong");
         }
 
         for (Entry<String, VarSym> entry: env.curSymTab.getVars().entrySet()) {
@@ -141,7 +141,7 @@ public class FunctionDef extends FunctionSig {
 
         String ifNameCall = funcSym.internalPcSLC();
         env.checkTrustEqual(ifNameCall, ifNamePc, funcLabels.to_pc.location,
-                "Control flow of this method start with its call-after(second) label");
+                "Control flow in the method body starts at its internal begin label");
 
 //        String ifNameContract = env.curContractSym().getLabelNameContract();
 //        env.addTrustConstraint(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis(),
@@ -150,10 +150,10 @@ public class FunctionDef extends FunctionSig {
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
         env.checkTrustedBy(inLockName, ifNamePc, funcLabels.to_pc.location,
-                "The statically locked integrity must be at least as trusted as initial pc integrity");
+                "The reentrancy lock held on entry must be trusted at least as much as the internal begin label");
         env.checkFlow(Utils.joinLabels(inLockName, outLockName), ifNameGamma,
                 funcLabels.gamma_label.location,
-                "This function does not maintain reentrancy locks as specified in signature");
+                "The method body must maintain the reentrancy lock label in its signature");
 
         Context funcBeginContext = curContext;
         PsiUnit funcEndContext = new PsiUnit(outPcName, outLockName);
@@ -187,7 +187,7 @@ public class FunctionDef extends FunctionSig {
                             + " must be trusted at its declared label");
             env.checkFlow(Utils.joinLabels(inLockName, c.lambda), ifNameGamma,
                     funcLabels.gamma_label.location,
-                    "This function does not maintain reentrancy locks as specified in signature"
+                    "The method body must maintain the reentrancy lock label in its signature"
                             + " when it throws " + exp.getKey().getName());
         }
 

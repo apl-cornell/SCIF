@@ -19,6 +19,7 @@ import sherrloc.diagnostic.explanation.Explanation;
 import sherrloc.graph.Variance;
 import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Constraint;
+import typecheck.sherrlocUtils.Inequality;
 
 import java.io.*;
 import java.util.*;
@@ -64,8 +65,8 @@ public class Utils {
     public static final String SET_CONTRACT_NAME = "Set";
     public static final String PATH_TO_BASECONTRACTCENTRALIZED = "BaseContractCentralized";
 
-    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "Static reentrancy locks should be maintained except during the last operation";
-    public static final String ERROR_MESSAGE_PC_IN_NONLAST_OPERATION = "PC should be maintained except during the last operation";
+    public static final String ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION = "This operation must maintain the reentrancy lock, since more operations follow it";
+    public static final String ERROR_MESSAGE_PC_IN_NONLAST_OPERATION = "Control flow after this point is trusted no more than control flow reaching it";
 //    public static final String ERROR_MESSAGE_LOCK_IN_LAST_OPERATION = "The operation at tail position should respect the final reentrancy lock label";
 
     public static final String DEBUG_UNKNOWN_CONTRACT_NAME = "UNKNOWN";
@@ -265,21 +266,23 @@ public class Utils {
         }
     }
 
-    public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors, List<Constraint> assumptions,
-            List<Constraint> constraints, boolean isIFC, InterfaceSym contractSym) {
-        return createDiagnoser(constructors, java.util.Set.of(), assumptions, constraints, isIFC,
-                contractSym, java.util.Set.of(), List.of());
+    public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors,
+            List<Constraint> trustConstraints, List<Constraint> constraints, boolean isIFC,
+            InterfaceSym contractSym) {
+        return createDiagnoser(constructors, java.util.Set.of(), trustConstraints, constraints,
+                isIFC, contractSym, java.util.Set.of(), List.of());
     }
 
     /**
-     * A diagnoser for {@code constraints} under {@code assumptions}. The principals named by
+     * A diagnoser that checks {@code trustConstraints} and {@code constraints}, assuming that
+     * every inequality in {@code assumptions} holds. The principals named by
      * {@code constructors} and {@code principalNames} are constants rather than variables to
      * solve for; in IFC mode, each lies between the top and bottom principals.
      */
     public static SherrlocDiagnoser createDiagnoser(Set<? extends Sym> constructors,
-            Set<String> principalNames, List<Constraint> assumptions,
+            Set<String> principalNames, List<Constraint> trustConstraints,
             List<Constraint> constraints, boolean isIFC, InterfaceSym contractSym,
-            Set<String> rigidAtoms, List<String[]> atomAssumptions) {
+            Set<String> rigidAtoms, List<Inequality> assumptions) {
 
         SherrlocDiagnoser diagnoser = new SherrlocDiagnoser(DiagnosticOptions.Mode.CONS, true, false);
 
@@ -300,7 +303,7 @@ public class Utils {
             }
         }
 
-        if (!assumptions.isEmpty() || isIFC) {
+        if (!trustConstraints.isEmpty() || isIFC) {
             assert bot != null;
             assert top != null;
             if (isIFC) {
@@ -337,15 +340,13 @@ public class Utils {
                             diagnoser.createElement(bot.toSHErrLocFmt(), sherrloc.constraint.ast.Position.EmptyPosition()),
                             diagnoser.createElement(atom, sherrloc.constraint.ast.Position.EmptyPosition())));
                 }
-                for (String[] pair : atomAssumptions) {
-                    diagnoser.addAssumedInequality(diagnoser.createEqualityConstraint(
-                            diagnoser.createElement(pair[0], sherrloc.constraint.ast.Position.EmptyPosition()),
-                            diagnoser.createElement(pair[1], sherrloc.constraint.ast.Position.EmptyPosition())));
+                for (Inequality assumption : assumptions) {
+                    diagnoser.addAssumedInequality(assumption.toSherrlocInequality(diagnoser));
                 }
             }
         }
 
-        for (Constraint con : assumptions) {
+        for (Constraint con : trustConstraints) {
             if (con.inequality != null) {
                 diagnoser.addConstraint(con.inequality.toSherrlocInequality(diagnoser),
                         con.hypothesis.toSherrlocHypothesis(diagnoser).getInequalities(),
@@ -659,9 +660,9 @@ public class Utils {
     public static void contextFlow(VisitEnv env, Context outContext, Context endContext,
             CodeLocation location) {
         env.checkTrustedBy(outContext.lambda, endContext.lambda, location,
-                "actually maintained lock of final sub-statement must flow to that of parent statement");
+                "An enclosing statement maintains no more reentrancy lock than its last part");
         env.checkTrustedBy(outContext.pc, endContext.pc, location,
-                "Normal-termination control flow of final sub-statement must flow to that of parent statement");
+                "Control flow after an enclosing statement is trusted no more than control flow at the end of its last part");
     }
 
     public static ExceptionTypeSym getNormalPathException() {

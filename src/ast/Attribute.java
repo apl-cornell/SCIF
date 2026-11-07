@@ -37,7 +37,7 @@ public class Attribute extends TrailerExpr {
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         VarSym varSym = getVarInfo(env);
         ScopeContext now = new ScopeContext(this, parent);
-        env.addCons(now.genTypeConstraints(varSym.typeSym.getName(), Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(varSym.typeSym.getName(), Relation.EQ, env, location, "Member " + attr.id + " has its declared type"));
         return now;
     }
 
@@ -114,7 +114,7 @@ public class Attribute extends TrailerExpr {
         }
         String ifNameRnt = scopeContext.getSHErrLocName() + ".struct" + location.toString();
         env.checkEqual(attrValueLabel, ifNameRnt, location,
-                "Integrity of the index value must be trusted to indicate the attribute");
+                "Member " + attr.id + " is trusted no more than its label and the value it is read from");
         return new ExpOutcome(ifNameRnt, vo.psi);
     }
 

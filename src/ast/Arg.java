@@ -88,7 +88,7 @@ public class Arg extends Node {
         }
         ScopeContext type = annotation.genTypeConstraints(env, now);
 
-        env.addCons(type.genTypeConstraints(now, Relation.EQ, env, location));
+        env.addCons(type.genTypeConstraints(now, Relation.EQ, env, location, "Parameter " + name + " has its declared type"));
 
         return now;
     }

@@ -30,11 +30,11 @@ public class While extends Statement {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterNewScope();
         ScopeContext rtn = test.genTypeConstraints(env, now);
-        env.addCons(rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
+        env.addCons(rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location, "The loop condition must be a bool"));
 
         body.genTypeConstraints(env, now);
         env.exitNewScope();
-        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location, "A while statement has the type of its condition"));
         return now;
     }
 
@@ -54,10 +54,10 @@ public class While extends Statement {
         String ifNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
         env.checkFlow(ifNamePcBefore, ifNamePcAfter, location,
-                "Control flow before this while statement contributes to the one in its scope");
+                "Control flow in the loop is trusted no more than control flow before it");
 
         env.checkFlow(ifNameTest, ifNamePcAfter, location,
-                "Integrity of the test condition contributes to control flow of this while statement");
+                "Control flow in the loop is trusted no more than the loop condition");
 
         env.incScopeLayer();
 
@@ -69,7 +69,7 @@ public class While extends Statement {
         ifo.join(bodyOutcome.withoutNormalPath());
         if (bodyOutcome.getNormalPath() instanceof PsiUnit bodyEnd) {
             env.checkFlow(bodyEnd.c.pc, ifNamePcAfter, location,
-                    "Control flow at the end of the loop body contributes to the control flow of this while statement");
+                    "Control flow in the loop is trusted no more than control flow at the end of the loop body");
         }
         ifo.setNormalPath(new Context(ifNamePcAfter, to.psi.getNormalPath().c.lambda));
 //        for (Statement stmt : body) {

@@ -77,14 +77,14 @@ public class Subscript extends TrailerExpr {
         } else if (valueVarSym.typeSym instanceof MapTypeSym) {
             MapTypeSym typeInfo = (MapTypeSym) valueVarSym.typeSym;
             // index matches the keytype
-            env.addCons(idx.genTypeConstraints(typeInfo.keyType.getName(), Relation.LEQ, env, location));
+            env.addCons(idx.genTypeConstraints(typeInfo.keyType.getName(), Relation.LEQ, env, location, "A map index must have the map's key type"));
             // valueType matches the result exp
-            env.addCons(now.genTypeConstraints(typeInfo.valueType.getName(), Relation.EQ, env, location));
+            env.addCons(now.genTypeConstraints(typeInfo.valueType.getName(), Relation.EQ, env, location, "A map element has the map's value type"));
             return now;
         } else if (valueVarSym.typeSym instanceof ArrayTypeSym) {
             ArrayTypeSym typeInfo = (ArrayTypeSym) valueVarSym.typeSym;
-            env.addCons(idx.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.LEQ, env, location));
-            env.addCons(now.genTypeConstraints(typeInfo.valueType.getName(), Relation.EQ, env, location));
+            env.addCons(idx.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.LEQ, env, location, "An array index must be a uint"));
+            env.addCons(now.genTypeConstraints(typeInfo.valueType.getName(), Relation.EQ, env, location, "An array element has the array's element type"));
             return now;
         } else {
             throw new SemanticException("only maps and arrays can be subscripted", value.location);
@@ -121,7 +121,7 @@ public class Subscript extends TrailerExpr {
             //        scopeContext.getSHErrLocName() + "." + "Subscript" + location.toString();
             // The index chooses which element is read, so the result is trusted no more than it.
             env.checkEqual(Utils.joinLabels(ifNameValue, ifNameIndex), ifNameRtnValue, location,
-                    "Integrity level of the subscript value is not trustworthy enough");
+                    "An element is trusted no more than the collection and the index used to read it");
 
             // env.cons.add(new Constraint(new Inequality(ifNameIndex, ifNameRtnValue), env.hypothesis, location));
             // ifNameRtnLock = indexContext.lambda;
@@ -148,10 +148,10 @@ public class Subscript extends TrailerExpr {
             rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
                     rtnTypeSym.defContext(), false, false, false);
             env.checkFlow(elementLabel(depMapTypeSym, indexPrincipal(env)),
-                    rtnVarSym.labelNameSLC(), location, "Label of the subscript value");
+                    rtnVarSym.labelNameSLC(), location, "An element is trusted no more than the collection it is read from");
             if (!namesKey(depMapTypeSym)) {
                 env.checkFlow(index.genIFConstraints(env, tail_position).valueLabelName,
-                        rtnVarSym.labelNameSLC(), location, "Label of the subscript index value");
+                        rtnVarSym.labelNameSLC(), location, "An element is trusted no more than the index used to read it");
             }
         } else {
             String ifNameIndex = index.genIFConstraints(env, tail_position).valueLabelName;
@@ -161,10 +161,10 @@ public class Subscript extends TrailerExpr {
             rtnVarSym = new VarSym(ifNameRtn, rtnTypeSym, valueVarSym.ifl, location,
                     valueVarSym.defContext(), false, false, false);
             env.checkFlow(ifNameValue, rtnVarSym.labelNameSLC(), location,
-                    "Label of the subscript value");
+                    "An element is trusted no more than the collection it is read from");
 
             env.checkFlow(ifNameIndex, rtnVarSym.labelNameSLC(), location,
-                    "Label of the subscript index value");
+                    "An element is trusted no more than the index used to read it");
 
         }
         return rtnVarSym;

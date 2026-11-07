@@ -40,7 +40,7 @@ public class Cast extends Expression {
         ScopeContext now = new ScopeContext(this, parent);
         arg.genTypeConstraints(env, now);
         Sym typeSym = env.getCurSym(type.id);
-        env.addCons(now.genTypeConstraints(typeSym.getName(), Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(typeSym.getName(), Relation.EQ, env, location, "A cast has the type it names"));
         return now;
     }
 

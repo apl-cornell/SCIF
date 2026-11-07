@@ -87,10 +87,10 @@ public class StateVariableDeclaration extends TopLayerNode {
         ScopeContext vtype = type.genTypeConstraints(env, now);
         ScopeContext tgt = name.genTypeConstraints(env, now);
 
-        env.addCons(vtype.genTypeConstraints(tgt, Relation.EQ, env, location));
+        env.addCons(vtype.genTypeConstraints(tgt, Relation.EQ, env, location, "Field " + name.id + " has its declared type"));
         if (value != null) {
             ScopeContext v = value.genTypeConstraints(env, now);
-            env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location));
+            env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location, "The initial value must have the declared type of " + name.id));
         }
         // The label must mean the same thing wherever the field is used, so it may not
         // name a principal that can change.
@@ -152,7 +152,7 @@ public class StateVariableDeclaration extends TopLayerNode {
         // Context prevContext = env.prevContext;
 
         env.checkFlow(ifNamePc, SLCNameVarLbl, location,
-                "Integrity of control flow must be trusted to allow this assignment");
+                "Control flow must be trusted at the label of " + name.id + " to initialize it");
 
         //env.outContext = endContext;
 
@@ -164,7 +164,7 @@ public class StateVariableDeclaration extends TopLayerNode {
             env.inContext = beginContext;
             ExpOutcome valueOutcome = value.genIFConstraints(env, scopeContext.isContractLevel());
             env.checkFlow(valueOutcome.valueLabelName, SLCNameVarLbl, value.location,
-                    "Integrity of the value being assigned must be trusted to allow this assignment");
+                    "The initial value must be trusted at the label of " + name.id);
             typecheck.Utils.contextFlow(env, valueOutcome.psi.getNormalPath().c, endContext,
                     value.location);
             valueOutcome.psi.set(Utils.getNormalPathException(), endContext);

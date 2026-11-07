@@ -159,12 +159,12 @@ public class ExceptHandler extends Node {
         }
         if (declared == null) {
             env.checkEqual(var.labelNameSLC(), handlerPc, location,
-                    "Label of " + name + " may be incorrect");
+                    "The label of handler variable " + name + " may be wrong");
         } else {
             env.checkEqual(var.labelNameSLC(), declared.toSHErrLocFmt(), location,
-                    "Label of " + name + " may be incorrect");
+                    "The label of handler variable " + name + " may be wrong");
             env.checkFlow(handlerPc, declared.toSHErrLocFmt(), location,
-                    "The caught exception must be trusted at the label of " + name);
+                    "Control flow in the handler must be trusted at the label of " + name);
         }
     }
 

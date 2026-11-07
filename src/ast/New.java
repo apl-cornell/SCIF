@@ -81,10 +81,10 @@ public class New extends Expression {
             TypeSym paraInfo = constructorSym.parameters.get(i).typeSym;
             ScopeContext argContext = arg.genTypeConstraints(env, now);
             String typeName = paraInfo.toSHErrLocFmt();
-            env.addCons(argContext.genTypeConstraints(typeName, Relation.GEQ, env, arg.location));
+            env.addCons(argContext.genTypeConstraints(typeName, Relation.GEQ, env, arg.location, "The " + Utils.ordNumString(i + 1) + " argument must have the type of its constructor parameter"));
         }
         String rtnTypeName = sym.toSHErrLocFmt();
-        env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location, "new returns the contract type it names"));
 
         return now;
     }
@@ -170,11 +170,11 @@ public class New extends Expression {
             Label ifArgLabel = funcSym.getLabelArg(i);
             assert ifArgLabel != null : argSym.getName();
             env.checkFlow(ifNameArgValue, ifArgLabel.toSHErrLocFmt(dependentLabelMapping),
-                    arg.location, "Input to the " + Utils.ordNumString(i + 1)
-                    + " argument must be trusted enough");
+                    arg.location, "The " + Utils.ordNumString(i + 1)
+                    + " argument must be trusted at the label of its parameter");
             env.checkFlow(ifNamePc, ifArgLabel.toSHErrLocFmt(dependentLabelMapping),
-                    arg.location, "Current control flow must be trusted to feed the "
-                    + Utils.ordNumString(i + 1) + "-th argument value");
+                    arg.location, "Control flow must be trusted at the label of the "
+                    + Utils.ordNumString(i + 1) + " parameter");
         }
 
         // pc_2 dropped
@@ -191,7 +191,7 @@ public class New extends Expression {
 
         typecheck.Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
         env.checkFlow(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
-                location, "Current control flow must be trusted to call this method");
+                location, "Control flow must be trusted at the external begin label of the constructor");
         // pc_2 dropped
         // env.cons.add(new Constraint(
         //         new Inequality(ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
@@ -210,7 +210,7 @@ public class New extends Expression {
         //         typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         env.checkEqual(ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping),
                 endContext.lambda, location,
-                typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
+                "The constructor maintains only its reentrancy lock label");
 
         if (!tail_position) {
             env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,

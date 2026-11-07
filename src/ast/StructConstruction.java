@@ -49,10 +49,10 @@ public class StructConstruction extends Expression {
             TypeSym memberType = structSym.getMemberVarInfo(struct.id, i).typeSym;
             ScopeContext argContext = arg.genTypeConstraints(env, now);
             env.addCons(argContext.genTypeConstraints(memberType.toSHErrLocFmt(), Relation.GEQ,
-                    env, arg.location));
+                    env, arg.location, "The value for member " + structSym.getMemberVarInfo(struct.id, i).getName() + " must have the member's type"));
         }
         env.addCons(now.genTypeConstraints(structSym.toSHErrLocFmt(), Relation.EQ, env,
-                location));
+                location, "new returns the struct type it names"));
         return now;
     }
 
@@ -78,9 +78,9 @@ public class StructConstruction extends Expression {
             VarSym member = structSym.members().get(i);
             String memberLabel = member.ifl.toSHErrLocFmt();
             env.checkFlow(ao.valueLabelName, memberLabel, arg.location,
-                    "Input to member " + member.getName() + " must be trusted at its label");
+                    "The value for member " + member.getName() + " must be trusted at the member's label");
             env.checkFlow(env.inContext.pc, memberLabel, arg.location,
-                    "Current control flow must be trusted to set member " + member.getName());
+                    "Control flow must be trusted at the label of member " + member.getName());
         }
         return new ExpOutcome(env.inContext.pc, psi);
     }

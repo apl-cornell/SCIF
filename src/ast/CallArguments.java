@@ -45,7 +45,7 @@ final class CallArguments {
             Expression arg = args.get(i);
             ScopeContext argContext = arg.genTypeConstraints(env, now);
             env.addCons(argContext.genTypeConstraints(paramTypes.get(i).toSHErrLocFmt(),
-                    Relation.GEQ, env, arg.location));
+                    Relation.GEQ, env, arg.location, "The " + Utils.ordNumString(i + 1) + " argument of " + what + " must have the type of its parameter"));
         }
     }
 
@@ -114,9 +114,9 @@ final class CallArguments {
             String paramLabel = paramLabels.get(i).toSHErrLocFmt(mapping);
             String nth = Utils.ordNumString(i + 1);
             env.checkFlow(evaluated.labels().get(i), paramLabel, location,
-                    "Input to the " + nth + " argument" + of + " must be trusted enough");
+                    "The " + nth + " argument" + of + " must be trusted at the label of its parameter");
             env.checkFlow(pc, paramLabel, location,
-                    "Current control flow must be trusted to feed the " + nth + " argument"
+                    "Control flow must be trusted at the label of the " + nth + " parameter"
                             + of);
         }
     }

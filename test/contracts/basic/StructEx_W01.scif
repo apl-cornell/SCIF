@@ -5,6 +5,7 @@ contract StructEx {
     }
 
     s0 a;
+    constructor() { super(); }
     public void init(uint b) {
         a = endorse(b, sender->this);
     }

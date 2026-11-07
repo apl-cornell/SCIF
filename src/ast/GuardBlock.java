@@ -55,7 +55,7 @@ public class GuardBlock extends Statement {
         String guardLabel = label.toSHErrLocFmt();
 
         env.checkFlow(Utils.meetLabels(guardLabel, curContext.lambda), beginContext.lambda,
-                location, "Cannot grant a dynamic reentrancy lock");
+                location, "The lock(...) block must maintain the reentrancy lock held before it");
         // String newAfterLockLabel = Utils.getLabelNameLock(scopeContext.getSHErrLocName() + ".after");
 
         //Context lastContext = new Context(curContext);//, prev2 = null;
@@ -86,7 +86,7 @@ public class GuardBlock extends Statement {
                     scopeContext.getSHErrLocName() + "." + "lock" + location.toString() + "."
                             + entry.getKey().getName();
             env.checkEqual(newPathLabel, Utils.meetLabels(value.c.lambda, guardLabel), location,
-                    "Operations inside lock clause does't respect locks");
+                    "The reentrancy lock leaving the lock(...) block combines the body's lock with the dynamic lock");
             psiOutcome.set(entry.getKey(),
                     new PsiUnit(new Context(value.c.pc, newPathLabel), value.catchable));
         }

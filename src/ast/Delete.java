@@ -50,7 +50,7 @@ public class Delete extends Statement {
         }
 
         env.checkFlow(ifNamePc, ifNameTgt, target.location,
-                "Integrity of control flow must be trusted to allow this assignment");
+                "Control flow must be trusted at the label of the deleted location");
 
         typecheck.Utils.contextFlow(env, env.inContext, endContext, target.location);
         // env.outContext = endContext;

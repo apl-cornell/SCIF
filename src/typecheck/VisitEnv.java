@@ -45,7 +45,7 @@ public class VisitEnv {
     private int versionCount = 0;
 
     private final Set<String> rigidAtoms = new java.util.LinkedHashSet<>();
-    private final List<String[]> atomAssumptions = new ArrayList<>();
+    private final List<Inequality> assumptions = new ArrayList<>();
 
     public void addRigidAtom(String name) {
         rigidAtoms.add(name);
@@ -55,12 +55,16 @@ public class VisitEnv {
         return rigidAtoms;
     }
 
-    public void addAtomAssumption(String a, String b) {
-        atomAssumptions.add(new String[]{a, b});
+    /**
+     * Assumes that {@code inequality} holds when checking the methods of the current contract.
+     */
+    public void assume(Inequality inequality) {
+        assumptions.add(inequality);
     }
 
-    public List<String[]> atomAssumptions() {
-        return atomAssumptions;
+    /** The inequalities assumed so far. */
+    public List<Inequality> assumptions() {
+        return assumptions;
     }
 
     public VisitEnv(Context inContext,
@@ -260,7 +264,7 @@ public class VisitEnv {
      * variable is assigned the principal held by another.
      */
     public void assumeSamePrincipal(String a, String b) {
-        addAtomAssumption(a, b);
+        assume(new Inequality(a, Relation.EQ, b));
     }
 
     /**

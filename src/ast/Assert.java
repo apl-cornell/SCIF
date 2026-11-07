@@ -55,7 +55,7 @@ public class Assert extends Statement {
         ScopeContext now = scopeContext;
         ScopeContext rtn = null;
         rtn = test.genTypeConstraints(env, now);
-        Constraint testCon = rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
+        Constraint testCon = rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location, "The asserted condition must be a bool");
         env.addCons(testCon);
         return now;
     }

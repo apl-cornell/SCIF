@@ -41,7 +41,7 @@ public class Name extends Variable {
             ScopeContext now = new ScopeContext(this, parent);
             TypeSym typeSym = ((VarSym) s).typeSym;
             // logger.debug(s.getName());
-            env.addCons(now.genEqualCons(typeSym, env, location, "Variable `" + id + "` has the wrong type"));
+            env.addCons(now.genEqualCons(typeSym, env, location, "Variable " + id + " has type " + typeSym.getName()));
             // logger.debug(now.toString());
             return now;
         } else if (s instanceof TypeSym) {

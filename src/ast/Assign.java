@@ -67,7 +67,7 @@ public class Assign extends Statement {
 //        // logger.debug(v);
 //        // logger.debug(env);
 //        // logger.debug(location);
-        env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location));
+        env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location, "The assigned value must have the type of the assignment target"));
         return now;
     }
 
@@ -103,15 +103,15 @@ public class Assign extends Statement {
         // prevContext = valueContext;
 
         env.checkFlow(ifNameValue, ifNameTgt, value.location,
-                "Integrity of the value being assigned must be trusted to allow this assignment");
+                "The assigned value must be trusted at the label of the assignment target");
 
         env.checkFlow(ifNamePc, ifNameTgt, value.location,
-                "Integrity of control flow must be trusted to allow this assignment");
+                "Control flow must be trusted at the label of the assignment target");
 
   
         if (target instanceof Name tgtName && env.getVar(tgtName.id).typeSym instanceof typecheck.ClosureTypeSym targetCs) {
             ClosureCreation.checkFlowInto(value, targetCs, new java.util.HashMap<>(), env,
-                value.location, "Closure value flowing into the assignment target must subtype its slot");
+                value.location, "The closure's labels must be compatible with the type of the assignment target");
         }
 
         // The target names the assigned principal from here on.

@@ -36,11 +36,11 @@ public class Return extends Statement {
         }
         if (value != null) {
             ScopeContext rtn = value.genTypeConstraints(env, now);
-            env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
+            env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location, "A return statement has the type of its value"));
         }
 
         env.addCons(
-                now.genTypeConstraints(funcSym.returnTypeSLC(), Relation.EQ, env, location));
+                now.genTypeConstraints(funcSym.returnTypeSLC(), Relation.EQ, env, location, "The returned value must have the return type of the method"));
         return now;
     }
 
@@ -62,7 +62,7 @@ public class Return extends Statement {
         PathOutcome psi = new PathOutcome();
         if (value == null) {
             env.checkFlow(ifNamePc, ifNameRtnValue, location,
-                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
+                    "Control flow must be trusted at the label of the return value to return");
             psi.setReturnPath(env.inContext);
             return psi;
         }
@@ -71,17 +71,17 @@ public class Return extends Statement {
         Context expContext = vo.psi.getNormalPath().c;
         String ifNameValue = vo.valueLabelName;
         env.checkFlow(ifNameValue, ifNameRtnValue, location,
-                "Value must be trusted to be returned");
+                "The returned value must be trusted at the label of the return value");
         env.checkFlow(ifNamePc, ifNameRtnValue, location,
-                "Control flow must be trusted to return");
+                "Control flow must be trusted at the label of the return value to return");
 
         if (funcSym.returnType instanceof typecheck.ClosureTypeSym targetCs) {
             ClosureCreation.checkFlowInto(value, targetCs, new java.util.HashMap<>(), env, location,
-                "Returned closure value must subtype the declared return closure type");
+                "The returned closure's labels must be compatible with the declared return type");
         }
 
         env.checkFlow(Utils.joinLabels(endContext.lambda, beginContext.lambda), ifRtnLockName,
-                location, "Reentrancy locks must be respected to return");
+                location, "The method must maintain its reentrancy lock label when it returns");
         PsiUnit pathn = vo.psi.getNormalPath();
         vo.psi.removeNormalPath();
         vo.psi.setReturnPath(pathn.c);

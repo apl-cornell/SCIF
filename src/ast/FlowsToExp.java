@@ -46,9 +46,9 @@ public class FlowsToExp extends Expression {
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bool" + location.toString();
 
         env.checkFlow(ifNameLeft, ifNameRtn, location,
-                "Integrity of left hand expression doesn't flow to value of this flows-to operation");
+                "The result of a flows-to test is trusted no more than its left operand");
         env.checkFlow(ifNameRight, ifNameRtn, location,
-                "Integrity of right hand expression doesn't flow to value of this flows-to operation");
+                "The result of a flows-to test is trusted no more than its right operand");
 
         typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, rhs.location);
         // env.outContext = endContext;
@@ -90,7 +90,7 @@ public class FlowsToExp extends Expression {
                                 + operand.id, location);
             }
         }
-        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location, "A flows-to test returns a bool"));
         return now;
     }
 

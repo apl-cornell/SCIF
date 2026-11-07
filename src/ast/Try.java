@@ -171,7 +171,7 @@ public class Try extends Statement {
 
             if (u != null) {
                 env.checkFlow(u.c.lambda, beginContext.lambda, location,
-                        "Try clause should maintain locks when throwing exception " + h.type().name());
+                        "The try block must maintain the reentrancy lock when it throws " + h.type().name());
             /*env.cons.add(new Constraint(new Inequality(u.c.pc, h.), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));*/
 

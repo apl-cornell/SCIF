@@ -24,13 +24,13 @@ public class UnaryOp extends Expression {
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         ScopeContext rtn = operand.genTypeConstraints(env, now);
-        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location, "A unary operation has the type of its operand"));
         if (op == UnaryOperator.USub || op == UnaryOperator.UAdd) {
             env.addCons(
-                    rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.EQ, env, location));
+                    rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.UINT), Relation.EQ, env, location, "The operand of unary - or + must be a uint"));
         } else if (op == UnaryOperator.Not || op == UnaryOperator.Invert) {
             env.addCons(
-                    rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
+                    rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location, "The operand of ! or ~ must be a bool"));
         }
         return now;
     }

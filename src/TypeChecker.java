@@ -196,10 +196,7 @@ public class TypeChecker {
 //                    "The Code integrity label of contract " + ifNameContract + " may be incorrect"));
 
             for (Assumption assumption : contractSym.assumptions()) {
-                env.addTrustConstraint(new Constraint(
-                        assumption.toInequality(),
-                        assumption.location(),
-                        "Static trust relationship"));
+                env.assume(assumption.toInequality());
             }
         } else {
             // TODO: handle the assumptions of other contracts
@@ -227,20 +224,20 @@ public class TypeChecker {
                 cons.add(new Constraint(
                         new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel),
                         func.external_pc.location(),
-                        "Integrity requirement to call this method may be incorrect"));
+                        "The external begin label of " + func.funcName + " may be wrong"));
             }
             if (ifCallAfterLabel != null) {
                 cons.add(new Constraint(
                         new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel),
                         func.internal_pc.location(),
-                        "Integrity pc level autoendorsed to when calling this method may be incorrect"));
+                        "The internal begin label of " + func.funcName + " may be wrong"));
             }
 
             if (ifCallLockLabel != null) {
                 cons.add(new Constraint(
                         new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallGammaLabel),
                         func.gamma.location(),
-                        "The final reentrancy lock label may be declared incorrectly"));
+                        "The reentrancy lock label of " + func.funcName + " may be wrong"));
 
             }
 
@@ -250,7 +247,7 @@ public class TypeChecker {
                 cons.add(new Constraint(
                         new Inequality(ifReturnLabel, Relation.EQ, ifNameReturnLabel),
                         func.location,
-                        "Integrity label of this method's return value may be incorrect"));
+                        "The label of the return value of " + func.funcName + " may be wrong"));
             }
 
             for (int i = 0; i < func.parameters.size(); ++i) {
@@ -262,12 +259,12 @@ public class TypeChecker {
                 if (ifArgLabel != null) {
                     cons.add(new Constraint(new Inequality(ifNameArgLabel, Relation.EQ, ifArgLabel),
                             arg.location,
-                            "Argument " + arg.getName() + " may be labeled incorrectly"));
+                            "The label of parameter " + arg.getName() + " may be wrong"));
                     env.addTrustConstraint(
                             new Constraint(new Inequality(ifNameCallBeforeLabel, ifNameArgLabel),
                                     arg.location,
-                                    "Argument " + arg.getName()
-                                            + " must be no more trusted than caller's integrity"));
+                                    "Parameter " + arg.getName() + " cannot be trusted more than the "
+                                            + "external begin label of " + func.funcName));
                 }
             }
 
@@ -291,7 +288,7 @@ public class TypeChecker {
             if (ifLabel != null && varName != null) {
                 env.cons.add(
                         new Constraint(new Inequality(varName, Relation.EQ, ifLabel), var.location,
-                                "Variable " + var.getName() + " may be labeled incorrectly"));
+                                "The label of field " + var.getName() + " may be wrong"));
             }
         }
 
@@ -324,7 +321,7 @@ public class TypeChecker {
             }
             SherrlocDiagnoser sherrlocDiagnoser = Utils.createDiagnoser(env.principalSet(),
                     env.versionNames(), trustCons, cons,
-                    true, contractSym, env.rigidAtoms(), env.atomAssumptions());
+                    true, contractSym, env.rigidAtoms(), env.assumptions());
             boolean result;
             try {
                 result = runSLC(env.programMap, sherrlocDiagnoser, DEBUG);

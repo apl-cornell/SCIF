@@ -38,14 +38,14 @@ public class For extends Statement {
         newVars.genTypeConstraints(env, now);
         ScopeContext rtn = test.genTypeConstraints(env, now);
         // the test condition must be boolean
-        env.addCons(rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location));
+        env.addCons(rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, location, "The loop condition must be a bool"));
 
         body.genTypeConstraints(env, now);
         iter.genTypeConstraints(env, now);
 
         env.exitNewScope();
 
-        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location, "A for statement has the type of its condition"));
         return now;
     }
 
@@ -67,10 +67,10 @@ public class For extends Statement {
         String ifNamePcAfter = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
         env.checkFlow(ifNamePcBefore, ifNamePcAfter, location,
-                "Control flow before this for statement contributes to the one in its scope");
+                "Control flow in the loop is trusted no more than control flow before it");
 
         env.checkFlow(ifNameTest, ifNamePcAfter, location,
-                "Integrity of the test condition contributes to control flow of this for statement");
+                "Control flow in the loop is trusted no more than the loop condition");
 
 
         env.inContext = new Context(ifNamePcAfter, beginContext.lambda);
@@ -84,7 +84,7 @@ public class For extends Statement {
         ifo.join(iterOutcome.withoutNormalPath());
         if (iterOutcome.getNormalPath() instanceof PsiUnit iterEnd) {
             env.checkFlow(iterEnd.c.pc, ifNamePcAfter, location,
-                    "Control flow at the end of the loop body contributes to the control flow of this for statement");
+                    "Control flow in the loop is trusted no more than control flow at the end of the loop body");
         }
         ifo.setNormalPath(new Context(ifNamePcAfter, to.psi.getNormalPath().c.lambda));
 

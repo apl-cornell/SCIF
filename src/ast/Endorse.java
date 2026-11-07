@@ -45,14 +45,14 @@ public class Endorse extends Expression {
         String toLabel = env.toLabel(to).toSHErrLocFmt();
 
         env.checkFlow(ifNameValue, fromLabel, location,
-                "The expression must be trusted to be endorsed");
+                "The endorsed value must be trusted at the label it is endorsed from");
 
         env.checkFlow(toLabel, ifNameRtn, location,
-                "The integrity level of this expression would be endorsed");
+                "The endorsed value has the label it is endorsed to");
 
         // Code can endorse data only up to the integrity of its own control flow.
         env.checkFlow(vo.psi.getNormalPath().c.pc, toLabel, location,
-                "Control flow must be trusted at the label this expression is endorsed to");
+                "Control flow must be trusted at the label the value is endorsed to");
 
         // if (value instanceof Name n && env.getVar(n.id) != null
         //         && env.getVar(n.id).typeSym instanceof ClosureTypeSym cs) {

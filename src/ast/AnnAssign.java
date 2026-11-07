@@ -102,10 +102,10 @@ public class AnnAssign extends Statement {
         ScopeContext type = annotation.genTypeConstraints(env, now);
         ScopeContext tgt = target.genTypeConstraints(env, now);
 
-        env.addCons(type.genTypeConstraints(tgt, Relation.EQ, env, location));
+        env.addCons(type.genTypeConstraints(tgt, Relation.EQ, env, location, "Variable " + target.id + " has its declared type"));
         if (value != null) {
             ScopeContext v = value.genTypeConstraints(env, now);
-            env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location));
+            env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location, "The initial value must have the declared type of " + target.id));
         } else if (isFinal) {
             throw new SemanticException("final variable " + name + " not initialized", location);
         }
@@ -143,8 +143,8 @@ public class AnnAssign extends Statement {
             if (annotation.label() != null) {
                 varSym.setLabel(env.toLabel(annotation.label()));
             }
-            env.checkEqual(varSym.labelNameSLC(), varSym.labelValueSLC(), location, "Variable "
-                    + varSym.getName() + " may be labeled incorrectly");
+            env.checkEqual(varSym.labelNameSLC(), varSym.labelValueSLC(), location, "The label of variable "
+                    + varSym.getName() + " may be wrong");
         }
 //        // logger.debug(varSym.getName());
         SLCNameVar = varSym.toSHErrLocFmt();
@@ -158,7 +158,7 @@ public class AnnAssign extends Statement {
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
         env.checkFlow(ifNamePc, SLCNameVarLbl, location,
-                "Integrity of control flow must be trusted to allow this assignment");
+                "Control flow must be trusted at the label of " + target.id + " to initialize it");
 
         if (!tail_position) {
             env.checkFlow(endContext.lambda, beginContext.lambda, location,
@@ -173,12 +173,12 @@ public class AnnAssign extends Statement {
                 env.assumeSamePrincipal(SLCNameVar, init);
             }
             env.checkFlow(valueOutcome.valueLabelName, SLCNameVarLbl, value.location,
-                    "Integrity of the value being assigned must be trusted to allow this assignment");
+                    "The initial value must be trusted at the label of " + target.id);
 
             if (varSym.typeSym instanceof typecheck.ClosureTypeSym targetCs) {
                 ClosureCreation.checkFlowInto(value, targetCs, new java.util.HashMap<>(), env,
                         value.location,
-                        "Closure value flowing into the declared variable type must subtype its slot");
+                        "The closure's labels must be compatible with the declared type of " + target.id);
             }
             typecheck.Utils.contextFlow(env, valueOutcome.psi.getNormalPath().c, endContext,
                     value.location);

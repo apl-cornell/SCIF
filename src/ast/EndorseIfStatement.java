@@ -83,7 +83,7 @@ public class EndorseIfStatement extends Statement {
             }
         }
         env.checkFlow(IfNamePcBefore, IfNamePcAfter, location,
-                "Control flow integrity before this if condition doesn't flow to the one after this condition");
+                "Control flow in the branches is trusted no more than control flow before the endorse statement");
         /*env.cons.add(
                 new Constraint(new Inequality(IfNameTest, IfNamePcAfter), env.hypothesis(), location,
                         env.curContractSym().getName(),
@@ -106,7 +106,7 @@ public class EndorseIfStatement extends Statement {
             String id = name.id;
             VarSym sym = env.getVar(id);
             env.checkFlow(sym.labelNameSLC(), fromLabel.toSHErrLocFmt(), name.location,
-                    "Variables to be endorsed must flows to from-label");
+                    "Variable " + id + " must be trusted at the label it is endorsed from");
         }
 
         // create new identical variables in the same scope with to-label
@@ -116,7 +116,7 @@ public class EndorseIfStatement extends Statement {
             VarSym newSym = new VarSym(sym, scopeContext);
             newSym.ifl = toLabel;
             env.checkEqual(newSym.labelNameSLC(), newSym.labelValueSLC(), location, "Variable "
-                    + newSym.getName() + " may be endorsed incorrectly");
+                    + newSym.getName() + " has the label it is endorsed to");
             if (sym.isPrincipalTyped()) {
                 env.addPrincipal(newSym);
                 env.assumeSamePrincipal(env.principalName(sym), newSym.toSHErrLocFmt());

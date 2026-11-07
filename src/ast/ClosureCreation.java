@@ -149,13 +149,13 @@ public class ClosureCreation extends Expression {
             }
             ScopeContext ac = a.genTypeConstraints(env, now);
             env.addCons(ac.genTypeConstraints(
-                    declaredParams.get(i).toSHErrLocFmt(), Relation.GEQ, env, a.location));
+                    declaredParams.get(i).toSHErrLocFmt(), Relation.GEQ, env, a.location, "The " + Utils.ordNumString(i + 1) + " bound argument must have the type of its parameter"));
         }
 
         // Closure type eval
         ClosureTypeSym result =
                 new ClosureTypeSym(stillUnbound, retSym, new ArrayList<>(), scopeContext);
-        env.addCons(now.genEqualCons(result, env, location, "Type error: Improper closure"));
+        env.addCons(now.genEqualCons(result, env, location, "A closure has the type given by its target method and bound arguments"));
         return now;
     }
 
@@ -252,22 +252,22 @@ public class ClosureCreation extends Expression {
             }
 
             // argLabel[i] => paramLabel[i]
-            env.checkFlow(ao.valueLabelName, argLabelStr, a.location, "Input to the "
-                    + Utils.ordNumString(i + 1) + " bound closure argument must be trusted enough");
+            env.checkFlow(ao.valueLabelName, argLabelStr, a.location, "The "
+                    + Utils.ordNumString(i + 1) + " bound argument must be trusted at the label of its parameter");
 
             // pc => paramLabel[i]
             env.checkFlow(ifNamePc, argLabelStr, a.location,
-                    "Current control flow must be trusted to bind the " + Utils.ordNumString(i + 1)
-                    + " closure argument");
+                    "Control flow must be trusted at the label of the " + Utils.ordNumString(i + 1)
+                    + " bound parameter");
         }
 
         // pc => closureValueLabel
         env.checkFlow(ifNamePc, ifNameRtn, location,
-                "Closure value integrity is bounded by the binding control flow");
+                "A closure is trusted no more than the control flow that creates it");
 
         // sourceClosureLabel => closureValueLabel
         env.checkFlow(ifSrcRtn, ifNameRtn, location,
-                "Closure value integrity is bounded by the closure it binds");
+                "A closure is trusted no more than the closure it binds arguments of");
 
         // The result's labels are the source's under the substitution
         // above; only the slots that stayed open keep a parameter label.
@@ -383,22 +383,22 @@ public class ClosureCreation extends Expression {
             }
 
             // argLabel[i] => paramLabel[i]
-            env.checkFlow(ao.valueLabelName, argLabelStr, a.location, "Input to the "
-                    + Utils.ordNumString(i + 1) + " bound closure argument must be trusted enough");
+            env.checkFlow(ao.valueLabelName, argLabelStr, a.location, "The "
+                    + Utils.ordNumString(i + 1) + " bound argument must be trusted at the label of its parameter");
             
             // pc => paramLabel[i]
             env.checkFlow(ifNamePc, argLabelStr, a.location,
-                    "Current control flow must be trusted to bind the " + Utils.ordNumString(i + 1)
-                    + " closure argument");
+                    "Control flow must be trusted at the label of the " + Utils.ordNumString(i + 1)
+                    + " bound parameter");
         }
 
         // pc => closureValueLabel
         env.checkFlow(ifNamePc, ifNameRtn, location,
-                "Closure value integrity is bounded by the creating control flow");
+                "A closure is trusted no more than the control flow that creates it");
         
         // recv..lbl => closureValueLabel
         env.checkFlow(ifContRtn, ifNameRtn, location,
-                "Closure value integrity is bounded by the target");
+                "A closure is trusted no more than the reference to its target contract");
 
         List<String> realParamLabels = new ArrayList<>();
         for (int i = 0; i < args.size(); ++i) {

@@ -87,15 +87,24 @@ public class ScopeContext {
         return SHErrLocName;
     }
 
-    public Constraint genTypeConstraints(ScopeContext rhs, Relation op, NTCEnv env, CodeLocation location) {
-
+    /**
+     * The constraint that the type of this context is related by {@code op} to the type of
+     * {@code rhs}, reported at {@code location} with {@code explanation} if it fails.
+     */
+    public Constraint genTypeConstraints(ScopeContext rhs, Relation op, NTCEnv env,
+            CodeLocation location, String explanation) {
         return new Constraint(new Inequality(getSHErrLocName(), op, rhs.getSHErrLocName()),
-                env.globalHypothesis(), location, "");
+                env.globalHypothesis(), location, explanation);
     }
 
-    public Constraint genTypeConstraints(String rhs, Relation op, NTCEnv env, CodeLocation location) {
+    /**
+     * The constraint that the type of this context is related by {@code op} to the type named
+     * {@code rhs}, reported at {@code location} with {@code explanation} if it fails.
+     */
+    public Constraint genTypeConstraints(String rhs, Relation op, NTCEnv env,
+            CodeLocation location, String explanation) {
         return new Constraint(new Inequality(getSHErrLocName(), op, rhs), env.globalHypothesis(),
-                location, "");
+                location, explanation);
     }
 
     public boolean isContractLevel() {

@@ -38,7 +38,7 @@ public class If extends Statement {
         // must contain at least one Statement
         ScopeContext now = scopeContext;
         ScopeContext rtn = test.genTypeConstraints(env, now);
-        Constraint testCon = rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
+        Constraint testCon = rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location, "The condition of an if statement must be a bool");
         env.addCons(testCon);
 
         env.enterNewScope();
@@ -51,7 +51,7 @@ public class If extends Statement {
             rtn = orelse.genTypeConstraints(env, now);
         }
         env.exitNewScope();
-        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location, "An if statement has the type of its last part"));
         return now;
     }
 
@@ -97,9 +97,9 @@ public class If extends Statement {
             }
         }
         env.checkFlow(IfNamePcBefore, IfNamePcAfter, location,
-                "Control flow integrity before this if condition doesn't flow to the one after this condition");
+                "Control flow in the branches is trusted no more than control flow before the if statement");
         env.checkFlow(IfNameTest, IfNamePcAfter, location,
-                "Integrity of this condition doesn't flow to the control flow in this if branch");
+                "Control flow in the branches is trusted no more than the condition");
 
         if (!body.isEmpty() || !orelse.isEmpty()) {
             Utils.genSequenceConstraints(env, beginContext.lambda, IfTestNormalPc, IfTestNormalLambda, IfNamePcAfter, test.location);
