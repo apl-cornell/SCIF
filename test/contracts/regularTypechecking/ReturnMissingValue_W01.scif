@@ -1,0 +1,5 @@
+// A method that returns a value has a return statement without one.
+contract ReturnMissingValue_W01 {
+    constructor() { super(); }
+    uint f{this}() { return; }
+}

@@ -45,12 +45,14 @@ public class New extends Expression {
         ScopeContext now = new ScopeContext(this, parent);
         // check constructor_call to be a valid contract constructor call
         if (!(constructor_call.value instanceof Name)) {
-            throw new SemanticException("Contract name must be in the current namespace: ", location);
+            throw new SemanticException("new must name a contract or struct type in this contract's scope",
+                    constructor_call.value.location);
         }
         String name = ((Name) constructor_call.value).id;
         Sym sym = env.getCurSym(name);
         if (!(sym instanceof ContractSym) && !(sym instanceof StructTypeSym)) {
-            throw new SemanticException("Not a contract or struct type: " + sym, location);
+            throw new SemanticException("not a contract or struct type: " + name,
+                    constructor_call.value.location);
         }
         if (sym instanceof StructTypeSym) {
             form = new StructConstruction((Name) constructor_call.value, constructor_call.args);

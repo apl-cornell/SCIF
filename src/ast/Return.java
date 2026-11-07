@@ -26,6 +26,14 @@ public class Return extends Statement {
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         FuncSym funcSym = Utils.getCurrentFuncInfo(env, now);
+        if (value == null && !funcSym.returnType.isVoid()) {
+            throw new SemanticException("missing return value: the method returns "
+                    + funcSym.returnType.getName(), location);
+        }
+        if (value != null && funcSym.returnType.isVoid()) {
+            throw new SemanticException("a method that returns void cannot return a value",
+                    value.location);
+        }
         if (value != null) {
             ScopeContext rtn = value.genTypeConstraints(env, now);
             env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));

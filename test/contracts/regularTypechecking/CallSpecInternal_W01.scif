@@ -1,0 +1,6 @@
+// Call options apply only to calls of another contract's methods.
+contract CallSpecInternal_W01 {
+    constructor() { super(); }
+    void g{this}() { }
+    void f{this}() { g(){value = 1}; }
+}

@@ -61,6 +61,15 @@ parser code {:
         errorMessages.add(sb.toString());
     }
 
+    /**
+     * Records an error that is not a syntax error at the given position in the file being
+     * parsed, which makes {@link #parse()} fail.
+     */
+    void reportError(int left, int right, String message) {
+        hasError = true;
+        errorMessages.add(ErrorFormatter.format(filename, left, right, message));
+    }
+
     @Override public void report_error(String message, Object info) {
         // only used by CUP internals; actual reporting is done in syntax_error
         hasError = true;
@@ -99,35 +108,39 @@ parser code {:
           parse(inputFile, null);
         } catch (SyntaxError err) {
           /* ignore */
+        } catch (FileNotFoundException e) {
+          System.err.println("File not found: " + e.getMessage());
         }
     }
 
-    public static Symbol parse(File inputFile, File astFile) throws SyntaxError {
-        Symbol rtn = null;
+    /**
+     * Parses {@code inputFile}, writing the AST to {@code astFile} if it is not null.
+     *
+     * @throws SyntaxError if the file has syntax errors or imports a file that does not exist
+     * @throws FileNotFoundException if {@code inputFile} cannot be read
+     */
+    public static Symbol parse(File inputFile, File astFile)
+            throws SyntaxError, FileNotFoundException {
+        filename = inputFile.getAbsolutePath();
+        Lexer lexer = new Lexer(new FileReader(inputFile));
+
+        if (astFile != null) {
+            PrintStream ps = new PrintStream(new FileOutputStream(astFile));
+            System.setErr(ps);
+        }
+
+        Parser p = new Parser(lexer);
+
+        Symbol rtn;
         try {
-            filename = inputFile.getAbsolutePath();
-            Lexer lexer = new Lexer(new FileReader(inputFile));
-
-            if (astFile != null) {
-                PrintStream ps = new PrintStream(new FileOutputStream(astFile));
-                System.setErr(ps);
-            }
-
-            Parser p = new Parser(lexer);
-
-            try {
-                rtn = p.parse();
-            } catch (SyntaxError se) {
-                throw se;
-            } catch (Exception e) {
-                throw new Error("Unexpected exception from parser");
-            }
-            if (astFile != null) {
-                System.setErr(System.err);
-            }
-        } catch (FileNotFoundException e) {
-            System.err.println("File not found: " + e.getMessage());
-            return null;
+            rtn = p.parse();
+        } catch (SyntaxError se) {
+            throw se;
+        } catch (Exception e) {
+            throw new Error("Unexpected exception from parser");
+        }
+        if (astFile != null) {
+            System.setErr(System.err);
         }
         return rtn;
     }
@@ -367,8 +380,14 @@ ipt_stmts ::=
 ipt_stmt ::= ipt_name:a SEMI {:RESULT = a; :};
 
 ipt_name ::= IMPORT:x STRING_LITERAL:a {:
-        RESULT = a;//new Import();
-        //RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+        java.nio.file.Path path = java.nio.file.Paths.get((String) a);
+        if (!path.isAbsolute()) {
+            path = java.nio.file.Paths.get(filename).getParent().resolve(path);
+        }
+        if (!java.nio.file.Files.isRegularFile(path)) {
+            parser.reportError(aleft, aright, "imported file not found: " + a);
+        }
+        RESULT = a;
     :};
 //
 //ipt_as_names ::=

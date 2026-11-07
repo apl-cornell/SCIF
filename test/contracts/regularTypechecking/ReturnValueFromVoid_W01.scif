@@ -1,0 +1,5 @@
+// A method that returns void returns a value.
+contract ReturnValueFromVoid_W01 {
+    constructor() { super(); }
+    void f{this}() { return 1; }
+}

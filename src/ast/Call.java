@@ -149,6 +149,9 @@ public class Call extends TrailerExpr {
                 // c.invoke(args): args must match the still-unbound parameters; the call's type is the closure's return.
                 this.builtIn = true;
                 this.isClosureInvoke = true;
+                if (callSpec != null) {
+                    throw unsupportedSpec();
+                }
                 if (!funcName.equals("invoke")) {
                     throw new SemanticException("type error: unknown closure operator " + funcName, this.location);
                 }
@@ -207,7 +210,10 @@ public class Call extends TrailerExpr {
                  location);
         this.funcSym = funcSym;
 
-        if (extern && callSpec != null) {
+        if (callSpec != null) {
+            if (!extern) {
+                throw unsupportedSpec();
+            }
             callSpec.genTypeConstraints(env, now);
         }
         CallArguments.genTypeConstraints(args,
@@ -880,8 +886,18 @@ public class Call extends TrailerExpr {
      * Resolves this expression to {@code form}, which takes its place in every later pass, and
      * generates the type constraints of {@code form} in the scope context {@code parent}.
      */
+    /** The error for a call spec on a call that is not a call of another contract's method. */
+    private SemanticException unsupportedSpec() {
+        return new SemanticException(
+                "call options such as value apply only to calls of another contract's methods",
+                callSpec.location);
+    }
+
     private ScopeContext resolveTo(Expression form, NTCEnv env, ScopeContext parent)
             throws SemanticException {
+        if (callSpec != null) {
+            throw unsupportedSpec();
+        }
         this.form = form;
         form.setLoc(location);
         form.scopeContext = scopeContext;

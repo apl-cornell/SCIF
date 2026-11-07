@@ -168,6 +168,9 @@ public class SCIF implements Callable<Integer> {
             } catch (TypeCheckFailure e) {
                 System.out.println(e.getMessage());
                 return 0;
+            } catch (java.io.FileNotFoundException e) {
+                System.out.println("File not found: " + e.getMessage());
+                return 1;
             } catch (Exception e) {
                 System.out.println("Unexpected exception:");
                 e.printStackTrace();
@@ -218,6 +221,9 @@ public class SCIF implements Callable<Integer> {
                 Parser.parse(m_inputFiles[0], astOutputFile);
             } catch (Parser.SyntaxError e) {
                 /* skip */
+            } catch (java.io.FileNotFoundException e) {
+                System.out.println("File not found: " + e.getMessage());
+                return 1;
             }
         } else if (m_funcRequest.tokenize) {
             LexerTest.tokenize(m_inputFiles[0]);
