@@ -102,10 +102,10 @@ public class AnnAssign extends Statement {
         ScopeContext type = annotation.genTypeConstraints(env, now);
         ScopeContext tgt = target.genTypeConstraints(env, now);
 
-        env.addCons(type.genTypeConstraints(tgt, Relation.EQ, env, location));
+        env.addCons(type.genTypeConstraints(tgt, Relation.EQ, env, location, "Variable " + target.id + " has its declared type"));
         if (value != null) {
             ScopeContext v = value.genTypeConstraints(env, now);
-            env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location));
+            env.addCons(tgt.genTypeConstraints(v, Relation.LEQ, env, location, "The initial value must have the declared type of " + target.id));
         } else if (isFinal) {
             throw new SemanticException("final variable " + name + " not initialized", location);
         }
@@ -143,56 +143,22 @@ public class AnnAssign extends Statement {
             if (annotation.label() != null) {
                 varSym.setLabel(env.toLabel(annotation.label()));
             }
-            env.checkEqual(varSym.labelNameSLC(), varSym.labelValueSLC(), location, "Variable "
-                    + varSym.getName() + " may be labeled incorrectly");
+            env.checkEqual(varSym.labelNameSLC(), varSym.labelValueSLC(), location, "The label of variable "
+                    + varSym.getName() + " may be wrong");
         }
 //        // logger.debug(varSym.getName());
         SLCNameVar = varSym.toSHErrLocFmt();
         SLCNameVarLbl = varSym.labelNameSLC();
 //        // logger.debug(varSym.typeSym.getName());
 
-        // If the declared variable is a principal (final address/contract), add it to the principal list
-        if ((varSym.isFinal &&
-                (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE)))
-                // || varSym.typeSym.name().equals(Utils.PRINCIPAL_TYPE)) Invalid to declare a non-global principal
-                ) {
+        if (varSym.isPrincipalTyped()) {
             env.addPrincipal(varSym);
-
-            VarSym equalPrincipal = null;
-            boolean correctInit = true;
-            if (value instanceof Name) { // assigned as another variable
-                // Nothing to check
-                equalPrincipal = env.getVar(((Name) value).id);
-            } else if (value instanceof Call call && call.isCast(env)) { // assigned as another contract
-                // check if it is a cast to a final address variable
-                Expression arg = call.getArgAt(0);
-                if (arg instanceof Name) {
-                    VarSym sym = env.getVar(((Name) arg).id);
-                    if (!sym.isFinal) {
-                        correctInit = false;
-                    } else {
-                        equalPrincipal = sym;
-                    }
-                } else {
-                    correctInit = false;
-                }
-            } else if (!isBuiltIn) {
-                correctInit = false;
-            }
-
-            if (correctInit) {
-                // add equivalence assumption to the trust set
-                env.checkTrustEqual(SLCNameVar, equalPrincipal.toSHErrLocFmt(), location,
-                        "New principal declaration");
-            } else {
-                throw new SemanticException("A final address/Contract must be initialized to another final address/Contract: " + id, location);
-            }
         }
 
         String ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
         env.checkFlow(ifNamePc, SLCNameVarLbl, location,
-                "Integrity of control flow must be trusted to allow this assignment");
+                "Control flow must be trusted at the label of " + target.id + " to initialize it");
 
         if (!tail_position) {
             env.checkFlow(endContext.lambda, beginContext.lambda, location,
@@ -201,13 +167,18 @@ public class AnnAssign extends Statement {
         if (value != null) {
             env.inContext = beginContext;
             ExpOutcome valueOutcome = value.genIFConstraints(env, scopeContext.isContractLevel());
+            // A principal-typed variable starts out naming the principal it is initialized to.
+            String init = varSym.isPrincipalTyped() ? value.principalName(env) : null;
+            if (init != null) {
+                env.assumeSamePrincipal(SLCNameVar, init);
+            }
             env.checkFlow(valueOutcome.valueLabelName, SLCNameVarLbl, value.location,
-                    "Integrity of the value being assigned must be trusted to allow this assignment");
+                    "The initial value must be trusted at the label of " + target.id);
 
             if (varSym.typeSym instanceof typecheck.ClosureTypeSym targetCs) {
                 ClosureCreation.checkFlowInto(value, targetCs, new java.util.HashMap<>(), env,
                         value.location,
-                        "Closure value flowing into the declared variable type must subtype its slot");
+                        "The closure's labels must be compatible with the declared type of " + target.id);
             }
             typecheck.Utils.contextFlow(env, valueOutcome.psi.getNormalPath().c, endContext,
                     value.location);

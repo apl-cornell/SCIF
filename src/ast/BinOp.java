@@ -36,14 +36,14 @@ public class BinOp extends Expression {
         ScopeContext r = right.genTypeConstraints(env, now);
         // // logger.debug("binOp/right:");
         // // logger.debug(r.toString());
-        env.addCons(now.genTypeConstraints(l, Relation.LEQ, env, location));
-        env.addCons(now.genTypeConstraints(r, Relation.LEQ, env, location));
-        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(l, Relation.LEQ, env, location, "The operands of an arithmetic operation must be uint"));
+        env.addCons(now.genTypeConstraints(r, Relation.LEQ, env, location, "The operands of an arithmetic operation must be uint"));
+        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location, "An arithmetic operation returns a uint"));
         return now;
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -60,9 +60,9 @@ public class BinOp extends Expression {
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bin" + location.toString();
 
         env.checkFlow(ifNameLeft, ifNameRtn, left.location,
-                "Integrity of left hand expression doesn't flow to value of this binary operation");
+                "The result of an operation is trusted no more than its left operand");
         env.checkFlow(ifNameRight, ifNameRtn, right.location,
-                "Integrity of right hand expression doesn't flow to value of this binary operation");
+                "The result of an operation is trusted no more than its right operand");
 
         typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, right.location);
         // env.outContext = endContext;
@@ -109,5 +109,10 @@ public class BinOp extends Expression {
         Map<String, Type> result = left.readMap(code);
         result.putAll(right.readMap(code));
         return result;
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return env.builtinType(BuiltInT.UINT);
     }
 }

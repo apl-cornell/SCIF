@@ -42,7 +42,7 @@ public class Delete extends Statement {
             //Assuming target is Name
             ifNameTgt = env.getVar(((Name) target).id).labelNameSLC();
         } else if (target instanceof Subscript || target instanceof Attribute) {
-            to = target.genIFConstraints(env, false);
+            to = target.genLocationConstraints(env);
             ifNameTgt = to.valueLabelName;
             env.inContext = Utils.genNewContextAndConstraints(env, false, to.psi.getNormalPath().c, beginContext.lambda, target.nextPcSHL(), location);
         } else {
@@ -50,7 +50,7 @@ public class Delete extends Statement {
         }
 
         env.checkFlow(ifNamePc, ifNameTgt, target.location,
-                "Integrity of control flow must be trusted to allow this assignment");
+                "Control flow must be trusted at the label of the deleted location");
 
         typecheck.Utils.contextFlow(env, env.inContext, endContext, target.location);
         // env.outContext = endContext;

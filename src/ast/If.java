@@ -18,19 +18,19 @@ import java.util.ArrayList;
 public class If extends Statement {
 
     Expression test;
-    List<Statement> body;
-    List<Statement> orelse;
+    Block body;
+    Block orelse;
 
     public If(Expression test, List<Statement> body, List<Statement> orelse) {
         this.test = test;
-        this.body = body;
-        this.orelse = orelse;
+        this.body = new Block(body);
+        this.orelse = new Block(orelse);
     }
 
     public If(Expression test, List<Statement> body) {
         this.test = test;
-        this.body = body;
-        this.orelse = new ArrayList<>();
+        this.body = new Block(body);
+        this.orelse = new Block(new ArrayList<>());
     }
 
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
@@ -38,21 +38,20 @@ public class If extends Statement {
         // must contain at least one Statement
         ScopeContext now = scopeContext;
         ScopeContext rtn = test.genTypeConstraints(env, now);
-        Constraint testCon = rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location);
+        Constraint testCon = rtn.genTypeConstraints(Utils.BuiltinType2ID(BuiltInT.BOOL), Relation.EQ, env, test.location, "The condition of an if statement must be a bool");
         env.addCons(testCon);
 
         env.enterNewScope();
-        for (Statement s : body) {
-            assert !now.getSHErrLocName().startsWith("null"): now.getSHErrLocName();
-            rtn = s.genTypeConstraints(env, now);
+        if (!body.isEmpty()) {
+            rtn = body.genTypeConstraints(env, now);
         }
         env.exitNewScope();
         env.enterNewScope();
-        for (Statement s : orelse) {
-            rtn = s.genTypeConstraints(env, now);
+        if (!orelse.isEmpty()) {
+            rtn = orelse.genTypeConstraints(env, now);
         }
         env.exitNewScope();
-        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtn, Relation.EQ, env, location, "An if statement has the type of its last part"));
         return now;
     }
 
@@ -67,7 +66,7 @@ public class If extends Statement {
         String rtnValueLabel;
 
         ExpOutcome to = test.genIFConstraints(env,
-                body.size() == 0 && orelse.size() == 0 && tail_position);
+                body.isEmpty() && orelse.isEmpty() && tail_position);
         //Context condContext = to.psi
         rtnValueLabel = to.valueLabelName;
         String IfNameTest = to.valueLabelName;
@@ -90,45 +89,31 @@ public class If extends Statement {
 //                // logger.debug(l.toString());
 //                // logger.debug(r.toString());
                 createdHypo = true;
-                Inequality hypo = new Inequality(l.toSHErrLocFmt(), Relation.LEQ,
-                        r.toSHErrLocFmt());
+                Inequality hypo = new Inequality(env.principalName(l), Relation.LEQ,
+                        env.principalName(r));
 
                 env.hypothesis().add(hypo);
                 // logger.debug("testing label");
             }
         }
         env.checkFlow(IfNamePcBefore, IfNamePcAfter, location,
-                "Control flow integrity before this if condition doesn't flow to the one after this condition");
+                "Control flow in the branches is trusted no more than control flow before the if statement");
         env.checkFlow(IfNameTest, IfNamePcAfter, location,
-                "Integrity of this condition doesn't flow to the control flow in this if branch");
+                "Control flow in the branches is trusted no more than the condition");
 
-        if (body.size() > 0 || orelse.size() > 0) {
+        if (!body.isEmpty() || !orelse.isEmpty()) {
             Utils.genSequenceConstraints(env, beginContext.lambda, IfTestNormalPc, IfTestNormalLambda, IfNamePcAfter, test.location);
 //            env.cons.add(new Constraint(new Inequality(IfTestNormalPc, IfNamePcAfter), env.hypothesis(), test.location, env.curContractSym().getName(),
 //                    Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION));
         }
+        Map<String, String> versionsBefore = env.saveVersions();
         env.incScopeLayer();
 
         // Context leftContext = new Context(curContext), rightContext = new Context(curContext);
         CodeLocation loc = null;
-        PathOutcome ifo = to.psi;
+        PathOutcome ifo = to.psi.withoutNormalPath();
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        int index = 0;
-        for (Statement stmt : body) {
-            ++index;
-            String prevLambda = env.inContext.lambda;
-            ifo = stmt.IFCVisit(env, index == body.size() && tail_position);
-            // env.prevContext = tmp;
-            // prev2 = leftContext;
-            //env.context = context;
-            PsiUnit normalUnit = ifo.getNormalPath();
-            if (normalUnit == null) {
-                break;
-            }
-            env.inContext = Utils.genNewContextAndConstraints(env, index == body.size() && tail_position, normalUnit.c, prevLambda, stmt.nextPcSHL(), stmt.location);
-            loc = stmt.location;
-            // leftContext = new Context(tmp);
-        }
+        ifo.join(body.IFCVisit(env, tail_position));
         env.decScopeLayer();
 
         if (createdHypo) {
@@ -138,22 +123,13 @@ public class If extends Statement {
         // logger.debug("finished if branch");
         //System.err.println("finished if branch");
         // env.prevContext.lambda = curContext.lambda;
+        Map<String, String> versionsThen = env.saveVersions();
+        env.restoreVersions(versionsBefore);
         env.incScopeLayer();
-        index = 0;
-        PathOutcome elseo = to.psi;
         env.inContext = new Context(IfNamePcAfter, beginContext.lambda);
-        for (Statement stmt : orelse) {
-            ++index;
-            String prevLambda = env.inContext.lambda;
-            elseo = stmt.IFCVisit(env, index == orelse.size() && tail_position);
-            PsiUnit normalUnit = elseo.getNormalPath();
-            if (normalUnit == null) {
-                break;
-            }
-            env.inContext = Utils.genNewContextAndConstraints(env, index == body.size() && tail_position, normalUnit.c, prevLambda, stmt.nextPcSHL(), stmt.location);
-            // env.prevContext.lambda = rightContext.lambda;
-        }
+        PathOutcome elseo = orelse.IFCVisit(env, tail_position);
         env.decScopeLayer();
+        env.mergeVersions(List.of(versionsThen, env.saveVersions()));
 
         ifo.join(elseo);
         // env.cons.add(new Constraint(new Inequality(IfNameLock, Relation.REQ, Utils.joinLabels(leftContext.lambda, rightContext.lambda)), env.hypothesis, location));
@@ -174,16 +150,12 @@ public class If extends Statement {
         List<compile.ast.Statement> ifBranch = new ArrayList<>();
         compile.ast.Expression cond = test.solidityCodeGen(result, code);
         code.enterNewVarScope();
-        for (Statement stmt : body) {
-            ifBranch.addAll(stmt.solidityCodeGen(code));
-        }
+        ifBranch.addAll(body.solidityCodeGen(code));
         code.exitVarScope();
         if (!orelse.isEmpty()) {
             List<compile.ast.Statement> elseBranch = new ArrayList<>();
             code.enterNewVarScope();
-            for (Statement stmt : orelse) {
-                elseBranch.addAll(stmt.solidityCodeGen(code));
-            }
+            elseBranch.addAll(orelse.solidityCodeGen(code));
             code.exitVarScope();
             result.add(new IfStatement(cond, ifBranch, elseBranch));
         } else {
@@ -204,46 +176,26 @@ public class If extends Statement {
     @Override
     public List<Node> children() {
         ArrayList<Node> rtn = new ArrayList<>();
-        rtn.addAll(body);
-        rtn.addAll(orelse);
+        rtn.add(body);
+        rtn.add(orelse);
         return rtn;
     }
     @Override
     public boolean exceptionHandlingFree() {
-        for (Statement s: body) {
-            if (!s.exceptionHandlingFree()) {
-                return false;
-            }
-        }
-        for (Statement s: orelse) {
-            if (!s.exceptionHandlingFree()) {
-                return false;
-            }
-        }
-        return true;
+        return body.exceptionHandlingFree() && orelse.exceptionHandlingFree();
     }
 
     @Override
     protected java.util.Map<String,? extends Type> readMap(CompileEnv code) {
-        java.util.Map<String, Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.readMap(code));
-        }
-        for (Statement s: orelse) {
-            result.putAll(s.readMap(code));
-        }
+        java.util.Map<String, Type> result = new HashMap<>(body.readMap(code));
+        result.putAll(orelse.readMap(code));
         return result;
     }
 
     @Override
     protected java.util.Map<String,? extends Type> writeMap(CompileEnv code) {
-        Map<String, Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.writeMap(code));
-        }
-        for (Statement s: orelse) {
-            result.putAll(s.writeMap(code));
-        }
+        Map<String, Type> result = new HashMap<>(body.writeMap(code));
+        result.putAll(orelse.writeMap(code));
         return result;
     }
 }

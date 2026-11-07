@@ -1,0 +1,13 @@
+// Untrusted data can be written to an untrusted member of an array element.
+contract StructElementWrite {
+    struct S {
+        uint{any} v;
+        uint w;
+    }
+    S[] ss;
+    constructor() { super(); }
+
+    public void f{this}(uint{this} k, uint{any} x) {
+        ss[k].v = x;
+    }
+}

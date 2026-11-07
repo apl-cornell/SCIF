@@ -1,0 +1,10 @@
+// An endorsement raises a value from its from-label to its to-label.
+contract EndorseLabels {
+    uint{this} secret;
+
+    constructor() { super(); }
+
+    public void f{this}(uint{any} v) {
+        secret = endorse(v, any -> this);
+    }
+}

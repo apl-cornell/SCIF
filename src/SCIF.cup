@@ -61,6 +61,15 @@ parser code {:
         errorMessages.add(sb.toString());
     }
 
+    /**
+     * Records an error that is not a syntax error at the given position in the file being
+     * parsed, which makes {@link #parse()} fail.
+     */
+    void reportError(int left, int right, String message) {
+        hasError = true;
+        errorMessages.add(ErrorFormatter.format(filename, left, right, message));
+    }
+
     @Override public void report_error(String message, Object info) {
         // only used by CUP internals; actual reporting is done in syntax_error
         hasError = true;
@@ -99,35 +108,39 @@ parser code {:
           parse(inputFile, null);
         } catch (SyntaxError err) {
           /* ignore */
+        } catch (FileNotFoundException e) {
+          System.err.println("File not found: " + e.getMessage());
         }
     }
 
-    public static Symbol parse(File inputFile, File astFile) throws SyntaxError {
-        Symbol rtn = null;
+    /**
+     * Parses {@code inputFile}, writing the AST to {@code astFile} if it is not null.
+     *
+     * @throws SyntaxError if the file has syntax errors or imports a file that does not exist
+     * @throws FileNotFoundException if {@code inputFile} cannot be read
+     */
+    public static Symbol parse(File inputFile, File astFile)
+            throws SyntaxError, FileNotFoundException {
+        filename = inputFile.getAbsolutePath();
+        Lexer lexer = new Lexer(new FileReader(inputFile));
+
+        if (astFile != null) {
+            PrintStream ps = new PrintStream(new FileOutputStream(astFile));
+            System.setErr(ps);
+        }
+
+        Parser p = new Parser(lexer);
+
+        Symbol rtn;
         try {
-            filename = inputFile.getAbsolutePath();
-            Lexer lexer = new Lexer(new FileReader(inputFile));
-
-            if (astFile != null) {
-                PrintStream ps = new PrintStream(new FileOutputStream(astFile));
-                System.setErr(ps);
-            }
-
-            Parser p = new Parser(lexer);
-
-            try {
-                rtn = p.parse();
-            } catch (SyntaxError se) {
-                throw se;
-            } catch (Exception e) {
-                throw new Error("Unexpected exception from parser");
-            }
-            if (astFile != null) {
-                System.setErr(System.err);
-            }
-        } catch (FileNotFoundException e) {
-            System.err.println("File not found: " + e.getMessage());
-            return null;
+            rtn = p.parse();
+        } catch (SyntaxError se) {
+            throw se;
+        } catch (Exception e) {
+            throw new Error("Unexpected exception from parser");
+        }
+        if (astFile != null) {
+            System.setErr(System.err);
         }
         return rtn;
     }
@@ -227,7 +240,7 @@ nonterminal TrailerExpr trailer;
 //nonterminal Setmaker setmaker;
 // nonterminal Setmaker setmaker_sub;
 // nonterminal ClassDef classdef;
-nonterminal Call arglist;
+nonterminal List<Expression> arglist, call_args;
 nonterminal LabeledType labeledType, maybeLabeledType;
 nonterminal ast.ClosureType closureType;
 nonterminal List<LabeledType> throwsOpt;
@@ -269,7 +282,6 @@ nonterminal List<LabeledType> except_types;
 nonterminal Throw throw_stmt;
 nonterminal List<FunctionDef> constructors;
 nonterminal FunctionDef constructor;
-//nonterminal EndorseStatement endorse_stmt;
 nonterminal EndorseIfStatement endorseIf_stmt;
 nonterminal Call call_expr;
 nonterminal Revert revert_stmt;
@@ -368,8 +380,14 @@ ipt_stmts ::=
 ipt_stmt ::= ipt_name:a SEMI {:RESULT = a; :};
 
 ipt_name ::= IMPORT:x STRING_LITERAL:a {:
-        RESULT = a;//new Import();
-        //RESULT.setLoc(new CodeLocation(xleft, xright, filename));
+        java.nio.file.Path path = java.nio.file.Paths.get((String) a);
+        if (!path.isAbsolute()) {
+            path = java.nio.file.Paths.get(filename).getParent().resolve(path);
+        }
+        if (!java.nio.file.Files.isRegularFile(path)) {
+            parser.reportError(aleft, aright, "imported file not found: " + a);
+        }
+        RESULT = a;
     :};
 //
 //ipt_as_names ::=
@@ -666,10 +684,10 @@ plain_var_dec ::=
 //        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
 //
 //    :}
-    type:t NAME:a SEMI {:
+    maybeLabeledType:t NAME:a SEMI {:
         Name name = new Name((String)a);
         name.setLoc(new CodeLocation(aleft, aright, filename));
-        StateVariableDeclaration rnt = new StateVariableDeclaration(name, new LabeledType(t, null), null, false, false, false);
+        StateVariableDeclaration rnt = new StateVariableDeclaration(name, t, null, false, false, false);
         RESULT = rnt;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :};
@@ -1158,9 +1176,6 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     | throw_stmt:a {: RESULT = a;:}
     | revert_stmt:a {: RESULT = a;:}
     | emit_stmt:a {: RESULT = a; :}
-//    | endorse_stmt:a {:
-//        RESULT = a;
-//    :}
     | endorseIf_stmt:a {:
         RESULT = a;
     :}
@@ -1173,21 +1188,11 @@ stmt ::= assign_stmt:a {: RESULT = a; :}
     :}
     ;
 
-//endorse_stmt ::=
-//    ENDORSEIF:x LPAR name_list:exprList COMMA ifLabel:from RIGHT_ARROW ifLabel:to RPAR IN suite:s {:
-//        EndorseStatement statement = new EndorseStatement(exprList, from, to, s);
-//        RESULT = statement;
-//        RESULT.setLoc(new CodeLocation(xleft, xright, filename));
-//    :}
-//    ;
-
 emit_stmt ::=
-    EMIT:x call_expr:e SEMI {:
-        if (!(e instanceof Call)) {
-            return null;
-        }
-
-        RESULT = new Emit((Call)e);
+    EMIT:x NAME:n call_args:a SEMI {:
+        Name event = new Name(n);
+        event.setLoc(new CodeLocation(nleft, nright, filename));
+        RESULT = new Emit(event, a);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :}
     ;
@@ -1237,12 +1242,10 @@ atomic_stmt ::= ATOMIC:x suite:s exceptall_stmts:es {:
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
-throw_stmt ::= THROW:x call_expr:e SEMI{:
-        if (!(e instanceof Call)) {
-            return null;
-        }
-
-        RESULT = new Throw((Call)e);
+throw_stmt ::= THROW:x NAME:n call_args:a SEMI{:
+        Name exception = new Name(n);
+        exception.setLoc(new CodeLocation(nleft, nright, filename));
+        RESULT = new Throw(exception, a);
         RESULT.setLoc(new CodeLocation(xleft, xright, filename));
     :};
 
@@ -1594,9 +1597,9 @@ call_expr ::= trailer_expr:e  LPAR RPAR transaction_spec:ts{:
         RESULT = c;
         RESULT.setLoc(new CodeLocation(eleft, eright, filename));
     :}
-    | trailer_expr:e LPAR arglist:c RPAR transaction_spec:ts{:
-             c.setValue(e);
-            c.setSpec(ts);
+    | trailer_expr:e LPAR arglist:a RPAR transaction_spec:ts{:
+             Call c = new Call(e, a);
+             c.setSpec(ts);
              RESULT = c;
              RESULT.setLoc(new CodeLocation(eleft, eright, filename));
     :}
@@ -1606,9 +1609,8 @@ call_expr ::= trailer_expr:e  LPAR RPAR transaction_spec:ts{:
           RESULT = c;
           RESULT.setLoc(new CodeLocation(eleft, eright, filename));
       :}
-      | trailer_expr:e LPAR arglist:c RPAR {:
-               c.setValue(e);
-               RESULT = c;
+      | trailer_expr:e LPAR arglist:a RPAR {:
+               RESULT = new Call(e, a);
                RESULT.setLoc(new CodeLocation(eleft, eright, filename));
       :}
     | atom:a LPAR RPAR transaction_spec:ts  {:
@@ -1624,15 +1626,14 @@ call_expr ::= trailer_expr:e  LPAR RPAR transaction_spec:ts{:
         RESULT = c;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
-    | atom:a LPAR arglist:c RPAR transaction_spec:ts  {:
-        c.setValue(a);
+    | atom:a LPAR arglist:l RPAR transaction_spec:ts  {:
+        Call c = new Call(a, l);
         c.setSpec(ts);
         RESULT = c;
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
-    | atom:a LPAR arglist:c RPAR {:
-        c.setValue(a);
-        RESULT = c;
+    | atom:a LPAR arglist:l RPAR {:
+        RESULT = new Call(a, l);
         RESULT.setLoc(new CodeLocation(aleft, aright, filename));
     :}
     ;
@@ -1780,17 +1781,17 @@ trailer ::=
     :};
 arglist ::=
     expr:a {:
-        //System.out.println("parsing first arg for arglist");
-        Call rnt = new Call();
-        rnt.addArg(a);
-        RESULT = rnt;
-        RESULT.setLoc(new CodeLocation(aleft, aright, filename));
+        List<Expression> rtn = new ArrayList<>();
+        rtn.add(a);
+        RESULT = rtn;
     :}
     | arglist:list COMMA expr:a {:
-        //System.out.println("parsing one more arg for arglist");
-        list.addArg(a);
+        list.add(a);
         RESULT = list;
     :};
+call_args ::=
+    LPAR RPAR {: RESULT = new ArrayList<>(); :}
+    | LPAR arglist:a RPAR {: RESULT = a; :};
 //exprlist ::=
 //    exprlist_sub:a {:RESULT = a;:}
 //    | exprlist_sub:a COMMA {:RESULT = a;:};

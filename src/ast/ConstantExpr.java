@@ -20,19 +20,19 @@ public class ConstantExpr extends Expression {
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
         //TODO: Constant are boolean
         ScopeContext now = new ScopeContext(this, parent);
-        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location, "A boolean constant is a bool"));
         return now;
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) {
 
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
         //env.outContext = endContext;
         env.checkFlow(beginContext.pc, endContext.pc, location,
-                "Integrity of the control flow doesn't flow to value of this constant");
+                "A constant is trusted no more than the control flow that evaluates it");
         if (!tail_position) {
             env.checkFlow(endContext.lambda, beginContext.lambda, location,
                     typecheck.Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
@@ -59,5 +59,10 @@ public class ConstantExpr extends Expression {
     public List<Node> children() {
         List<Node> rtn = new ArrayList<>();
         return rtn;
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return env.builtinType(BuiltInT.BOOL);
     }
 }

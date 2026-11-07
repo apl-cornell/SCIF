@@ -19,13 +19,13 @@ public class ExceptHandler extends Node {
 
     private LabeledType labeledType;
     private String name;
-    private List<Statement> body;
+    private Block body;
     final private boolean acceptall;
 
     public ExceptHandler(LabeledType type, String name, List<Statement> body) {
         this.labeledType = type;
         this.name = name;
-        this.body = body;
+        this.body = new Block(body);
         acceptall = false;
     }
 
@@ -33,13 +33,10 @@ public class ExceptHandler extends Node {
      * Create a handler that accept all other types of exceptions(try/catch) or failures(atomic/rescue)
      */
     public ExceptHandler(List<Statement> body) {
-        this.body = body;
+        this.body = new Block(body);
         acceptall = true;
     }
 
-    public void setBody(List<Statement> body) {
-        this.body = body;
-    }
 
     @Override
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
@@ -59,9 +56,7 @@ public class ExceptHandler extends Node {
             }
         }
 
-        for (Statement s : body) {
-            ScopeContext tmp = s.genTypeConstraints(env, now);
-        }
+        body.genTypeConstraints(env, now);
         env.exitNewScope();
         return now;
     }
@@ -69,9 +64,7 @@ public class ExceptHandler extends Node {
     public IfStatement solidityCodeGen(CompileEnv code, Map<String, compile.ast.Type> writeMap, SingleVar dataVar) {
         List<compile.ast.Statement> solBody = new ArrayList<>();
         if (acceptall) {
-            for (Statement s: body) {
-                solBody.addAll(s.solidityCodeGen(code));
-            }
+            solBody.addAll(body.solidityCodeGen(code));
             return code.testNonNormalPath(solBody);
         }
 
@@ -101,9 +94,7 @@ public class ExceptHandler extends Node {
         }
 
 
-        for (Statement s: body) {
-            solBody.addAll(s.solidityCodeGen(code));
-        }
+        solBody.addAll(body.solidityCodeGen(code));
 
         IfStatement testException = code.testException(exceptionTypeSym, solBody);
         return testException;
@@ -113,7 +104,7 @@ public class ExceptHandler extends Node {
     public List<Node> children() {
         List<Node> rtn = new ArrayList<>();
         rtn.add(labeledType);
-        rtn.addAll(body);
+        rtn.add(body);
         return rtn;
     }
 
@@ -129,9 +120,11 @@ public class ExceptHandler extends Node {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
+        if (!acceptall) {
+            declareCaughtVar(env, beginContext.pc);
+        }
         int index = 0;
-        PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        Utils.genConsStmts(body, env, so, tail_position);
+        PathOutcome so = body.IFCVisit(env, tail_position);
 //        for (Statement stmt : body) {
 //            ++index;
 //            so = stmt.genConsVisit(env, index == body.size() && tail_position);
@@ -149,23 +142,48 @@ public class ExceptHandler extends Node {
         return labeledType.type();
     }
 
+    /**
+     * Declares this handler's variable in the current scope of {@code env}, bound by control
+     * flow at {@code handlerPc}. If the variable's type has a label, that label is its label,
+     * and the control flow must be trusted at it; otherwise its label is {@code handlerPc}.
+     * An exception has a single label, so its fields are read at the variable's label.
+     */
+    private void declareCaughtVar(VisitEnv env, String handlerPc) throws SemanticException {
+        Label declared = labeledType.label() == null ? null : env.toLabel(labeledType.label());
+        VarSym var = new VarSym(name, exceptionType(env), declared, location, scopeContext,
+                false, true, false);
+        try {
+            env.addVar(name, var);
+        } catch (SymTab.AlreadyDefined e) {
+            throw new SemanticException("Already defined: " + name, location);
+        }
+        if (declared == null) {
+            env.checkEqual(var.labelNameSLC(), handlerPc, location,
+                    "The label of handler variable " + name + " may be wrong");
+        } else {
+            env.checkEqual(var.labelNameSLC(), declared.toSHErrLocFmt(), location,
+                    "The label of handler variable " + name + " may be wrong");
+            env.checkFlow(handlerPc, declared.toSHErrLocFmt(), location,
+                    "Control flow in the handler must be trusted at the label of " + name);
+        }
+    }
+
     public String name() {
         return name;
     }
 
+    /**
+     * The exception type this handler catches, or null if it catches every failure.
+     */
+    public ExceptionTypeSym exceptionType(VisitEnv env) {
+        return acceptall ? null : env.getExp(labeledType.type().name());
+    }
+
     protected Map<String,? extends compile.ast.Type> readMap(CompileEnv code) {
-        Map<String, compile.ast.Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.readMap(code));
-        }
-        return result;
+        return body.readMap(code);
     }
 
     protected Map<String,? extends compile.ast.Type> writeMap(CompileEnv code) {
-        Map<String, compile.ast.Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.writeMap(code));
-        }
-        return result;
+        return body.writeMap(code);
     }
 }

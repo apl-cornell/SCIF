@@ -149,13 +149,13 @@ public class ClosureCreation extends Expression {
             }
             ScopeContext ac = a.genTypeConstraints(env, now);
             env.addCons(ac.genTypeConstraints(
-                    declaredParams.get(i).toSHErrLocFmt(), Relation.GEQ, env, a.location));
+                    declaredParams.get(i).toSHErrLocFmt(), Relation.GEQ, env, a.location, "The " + Utils.ordNumString(i + 1) + " bound argument must have the type of its parameter"));
         }
 
         // Closure type eval
         ClosureTypeSym result =
                 new ClosureTypeSym(stillUnbound, retSym, new ArrayList<>(), scopeContext);
-        env.addCons(now.genEqualCons(result, env, location, "Type error: Improper closure"));
+        env.addCons(now.genEqualCons(result, env, location, "A closure has the type given by its target method and bound arguments"));
         return now;
     }
 
@@ -222,16 +222,10 @@ public class ClosureCreation extends Expression {
 
             // A slot filled with a principal becomes that principal
             // everywhere the result's labels named the slot.
-            Expression principalExp = a;
-            if (a instanceof Call cast && cast.isCast(env)) {
-                principalExp = cast.getArgAt(0);
-            }
             VarSym binder = i < binders.size() ? binders.get(i) : null;
-            if (binder != null && principalExp instanceof Name an) {
-                VarSym valueSym = env.getVar(an.id);
-                if (valueSym != null && valueSym.isPrincipalVar()) {
-                    bindMapping.put(binder.toSHErrLocFmt(), valueSym.toSHErrLocFmt());
-                }
+            String principal = a.principalName(env);
+            if (binder != null && principal != null) {
+                bindMapping.put(binder.toSHErrLocFmt(), principal);
             }
 
             ExpOutcome ao = a.genIFConstraints(env, false);
@@ -258,22 +252,22 @@ public class ClosureCreation extends Expression {
             }
 
             // argLabel[i] => paramLabel[i]
-            env.checkFlow(ao.valueLabelName, argLabelStr, a.location, "Input to the "
-                    + Utils.ordNumString(i + 1) + " bound closure argument must be trusted enough");
+            env.checkFlow(ao.valueLabelName, argLabelStr, a.location, "The "
+                    + Utils.ordNumString(i + 1) + " bound argument must be trusted at the label of its parameter");
 
             // pc => paramLabel[i]
             env.checkFlow(ifNamePc, argLabelStr, a.location,
-                    "Current control flow must be trusted to bind the " + Utils.ordNumString(i + 1)
-                    + " closure argument");
+                    "Control flow must be trusted at the label of the " + Utils.ordNumString(i + 1)
+                    + " bound parameter");
         }
 
         // pc => closureValueLabel
         env.checkFlow(ifNamePc, ifNameRtn, location,
-                "Closure value integrity is bounded by the binding control flow");
+                "A closure is trusted no more than the control flow that creates it");
 
         // sourceClosureLabel => closureValueLabel
         env.checkFlow(ifSrcRtn, ifNameRtn, location,
-                "Closure value integrity is bounded by the closure it binds");
+                "A closure is trusted no more than the closure it binds arguments of");
 
         // The result's labels are the source's under the substitution
         // above; only the slots that stayed open keep a parameter label.
@@ -292,7 +286,7 @@ public class ClosureCreation extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position)
             throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
@@ -357,17 +351,9 @@ public class ClosureCreation extends Expression {
 
             VarSym argSym = funcSym.parameters.get(i);
 
-            Expression principalExp = a;
-            if (a instanceof Call cast && cast.isCast(env)) {
-                principalExp = cast.getArgAt(0);
-            }
-
-            if (argSym.isPrincipalVar() && principalExp instanceof Name an) {
-                VarSym valueSym = env.getVar(an.id);
-                if (valueSym != null && valueSym.isPrincipalVar()) {
-                    dependentLabelMapping.put(argSym.toSHErrLocFmt(),
-                            valueSym.toSHErrLocFmt());
-                }
+            String principal = a.principalName(env);
+            if (argSym.isPrincipalTyped() && principal != null) {
+                dependentLabelMapping.put(argSym.toSHErrLocFmt(), principal);
             }
 
             ExpOutcome ao = a.genIFConstraints(env, false);
@@ -397,22 +383,22 @@ public class ClosureCreation extends Expression {
             }
 
             // argLabel[i] => paramLabel[i]
-            env.checkFlow(ao.valueLabelName, argLabelStr, a.location, "Input to the "
-                    + Utils.ordNumString(i + 1) + " bound closure argument must be trusted enough");
+            env.checkFlow(ao.valueLabelName, argLabelStr, a.location, "The "
+                    + Utils.ordNumString(i + 1) + " bound argument must be trusted at the label of its parameter");
             
             // pc => paramLabel[i]
             env.checkFlow(ifNamePc, argLabelStr, a.location,
-                    "Current control flow must be trusted to bind the " + Utils.ordNumString(i + 1)
-                    + " closure argument");
+                    "Control flow must be trusted at the label of the " + Utils.ordNumString(i + 1)
+                    + " bound parameter");
         }
 
         // pc => closureValueLabel
         env.checkFlow(ifNamePc, ifNameRtn, location,
-                "Closure value integrity is bounded by the creating control flow");
+                "A closure is trusted no more than the control flow that creates it");
         
         // recv..lbl => closureValueLabel
         env.checkFlow(ifContRtn, ifNameRtn, location,
-                "Closure value integrity is bounded by the target");
+                "A closure is trusted no more than the reference to its target contract");
 
         List<String> realParamLabels = new ArrayList<>();
         for (int i = 0; i < args.size(); ++i) {
@@ -574,5 +560,31 @@ public class ClosureCreation extends Expression {
         if (callee != null) rtn.add(callee);
         rtn.addAll(args);
         return rtn;
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        List<TypeSym> declaredParams = new ArrayList<>();
+        TypeSym retSym;
+        if (callee instanceof Attribute att && att.value instanceof Name recvName) {
+            FuncSym target = ((InterfaceSym) env.getVar(recvName.id).typeSym)
+                    .getFunc(att.attr.id);
+            for (VarSym p : target.parameters) {
+                declaredParams.add(p.typeSym);
+            }
+            retSym = target.returnType;
+        } else {
+            ClosureTypeSym source =
+                    (ClosureTypeSym) env.getVar(((Name) callee).id).typeSym;
+            declaredParams.addAll(source.unboundParams);
+            retSym = source.returnType;
+        }
+        List<TypeSym> stillUnbound = new ArrayList<>();
+        for (int i = 0; i < args.size(); ++i) {
+            if (args.get(i) instanceof Hole) {
+                stillUnbound.add(declaredParams.get(i));
+            }
+        }
+        return new ClosureTypeSym(stillUnbound, retSym, new ArrayList<>(), scopeContext);
     }
 }

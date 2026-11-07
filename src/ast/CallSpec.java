@@ -44,7 +44,7 @@ public class CallSpec extends Node {
             ScopeContext value = entry.getValue().genTypeConstraints(env, now);
             env.addCons(
                     new Constraint(new Inequality(env.getSymName(BuiltInT.UINT), Relation.LEQ, value.getSHErrLocName()),
-                    env.globalHypothesis(), location, ""));
+                    env.globalHypothesis(), location, "A call option's value must be a uint"));
         }
         return now;
     }
@@ -65,10 +65,10 @@ public class CallSpec extends Node {
             String ifNameValue = vo.valueLabelName;
 
             env.checkFlow(ifNameValue, ifNameTgt, value.location,
-                    "Integrity of the value being assigned must be trusted to allow this assignment");
+                    "The value of a call option must be trusted by this contract");
 
             env.checkFlow(ifNamePc, ifNameTgt, value.location,
-                    "Integrity of control flow must be trusted to allow this assignment");
+                    "Control flow must be trusted by this contract to set a call option");
             typecheck.Utils.contextFlow(env, vo.psi.getNormalPath().c, endContext, value.location);
             // env.outContext = endContext;
 
@@ -103,5 +103,14 @@ public class CallSpec extends Node {
             specs.put(entry.getKey(), entry.getValue().solidityCodeGen(result, code));
         }
         return new compile.ast.CallSpec(specs);
+    }
+
+    /** The local variables the expressions in this spec read, with their types. */
+    public Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        Map<String, compile.ast.Type> result = new HashMap<>();
+        for (Expression spec : specs.values()) {
+            result.putAll(spec.readMap(code));
+        }
+        return result;
     }
 }

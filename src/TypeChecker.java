@@ -62,7 +62,7 @@ public class TypeChecker {
             if (DEBUG) {
                 System.err.println("regular type-checking using SLC...");
             }
-            if (!runSLC(ntcEnv.programMap(), sherrlocDiagnoser, DEBUG)) {
+            if (!runSLC(ntcEnv.programMap(), sherrlocDiagnoser, false, DEBUG)) {
                 return false;
             }
         } catch (Exception e) {
@@ -196,10 +196,7 @@ public class TypeChecker {
 //                    "The Code integrity label of contract " + ifNameContract + " may be incorrect"));
 
             for (Assumption assumption : contractSym.assumptions()) {
-                env.addTrustConstraint(new Constraint(
-                        assumption.toInequality(),
-                        assumption.location(),
-                        "Static trust relationship"));
+                env.assume(assumption.toInequality());
             }
         } else {
             // TODO: handle the assumptions of other contracts
@@ -227,20 +224,20 @@ public class TypeChecker {
                 cons.add(new Constraint(
                         new Inequality(ifCallBeforeLabel, Relation.EQ, ifNameCallBeforeLabel),
                         func.external_pc.location(),
-                        "Integrity requirement to call this method may be incorrect"));
+                        "The external begin label of " + func.funcName + " may be wrong"));
             }
             if (ifCallAfterLabel != null) {
                 cons.add(new Constraint(
                         new Inequality(ifCallAfterLabel, Relation.EQ, ifNameCallAfterLabel),
                         func.internal_pc.location(),
-                        "Integrity pc level autoendorsed to when calling this method may be incorrect"));
+                        "The internal begin label of " + func.funcName + " may be wrong"));
             }
 
             if (ifCallLockLabel != null) {
                 cons.add(new Constraint(
                         new Inequality(ifCallLockLabel, Relation.EQ, ifNameCallGammaLabel),
                         func.gamma.location(),
-                        "The final reentrancy lock label may be declared incorrectly"));
+                        "The reentrancy lock label of " + func.funcName + " may be wrong"));
 
             }
 
@@ -250,7 +247,7 @@ public class TypeChecker {
                 cons.add(new Constraint(
                         new Inequality(ifReturnLabel, Relation.EQ, ifNameReturnLabel),
                         func.location,
-                        "Integrity label of this method's return value may be incorrect"));
+                        "The label of the return value of " + func.funcName + " may be wrong"));
             }
 
             for (int i = 0; i < func.parameters.size(); ++i) {
@@ -262,12 +259,12 @@ public class TypeChecker {
                 if (ifArgLabel != null) {
                     cons.add(new Constraint(new Inequality(ifNameArgLabel, Relation.EQ, ifArgLabel),
                             arg.location,
-                            "Argument " + arg.getName() + " may be labeled incorrectly"));
+                            "The label of parameter " + arg.getName() + " may be wrong"));
                     env.addTrustConstraint(
                             new Constraint(new Inequality(ifNameCallBeforeLabel, ifNameArgLabel),
                                     arg.location,
-                                    "Argument " + arg.getName()
-                                            + " must be no more trusted than caller's integrity"));
+                                    "Parameter " + arg.getName() + " cannot be trusted more than the "
+                                            + "external begin label of " + func.funcName));
                 }
             }
 
@@ -291,7 +288,7 @@ public class TypeChecker {
             if (ifLabel != null && varName != null) {
                 env.cons.add(
                         new Constraint(new Inequality(varName, Relation.EQ, ifLabel), var.location,
-                                "Variable " + var.getName() + " may be labeled incorrectly"));
+                                "The label of field " + var.getName() + " may be wrong"));
             }
         }
 
@@ -320,12 +317,14 @@ public class TypeChecker {
                 for (Constraint c : trustCons) System.err.println("DBGTRUST[" + methodName + "] " + c.toSherrlocFmt(true));
                 for (Sym s : env.principalSet()) System.err.println("DBGCTOR[" + methodName + "] " + s.toSHErrLocFmt());
                 for (String a : env.rigidAtoms()) System.err.println("DBGATOM[" + methodName + "] " + a);
+                for (String v : env.versionNames()) System.err.println("DBGVER[" + methodName + "] " + v);
             }
-            SherrlocDiagnoser sherrlocDiagnoser = Utils.createDiagnoser(env.principalSet(), trustCons, cons,
-                    true, contractSym, env.rigidAtoms(), env.atomAssumptions());
+            SherrlocDiagnoser sherrlocDiagnoser = Utils.createDiagnoser(env.principalSet(),
+                    env.versionNames(), trustCons, cons,
+                    true, contractSym, env.rigidAtoms(), env.assumptions());
             boolean result;
             try {
-                result = runSLC(env.programMap, sherrlocDiagnoser, DEBUG);
+                result = runSLC(env.programMap, sherrlocDiagnoser, true, DEBUG);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 return false;
@@ -336,8 +335,13 @@ public class TypeChecker {
     }
 
 
+    /**
+     * Solves the constraints of {@code sherrlocDiagnoser}, reporting the likely causes of any
+     * failure for the source files in {@code programMap}, and returns whether they were
+     * satisfied. The constraints are on labels if {@code ifc}, and on types otherwise.
+     */
     static boolean runSLC(Map<String, List<SourceFile>> programMap, SherrlocDiagnoser sherrlocDiagnoser,
-                          boolean DEBUG) {
+                          boolean ifc, boolean DEBUG) {
 //        logger.trace("running SLC");
         if (sherrlocDiagnoser == null) { // There were no constraints
             return true;
@@ -373,7 +377,7 @@ public class TypeChecker {
                     System.out.println("Some other possible places:");
                 }
                 List<String> s = Utils.SLCEntitiesToStrings(programMap, result.getSuggestions().get(i),
-                        DEBUG);
+                        ifc, DEBUG);
                 if (s != null) {
                     for (String exp: s) {
                         if (!expSet.contains(exp)) {

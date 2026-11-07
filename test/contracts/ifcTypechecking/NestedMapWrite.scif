@@ -1,0 +1,9 @@
+// Trusted data can be written through nested subscripts of a trusted map.
+contract NestedMapWrite {
+    map(address, map(address, uint)) m;
+    constructor() { super(); }
+
+    public void f{this}(address{this} a, address{this} b, uint{this} x) {
+        m[a][b] = x;
+    }
+}

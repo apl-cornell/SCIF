@@ -146,7 +146,7 @@ public class ClosureType extends Type {
         env.exitNewScope();
 
         TypeSym typeSym = env.toTypeSym(this, scopeContext);
-        env.addCons(now.genEqualCons(typeSym, env, location, "Type error: Improper closure type"));
+        env.addCons(now.genEqualCons(typeSym, env, location, "This closure type is not well formed"));
         return now;
     }
 

@@ -367,6 +367,13 @@ public class InterfaceSym extends TypeSym {
         return anySym;
     }
 
+    /** The top principal: the most trusted one. */
+    public VarSym top() {
+        VarSym topSym = (VarSym) lookupSym(Utils.LABEL_TOP);
+        assert topSym != null;
+        return topSym;
+    }
+
     public VarSym invoker() {
         VarSym invokerSym = (VarSym) lookupSym(Utils.LABEL_INVOKER);
         assert invokerSym != null;

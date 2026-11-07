@@ -1,0 +1,17 @@
+// An exception thrown in a loop body may leave the method when declared untrusted.
+contract WhileThrowUntrusted {
+    uint{this} count;
+    exception E();
+    constructor() { super(); }
+
+    void g{this}() throws (E{any}) {
+        throw E();
+    }
+
+    public void f{this}(uint{this} n) throws (E{any}) {
+        while (n > 0) {
+            g();
+            count = 1;
+        }
+    }
+}

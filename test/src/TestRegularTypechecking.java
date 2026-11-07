@@ -49,6 +49,12 @@ public class TestRegularTypechecking {
             "regularTypechecking/ClosureNoOuterLabelOK",
             "regularTypechecking/ClosureJoinPcEx",
             "regularTypechecking/ClosureBinderRegularOK",
+            "regularTypechecking/FinalFieldInitOK",
+            "regularTypechecking/ExceptionParamLabels",
+            "ifcTypechecking/ArrayPop",
+            "regularTypechecking/StructMemberLabels",
+            "regularTypechecking/DepMapMutableIndex",
+            "regularTypechecking/TrustQueryNonFinal",
     })
     void testPositive(String contractName) throws Exception {
         File logDir = new File("./.scif");
@@ -65,14 +71,50 @@ public class TestRegularTypechecking {
                 "expected " + contractName + " to regular-typecheck");
     }
 
+    /**
+     * Each contract must be rejected with a reported error: a SemanticException or
+     * a failed constraint check. Any other exception fails the test.
+     */
     @ParameterizedTest
     @ValueSource(strings = {
+            "regularTypechecking/AttributeOfUndefined_W01",
+            "regularTypechecking/AttributeNoMember_W01",
+            "regularTypechecking/EmitArity_W01",
+            "regularTypechecking/ThrowArity_W01",
+            "regularTypechecking/ThrowNotException_W01",
+            "regularTypechecking/ArrayPopResult_W01",
+            "regularTypechecking/ReturnValueFromVoid_W01",
+            "regularTypechecking/ReturnMissingValue_W01",
+            "regularTypechecking/CallSpecInternal_W01",
+            "regularTypechecking/EmitNotEvent_W01",
+            "regularTypechecking/MethodAsValue_W01",
+            "regularTypechecking/CatchUnknownException_W01",
+            "regularTypechecking/CallReceiverUndefined_W01",
+            "regularTypechecking/CallReceiverNotVariable_W01",
+            "regularTypechecking/DeleteNonLvalue_W01",
+            "regularTypechecking/PublicMeetExternalPc_W01",
+            "regularTypechecking/PublicJoinInternalPc_W01",
+            "regularTypechecking/ImplementsMissingMethod_W01",
+            "regularTypechecking/CallOptionUnsupported_W01",
+            "regularTypechecking/ThrowsUnknownException_W01",
+            "regularTypechecking/EmptyFile_W01",
+            "regularTypechecking/ThrowUndeclared_W01",
+            "regularTypechecking/SubscriptNonCollection_W01",
+            "regularTypechecking/LabelNonPrincipalVar_W01",
+            "regularTypechecking/FinalFieldUninitialized_W01",
+            "regularTypechecking/FinalFieldInitTwice_W01",
+            "regularTypechecking/FinalFieldInitNested_W01",
+            "regularTypechecking/FinalFieldAssignInMethod_W01",
+            "regularTypechecking/FinalLocalReassign_W01",
+            "regularTypechecking/FinalParamReassign_W01",
+            "regularTypechecking/FieldLabelNonFinal_W01",
+            "regularTypechecking/ExceptionParamLabelNotPrincipal_W01",
+            "regularTypechecking/StructMemberLabelNonFinal_W01",
+            "regularTypechecking/StructMemberLabelNotPrincipal_W01",
             "basic/StructEx_W01",
-//            "basic/Assignment_W01",
             "regularTypechecking/ExceptionThrowAndCatch_W01",
             "regularTypechecking/ExceptionThrowAndCatch_W02",
             "regularTypechecking/ExceptionThrowAndCatch_W03",
-            // "regularTypechecking/LocalTrust_W01",
             "regularTypechecking/FinalVarNotInitialized_W01",
             "regularTypechecking/FinalVarNotInitialized_W02",
             "regularTypechecking/Constructor1",
@@ -87,53 +129,9 @@ public class TestRegularTypechecking {
             "regularTypechecking/ClosureLabelNonPrincipal",
             "regularTypechecking/ClosureMeetPcEx",
             "regularTypechecking/ClosureTargetWrite",
+            "regularTypechecking/LocalTrust_W01",
+//            "basic/Assignment_W01",
 //            "regularTypechecking/Constructor4",
-    })
-    void testNegative(String contractName) {
-        File logDir = new File("./.scif");
-        logDir.mkdirs();
-        String inputFilePath = contractName + ".scif";
-        URL input = ClassLoader.getSystemResource(inputFilePath);
-        System.out.println(inputFilePath + ": " + input);
-        ArrayList<File> files = new ArrayList<>();
-        files.add(new File(input.getFile()));
-        boolean accepted;
-        try {
-            List<SourceFile> roots = Preprocessor.preprocess(files);
-            accepted = roots != null && TypeChecker.regularTypecheck(roots, m_debug);
-        } catch (Throwable t) {
-            // Any error means the bad input was correctly not accepted.
-            accepted = false;
-        }
-        assertFalse(accepted, "expected " + contractName + " to be rejected by regular typecheck");
-    }
-
-    /**
-     * Each contract must be rejected with a reported error: a SemanticException or
-     * a failed constraint check. Any other exception fails the test.
-     */
-    @ParameterizedTest
-    @ValueSource(strings = {
-            "regularTypechecking/AttributeOfUndefined_W01",
-            "regularTypechecking/AttributeNoMember_W01",
-            "regularTypechecking/EmitArity_W01",
-            "regularTypechecking/ThrowArity_W01",
-            "regularTypechecking/TrustQueryNonFinal_W01",
-            "regularTypechecking/MethodAsValue_W01",
-            "regularTypechecking/CatchUnknownException_W01",
-            "regularTypechecking/CallReceiverUndefined_W01",
-            "regularTypechecking/CallReceiverNotVariable_W01",
-            "regularTypechecking/DeleteNonLvalue_W01",
-            "regularTypechecking/PublicMeetExternalPc_W01",
-            "regularTypechecking/PublicJoinInternalPc_W01",
-            "regularTypechecking/ImplementsMissingMethod_W01",
-            "regularTypechecking/CallOptionUnsupported_W01",
-            "regularTypechecking/ThrowsUnknownException_W01",
-            "regularTypechecking/EmptyFile_W01",
-            "regularTypechecking/DepMapNonFinalIndex_W01",
-            "regularTypechecking/ThrowUndeclared_W01",
-            "regularTypechecking/SubscriptNonCollection_W01",
-            "regularTypechecking/LabelNonPrincipalVar_W01",
     })
     void testReportedError(String contractName) throws Exception {
         URL input = ClassLoader.getSystemResource(contractName + ".scif");

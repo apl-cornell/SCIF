@@ -87,6 +87,7 @@ public class TestParsing {
     @ValueSource(strings = {
             "WrongStateVarDeclaration",
             "ClosureHoleInInvoke",
+            "ImportMissing_W01",
     })
     void testNegative(String contractName) throws Exception {
         String inputFilePath = "parsing/" + contractName + ".scif";

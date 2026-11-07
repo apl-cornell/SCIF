@@ -32,19 +32,19 @@ public class Compare extends Expression {
         ScopeContext now = new ScopeContext(this, parent);
         ScopeContext l = left.genTypeConstraints(env, now), r = right.genTypeConstraints(env, now);
 
-        env.addCons(l.genTypeConstraints(r, Relation.EQ, env, location));
+        env.addCons(l.genTypeConstraints(r, Relation.EQ, env, location, "The operands of a comparison must have the same type"));
         if (op == CompareOperator.Eq || op == CompareOperator.NotEq) {
             //env.addCons(l.genCons(r, Relation.EQ, env, location));
         } else if (op == CompareOperator.Lt || op == CompareOperator.LtE
                 || op == CompareOperator.Gt || op == CompareOperator.GtE) {
-            env.addCons(l.genTypeConstraints(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location));
+            env.addCons(l.genTypeConstraints(env.getSymName(BuiltInT.UINT), Relation.EQ, env, location, "The operands of <, <=, > and >= must be uint"));
         }
-        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location, "A comparison returns a bool"));
         return now;
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position) throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -61,9 +61,9 @@ public class Compare extends Expression {
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "cmp" + location.toString();
 
         env.checkFlow(ifNameLeft, ifNameRtn, location,
-                "Integrity of left hand expression doesn't flow to value of this compare operation");
+                "The result of a comparison is trusted no more than its left operand");
         env.checkFlow(ifNameRight, ifNameRtn, location,
-                "Integrity of right hand expression doesn't flow to value of this compare operation");
+                "The result of a comparison is trusted no more than its right operand");
 
         typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, right.location);
         // env.outContext = endContext;
@@ -109,5 +109,10 @@ public class Compare extends Expression {
         Map<String, Type> result = left.readMap(code);
         result.putAll(right.readMap(code));
         return result;
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return env.builtinType(BuiltInT.BOOL);
     }
 }

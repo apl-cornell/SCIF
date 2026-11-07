@@ -14,6 +14,7 @@ import typecheck.Context;
 import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
+import typecheck.TypeSym;
 import typecheck.VarSym;
 import typecheck.VisitEnv;
 import typecheck.exceptions.SemanticException;
@@ -28,7 +29,8 @@ public class FlowsToExp extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position) {
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position)
+            throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
                 typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
@@ -44,9 +46,9 @@ public class FlowsToExp extends Expression {
         String ifNameRtn = scopeContext.getSHErrLocName() + "." + "bool" + location.toString();
 
         env.checkFlow(ifNameLeft, ifNameRtn, location,
-                "Integrity of left hand expression doesn't flow to value of this flows-to operation");
+                "The result of a flows-to test is trusted no more than its left operand");
         env.checkFlow(ifNameRight, ifNameRtn, location,
-                "Integrity of right hand expression doesn't flow to value of this flows-to operation");
+                "The result of a flows-to test is trusted no more than its right operand");
 
         typecheck.Utils.contextFlow(env, ro.psi.getNormalPath().c, endContext, rhs.location);
         // env.outContext = endContext;
@@ -82,13 +84,13 @@ public class FlowsToExp extends Expression {
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         for (Name operand : List.of((Name) lhs, (Name) rhs)) {
-            if (!(env.getCurSym(operand.id) instanceof VarSym v) || !v.isPrincipalVar()) {
+            if (!(env.getCurSym(operand.id) instanceof VarSym v) || !v.isPrincipalTyped()) {
                 throw new SemanticException(
-                        "dynamic trust queries can only happen between final address variables: "
+                        "dynamic trust queries can only happen between address or contract variables: "
                                 + operand.id, location);
             }
         }
-        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location, "A flows-to test returns a bool"));
         return now;
     }
 
@@ -104,5 +106,10 @@ public class FlowsToExp extends Expression {
         Map<String, Type> result = lhs.readMap(code);
         result.putAll(rhs.readMap(code));
         return result;
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return env.builtinType(BuiltInT.BOOL);
     }
 }

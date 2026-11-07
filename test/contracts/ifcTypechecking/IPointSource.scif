@@ -1,0 +1,7 @@
+interface IPointSource {
+    struct P {
+        uint v;
+        uint{any} u;
+    }
+    public P{sender} get{any}();
+}

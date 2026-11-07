@@ -28,24 +28,24 @@ public class FunctionDef extends FunctionSig {
 
     private static boolean DEBUG = false;
 
-    List<Statement> body;
+    Block body;
 
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
             List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor,
             CodeLocation location) {
         super(name, funcLabels, args, decoratorList, rtn, isConstructor, location);
-        this.body = body;
+        this.body = new Block(body);
     }
     public FunctionDef(String name, FuncLabels funcLabels, Arguments args,
             List<Statement> body, List<String> decoratorList, LabeledType rtn, boolean isConstructor, boolean isBuiltIn,
             CodeLocation location) {
         super(name, funcLabels, args, decoratorList, rtn, isConstructor, isBuiltIn, location);
-        this.body = body;
+        this.body = new Block(body);
     }
 
     public FunctionDef(FunctionSig funcSig, List<Statement> body) {
         super(funcSig);
-        this.body = body;
+        this.body = new Block(body);
     }
 
 
@@ -56,10 +56,10 @@ public class FunctionDef extends FunctionSig {
         env.enterNewScope();
         // add args to local sym;
         String funcName = this.name;
-        if (DEBUG) System.err.println("entering method: " + name + " " + body.size());
+        if (DEBUG) System.err.println("entering method: " + name + " " + body.statements().size());
         FuncSym funcSym = ((FuncSym) env.getCurSym(funcName));
         Map<ExceptionTypeSym, Boolean> exceptionTypeSyms = new HashMap<>();
-        for (Map.Entry<ExceptionTypeSym, String> t : funcSym.exceptions.entrySet()) {
+        for (Map.Entry<ExceptionTypeSym, Label> t : funcSym.exceptions.entrySet()) {
             exceptionTypeSyms.put(t.getKey(), true);
         }
 
@@ -79,7 +79,7 @@ public class FunctionDef extends FunctionSig {
         if (funcSym.returnType != null) {
             env.addCons(new Constraint(new Inequality(funcSym.returnTypeSLC(), Relation.EQ,
                     funcSym.returnType.toSHErrLocFmt()), env.globalHypothesis(), location,
-                    "Label of this method's return value"));
+                    "The return type of the method is its declared return type"));
         }
 
 //        env.enterMethod(getName());
@@ -89,10 +89,7 @@ public class FunctionDef extends FunctionSig {
         }
         //if (!isBuiltIn()) {
             // TODO: add support for signatures
-            for (Statement stmt : body) {
-                // // logger.debug("stmt: " + stmt);
-                stmt.genTypeConstraints(env, now);
-            }
+            body.genTypeConstraints(env, now);
         if (isConstructor()) {
             // TODO(steph): fix assert
             if (!env.superCalled()) throw new SemanticException("constructor of super contract is not called in the constructor of " + env.currentSourceFileFullName(), location);
@@ -115,13 +112,17 @@ public class FunctionDef extends FunctionSig {
         if (!returnVoid()) {
             addBuiltInResult(env.curSymTab, scopeContext);
         }
-        VarSym sender = env.getVar(Utils.LABEL_SENDER);
-        env.checkEqual(sender.labelNameSLC(), sender.labelValueSLC(), location,
-                "Label of sender may be incorrect");
+        List<String> builtInNames = new ArrayList<>(List.of(Utils.LABEL_SENDER, Utils.LABEL_PAYVALUE));
+        builtInNames.addAll(Utils.BUILTIN_INMETHOD_VARS.keySet());
+        for (String builtInName : builtInNames) {
+            VarSym builtIn = env.getVar(builtInName);
+            env.checkEqual(builtIn.labelNameSLC(), builtIn.labelValueSLC(), location,
+                    "The label of built-in variable " + builtInName + " may be wrong");
+        }
 
         for (Entry<String, VarSym> entry: env.curSymTab.getVars().entrySet()) {
             VarSym varSym = entry.getValue();
-            if (varSym.isFinal && (varSym.typeSym instanceof ContractSym || varSym.typeSym.getName().equals(Utils.ADDRESS_TYPE))) {
+            if (varSym.isPrincipalTyped()) {
                 env.addPrincipal(varSym);
             }
         }
@@ -140,7 +141,7 @@ public class FunctionDef extends FunctionSig {
 
         String ifNameCall = funcSym.internalPcSLC();
         env.checkTrustEqual(ifNameCall, ifNamePc, funcLabels.to_pc.location,
-                "Control flow of this method start with its call-after(second) label");
+                "Control flow in the method body starts at its internal begin label");
 
 //        String ifNameContract = env.curContractSym().getLabelNameContract();
 //        env.addTrustConstraint(new Constraint(new Inequality(ifNameContract, ifNameCall), env.hypothesis(),
@@ -149,17 +150,10 @@ public class FunctionDef extends FunctionSig {
 
         String ifNameGamma = funcSym.getLabelNameCallGamma();
         env.checkTrustedBy(inLockName, ifNamePc, funcLabels.to_pc.location,
-                "The statically locked integrity must be at least as trusted as initial pc integrity");
+                "The reentrancy lock held on entry must be trusted at least as much as the internal begin label");
         env.checkFlow(Utils.joinLabels(inLockName, outLockName), ifNameGamma,
                 funcLabels.gamma_label.location,
-                "This function does not maintain reentrancy locks as specified in signature");
-
-        HashMap<ExceptionTypeSym, PsiUnit> psi = new HashMap<>();
-        for (Map.Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
-            psi.put(exp.getKey(), new PsiUnit(
-                    //new Context(funcSym.getLabelNameException(exp.getKey()), ifNameGamma), true));
-                    new Context(exp.getKey().labelNameSLC(), ifNameGamma), true));
-        }
+                "The method body must maintain the reentrancy lock label in its signature");
 
         Context funcBeginContext = curContext;
         PsiUnit funcEndContext = new PsiUnit(outPcName, outLockName);
@@ -168,31 +162,33 @@ public class FunctionDef extends FunctionSig {
 
         args.genConsVisit(env, false);
         // Context prev = new Context(env.prevContext);//, prev2 = null;
-        CodeLocation loc = null;
-        PathOutcome CO = null;
         env.inContext = funcBeginContext;
-//        Utils.genConsStatments(body, env, CO, true);
-        int index = 0;
-        for (Statement stmt : body) {
-            // Context CO = new Context(Utils.getLabelNamePc(stmt.location), Utils.getLabelNameLock(stmt.location));
-            // env.outContext = CO;
-            ++index;
-            String prevLambda = env.inContext.lambda;
-            boolean isTail = index == body.size() && tail_info;
-            CO = stmt.IFCVisit(env, isTail);
-            //Context CO = env.outContext;
-            if (CO.existsNormalPath()) {
-                env.inContext = Utils.genNewContextAndConstraints(env, isTail, CO.getNormalPath().c, prevLambda, stmt.nextPcSHL(), stmt.location());
-
-//                env.inContext = new Context(CO.getNormalPath().c());
-            } else {
-                break;
-            }
-        }
-        if (body.size() > 0 && CO.existsNormalPath()) {
+        PathOutcome CO = body.IFCVisit(env, tail_info);
+        PathOutcome escaping = CO.withoutNormalPath(); // exception paths leaving the body
+        escaping.psi.remove(Utils.getReturnPathException());
+        if (!body.isEmpty() && CO.existsNormalPath()) {
             if (DEBUG) System.err.println("method: " + funcLocalName);
+            List<Statement> stmts = body.statements();
             Utils.contextFlow(env, CO.getNormalPath().c(), funcEndContext.c(),
-                    body.get(body.size() - 1).location);
+                    stmts.get(stmts.size() - 1).location);
+        }
+
+        // Each exception that escapes must be trusted at its declared label, and must
+        // maintain the declared locks.
+        for (Map.Entry<ExceptionTypeSym, PsiUnit> exp : escaping.psi.entrySet()) {
+            Label declared = funcSym.exceptions.get(exp.getKey());
+            if (declared == null) {
+                throw new AssertionError("undeclared exception escapes " + funcLocalName
+                        + ": " + exp.getKey().getName());
+            }
+            Context c = exp.getValue().c;
+            env.checkFlow(c.pc, declared.toSHErrLocFmt(), declared.location(),
+                    "Control flow that throws " + exp.getKey().getName()
+                            + " must be trusted at its declared label");
+            env.checkFlow(Utils.joinLabels(inLockName, c.lambda), ifNameGamma,
+                    funcLabels.gamma_label.location,
+                    "The method body must maintain the reentrancy lock label in its signature"
+                            + " when it throws " + exp.getKey().getName());
         }
 
         env.decScopeLayer();
@@ -236,9 +232,7 @@ public class FunctionDef extends FunctionSig {
             List<Argument> arguments = args.solidityCodeGen(code);
             List<compile.ast.Statement> statements = new ArrayList<>();
             compile.Utils.addBuiltInVars(true, statements, code);
-            for (Statement s: body) {
-                statements.addAll(s.solidityCodeGen(code));
-            }
+            statements.addAll(body.solidityCodeGen(code));
             code.exitVarScope();
             code.popScope();
             return new Constructor(arguments, statements);
@@ -275,10 +269,7 @@ public class FunctionDef extends FunctionSig {
                 wapperStatements.addAll(code.enterFuncCheck(funcLabels, args));
 //                statements.addAll(code.enterFuncCheck(funcLabels, args));
             }
-            for (Statement s: body) {
-                List<compile.ast.Statement> tmp = s.solidityCodeGen(code);
-                statements.addAll(tmp);
-            }
+            statements.addAll(body.solidityCodeGen(code));
 
             if (!exceptionFree()) {
                 statements.addAll(code.compileReturn(rtn.type().isVoid() ? null : new SingleVar(
@@ -323,23 +314,19 @@ public class FunctionDef extends FunctionSig {
     }
 
     private boolean exceptionHandlingFree() {
-        if (!exceptionFree()) return false;
-        for (Statement s: body) {
-            if (!s.exceptionHandlingFree()) return false;
-        }
-        return true;
+        return exceptionFree() && body.exceptionHandlingFree();
     }
 
     @Override
     public List<Node> children() {
         List<Node> rtn = super.children();
-        rtn.addAll(body);
+        rtn.add(body);
         return rtn;
     }
 
     public void renameSuperCall(String extendsContractName) {
         List<Statement> newBody = new ArrayList<>();
-        for (Statement s: body) {
+        for (Statement s: body.statements()) {
             if (s instanceof ast.CallStatement callStatement) {
                 CallStatement newS = new CallStatement(callStatement);
                 newS.call.checkAndRenameSuper(extendsContractName);

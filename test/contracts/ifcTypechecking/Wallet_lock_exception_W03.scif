@@ -6,6 +6,7 @@ contract Wallet {
 //     *  msg.sender: address{msg.sender}
 //     *  amount: uint{msg.sender}
 //     *
+    constructor() { super(); }
     public void withdraw{sender -> this; any}(uint _amount) {
         uint amount = endorse(_amount, any -> this);
         send(sender, amount);

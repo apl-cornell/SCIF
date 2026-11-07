@@ -1,0 +1,11 @@
+// A final field is initialized by a top-level statement of the constructor.
+contract FinalFieldInitNested_W01 {
+    final address owner;
+    bool flag;
+    constructor() {
+        super();
+        if (flag) {
+            owner = sender;
+        }
+    }
+}

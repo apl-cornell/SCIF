@@ -7,7 +7,7 @@ contract Uniswap extends ERC20 {
 
     constructor(address token_addr, bytes _name, bytes _symbol) {
         assert (address(token) == address(0) && token_addr != address(0));
-        token = endorse(IERC777(token_addr), sender->this);
+        token = endorse(IERC777(token_addr), (sender ⨆ token_addr) -> this);
         super(endorse(_name, sender->this), endorse(_symbol, sender->this));
     }
 
@@ -176,9 +176,9 @@ contract Uniswap extends ERC20 {
         return tokenToEthOutput(endorse(eth_bought, sender->this), max_tokens, deadline, sender, endorse(recipient, sender->this));
     }
 
-    uint tokenToTokenInput(uint tokens_sold, uint{any} min_tokens_bought, uint{any} min_eth_bought, uint{any} deadline, address buyer, address recipient, address exchange_addr) {
+    uint tokenToTokenInput(uint tokens_sold, uint{any} min_tokens_bought, uint{any} min_eth_bought, uint{any} deadline, address buyer, address recipient, Uniswap exchange) {
         assert ((deadline >= now && tokens_sold > 0) && (min_tokens_bought > 0 && min_eth_bought > 0));
-        assert (exchange_addr != address(this) && exchange_addr != address(0));
+        assert (address(exchange) != address(this) && address(exchange) != address(0));
         uint token_reserve = token.balanceOf(address(this));
         uint eth_bought = getInputPrice(tokens_sold, token_reserve, balance(address(this)));
         uint wei_bought = eth_bought;
@@ -188,25 +188,23 @@ contract Uniswap extends ERC20 {
                 token.transferFrom(buyer, address(this), tokens_sold);
             }
         }
-        Uniswap exchange = Uniswap(exchange_addr);
         uint tokens_bought = exchange.ethToTokenTransferInput(min_tokens_bought, deadline, recipient){value = wei_bought};
         return tokens_bought;
     }
 
     public uint tokenToTokenSwapInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address token_addr) {
-        address exchange_addr = token_to_exchange[token_addr];
-        return tokenToTokenInput(endorse(tokens_sold, sender->this), min_tokens_bought, min_eth_bought, deadline, sender, sender, endorse(exchange_addr, sender->this));
+        address{sender} exchange_addr = token_to_exchange[token_addr];
+        return tokenToTokenInput(endorse(tokens_sold, sender->this), min_tokens_bought, min_eth_bought, deadline, sender, sender, endorse(Uniswap(exchange_addr), (sender ⨆ exchange_addr) -> this));
     }
 
     public uint tokenToTokenTransferInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address recipient, address token_addr) {
-        address exchange_addr = token_to_exchange[token_addr];
-        return tokenToTokenInput(endorse(tokens_sold, sender->this), min_tokens_bought, min_eth_bought, deadline, sender, endorse(recipient, sender->this), endorse(exchange_addr, sender->this));
+        address{sender} exchange_addr = token_to_exchange[token_addr];
+        return tokenToTokenInput(endorse(tokens_sold, sender->this), min_tokens_bought, min_eth_bought, deadline, sender, endorse(recipient, sender->this), endorse(Uniswap(exchange_addr), (sender ⨆ exchange_addr) -> this));
     }
 
-    uint tokenToTokenOutput(uint tokens_bought, uint{any} max_tokens_sold, uint{any} max_eth_sold, uint{any} deadline, address buyer, address recipient, address exchange_addr) {
+    uint tokenToTokenOutput(uint tokens_bought, uint{any} max_tokens_sold, uint{any} max_eth_sold, uint{any} deadline, address buyer, address recipient, Uniswap exchange) {
         assert (deadline >= now && (tokens_bought > 0 && max_eth_sold > 0));
-        assert (exchange_addr != address(this) && exchange_addr != address(0));
-        Uniswap exchange = Uniswap(exchange_addr);
+        assert (address(exchange) != address(this) && address(exchange) != address(0));
         uint eth_bought = exchange.getEthToTokenOutputPrice(tokens_bought);
         uint token_reserve = token.balanceOf(address(this));
         uint tokens_sold = getOutputPrice(eth_bought, token_reserve, balance(address(this)));
@@ -221,31 +219,31 @@ contract Uniswap extends ERC20 {
     }
 
     public uint tokenToTokenSwapOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address token_addr) {
-        address exchange_addr = token_to_exchange[token_addr];
-        return tokenToTokenOutput(endorse(tokens_bought, sender->this), max_tokens_sold, max_eth_sold, deadline, sender, sender, endorse(exchange_addr, sender->this));
+        address{sender} exchange_addr = token_to_exchange[token_addr];
+        return tokenToTokenOutput(endorse(tokens_bought, sender->this), max_tokens_sold, max_eth_sold, deadline, sender, sender, endorse(Uniswap(exchange_addr), (sender ⨆ exchange_addr) -> this));
     }
 
     public uint tokenToTokenTransferOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address recipient, address token_addr) {
-        address exchange_addr = token_to_exchange[token_addr];
-        return tokenToTokenOutput(endorse(tokens_bought, sender->this), max_tokens_sold, max_eth_sold, deadline, sender, endorse(recipient, sender->this), endorse(exchange_addr, sender->this));
+        address{sender} exchange_addr = token_to_exchange[token_addr];
+        return tokenToTokenOutput(endorse(tokens_bought, sender->this), max_tokens_sold, max_eth_sold, deadline, sender, endorse(recipient, sender->this), endorse(Uniswap(exchange_addr), (sender ⨆ exchange_addr) -> this));
     }
 
     public uint tokenToExchangeSwapInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address exchange_addr) {
-        return tokenToTokenInput(endorse(tokens_sold, sender->this), min_tokens_bought, min_eth_bought, deadline, sender, sender, endorse(exchange_addr, sender->this));
+        return tokenToTokenInput(endorse(tokens_sold, sender->this), min_tokens_bought, min_eth_bought, deadline, sender, sender, endorse(Uniswap(exchange_addr), any -> this));
     }
 
     public uint tokenToExchangeTransferInput(uint tokens_sold, uint min_tokens_bought, uint min_eth_bought, uint deadline, address recipient, address exchange_addr) {
         assert (recipient != address(this));
-        return tokenToTokenInput(endorse(tokens_sold, sender->this), min_tokens_bought, min_eth_bought, deadline, sender, endorse(recipient, sender->this), endorse(exchange_addr, sender->this));
+        return tokenToTokenInput(endorse(tokens_sold, sender->this), min_tokens_bought, min_eth_bought, deadline, sender, endorse(recipient, sender->this), endorse(Uniswap(exchange_addr), any -> this));
     }
 
     public uint tokenToExchangeSwapOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address exchange_addr) {
-        return tokenToTokenOutput(endorse(tokens_bought, sender->this), max_tokens_sold, max_eth_sold, deadline, sender, sender, endorse(exchange_addr, sender->this));
+        return tokenToTokenOutput(endorse(tokens_bought, sender->this), max_tokens_sold, max_eth_sold, deadline, sender, sender, endorse(Uniswap(exchange_addr), any -> this));
     }
 
     public uint tokenToExchangeTransferOutput(uint tokens_bought, uint max_tokens_sold, uint max_eth_sold, uint deadline, address recipient, address exchange_addr) {
         assert (recipient != address(this));
-        return tokenToTokenOutput(endorse(tokens_bought, sender->this), max_tokens_sold, max_eth_sold, deadline, sender, endorse(recipient, sender->this), endorse(exchange_addr, sender->this));
+        return tokenToTokenOutput(endorse(tokens_bought, sender->this), max_tokens_sold, max_eth_sold, deadline, sender, endorse(recipient, sender->this), endorse(Uniswap(exchange_addr), any -> this));
     }
 
     public uint getEthToTokenInputPrice(uint eth_sold) {

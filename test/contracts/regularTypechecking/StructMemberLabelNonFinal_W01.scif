@@ -1,0 +1,9 @@
+// A struct member's label must mean the same thing wherever the struct is
+// used, so it may not name a principal that can change.
+contract StructMemberLabelNonFinal_W01 {
+    struct S {
+        uint{owner} v;
+    }
+    address owner;
+    constructor() { super(); }
+}

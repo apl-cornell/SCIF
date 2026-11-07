@@ -1,0 +1,13 @@
+// Without an assumption that high is trusted at least as much as low, data labeled high
+// cannot flow to a field labeled low.
+contract LocalTrust {
+    principal high;
+    principal low;
+    uint{high} a;
+    uint{low} b;
+
+    constructor() { super(); }
+    public void assignAtoB() {
+        b = a;
+    }
+}

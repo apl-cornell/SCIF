@@ -20,14 +20,14 @@ import typecheck.exceptions.SemanticException;
 
 public class Atomic extends Statement {
 
-    List<Statement> body;
+    Block body;
     List<ExceptHandler> handlers;
 
     // ArrayList<Statement> orelse;
     // ArrayList<Statement> finalbody;
     public Atomic(List<Statement> body,
             List<ExceptHandler> handlers) {//, ArrayList<Statement> orelse, ArrayList<Statement> finalbody) {
-        this.body = body;
+        this.body = new Block(body);
         this.handlers = handlers;
         // this.orelse = orelse;
         // this.finalbody = finalbody;
@@ -53,10 +53,7 @@ public class Atomic extends Statement {
 //            now.addException(t, false);
 //        }
 
-        for (Statement s : body) {
-//            assert !now.getSHErrLocName().startsWith("null");
-            tmp = s.genTypeConstraints(env, atomicScope);
-        }
+        body.genTypeConstraints(env, atomicScope);
         env.exitNewScope();
         env.exitAtomic();
 
@@ -107,10 +104,11 @@ public class Atomic extends Statement {
         readMap = new HashMap<>();
         writeMap = new HashMap<>();
 
-        if (body.size() == 1 && body.get(0) instanceof CallStatement && ((CallStatement) body.get(0)).call.value instanceof Attribute) {
+        List<Statement> stmts = body.statements();
+        if (stmts.size() == 1 && stmts.get(0) instanceof CallStatement callStmt && callStmt.call.value instanceof Attribute) {
             // if it is a single call
-            Call call = ((CallStatement) body.get(0)).call;
-            List<compile.ast.Statement> result = body.get(0).solidityCodeGen(code);
+            Call call = callStmt.call;
+            List<compile.ast.Statement> result = callStmt.solidityCodeGen(code);
             if (result.size() == 1 && result.get(0) instanceof ExternalCall) {
                 ExternalCall externalCall = (ExternalCall) result.get(0);
 //                    LowLevelCall lowLevelCall = new LowLevelCall();
@@ -137,14 +135,11 @@ public class Atomic extends Statement {
 
         if (lowLevelCall == null) {
             // find out read and written local variables
-            for (Statement s : body) {
-                readMap.putAll(s.readMap(code));
-                writeMap.putAll(s.writeMap(code));
-                // solBody.addAll(s.solidityCodeGen(code));
-            }
+            readMap.putAll(body.readMap(code));
+            writeMap.putAll(body.writeMap(code));
             readMap.putAll(writeMap);
             code.enterNewVarScope();
-            Function newTempFunction = code.makeMethod(body, readMap, writeMap, ScopeType.ATOMIC);
+            Function newTempFunction = code.makeMethod(body.statements(), readMap, writeMap, ScopeType.ATOMIC);
             lowLevelCall = new LowLevelCall(newTempFunction, compile.Utils.THIS_ADDRESS,
                     newTempFunction.funcName(), newTempFunction.argNames().stream().map(name -> new SingleVar(name)).collect(
                     Collectors.toList()));
@@ -247,17 +242,17 @@ public class Atomic extends Statement {
         //env.psi = newPsi;
         PathOutcome psi = new PathOutcome();
         PathOutcome input = new PathOutcome();
+        Map<String, String> versionsBefore = env.saveVersions();
         env.incScopeLayer();
-        PathOutcome so = new PathOutcome(new PsiUnit(beginContext));
-        Utils.genConsStmtsWithException(body, env, so, psi, tail_position);
+        psi.join(body.IFCVisit(env, tail_position));
         env.decScopeLayer();
         for (ExceptHandler h : handlers) {
-            ExceptionTypeSym expSym = env.getExp(h.name());
+            ExceptionTypeSym expSym = h.exceptionType(env);
             PsiUnit u = psi.psi.get(expSym);
 
             if (u != null) {
                 env.checkFlow(u.c.lambda, beginContext.lambda, location,
-                        "Try clause should maintain locks when throwing exception " + h.name());
+                        "The atomic block must maintain the reentrancy lock when it throws " + h.type().name());
             /*env.cons.add(new Constraint(new Inequality(u.c.pc, h.), env.hypothesis, location, env.curContractSym.name,
                     "Try clause should maintain locks when throwing exception " + h.name));*/
 
@@ -269,19 +264,34 @@ public class Atomic extends Statement {
         //Context cTry = env.outContext;
 
         //env.psi = oldPsi;
+        // A handler may be entered from any point in the body.
+        List<Map<String, String>> exitVersions = new ArrayList<>();
+        exitVersions.add(env.saveVersions());
+        java.util.Set<String> assignedInBody = ast.Assign.assignedNames(body.statements());
         for (ExceptHandler h : handlers) {
+            env.restoreVersions(versionsBefore);
+            env.havoc(assignedInBody);
             env.incScopeLayer();
             //env.inContext = new Context(h.getHandlerPcLabelName(), beginContext.lambda);
-            ExceptionTypeSym expSym = env.getExp(h.name());
-            PsiUnit expUnit = input.psi.get(expSym);
-            if (expUnit != null) {
+            ExceptionTypeSym expSym = h.exceptionType(env);
+            if (expSym == null) {
+                // Nothing is known about where a failure came from, so a handler for
+                // failures runs with untrusted control flow.
+                env.inContext = new Context(env.curContractSym().any().toSHErrLocFmt(),
+                        beginContext.lambda);
+                PathOutcome ho = h.genConsVisit(env, tail_position);
+                psi.join(ho);
+                exitVersions.add(env.saveVersions());
+            } else if (input.psi.get(expSym) instanceof PsiUnit expUnit) {
                 env.inContext = new Context(expUnit.c.pc, beginContext.lambda);
                 PathOutcome ho = h.genConsVisit(env, tail_position);
                 psi.join(ho);
+                exitVersions.add(env.saveVersions());
             }
             env.decScopeLayer();
             // cTry = new Context(Utils.makeJoin(cTry.pc, env.outContext.outPcName), Utils.makeJoin(cTry.lambda, env.outContext.lockName));
         }
+        env.mergeVersions(exitVersions);
 
         Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
 
@@ -306,7 +316,7 @@ public class Atomic extends Statement {
     @Override
     public List<Node> children() {
         List<Node> rtn = new ArrayList<>();
-        rtn.addAll(body);
+        rtn.add(body);
         rtn.addAll(handlers);
         return rtn;
     }
@@ -318,10 +328,7 @@ public class Atomic extends Statement {
 
     @Override
     protected Map<String,? extends Type> readMap(CompileEnv code) {
-        Map<String, Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.readMap(code));
-        }
+        Map<String, Type> result = new HashMap<>(body.readMap(code));
         for (ExceptHandler s: handlers) {
             result.putAll(s.readMap(code));
         }
@@ -330,10 +337,7 @@ public class Atomic extends Statement {
 
     @Override
     protected Map<String,? extends Type> writeMap(CompileEnv code) {
-        Map<String, Type> result = new HashMap<>();
-        for (Statement s: body) {
-            result.putAll(s.writeMap(code));
-        }
+        Map<String, Type> result = new HashMap<>(body.writeMap(code));
         for (ExceptHandler s: handlers) {
             result.putAll(s.writeMap(code));
         }

@@ -1,0 +1,14 @@
+// A trusted member of a trusted struct can be used as trusted.
+contract StructMemberRead {
+    struct S {
+        uint{any} v;
+        uint w;
+    }
+    S s;
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}() {
+        secret = s.w;
+    }
+}

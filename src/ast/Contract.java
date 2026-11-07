@@ -177,12 +177,49 @@ public class Contract extends TopLayerNode {
             def.genTypeConstraints(env, now);
         }
 
+        markFinalFieldInits();
+
         for (FunctionDef fDef : methodDeclarations) {
             fDef.genTypeConstraints(env, now);
         }
 
         // System.err.println("exiting contract: " + contractName);
         return now;
+    }
+
+    /**
+     * Checks that each final field, other than a built-in one, is assigned exactly once by a
+     * top-level statement of a constructor (this contract's own, or a superclass constructor
+     * inherited as a method), and marks those assignments as final-field initializations.
+     */
+    private void markFinalFieldInits() throws SemanticException {
+        Map<String, StateVariableDeclaration> finalFields = new HashMap<>();
+        for (StateVariableDeclaration dec : varDeclarations) {
+            if (dec.isFinal() && !dec.isBuiltIn()) {
+                finalFields.put(dec.name().id, dec);
+            }
+        }
+        Set<String> initialized = new HashSet<>();
+        for (FunctionDef fDef : methodDeclarations) {
+            if (!fDef.isConstructor() && !Utils.isSuperConstructor(fDef.getName())) continue;
+            for (Statement stmt : fDef.body.statements()) {
+                if (stmt instanceof Assign a && a.target instanceof Name n
+                        && finalFields.containsKey(n.id)) {
+                    if (!initialized.add(n.id)) {
+                        throw new SemanticException("final field " + n.id
+                                + " is initialized more than once", a.location);
+                    }
+                    a.markFinalFieldInit();
+                }
+            }
+        }
+        for (Map.Entry<String, StateVariableDeclaration> e : finalFields.entrySet()) {
+            if (!initialized.contains(e.getKey())) {
+                throw new SemanticException("final field " + e.getKey()
+                        + " is not initialized by a top-level statement of the constructor",
+                        e.getValue().location);
+            }
+        }
     }
 
     @Override
@@ -206,6 +243,9 @@ public class Contract extends TopLayerNode {
         }
         for (StateVariableDeclaration dec : varDeclarations) {
             dec.globalInfoVisit(contractSym);
+        }
+        for (StructDef def: structDefs) {
+            def.resolveMemberLabels(contractSym);
         }
 
         trustSetting.globalInfoVisit(contractSym);
@@ -628,7 +668,7 @@ public class Contract extends TopLayerNode {
                     continue;
                 if (f.isConstructor()) {
                     // rename
-                    FunctionDef newF = new FunctionDef(f, f.body);
+                    FunctionDef newF = new FunctionDef(f, f.body.statements());
                     newF.changeName(Utils.genSuperName(contractName));
                     newF.makeNonConstructor();
                     newF.renameSuperCall(extendsContractName);

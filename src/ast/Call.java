@@ -32,9 +32,16 @@ public class Call extends TrailerExpr {
     List<Expression> args;
 
 
-    // store the called func symbol after regular typechecking
+    /**
+     * The method this call invokes, as resolved by the regular type check, or null if it
+     * invokes none. Code generation uses it; the IFC check resolves the callee separately.
+     */
     FuncSym funcSym = null;
-    private boolean isCast;
+    /**
+     * The node this expression resolves to when it is not a call, such as a cast, as determined
+     * by the regular type check; every later pass is its. Null for a call.
+     */
+    private Expression form = null;
     boolean builtIn = false, ntced = false;
     CallSpec callSpec;
 
@@ -45,11 +52,20 @@ public class Call extends TrailerExpr {
         return realLabels;
     }
 
+    /** Whether this call invokes a closure, as determined by the regular type check. */
     private boolean isClosureInvoke = false;
-    // Closure's external begin label (lextbef)
+    /**
+     * For a closure invocation, the principals in the closure's external begin label (lextbef),
+     * set by the IFC check. Code generation requires it.
+     */
     private List<String> closurePcExLeaves = null;
-    /** The invoked closure's declared type, kept for codegen. */
+    /**
+     * For a closure invocation, the invoked closure's declared type with its labels, set by the
+     * IFC check. Code generation requires it.
+     */
     private ClosureTypeSym closureSym = null;
+    /** The type of this call's result, once it has been IFC-checked. */
+    private TypeSym resultType;
 
     public Call() {
         this.args = new ArrayList<>();
@@ -102,22 +118,25 @@ public class Call extends TrailerExpr {
             // a.b(c), a must be a contract or an array
 
             extern = true;
-            if (!(att.value instanceof Name)) {
-                throw new SemanticException(
-                        "the receiver of a method call must be a variable", att.value.location);
-            }
-            String varName = ((Name) att.value).id; // a
-            // System.out.println(varName);
             funcName = att.attr.id; // b
-            Sym s = env.getCurSym(varName);
-            if (s == null) {
-                throw new SemanticException("variable not found: " + varName, att.value.location);
+            if (att.value instanceof Name n && env.getCurSym(n.id) == null) {
+                throw new SemanticException("variable not found: " + n.id, att.value.location);
             }
-            // logger.debug("var " + varName + ": " + s.getName());
-
-            if (!(s instanceof VarSym varSym)) {
-                throw new SemanticException("type error in call (callee must be a variable): ", this.location);
+            // The receiver is a variable, or a member or element of one.
+            VarSym varSym = att.value.getVarInfo(env);
+            if (varSym == null) {
+                throw new SemanticException(
+                        "the receiver of a method call must be a variable, a member, or an element",
+                        att.value.location);
             }
+            if (varSym.typeSym instanceof ArrayTypeSym) {
+                return resolveTo(new ArrayOperation(att.value, funcName, args), env, parent);
+            }
+            if (!(att.value instanceof Name)) {
+                att.value.genTypeConstraints(env, now);
+            }
+            String varName = varSym.getName();
+            Sym s;
 
             if (varSym.typeSym instanceof InterfaceSym contractSym) {
                 s = contractSym.getFunc(funcName);
@@ -126,59 +145,20 @@ public class Call extends TrailerExpr {
                         location);
                 funcSym = (FuncSym) s;
 
-            } else if (varSym.typeSym instanceof ArrayTypeSym arrayTypeSym) {
-                // TODO: change the hard-code style
-                // TODO: factor this block out into its own method
-                TypeSym arrayTSym = arrayTypeSym.valueType;
-                String arrayTName = arrayTSym.toSHErrLocFmt();
-                this.builtIn = true;
-                if (funcName.equals("pop")) {
-                    // return T
-                    if (!args.isEmpty()) throw new SemanticException("pop expects 0 arguments",
-                            this.location);
-                    env.addCons(now.genTypeConstraints(arrayTName, Relation.EQ, env, location));
-                    return now;
-                } else if (funcName.equals("push")) {
-                    // require one T, return void
-                    if (args.size() != 1) throw new SemanticException("push expects 1 argument",
-                            this.location);
-                    Expression arg = args.get(0);
-                    ScopeContext argContext = arg.genTypeConstraints(env, now);
-                    env.addCons(argContext.genTypeConstraints(arrayTName, Relation.GEQ, env, arg.location));
-                    TypeSym rtnTypeSym = (TypeSym) env.getSym(BuiltInT.VOID);
-                    env.addCons(now.genTypeConstraints(rtnTypeSym.toSHErrLocFmt(), Relation.EQ, env, location));
-                    return now;
-                } else if (funcName.equals("length")) {
-                    // return uint
-                    if (!args.isEmpty()) {
-                        throw new SemanticException("length expects 0 arguments",
-                                this.location);
-                    }
-                    TypeSym rtnTypeSym = (TypeSym) env.getSym(BuiltInT.UINT);
-                    env.addCons(now.genTypeConstraints(rtnTypeSym.toSHErrLocFmt(), Relation.EQ, env, location));
-                    return now;
-                } else {
-                    throw new SemanticException("type error: unknown array operator", this.location);
-                }
             } else if (varSym.typeSym instanceof ClosureTypeSym closureTypeSym) {
                 // c.invoke(args): args must match the still-unbound parameters; the call's type is the closure's return.
                 this.builtIn = true;
+                this.isClosureInvoke = true;
+                if (callSpec != null) {
+                    throw unsupportedSpec();
+                }
                 if (!funcName.equals("invoke")) {
                     throw new SemanticException("type error: unknown closure operator " + funcName, this.location);
                 }
-                if (args.size() != closureTypeSym.unboundParams.size()) {
-                    throw new SemanticException(
-                            "invoke argument count does not match the closure", this.location);
-                }
-                for (int i = 0; i < args.size(); ++i) {
-                    Expression arg = args.get(i);
-                    ScopeContext argContext = arg.genTypeConstraints(env, now);
-                    env.addCons(argContext.genTypeConstraints(
-                            closureTypeSym.unboundParams.get(i).toSHErrLocFmt(),
-                            Relation.GEQ, env, arg.location));
-                }
+                CallArguments.genTypeConstraints(args, closureTypeSym.unboundParams,
+                        "closure " + varName, env, now, location);
                 env.addCons(now.genTypeConstraints(
-                        closureTypeSym.returnType.toSHErrLocFmt(), Relation.EQ, env, location));
+                        closureTypeSym.returnType.toSHErrLocFmt(), Relation.EQ, env, location, "Invoking a closure returns the closure's return type"));
                 return now;
             } else {
                 throw new SemanticException("type error: " + varName + "." + funcName + "() " + varSym.typeSym.toSHErrLocFmt() + (varSym.typeSym instanceof ContractSym),
@@ -212,9 +192,10 @@ public class Call extends TrailerExpr {
             }
             if (!(s instanceof FuncSym)) {
                 if (s instanceof InterfaceSym || s instanceof BuiltinTypeSym) {
-                    env.addCons(now.genTypeConstraints(s.getName(), Relation.EQ, env, location));
-                    isCast = true;
-                    return now;
+                    if (args.size() != 1) {
+                        throw new SemanticException("cast must have one argument", location);
+                    }
+                    return resolveTo(new Cast((Name) value, args.get(0)), env, parent);
                 }
                 throw new SemanticException("contract not found: " + s.getName(),
                     location);
@@ -227,26 +208,21 @@ public class Call extends TrailerExpr {
         if (env.inConstructor() && !env.superCalled())
             throw new SemanticException("cannot call methods before super called in constructor: " + funcName,
                  location);
-        if (args.size() != funcSym.parameters.size())
-            throw new SemanticException("number of arguments does not match the number of parameters of the called method: " + funcName,
-                location);
         this.funcSym = funcSym;
 
-        if (extern && callSpec != null) {
+        if (callSpec != null) {
+            if (!extern) {
+                throw unsupportedSpec();
+            }
             callSpec.genTypeConstraints(env, now);
         }
-        // typecheck arguments
-        for (int i = 0; i < args.size(); ++i) {
-            Expression arg = args.get(i);
-            TypeSym paraInfo = funcSym.parameters.get(i).typeSym;
-            ScopeContext argContext = arg.genTypeConstraints(env, now);
-            String typeName = paraInfo.toSHErrLocFmt();
-            env.addCons(argContext.genTypeConstraints(typeName, Relation.GEQ, env, arg.location));
-        }
+        CallArguments.genTypeConstraints(args,
+                funcSym.parameters.stream().map(p -> p.typeSym).toList(),
+                "method " + funcName, env, now, location);
         String rtnTypeName = funcSym.returnType.toSHErrLocFmt();
-        env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location));
+        env.addCons(now.genTypeConstraints(rtnTypeName, Relation.EQ, env, location, "A call returns the return type of method " + funcName));
 
-        for (Map.Entry<ExceptionTypeSym, String> tl : funcSym.exceptions.entrySet()) {
+        for (Map.Entry<ExceptionTypeSym, Label> tl : funcSym.exceptions.entrySet()) {
             if (!parent.isCheckedException(tl.getKey(), extern)) {
                 throw new SemanticException("Unchecked exception: " + tl.getKey().getName(),
                     location);
@@ -276,7 +252,18 @@ public class Call extends TrailerExpr {
      *         operator other than {@code invoke}
      */
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position)
+            throws SemanticException {
+        if (form != null) {
+            return form.genIFConstraints(env, tail_position);
+        }
+        ExpOutcome result = callIFConstraints(env, tail_position);
+        // A call may assign to any field, so fields hold new principals afterwards.
+        env.havocFields();
+        return result;
+    }
+
+    private ExpOutcome callIFConstraints(VisitEnv env, boolean tail_position)
             throws SemanticException {
         //TODO: Assuming value is a Name for now
         Context beginContext = env.inContext; // (pc, lambda)
@@ -284,36 +271,26 @@ public class Call extends TrailerExpr {
                 Utils.getLabelNameLock(toSHErrLocFmt()));
         Map<String, String> dependentLabelMapping = new HashMap<>();
 
-        List<String> argValueLabelNames = new ArrayList<>();
-
         PathOutcome psi = new PathOutcome(new PsiUnit(endContext));
-
-        // Evaluate arguments from left to right with substituations.
-        ExpOutcome ao = null;
-        for (Expression arg : args) {
-            ao = arg.genIFConstraints(env, false);
-            psi.joinExe(ao.psi);
-            argValueLabelNames.add(ao.valueLabelName);
-
-            env.inContext = Utils.genNewContextAndConstraints(env, false,
-                    ao.psi.getNormalPath().c, beginContext.lambda, arg.nextPcSHL(), arg.location);
-//            env.inContext = new Context(
-//                    Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
-//                    beginContext.lambda);
-        }
+        CallArguments.Evaluated evaluated = CallArguments.evaluate(args, env, psi);
 
         String funcName;
         String ifNamePc; // currentMethod.PC
-        FuncSym funcSym;
+        FuncSym calleeSym;
         String namespace = "";
-        Label ifFuncCallPcBefore, ifFuncCallPcAfter, ifFuncGammaLock;
+        Label ifFuncCallPcBefore, ifFuncGammaLock;
 
         ExpOutcome vo = null;
 
-        boolean externalCall = false;
-        InterfaceSym externalContractSym = null;
-        VarSym externalTargetSym = null;
+        // The receiver of the call: the contract whose method is called, the label of the
+        // reference to it, and the principal it holds. An internal call's receiver is this
+        // contract itself.
+        InterfaceSym calleeContract;
+        Callee callee;
         String ifContRtn = null;
+        String receiverPrincipal = null; // the principal the receiver holds, if it is a variable
+        // The principal the callee's sender stands for.
+        String senderPrincipal;
 
         if (!(value instanceof Name)) {
             if (!(value instanceof Attribute att)) {
@@ -323,225 +300,44 @@ public class Call extends TrailerExpr {
             // case 1: a.b(c) where a is a contract or an array, b is a function and c are the arguments
             // att = a.b
 
-            externalCall = true;
-
             // evaluate a.b
             vo = att.value.genIFConstraints(env, false);
             psi.joinExe(vo.psi);
             ifContRtn = vo.valueLabelName; // a..lbl
+            receiverPrincipal = att.value.principalName(env);
 
-            //TODO: assuming a's depth is 1
-            String varName = ((Name) att.value).id; // a
             funcName = (att.attr).id; // b
-            VarSym var = env.getVar(varName);
+            TypeSym receiverType = att.value.type();
 
-            if (var.typeSym instanceof ArrayTypeSym arrayTypeSym) {
-                // case 1a: a is an array (terminating branch)
-
-                TypeSym arrayTSym = arrayTypeSym.valueType;
-                String arrayTName = arrayTSym.toSHErrLocFmt();
-
-                //TODO: change the hard-code style
-                if (funcName.equals("pop")) {
-                    // requires pc => integrity of the array var
-                    Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
-                    ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-                    env.checkFlow(ifNamePc, ifContRtn, location,
-                            "Current control flow must be trusted to call this method");
-                    // pc => l
-                    if (!tail_position) {
-                        env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
-                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
-                    }
-                    return new ExpOutcome(ifNamePc, psi);
-                } else if (funcName.equals("push")) {
-                    // require pc => integrity of the array var
-                    // require the element => integrity of the array var
-                    Expression arg = args.get(0);
-                    ExpOutcome argOutcome = arg.genIFConstraints(env, false);
-                    psi.join(argOutcome.psi);
-                    String argLabel = argOutcome.valueLabelName;
-                    Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
-                    ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-                    env.checkFlow(ifNamePc, var.ifl.toSHErrLocFmt(), location,
-                            "Current control flow must be trusted to call this method");
-                    // pc => ?
-                    env.checkFlow(argLabel, var.ifl.toSHErrLocFmt(), location,
-                            "Current control flow must be trusted to call this method");
-                    if (!tail_position) {
-                        env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
-                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
-                    }
-                    return new ExpOutcome(ifNamePc, psi);
-                } else if (funcName.equals("length")) {
-                    // return uint the same as
-                    Utils.contextFlow(env, psi.getNormalPath().c, endContext, location);
-                    ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-                    if (!tail_position) {
-                        env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
-                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
-                    }
-                    return new ExpOutcome(var.ifl.toSHErrLocFmt(), psi);
-                } else {
-                    throw new SemanticException("Unrecognized operator", location);
-                }
-            } 
-            
-            if (var.typeSym instanceof ClosureTypeSym cs) {
-                // case 1b: a is a closure value; a.invoke(args) (terminating branch)
-
+            if (receiverType instanceof ClosureTypeSym cs) {
+                // case 1b: a is a closure value; a.invoke(args) calls the closure's target, with
+                // the closure's labels, which are already in this contract's terms.
                 if (!funcName.equals("invoke")) {
                     throw new SemanticException(
                             "type error: unknown closure operator " + funcName, location);
                 }
-
-                this.builtIn = true;
-                this.isClosureInvoke = true;
                 this.closureSym = cs;
-                cs.registerAtoms(env);
-
-                // lextbef
                 this.closurePcExLeaves = cs.pcEx().principalLeaves();
+                cs.registerAtoms(env);
                 ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-                dependentLabelMapping.put(env.curContractSym().invoker().toSHErrLocFmt(), env.thisSym().toSHErrLocFmt());
-
-                // Each invoke argument naming a principal fills its
-                // positional binder in the closure's labels. An argument
-                // for a label-referenced slot must name a principal (the
-                // dependent-map key rule).
-                List<VarSym> binders = cs.binderSyms();
-                for (int i = 0; i < args.size() && i < binders.size(); i++) {
-                    VarSym binder = binders.get(i);
-                    if (binder == null) {
-                        continue;
-                    }
-                    Expression principalExp = args.get(i);
-                    if (principalExp instanceof Call cast && cast.isCast(env)) {
-                        principalExp = cast.getArgAt(0);
-                    }
-                    VarSym actual = principalExp instanceof Name an ? env.getVar(an.id) : null;
-                    if (actual != null && actual.isPrincipalVar()) {
-                        dependentLabelMapping.put(binder.toSHErrLocFmt(),
-                                actual.toSHErrLocFmt());
-                    } else if (cs.referencesBinder(binder)) {
-                        throw new SemanticException(
-                                "must use a final address/contract for the "
-                                        + Utils.ordNumString(i + 1)
-                                        + " invoke argument: the closure's labels depend on it",
-                                args.get(i).location);
-                    }
-                }
-
-                String pcExStr = cs.pcEx().toSHErrLocFmt(dependentLabelMapping);
-                // pc_2 dropped
-                // String pcInStr  = cs.pcIn().toSHErrLocFmt(dependentLabelMapping);
-                String gammaStr = cs.callGamma().toSHErrLocFmt(dependentLabelMapping);
-                String retStr = cs.endPc().toSHErrLocFmt(dependentLabelMapping);
-
-                for (int i = 0; i < args.size(); i++) {
-                    Expression arg = args.get(i);
-                    String argValue = argValueLabelNames.get(i);
-                    String argLabelStr = cs.getLabelArg(i).toSHErrLocFmt(dependentLabelMapping);
-                    // argValue => paramLabel[i]
-                    env.checkFlow(argValue, argLabelStr, arg.location, "Input to the "
-                            + Utils.ordNumString(i + 1)
-                            + " invoke argument must be trusted enough");
-                    
-                    // pc => paramLabel[i]
-                    env.checkFlow(ifNamePc, argLabelStr, arg.location,
-                            "Current control flow must be trusted to feed the "
-                            + Utils.ordNumString(i + 1) + "-th invoke argument");
-                }
-
-                // Authorization to make the call
-
-                // closureValueLabel => pc_ex
-                env.checkFlow(ifContRtn, pcExStr, location,
-                        "Closure value must be trusted enough to invoke");
-
-                // pc => pc_ex
-                env.checkFlow(ifNamePc, pcExStr, location,
-                        "Current control flow must be trusted to invoke this closure");
-
-                // pc_2 dropped
-                // // pc_ex => pc_in ∨ lambda_caller
-                // env.cons.add(new Constraint(
-                //         new Inequality(pcExStr,
-                //                 Utils.joinLabels(pcInStr, beginContext.lambda)),
-                //         env.hypothesis(), location, env.curContractSym().getName(),
-                //         "Invoking this closure does not respect static reentrancy locks"));
-
-                // Post-call Psi — normal path: (pc ⊔ l_nθ_u ⊔ ℓ, gamma).
-                // B.8 / advisor item (3): the continuation is floored by the
-                // caller's pc, the believed return label, and the closure's
-                // value label. pc_ex is an entry requirement (gate premise +
-                // runtime witness), not a taint source; joining it here would
-                // nullify callee-declared autoendorsement (any-entry methods
-                // would taint every caller's continuation to any).
-                String preCallPc = psi.getNormalPath().c.pc;
-                String postPcJoin = Utils.joinLabels(
-                        Utils.joinLabels(preCallPc, retStr),
-                        ifContRtn);
-                PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
-                        postPcJoin, gammaStr)));
-
-                // TODO: 
-                // closureValueLabel ⊔ gamma == post-call lambda
-                env.checkEqual(Utils.joinLabels(ifContRtn, gammaStr), endContext.lambda, location,
-                        "Invoking this closure does not respect static reentrancy locks");
-
-                if (!tail_position) {
-                    env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
-                            Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION); // normal psi.lock => pre-call lamnbda
-                }
-
-                // Finalize
-                String ifNameFuncRtnValue = retStr;
-                psi.joinExe(expPsi);
-                // contextFlow would route the pc edge into trustCons, which
-                // createDiagnoser hands to SHErrLoc as ASSUMPTIONS — granting
-                // the flow instead of checking it (found 2026-07-19; the Ψ
-                // floor was unenforced for every call). Emit the lock edge on
-                // the usual assumption channel but the pc floor as a CHECKED
-                // constraint.
-                env.checkTrustedBy(psi.getNormalPath().c.lambda, endContext.lambda, location,
-                        "actually maintained lock of final sub-statement must flow to that of parent statement");
-                // Emitted component-wise: a join on the left of ≤ can slip
-                // through the solver unchecked (see IMPLEMENTATION.md,
-                // string-emission landmines).
-                env.checkFlow(preCallPc, endContext.pc, location,
-                        "Post-invocation control flow must carry the pre-call control flow");
-                env.checkFlow(retStr, endContext.pc, location,
-                        "Post-invocation control flow must carry the closure's return label");
-                env.checkFlow(ifContRtn, endContext.pc, location,
-                        "Post-invocation control flow must carry the closure's value label");
-                psi.setNormalPath(endContext);
-                env.checkFlow(psi.getNormalPath().c.pc, ifNameFuncRtnValue, location, "ln_to_t");
-                return new ExpOutcome(ifNameFuncRtnValue, psi);
+                callee = Callee.ofClosure(cs, env.curContractSym().invoker());
+                calleeContract = null;
+                // The closure's target is called with this contract as its invoker.
+                senderPrincipal = env.thisSym().toSHErrLocFmt();
+            } else {
+                // case 1c: external call
+                TypeSym conType = receiverType;
+                namespace = conType.getName();
+                env.addSigReq(namespace, conType.getName());
+                ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
+                calleeContract = env.getContract(conType.getName());
+                calleeSym = calleeContract.getFunc(funcName);
+                if (calleeSym == null)
+                    throw new SemanticException("not found: " + conType.getName() + "." + funcName, location);
+                callee = Callee.ofMethod(calleeSym, calleeContract);
+                // The callee's sender is this contract.
+                senderPrincipal = env.thisSym().toSHErrLocFmt();
             }
-
-            // case 1c: external call
-            // look up funcSym, update dependentLabelMapping, and read labels from funcSym
-
-            externalTargetSym = var;
-            namespace = var.toSHErrLocFmt();
-            TypeSym conType = var.typeSym;
-            externalContractSym = env.getContract(conType.getName());
-
-            env.addSigReq(namespace, conType.getName());
-            ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
-            InterfaceSym contractSym = env.getContract(conType.getName());
-            funcSym = contractSym.getFunc(funcName);
-            if (funcSym == null)
-                throw new SemanticException("not found: " + conType.getName() + "." + funcName, location);
-
-            dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(), env.thisSym().toSHErrLocFmt());
-            dependentLabelMapping.put(contractSym.any().toSHErrLocFmt(), env.curContractSym().any().toSHErrLocFmt());
-            dependentLabelMapping.put(contractSym.invoker().toSHErrLocFmt(), env.curContractSym().invoker().toSHErrLocFmt());
-
-            ifFuncCallPcBefore = funcSym.externalPc();
-            ifFuncCallPcAfter = funcSym.internalPc();
-            ifFuncGammaLock = funcSym.callGamma();
         } else {
             // case 2: a(b) - local contract call or type cast
             funcName = ((Name) value).id;
@@ -551,43 +347,35 @@ public class Call extends TrailerExpr {
             ifNamePc = Utils.getLabelNamePc(scopeContext.getSHErrLocName());
 
             if (!env.containsFunc(funcName)) {
-                if (env.containsContract(funcName) || Utils.isPrimitiveType(funcName)) { 
-                    // case 2a: type cast (terminating branch)
-                    
-                    if (args.size() != 1) {
-                        throw new SemanticException("cast must have one argument", location);
-                    }
-
-                    String ifNameArgValue = argValueLabelNames.get(0);
-                    Utils.contextFlow(env, psi.getNormalPath().c, endContext,
-                            args.get(0).location);
-                    // env.outContext = endContext;
-                    if (!tail_position) {
-                        env.checkFlow(psi.getNormalPath().c.lambda, beginContext.lambda, location,
-                                Utils.ERROR_MESSAGE_LOCK_IN_NONLAST_OPERATION);
-                    }
-                    return new ExpOutcome(ifNameArgValue, psi);
-                } else {
-                    throw new SemanticException("method not found: " + funcName, location);
-                }
+                throw new SemanticException("method not found: " + funcName, location);
             }
 
-            // case 2b: local call
+            // case 2b: internal call, whose receiver is this contract
 
-            funcSym = env.getFunc(funcName);
-
-//            dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(), env.sender().toSHErrLocFmt());
-            dependentLabelMapping.put(funcSym.sender().toSHErrLocFmt(), env.inContext.pc);
-
-            ifFuncCallPcBefore = funcSym.externalPc();
-            ifFuncCallPcAfter = funcSym.internalPc();
-            ifFuncGammaLock = funcSym.callGamma();
+            calleeSym = env.getFunc(funcName);
+            calleeContract = env.curContractSym();
+            callee = Callee.ofMethod(calleeSym, calleeContract);
+            ifContRtn = env.thisSym().toSHErrLocFmt();
+            receiverPrincipal = env.thisSym().toSHErrLocFmt();
+            // The callee runs with the current sender, so its demands on the sender are met
+            // with the authority of the current control flow.
+            senderPrincipal = env.inContext.pc;
         }
+
+        if (calleeContract != null) {
+            dependentLabelMapping.put(calleeContract.any().toSHErrLocFmt(),
+                    env.curContractSym().any().toSHErrLocFmt());
+            dependentLabelMapping.put(calleeContract.invoker().toSHErrLocFmt(),
+                    env.curContractSym().invoker().toSHErrLocFmt());
+        }
+        dependentLabelMapping.put(callee.sender(), senderPrincipal);
+        ifFuncCallPcBefore = callee.externalPc();
+        ifFuncGammaLock = callee.gamma();
 
         // build hypothesis for sender and this
         // make sender equal to this
 //        Inequality senderHypo = new Inequality(
-//                funcSym.sender().toSHErrLocFmt(),
+//                calleeSym.sender().toSHErrLocFmt(),
 //                CompareOperator.Eq,
 //                env.curContractSym.toSHErrLocFmt()
 //        );
@@ -595,118 +383,88 @@ public class Call extends TrailerExpr {
         // ++createdHypoCount;
 
         // Evaluate callSpec
-        if (externalCall && callSpec != null) {
+        if (callSpec != null) {
             PathOutcome co = callSpec.genIFConstraints(env, false);
             psi.joinExe(co);
             env.inContext = Utils.genNewContextAndConstraints(env, false, co.getNormalPath().c, beginContext.lambda, callSpec.nextPcSHL(), callSpec.location);
         }
         
-        // if external call and the target address is final, make callee.this equal to the target address
-        if (externalCall) {
-            if (externalTargetSym.isFinal) {
-                dependentLabelMapping.put(
-                        externalContractSym.thisSym().toSHErrLocFmt(),
-                        externalTargetSym.toSHErrLocFmt());
-            } else {
-                dependentLabelMapping.put(
-                        externalContractSym.thisSym().toSHErrLocFmt(),
-                        ifContRtn); // XXX is this correct? Seems like this is the label of the contract value.
-            }
+        // The callee's labels are instantiated differently in input and output positions.
+        // Its inputs (argument labels, external pc) are demands it makes of this caller,
+        // so there the callee's `this` is the callee itself: the principal the receiver
+        // holds. This contract can meet those demands only with what it trusts itself,
+        // since it is the top principal here. Its outputs (return label, post-call pc,
+        // lock label) are promises trusted only as much as the callee, which acts for the
+        // label of the reference used to call it, so there its `this` becomes that label.
+        // A principal parameter of the callee names the principal passed for it. If that
+        // is unknown, the callee's demands are taken to name the most trusted principal and
+        // its promises the least trusted one.
+        Map<String, String> inputMapping = new HashMap<>(dependentLabelMapping);
+        Map<String, String> outputMapping = new HashMap<>(dependentLabelMapping);
+        CallArguments.mapPrincipals(callee.principalParams(), evaluated,
+                env.curContractSym().top().toSHErrLocFmt(), inputMapping);
+        CallArguments.mapPrincipals(callee.principalParams(), evaluated,
+                env.curContractSym().any().toSHErrLocFmt(), outputMapping);
+        if (callee.thisSym() != null) {
+            inputMapping.put(callee.thisSym(), receiverPrincipal != null
+                    ? receiverPrincipal : env.thisSym().toSHErrLocFmt());
+            outputMapping.put(callee.thisSym(), ifContRtn);
         }
+        // Whatever the callee's labels say, its results are trusted no more than the
+        // reference used to call it.
+        String calleeTrust = ifContRtn;
 
         // Generate constraints on arguments
 
-//        System.err.println("Call: " + funcName);
+        CallArguments.checkFlowInto(args, evaluated, ifNamePc, callee.paramLabels(),
+                inputMapping, "", env);
         for (int i = 0; i < args.size(); ++i) {
             Expression arg = args.get(i);
-            VarSym argSym = funcSym.parameters.get(i);
-            if (argSym.isPrincipalVar()) {
-
-                if (arg instanceof Name) {
-                    VarSym valueSym = (VarSym) env.getVar(((Name) arg).id);
-                    if (valueSym.isPrincipalVar()) {
-//                        System.err.println("dependent " + argSym.typeSym + " -> " + valueSym.toSHErrLocFmt());
-                        dependentLabelMapping.put(argSym.toSHErrLocFmt(), valueSym.toSHErrLocFmt());
-                    }
-                }
-                // TODO: Do we throw exception if arg is not a Name?
-            }
-
-            // env.prevContext = prevContext = tmp;
-            String ifNameArgValue = argValueLabelNames.get(i); // argument's label name
-            Label ifArgLabel = funcSym.getLabelArg(i); // parameter's label
-            assert ifArgLabel != null : argSym.getName();
-            env.checkFlow(ifNameArgValue, ifArgLabel.toSHErrLocFmt(dependentLabelMapping),
-                    arg.location, "Input to the " + Utils.ordNumString(i + 1)
-                    + " argument must be trusted enough"); // arglbl => paramlbl
-            env.checkFlow(ifNamePc, ifArgLabel.toSHErrLocFmt(dependentLabelMapping), arg.location,
-                    "Current control flow must be trusted to feed the " + Utils.ordNumString(i + 1)
-                    + "-th argument value"); // pc => paramlbl
-
-            if (argSym.typeSym instanceof ClosureTypeSym paramCs) {
-                ClosureCreation.checkFlowInto(arg, paramCs, dependentLabelMapping, env, arg.location,
-                        "Closure value flowing into the " + Utils.ordNumString(i + 1) + " argument must subtype its slot");
+            if (callee.paramTypes().get(i) instanceof ClosureTypeSym paramCs) {
+                ClosureCreation.checkFlowInto(arg, paramCs, inputMapping, env, arg.location,
+                        "The closure passed as the " + Utils.ordNumString(i + 1) + " argument must be compatible with the type of its parameter");
             }
         }
 
         // Generate pre-call and post-call constraints and contexts
 
-        if (externalCall) {
-//            String tem = ((Attribute) value).value.toSHErrLocFmt();
-            env.checkFlow(ifContRtn, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
-                    location, "Target contract must be trusted to call this method"); // target address..lbl => pc_ex
-        }
+        env.checkFlow(ifContRtn, ifFuncCallPcBefore.toSHErrLocFmt(inputMapping),
+                location, "The reference used to call this method must be trusted at its external begin label"); // target address..lbl => pc_ex
 
 
+        String postCallLock = attenuate(ifFuncGammaLock.toSHErrLocFmt(outputMapping), calleeTrust);
         PathOutcome expPsi = new PathOutcome(new PsiUnit(new Context(
-                Utils.joinLabels(psi.getNormalPath().c.pc, funcSym.endPc().toSHErrLocFmt(dependentLabelMapping)),
-//                funcSym.getLabelNameCallGamma()
-                ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)
-        ))); // post-call psi = (current normal path pc ⊔ function return label, gamma)
+                attenuate(Utils.joinLabels(psi.getNormalPath().c.pc,
+                        callee.returnLabel().toSHErrLocFmt(outputMapping)), calleeTrust),
+                postCallLock
+        ))); // post-call psi = (current normal path pc ⊔ function end pc, gamma), attenuated
 
-        for (Entry<ExceptionTypeSym, String> exp : funcSym.exceptions.entrySet()) {
-            ExceptionTypeSym curSym = exp.getKey();
-            String expLabelName = exp.getValue();
-            // pc_2 dropped
-            // expPsi.set(curSym, new PsiUnit(
-            //         new Context(
-            //                 Utils.joinLabels(expLabelName, funcSym.externalPcSLC()),
-            //                 Utils.joinLabels(ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping),
-            //                         ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping))),
-            //         true)
-            //     ); // exception-path post-call psi = (function exception-path pc ⊔ pc_ex,
-            //         // gamma ⊔ pc_in)
-            expPsi.set(curSym, new PsiUnit(
+        checkExceptionData(env, callee.exceptions().keySet(), outputMapping);
+        for (Entry<ExceptionTypeSym, Label> exp : callee.exceptions().entrySet()) {
+            // exception-path post-call psi = (current pc ⊔ declared exception label, gamma),
+            // attenuated like the normal path
+            expPsi.set(exp.getKey(), new PsiUnit(
                     new Context(
-                            Utils.joinLabels(expLabelName, funcSym.externalPcSLC()),
-                            ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
-                    true)
-                ); // exception-path post-call psi = (function exception-path pc ⊔ pc_ex, gamma)
-                    // TODO: should pc label get joined by pc_ex, or psi.normal.pc?
-                    //TODO: dependent
-            //PsiUnit psiUnit = env.psi.get(curSym);
-            //env.cons.add(new Constraint(new Inequality(Utils.makeJoin(expLabelName, ifNameFuncCallPcAfter), psiUnit.pc), env.hypothesis, location, env.curContractSym.name,
-            //"Exception " + curSym.name + " is not trusted enough to throw"));
+                            attenuate(Utils.joinLabels(psi.getNormalPath().c.pc,
+                                    exp.getValue().toSHErrLocFmt(outputMapping)), calleeTrust),
+                            postCallLock),
+                    true));
         }
 
         //TODO
 
-        env.checkFlow(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping), location,
-                "Current control flow must be trusted to call this method"); // current pc => pc_ex
+        env.checkFlow(ifNamePc, ifFuncCallPcBefore.toSHErrLocFmt(inputMapping), location,
+                "Control flow must be trusted at the external begin label of the method called"); // current pc => pc_ex
         // pc_2 dropped
         // env.cons.add(new Constraint(new Inequality(ifFuncCallPcBefore.toSHErrLocFmt(dependentLabelMapping),
         //         Utils.joinLabels(ifFuncCallPcAfter.toSHErrLocFmt(dependentLabelMapping), beginContext.lambda)), env.hypothesis(),
         //         location, env.curContractSym().getName(),
-        //         "Calling this function does not respect static reentrancy locks")
+        //         "The method called maintains only its reentrancy lock label, trusted no more than the reference used to call it")
         //     ); // pc_ex => pc_in ⊔ caller's lambda
 
-        if (externalCall) {
-            // target address..lbl ⊔ gamma == post-call lambda
-            env.checkEqual(
-                    Utils.joinLabels(ifContRtn, ifFuncGammaLock.toSHErrLocFmt(dependentLabelMapping)),
-                    endContext.lambda, location,
-                    "Calling this function does not respect static reentrancy locks");
-        }
+        // callee trust ⊔ gamma == post-call lambda
+        env.checkEqual(postCallLock, endContext.lambda, location,
+                "The method called maintains only its reentrancy lock label, trusted no more than the reference used to call it");
 
         if (!tail_position) {
 //            env.cons.add(new Constraint(
@@ -724,11 +482,12 @@ public class Call extends TrailerExpr {
 
         // Finalize
 
-        String ifNameFuncRtnValue = funcSym.rtn.toSHErrLocFmt(dependentLabelMapping);
+        String ifNameFuncRtnValue = attenuate(callee.returnLabel().toSHErrLocFmt(outputMapping),
+                calleeTrust);
 
         // realLabels
-        if (funcSym.returnType instanceof ClosureTypeSym retCs) {
-            this.realLabels = retCs.renderLabels(dependentLabelMapping);
+        if (callee.returnType() instanceof ClosureTypeSym retCs) {
+            this.realLabels = retCs.renderLabels(outputMapping);
         }
 
         psi.joinExe(expPsi);
@@ -736,8 +495,106 @@ public class Call extends TrailerExpr {
         psi.setNormalPath(endContext);
         // post-call pc (normal) => function return label (l_n)
         env.checkFlow(psi.getNormalPath().c.pc, ifNameFuncRtnValue, location,
-                "Control flow after this call must be trusted by the function's return value label");
+                "The result of a call is trusted no more than control flow after the call");
+        resultType = callee.returnType();
         return new ExpOutcome(ifNameFuncRtnValue, psi);
+    }
+
+    /**
+     * Checks that the data of each exception in {@code exceptions}, which the callee may throw, is
+     * trusted at the labels this contract's declaration of that exception gives it, since
+     * handlers here read it at those labels. The callee's labels are instantiated with
+     * {@code outputMapping}, with its exception's principal parameters standing for the
+     * corresponding parameters of this contract's declaration.
+     */
+    private void checkExceptionData(VisitEnv env, java.util.Set<ExceptionTypeSym> exceptions,
+            Map<String, String> outputMapping) {
+        // A handler reads each field at its label joined with the label of the exception's
+        // path, which is attenuated by the callee's trust, so the data is too.
+        for (ExceptionTypeSym calleeExp : exceptions) {
+            ExceptionTypeSym localExp = env.getExp(calleeExp.getName());
+            if (localExp == null) {
+                throw new AssertionError("exception " + calleeExp.getName()
+                        + " of an external call has no local declaration");
+            }
+            Map<String, String> mapping = new HashMap<>(outputMapping);
+            for (int i = 0; i < calleeExp.parameters().size(); ++i) {
+                VarSym calleeParam = calleeExp.parameters().get(i);
+                if (calleeParam.isPrincipalTyped()) {
+                    mapping.put(calleeParam.toSHErrLocFmt(), env.freshPrincipal(
+                            localExp.parameters().get(i).toSHErrLocFmt()));
+                }
+            }
+            for (int i = 0; i < calleeExp.parameters().size(); ++i) {
+                VarSym calleeParam = calleeExp.parameters().get(i);
+                VarSym localParam = localExp.parameters().get(i);
+                env.checkFlow(calleeParam.ifl.toSHErrLocFmt(mapping),
+                        localParam.ifl.toSHErrLocFmt(), location,
+                        "Data of exception " + calleeExp.getName()
+                                + " from this call must be trusted at its declared label here");
+            }
+        }
+    }
+
+    /**
+     * What the call rule needs to know about a callee, whether a method or a closure's target.
+     *
+     * @param paramLabels the label of each parameter
+     * @param principalParams the principal each parameter binds, or null for a parameter that
+     *        binds none
+     * @param paramTypes the type of each parameter
+     * @param externalPc the label the caller's control flow must be trusted at
+     * @param gamma the lock label of the call
+     * @param returnLabel the label of the result, which is also the end pc
+     * @param returnType the type of the result
+     * @param exceptions the exceptions the callee may throw, each with its label
+     * @param sender the SHErrLoc name of the principal that stands for the caller in the
+     *        callee's labels
+     * @param thisSym the SHErrLoc name of the callee's {@code this}, or null if its labels are
+     *        already in this contract's terms
+     */
+    private record Callee(List<Label> paramLabels, List<VarSym> principalParams,
+            List<TypeSym> paramTypes, Label externalPc, Label gamma, Label returnLabel,
+            TypeSym returnType, Map<ExceptionTypeSym, Label> exceptions, String sender,
+            String thisSym) {
+
+        /** The callee for a call of method {@code method} of contract {@code contract}. */
+        static Callee ofMethod(FuncSym method, InterfaceSym contract) {
+            List<Label> labels = new ArrayList<>();
+            List<VarSym> principals = new ArrayList<>();
+            List<TypeSym> types = new ArrayList<>();
+            for (int i = 0; i < method.parameters.size(); ++i) {
+                VarSym param = method.parameters.get(i);
+                labels.add(method.getLabelArg(i));
+                principals.add(param.isPrincipalTyped() ? param : null);
+                types.add(param.typeSym);
+            }
+            return new Callee(labels, principals, types, method.externalPc(), method.callGamma(),
+                    method.endPc(), method.returnType, method.exceptions,
+                    method.sender().toSHErrLocFmt(), contract.thisSym().toSHErrLocFmt());
+        }
+
+        /**
+         * The callee for an invocation of a closure of type {@code type}, whose labels name
+         * the closure's invoker as {@code invoker}.
+         */
+        static Callee ofClosure(ClosureTypeSym type, VarSym invoker) {
+            List<Label> labels = new ArrayList<>();
+            for (int i = 0; i < type.unboundParams.size(); ++i) {
+                labels.add(type.getLabelArg(i));
+            }
+            return new Callee(labels, type.binderSyms(), type.unboundParams, type.pcEx(),
+                    type.callGamma(), type.endPc(), type.returnType, Map.of(),
+                    invoker.toSHErrLocFmt(), null);
+        }
+    }
+
+    /**
+     * The label {@code label} trusted no more than {@code trust}, or {@code label} itself if
+     * {@code trust} is null. {@code trust} may be null.
+     */
+    private static String attenuate(String label, String trust) {
+        return trust == null ? label : Utils.joinLabels(label, trust);
     }
 
     /**
@@ -762,7 +619,15 @@ public class Call extends TrailerExpr {
 
     @Override
     public compile.ast.Expression solidityCodeGen(List<Statement> result, CompileEnv code) {
+        if (form != null) {
+            return form.solidityCodeGen(result, code);
+        }
         if (isClosureInvoke) {
+            if (closureSym == null || closurePcExLeaves == null) {
+                throw new AssertionError(
+                        "code generation for a closure invocation requires the IFC check: "
+                                + location);
+            }
             assert value instanceof Attribute;
             compile.ast.Expression closureExp = ((Attribute) value).value.solidityCodeGen(result, code);
 
@@ -837,7 +702,7 @@ public class Call extends TrailerExpr {
         compile.ast.Call callExp;
         String funcName;
         // hash the name if not private method
-        if (builtIn || isCast) {
+        if (builtIn) {
             funcName = value instanceof Name ? ((Name) value).id : ((Attribute) value).attr.id;
         } else {
             assert funcSym != null;
@@ -857,16 +722,13 @@ public class Call extends TrailerExpr {
             assert value instanceof Attribute;
             compile.ast.Expression target = ((Attribute) value).value.solidityCodeGen(result, code);
             // String funcName = ((Attribute) value).attr.id;
-            if (builtIn && funcName.equals("length")) {
-                return new Attr(target, funcName);
-            }
             callExp = new ExternalCall(target, funcName, argumentExps, callSpec != null ? callSpec.solidityCodeGen(result, code) : null);
         }
         assert ntced : "funcSym being null: " + callExp.toSolCode() + " " + builtIn;
         assert !(funcName.equals("send") && !builtIn);
         if (builtIn) {
             return compile.Utils.translateBuiltInFunc(callExp);
-        } else if (isCast || funcSym.exceptions.size() == 0) {
+        } else if (funcSym.exceptions.size() == 0) {
             return callExp;
         } else {
             // statVar, dataVar = call(...);
@@ -890,7 +752,7 @@ public class Call extends TrailerExpr {
             // map exceptionID
             IfStatement mapExpIds = null;
             int i = 1;
-            for (Entry<ExceptionTypeSym, String> entry: funcSym.exceptions.entrySet()) {
+            for (Entry<ExceptionTypeSym, Label> entry: funcSym.exceptions.entrySet()) {
                 IfStatement ifexp = new IfStatement(
                         new BinaryExpression(compile.Utils.SOL_BOOL_EQUAL, statVar, new Literal(String.valueOf(i))),
                         List.of(new Assign(statVar, new Literal(String.valueOf(code.getExceptionId(entry.getKey()))))),
@@ -980,26 +842,9 @@ public class Call extends TrailerExpr {
         return true;
     }
 
-    /**
-     * Check if a type cast
-     */
-    public boolean isCast(VisitEnv env) {
-        if (value instanceof Name) {
-            // a(b)
-            String funcName = ((Name) value).id;
-            Sym s = env.getCurSym(funcName);
-            assert s != null;
-            if (!(s instanceof FuncSym)) {
-                if (s instanceof InterfaceSym || s instanceof BuiltinTypeSym) {
-                    return true;
-                }
-                throw new AssertionError("callee is neither a method nor a type: " + funcName);
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
+    @Override
+    public String principalName(VisitEnv env) {
+        return form != null ? form.principalName(env) : null;
     }
 
     public boolean isExternal() {
@@ -1008,9 +853,18 @@ public class Call extends TrailerExpr {
 
     @Override
     public java.util.Map<String, compile.ast.Type> readMap(CompileEnv code) {
+        if (form != null) {
+            return form.readMap(code);
+        }
         Map<String, Type> result = new HashMap<>();
+        if (value instanceof Attribute att) {
+            result.putAll(att.value.readMap(code));
+        }
         for (Expression arg: args) {
             result.putAll(arg.readMap(code));
+        }
+        if (callSpec != null) {
+            result.putAll(callSpec.readMap(code));
         }
         return result;
     }
@@ -1021,5 +875,32 @@ public class Call extends TrailerExpr {
                 name.id = Utils.genSuperName(extendsContractName);
             }
         }
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        return form != null ? form.type() : resultType;
+    }
+
+    /**
+     * Resolves this expression to {@code form}, which takes its place in every later pass, and
+     * generates the type constraints of {@code form} in the scope context {@code parent}.
+     */
+    /** The error for a call spec on a call that is not a call of another contract's method. */
+    private SemanticException unsupportedSpec() {
+        return new SemanticException(
+                "call options such as value apply only to calls of another contract's methods",
+                callSpec.location);
+    }
+
+    private ScopeContext resolveTo(Expression form, NTCEnv env, ScopeContext parent)
+            throws SemanticException {
+        if (callSpec != null) {
+            throw unsupportedSpec();
+        }
+        this.form = form;
+        form.setLoc(location);
+        form.scopeContext = scopeContext;
+        return form.genTypeConstraints(env, parent);
     }
 }

@@ -1,0 +1,5 @@
+import "./NoSuchFile.scif";
+// An imported file does not exist.
+contract ImportMissing_W01 {
+    constructor() { super(); }
+}

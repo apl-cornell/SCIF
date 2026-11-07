@@ -10,6 +10,8 @@ contract LocalTrust {
     uint{high} a;
     uint{low} b;
 
+    constructor() { super(); }
+
     public void assignBtoA() {
         a = b;
     }

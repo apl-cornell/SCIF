@@ -1,0 +1,19 @@
+// An exception thrown in a handler leaves the method on its path, which is
+// trusted no more than the exception the handler caught.
+contract HandlerThrowLow_W01 {
+    exception E();
+    exception F();
+    constructor() { super(); }
+
+    void g{this}() throws (E{any}) {
+        throw E();
+    }
+
+    public void f{this}() throws (F{this}) {
+        try {
+            g();
+        } catch (E e) {
+            throw F();
+        }
+    }
+}
