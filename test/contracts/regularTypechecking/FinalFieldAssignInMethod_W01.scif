@@ -1,0 +1,6 @@
+// Only the constructor initializes a final field.
+contract FinalFieldAssignInMethod_W01 {
+    final address owner;
+    constructor() { super(); owner = sender; }
+    public void f() { owner = sender; }
+}

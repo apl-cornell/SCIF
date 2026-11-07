@@ -1,0 +1,15 @@
+import "./IOracle.scif";
+// A reference held in an untrusted member is untrusted, so the results of calls
+// through it are not trusted.
+contract CallMemberReceiverLow_W01 {
+    struct Feed {
+        IOracle{any} oracle;
+    }
+    Feed feed;
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}() {
+        secret = feed.oracle.price();
+    }
+}

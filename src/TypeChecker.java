@@ -320,8 +320,10 @@ public class TypeChecker {
                 for (Constraint c : trustCons) System.err.println("DBGTRUST[" + methodName + "] " + c.toSherrlocFmt(true));
                 for (Sym s : env.principalSet()) System.err.println("DBGCTOR[" + methodName + "] " + s.toSHErrLocFmt());
                 for (String a : env.rigidAtoms()) System.err.println("DBGATOM[" + methodName + "] " + a);
+                for (String v : env.versionNames()) System.err.println("DBGVER[" + methodName + "] " + v);
             }
-            SherrlocDiagnoser sherrlocDiagnoser = Utils.createDiagnoser(env.principalSet(), trustCons, cons,
+            SherrlocDiagnoser sherrlocDiagnoser = Utils.createDiagnoser(env.principalSet(),
+                    env.versionNames(), trustCons, cons,
                     true, contractSym, env.rigidAtoms(), env.atomAssumptions());
             boolean result;
             try {

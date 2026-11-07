@@ -1,0 +1,16 @@
+import "./ISelfVouching.scif";
+// Control flow after an endorse-if whose branch calls a trusted contract stays
+// trusted.
+contract EndorseIfBodyPcTrusted {
+    uint{this} count;
+    constructor() { super(); }
+
+    public void f{this}(ISelfVouching{this} x, uint{this} n) {
+        lock(this) {
+            endorse(n, this -> this) when (n > 0) {
+                x.get();
+            }
+        }
+        count = count + 1;
+    }
+}

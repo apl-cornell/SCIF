@@ -1,0 +1,19 @@
+import "../ifcTypechecking/ICrossThrower.scif";
+// A method is called on a local variable inside a try body, which is compiled into a
+// separate method; the local must be passed to it.
+contract CallInTry {
+    uint{this} secret;
+    exception Oops();
+    constructor() { super(); }
+
+    public void f{this}(ICrossThrower{this} x) {
+        ICrossThrower{this} y = x;
+        lock(this) {
+            try {
+                y.boom();
+            } catch (Oops e) {
+                secret = 1;
+            }
+        }
+    }
+}

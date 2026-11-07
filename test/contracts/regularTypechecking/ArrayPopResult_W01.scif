@@ -1,0 +1,9 @@
+// pop removes an array's last element but, as in Solidity, does not return it.
+contract ArrayPopResult_W01 {
+    uint[] entries;
+    constructor() { super(); }
+
+    void f{this}() {
+        uint x = entries.pop();
+    }
+}

@@ -63,7 +63,7 @@ contract KoET {
         currentClaimPrice = startingClaimPrice;
         currentMonarch = endorse(new Monarch(
             wizardAddress,
-            name,
+            endorse(name, sender->this),
             0,
             now
         ), sender->this);
@@ -114,7 +114,7 @@ contract KoET {
             pastMonarchs.push(currentMonarch);
             currentMonarch = endorse(new Monarch(
                 sender,
-                name,
+                endorse(name, sender->this),
                 valuePaid,
                 now
             ), sender->this);

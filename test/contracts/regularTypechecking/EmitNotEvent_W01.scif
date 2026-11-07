@@ -1,0 +1,6 @@
+// Only an event can be emitted.
+contract EmitNotEvent_W01 {
+    exception E(uint a);
+    constructor() { super(); }
+    void f{this}() { emit E(1); }
+}

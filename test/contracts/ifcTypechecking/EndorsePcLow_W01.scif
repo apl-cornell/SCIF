@@ -1,0 +1,11 @@
+// Code under untrusted control flow cannot endorse data up to this,
+// even if the result is used only where untrusted data may go.
+contract EndorsePcLow_W01 {
+    constructor() { super(); }
+
+    public void f{this}(uint{any} v, bool{any} c) {
+        if (c) {
+            uint{any} w = endorse(v, any -> this);
+        }
+    }
+}

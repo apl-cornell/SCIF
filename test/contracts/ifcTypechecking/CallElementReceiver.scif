@@ -1,0 +1,11 @@
+import "./IOracle.scif";
+// A method can be called on an element of an array of contract references.
+contract CallElementReceiver {
+    IOracle[] oracles;
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}(uint{this} k) {
+        secret = oracles[k].price();
+    }
+}

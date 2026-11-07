@@ -1,0 +1,15 @@
+import "./ISelfVouching.scif";
+// Control flow after a loop whose body calls a trusted contract stays trusted.
+contract WhileBodyPcTrusted {
+    uint{this} count;
+    constructor() { super(); }
+
+    public void f{this}(ISelfVouching{this} x, uint{this} n) {
+        lock(this) {
+            while (n > 0) {
+                x.get();
+            }
+        }
+        count = count + 1;
+    }
+}

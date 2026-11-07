@@ -1,0 +1,6 @@
+// Only an exception can be thrown.
+contract ThrowNotException_W01 {
+    event E(uint a);
+    constructor() { super(); }
+    void f{this}() { throw E(1); }
+}

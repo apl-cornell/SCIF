@@ -116,22 +116,6 @@ public class ClosureTypeSym extends TypeSym {
         }
     }
 
-    /** True when any of this type's labels mentions the given binder.
-     *  (Binders shadow outer names inside the type, so a name match on
-     *  this type's own labels is exact.) */
-    public boolean referencesBinder(VarSym binder) {
-        List<Label> all = new ArrayList<>(paramLabels);
-        all.add(pcEx);
-        all.add(gamma);
-        all.add(retLabel);
-        for (Label l : all) {
-            if (l != null && l.principalLeaves().contains(binder.getName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /** {@code map} extended with this type's binder-to-token entries;
      *  entries of {@code map} win (an invoke site substitutes actuals
      *  for tokens' slots). */

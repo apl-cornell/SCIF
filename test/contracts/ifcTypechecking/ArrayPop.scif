@@ -1,0 +1,9 @@
+// pop removes an array's last element, which requires trust at the array's location.
+contract ArrayPop {
+    uint[] entries;
+    constructor() { super(); }
+
+    public void f{this}() {
+        entries.pop();
+    }
+}

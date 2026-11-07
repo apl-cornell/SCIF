@@ -1,0 +1,6 @@
+// The label of an exception parameter may name only principal-typed parameters
+// of the exception.
+contract ExceptionParamLabelNotPrincipal_W01 {
+    exception E(uint n, uint{n} v);
+    constructor() { super(); }
+}

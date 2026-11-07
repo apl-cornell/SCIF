@@ -1,0 +1,13 @@
+// When an element's label does not name its key, the index chooses which
+// element is read, so the result is trusted no more than the index.
+contract DepMapUnnamedKeyReadLow_W01 {
+    map(address a, uint{this}) m;
+    uint{this} secret;
+    constructor() { super(); }
+
+    public void f{this}(address{any} k) {
+        if (k => this) {
+            secret = m[k];
+        }
+    }
+}

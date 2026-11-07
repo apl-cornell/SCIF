@@ -1,0 +1,10 @@
+// Data thrown for a parameter labeled by a principal parameter must be trusted
+// by the principal passed for it.
+contract ExceptionDependentThrowLow_W01 {
+    exception E(address owner, uint{owner} v);
+    constructor() { super(); }
+
+    public void g{this}(final address a, final address b, uint{a} x) throws (E{this}) {
+        throw E(b, x);
+    }
+}

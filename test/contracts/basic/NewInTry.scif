@@ -1,0 +1,16 @@
+// A struct is built from local variables inside a try body, which is compiled into a
+// separate method; the locals must be passed to it.
+contract NewInTry {
+    struct Point { uint x; uint y; }
+    Point p;
+    exception Fail();
+    constructor() { super(); }
+
+    public void f{this}(uint{this} a) {
+        uint b = a + 1;
+        try {
+            p = new Point(a, b);
+        } catch (Fail e) {
+        }
+    }
+}

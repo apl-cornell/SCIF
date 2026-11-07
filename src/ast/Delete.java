@@ -42,7 +42,7 @@ public class Delete extends Statement {
             //Assuming target is Name
             ifNameTgt = env.getVar(((Name) target).id).labelNameSLC();
         } else if (target instanceof Subscript || target instanceof Attribute) {
-            to = target.genIFConstraints(env, false);
+            to = target.genLocationConstraints(env);
             ifNameTgt = to.valueLabelName;
             env.inContext = Utils.genNewContextAndConstraints(env, false, to.psi.getNormalPath().c, beginContext.lambda, target.nextPcSHL(), location);
         } else {

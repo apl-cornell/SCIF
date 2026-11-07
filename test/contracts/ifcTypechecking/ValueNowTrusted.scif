@@ -1,0 +1,12 @@
+// The ether sent with a call and the block timestamp are trusted data.
+contract ValueNowTrusted {
+    uint{this} paid;
+    uint{this} paidAt;
+
+    constructor() { super(); }
+
+    public void pay{sender -> this; any}() {
+        paid = value;
+        paidAt = now;
+    }
+}

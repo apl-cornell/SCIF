@@ -7,83 +7,33 @@ import compile.ast.Return;
 import compile.ast.Revert;
 import compile.ast.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import typecheck.exceptions.SemanticException;
-import typecheck.sherrlocUtils.Constraint;
-import typecheck.sherrlocUtils.Relation;
 import typecheck.*;
 
 public class Throw extends Statement {
 
-    Call exception;
+    private final Name exception;
+    private final List<Expression> args;
 
-    public Throw(Call exception) {
+    /** A statement throwing the exception named {@code exception} with arguments {@code args}. */
+    public Throw(Name exception, List<Expression> args) {
         this.exception = exception;
+        this.args = args;
     }
 
     @Override
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
-
-        String exceptionName;
-        ExceptionTypeSym exceptionSym;
-        if (!(exception.value instanceof Name)) {
-            if (exception.value instanceof Attribute) {
-                // a.b(c), a must be a contract
-                Attribute att = (Attribute) exception.value;
-                // (att.value).(att.attr)
-                String contractTypeName = ((Name) att.value).id;
-                exceptionName = att.attr.id;
-                ContractSym s = env.getContract(contractTypeName);
-                // logger.debug("contract " + contractTypeName + ": " + s.getName());
-                if (!(env.getExtSym(contractTypeName, exceptionName, att.location) == null)) {
-                    System.err.println("a.b not found");
-                    return null;
-                }
-                exceptionSym = s.getExceptionSym(exceptionName);
-                if (exceptionSym == null) {
-                    System.err.println("exception in a.b() not found");
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        } else {
-            // a(b)
-            exceptionName = ((Name) exception.value).id;
-            Sym s = env.getCurSym(exceptionName);
-            if (s == null) {
-                System.err.println("exception type not found");
-                return null;
-            }
-            if (!(s instanceof ExceptionTypeSym)) {
-                // err: type mismatch
-                System.err.println("exception type mismatch");
-                return null;
-            }
-            exceptionSym = ((ExceptionTypeSym) s);
+        if (!(env.getCurSym(exception.id) instanceof ExceptionTypeSym exceptionSym)) {
+            throw new SemanticException("not an exception: " + exception.id, exception.location);
         }
-        // check if the parameter number matches
-        if (exceptionSym.parameters().size() != exception.args.size()) {
-            throw new SemanticException("exception " + exceptionSym.getName() + " takes "
-                    + exceptionSym.parameters().size() + " arguments, but "
-                    + exception.args.size() + " were given", location);
-        }
-
-        // typecheck arguments
-        for (int i = 0; i < exception.args.size(); ++i) {
-            Expression arg = exception.args.get(i);
-            TypeSym paraInfo = exceptionSym.parameters().get(i).typeSym;
-            assert !now.getSHErrLocName().startsWith("null");
-            ScopeContext argContext = arg.genTypeConstraints(env, now);
-            String typeNameSLC = paraInfo.toSHErrLocFmt();
-            Constraint argCon = argContext.genTypeConstraints(typeNameSLC, Relation.GEQ, env, arg.location);
-            env.addCons(argCon);
-        }
-        // String rtnTypeName = exceptionSym.returnType.name;
-        // env.addCons(now.genCons(env.getSymName(rtnTypeName), Relation.EQ, env, location));
-
+        CallArguments.genTypeConstraints(args,
+                exceptionSym.parameters().stream().map(p -> p.typeSym).toList(),
+                "exception " + exceptionSym.getName(), env, now, location);
         if (!parent.isCheckedException(exceptionSym, false)) {
             throw new SemanticException("exception " + exceptionSym.getName()
                     + " must be caught or declared to be thrown", location);
@@ -94,37 +44,23 @@ public class Throw extends Statement {
     @Override
     public List<compile.ast.Statement> solidityCodeGen(CompileEnv code) {
         List<compile.ast.Statement> result = new ArrayList<>();
-        String exceptionName = null;
-        if (!(exception.value instanceof Name)) {
-            if (exception.value instanceof Attribute) {
-                // a.b(c), a must be a contract
-                Attribute att = (Attribute) exception.value;
-                // (att.value).(att.attr)
-                String contractTypeName = ((Name) att.value).id;
-                exceptionName = att.attr.id;
-            }
-        } else {
-            // a(b)
-            exceptionName = ((Name) exception.value).id;
-        }
+        String exceptionName = exception.id;
         ExceptionTypeSym exceptionTypeSym = code.findExceptionTypeSym(exceptionName);
-        List<compile.ast.Expression> args = new ArrayList<>();
-        // typecheck arguments
-        for (int i = 0; i < exception.args.size(); ++i) {
-            Expression arg = exception.args.get(i);
-            args.add(arg.solidityCodeGen(result, code));
+        List<compile.ast.Expression> solArgs = new ArrayList<>();
+        for (Expression arg : args) {
+            solArgs.add(arg.solidityCodeGen(result, code));
         }
         if (code.currentScope() == ScopeType.METHOD) {
             result.add(new Return(
                     List.of(
                             new Literal(String.valueOf(code.getExceptionId(exceptionTypeSym))),
-                            CompileEnv.encodeException(exceptionTypeSym, args)
+                            CompileEnv.encodeException(exceptionTypeSym, solArgs)
                     )));
         } else if (code.currentScope() == ScopeType.TRY) {
             result.add(new Return(
                     List.of(
                             new Literal(String.valueOf(code.getExceptionId(exceptionTypeSym))),
-                            code.encodeVarsAndException(exceptionTypeSym, args)
+                            code.encodeVarsAndException(exceptionTypeSym, solArgs)
                     )));
         } else if (code.currentScope() == ScopeType.ATOMIC) {
             result.add(new Revert(new Literal(exceptionName)));
@@ -136,44 +72,42 @@ public class Throw extends Statement {
     public List<Node> children() {
         List<Node> rtn = new ArrayList<>();
         rtn.add(exception);
+        rtn.addAll(args);
         return rtn;
     }
 
     @Override
     public PathOutcome IFCVisit(VisitEnv env, boolean tail_position) throws SemanticException {
-        Context beginContext = env.inContext;
-        Context endContext = new Context(typecheck.Utils.getLabelNamePc(toSHErrLocFmt()),
-                typecheck.Utils.getLabelNameLock(toSHErrLocFmt()));
-        PathOutcome psi = new PathOutcome(new PsiUnit(beginContext));
-        ExpOutcome ao = null;
+        PathOutcome psi = new PathOutcome(new PsiUnit(env.inContext));
+        ExceptionTypeSym expSym = env.getExp(exception.id);
+        CallArguments.Evaluated evaluated = CallArguments.evaluate(args, env, psi);
 
-        for (int i = 0; i < exception.args.size(); ++i) {
-            Expression arg = exception.args.get(i);
-            ao = arg.genIFConstraints(env, false);
-            psi.joinExe(ao.psi);
-            env.inContext = new Context(
-                    Utils.joinLabels(ao.psi.getNormalPath().c.pc, beginContext.pc),
-                    beginContext.lambda);
-        }
-
-        String expName = ((Name) exception.value).id;
-        ExceptionTypeSym expSym = env.getExp(expName);
+        // Each argument is checked like an argument of a call.
+        Map<String, String> mapping = new HashMap<>();
+        // An argument holding an unknown principal is checked as if it held the most
+        // trusted one.
+        CallArguments.mapPrincipals(expSym.parameters(), evaluated,
+                env.curContractSym().top().toSHErrLocFmt(), mapping);
+        CallArguments.checkFlowInto(args, evaluated, env.inContext.pc,
+                expSym.parameters().stream().map(p -> p.ifl).toList(), mapping,
+                " of the exception", env);
 
         PsiUnit expUnit = new PsiUnit(
-                new Context(env.inContext.pc,
-                        psi.getNormalPath().c.lambda),
-                false);
+                new Context(env.inContext.pc, psi.getNormalPath().c.lambda), false);
         PathOutcome psi2 = new PathOutcome();
         psi2.set(expSym, expUnit);
 
         psi.remove(Utils.getNormalPathException());
         psi.join(psi2);
-
         return psi;
     }
 
     @Override
-    protected java.util.Map<String,? extends Type> readMap(CompileEnv code) {
-        return exception.readMap(code);
+    protected Map<String,? extends Type> readMap(CompileEnv code) {
+        Map<String, Type> result = new HashMap<>();
+        for (Expression arg : args) {
+            result.putAll(arg.readMap(code));
+        }
+        return result;
     }
 }

@@ -222,16 +222,10 @@ public class ClosureCreation extends Expression {
 
             // A slot filled with a principal becomes that principal
             // everywhere the result's labels named the slot.
-            Expression principalExp = a;
-            if (a instanceof Call cast && cast.isCast(env)) {
-                principalExp = cast.getArgAt(0);
-            }
             VarSym binder = i < binders.size() ? binders.get(i) : null;
-            if (binder != null && principalExp instanceof Name an) {
-                VarSym valueSym = env.getVar(an.id);
-                if (valueSym != null && valueSym.isPrincipalVar()) {
-                    bindMapping.put(binder.toSHErrLocFmt(), valueSym.toSHErrLocFmt());
-                }
+            String principal = a.principalName(env);
+            if (binder != null && principal != null) {
+                bindMapping.put(binder.toSHErrLocFmt(), principal);
             }
 
             ExpOutcome ao = a.genIFConstraints(env, false);
@@ -292,7 +286,7 @@ public class ClosureCreation extends Expression {
     }
 
     @Override
-    public ExpOutcome genIFConstraints(VisitEnv env, boolean tail_position)
+    protected ExpOutcome genFlowConstraints(VisitEnv env, boolean tail_position)
             throws SemanticException {
         Context beginContext = env.inContext;
         Context endContext = new Context(Utils.getLabelNamePc(toSHErrLocFmt()),
@@ -357,17 +351,9 @@ public class ClosureCreation extends Expression {
 
             VarSym argSym = funcSym.parameters.get(i);
 
-            Expression principalExp = a;
-            if (a instanceof Call cast && cast.isCast(env)) {
-                principalExp = cast.getArgAt(0);
-            }
-
-            if (argSym.isPrincipalVar() && principalExp instanceof Name an) {
-                VarSym valueSym = env.getVar(an.id);
-                if (valueSym != null && valueSym.isPrincipalVar()) {
-                    dependentLabelMapping.put(argSym.toSHErrLocFmt(),
-                            valueSym.toSHErrLocFmt());
-                }
+            String principal = a.principalName(env);
+            if (argSym.isPrincipalTyped() && principal != null) {
+                dependentLabelMapping.put(argSym.toSHErrLocFmt(), principal);
             }
 
             ExpOutcome ao = a.genIFConstraints(env, false);
@@ -574,5 +560,31 @@ public class ClosureCreation extends Expression {
         if (callee != null) rtn.add(callee);
         rtn.addAll(args);
         return rtn;
+    }
+
+    @Override
+    protected TypeSym staticType(VisitEnv env) {
+        List<TypeSym> declaredParams = new ArrayList<>();
+        TypeSym retSym;
+        if (callee instanceof Attribute att && att.value instanceof Name recvName) {
+            FuncSym target = ((InterfaceSym) env.getVar(recvName.id).typeSym)
+                    .getFunc(att.attr.id);
+            for (VarSym p : target.parameters) {
+                declaredParams.add(p.typeSym);
+            }
+            retSym = target.returnType;
+        } else {
+            ClosureTypeSym source =
+                    (ClosureTypeSym) env.getVar(((Name) callee).id).typeSym;
+            declaredParams.addAll(source.unboundParams);
+            retSym = source.returnType;
+        }
+        List<TypeSym> stillUnbound = new ArrayList<>();
+        for (int i = 0; i < args.size(); ++i) {
+            if (args.get(i) instanceof Hole) {
+                stillUnbound.add(declaredParams.get(i));
+            }
+        }
+        return new ClosureTypeSym(stillUnbound, retSym, new ArrayList<>(), scopeContext);
     }
 }

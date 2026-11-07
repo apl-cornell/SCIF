@@ -34,8 +34,7 @@ public class Preprocessor {
         for (File builtinFile : Utils.BUILTIN_FILES) {
             Symbol result;
             try {
-                result = Parser.parse(builtinFile, null); //p.parse()
-                assert result != null;
+                result = Parser.parse(builtinFile, null);
             } catch (SyntaxError se) {
                 continue;
             }
@@ -63,13 +62,7 @@ public class Preprocessor {
         // add all contracts from inputFiles recursively
         while (!mentionedFiles.isEmpty()) {
             File file = mentionedFiles.poll();
-            Symbol result;
-            try {
-                result = Parser.parse(file, null); //p.parse()
-                assert result != null;
-            } catch (SyntaxError se) {
-                throw se;
-            }
+            Symbol result = Parser.parse(file, null);
 
             List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
             if (rootsFiles == null || rootsFiles.isEmpty()) {

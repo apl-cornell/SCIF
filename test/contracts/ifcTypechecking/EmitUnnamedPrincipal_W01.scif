@@ -1,0 +1,14 @@
+// The principal amount is labeled by is held by a struct member, which is not a name, so
+// the event's label is taken to name the most trusted principal; data trusted only by
+// sender cannot be reported at that label.
+contract EmitUnnamedPrincipal_W01 {
+    struct S { address a; }
+    S s;
+    event Claimed(address who, uint{who} amount);
+
+    constructor() { super(); }
+
+    public void g{sender -> this; any}(uint{sender} amount) {
+        emit Claimed(s.a, amount);
+    }
+}

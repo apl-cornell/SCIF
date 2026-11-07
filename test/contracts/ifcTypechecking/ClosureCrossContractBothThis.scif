@@ -2,26 +2,14 @@
 //
 // Caller builds a closure value of type
 //   (fun {this -> this; this} () -> void) {this}
-// where every `this` resolves, in Caller's scope, to Caller's contract
-// identity. The closure value flows out via `Sink.accept` whose
-// parameter type uses the same syntactic shape, with `this` resolving
-// in Sink's scope to Sink's contract identity. The two `this`'s are
-// syntactically the same but logically different principals.
-//
-// IFC accepts the contract — and that acceptance is correct for the
-// single-hop case. The reason: SCIF's normal external-call
-// dependent-label substitution rewrites the parameter slot's
-// `Sink.this` to the receiver's label (Caller's `sink` field, which
-// defaults to {this} = Caller.this). After substitution, the closure's
-// inner labels (Caller.this) and the parameter slot's substituted
-// labels (Caller.this) are equal, so the variance constraints emitted
-// by the closure-argument hook in Call.genIFConstraints reduce to
-// trivially true.
-//
-// This test exists to lock in that single-hop behavior. Multi-hop
-// (Caller → Intermediate → Other) is the remaining open case: the
-// substitution chain breaks after the first hop. See G2 in
-// IMPLEMENTATION.md.
+// where every `this` is Caller. It passes the closure to Sink.accept,
+// whose parameter type has the same syntax but where every `this` is
+// Sink: Sink promises to invoke the closure with control flow trusted
+// by Sink. At the call, Sink's `this` is the principal the receiver
+// `sink` holds, so the closure fits the slot only if Sink acts for
+// Caller. Handing Sink a closure that demands Caller-trusted control
+// flow delegates Caller's authority, so Caller checks that it trusts
+// Sink before doing so.
 interface IT {
     closurable public void op{this -> this}();
 }
@@ -42,7 +30,9 @@ contract Caller {
 
     public void forward{this -> this; this}() {
         (fun {this -> this; this} () -> void) {this} c = closure t.op();
-        sink.accept(c);
+        if (sink => this) {
+            sink.accept(c);
+        }
     }
 }
 
