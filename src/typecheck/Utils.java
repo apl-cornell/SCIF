@@ -748,7 +748,8 @@ public class Utils {
         return name.startsWith(SUPER_PREFIX);
     }
 
-    public static List<String> SLCEntitiesToStrings(Map<String, List<SourceFile>> programMap, Explanation exp, boolean debug) {
+    public static List<String> SLCEntitiesToStrings(Map<String, List<SourceFile>> programMap, Explanation exp,
+            boolean ifc, boolean debug) {
         if (debug) {
             System.err.println("#" + exp.getWeight());
         }
@@ -800,13 +801,26 @@ public class Utils {
             StringBuilder rtn = new StringBuilder(
                     ErrorFormatter.format(program.getSourceFilePath(), row, col,
                             explanation + ".\n"
-                            + "Constraint violated: " + expBuffer.substring(0, expBuffer.length() - 2) + "."));
+                            + "Constraint violated: " + violated(expBuffer.substring(0, expBuffer.length() - 2),
+                                    program.getContractName(), ifc, debug) + "."));
 
 //            String expString = expBuffer.toString() + (locBuffer.isEmpty() ? "" : ":[" + locBuffer.toString() + "]");
             result.add(rtn.toString());
         }
 
         return result;
+    }
+
+    /**
+     * The violated constraint {@code constraint}, as SHErrLoc prints it, written for a reader of
+     * contract {@code contractName}, followed by its original form if {@code debug}. The
+     * constraint is on labels if {@code ifc}, and on types otherwise.
+     */
+    private static String violated(String constraint, String contractName, boolean ifc,
+            boolean debug) {
+        String readable = ifc ? ConstraintPrinter.constraint(constraint, contractName)
+                : ConstraintPrinter.typeConstraint(constraint, contractName);
+        return debug ? readable + " [" + constraint + "]" : readable;
     }
 
     public static boolean isBuiltInContractName(String contractName) {

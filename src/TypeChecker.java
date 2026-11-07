@@ -62,7 +62,7 @@ public class TypeChecker {
             if (DEBUG) {
                 System.err.println("regular type-checking using SLC...");
             }
-            if (!runSLC(ntcEnv.programMap(), sherrlocDiagnoser, DEBUG)) {
+            if (!runSLC(ntcEnv.programMap(), sherrlocDiagnoser, false, DEBUG)) {
                 return false;
             }
         } catch (Exception e) {
@@ -324,7 +324,7 @@ public class TypeChecker {
                     true, contractSym, env.rigidAtoms(), env.assumptions());
             boolean result;
             try {
-                result = runSLC(env.programMap, sherrlocDiagnoser, DEBUG);
+                result = runSLC(env.programMap, sherrlocDiagnoser, true, DEBUG);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 return false;
@@ -335,8 +335,13 @@ public class TypeChecker {
     }
 
 
+    /**
+     * Solves the constraints of {@code sherrlocDiagnoser}, reporting the likely causes of any
+     * failure for the source files in {@code programMap}, and returns whether they were
+     * satisfied. The constraints are on labels if {@code ifc}, and on types otherwise.
+     */
     static boolean runSLC(Map<String, List<SourceFile>> programMap, SherrlocDiagnoser sherrlocDiagnoser,
-                          boolean DEBUG) {
+                          boolean ifc, boolean DEBUG) {
 //        logger.trace("running SLC");
         if (sherrlocDiagnoser == null) { // There were no constraints
             return true;
@@ -372,7 +377,7 @@ public class TypeChecker {
                     System.out.println("Some other possible places:");
                 }
                 List<String> s = Utils.SLCEntitiesToStrings(programMap, result.getSuggestions().get(i),
-                        DEBUG);
+                        ifc, DEBUG);
                 if (s != null) {
                     for (String exp: s) {
                         if (!expSet.contains(exp)) {
