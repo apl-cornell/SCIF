@@ -1,0 +1,7 @@
+// A call uses an unsupported call option.
+contract CallOptionUnsupported_W01 {
+    uint x;
+    constructor() { super(); }
+    public void f(CallOptionUnsupported_W01 c) { x = c.g(){foo = 1}; }
+    public uint g() { return 1; }
+}

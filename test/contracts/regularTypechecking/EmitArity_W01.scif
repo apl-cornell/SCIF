@@ -1,0 +1,5 @@
+// An event is emitted with the wrong number of arguments.
+contract EmitArity_W01 {
+    event E(uint a);
+    constructor() { super(); emit E(1, 2); }
+}

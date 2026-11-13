@@ -112,7 +112,7 @@ public class Contract extends TopLayerNode {
 //        return true;
 //    }
 
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
+    public void ntcGlobalInfo(NTCEnv env, ScopeContext parent)
             throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         // SymTab curSymTab = new SymTab(env.curSymTab());
@@ -125,44 +125,33 @@ public class Contract extends TopLayerNode {
         try {
             env.addSym(contractName, contractSym);
         } catch (SymTab.AlreadyDefined e) {
-            assert false; // cannot happen
+            throw new AssertionError(e);
         }
         env.setCurContractSym(contractSym);
         // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
 
         for (StructDef def: structDefs) {
-            if (!def.ntcGlobalInfo(env, now)) {
-                return false;
-            }
+            def.ntcGlobalInfo(env, now);
         }
 
         for (StateVariableDeclaration dec : varDeclarations) {
-            if (!dec.ntcGlobalInfo(env, now)) {
-                return false;
-            }
+            dec.ntcGlobalInfo(env, now);
         }
 
         for (ExceptionDef def : exceptionDefs) {
-            if (!def.ntcGlobalInfo(env, now)) {
-                return false;
-            }
+            def.ntcGlobalInfo(env, now);
         }
 
         for (EventDef def : eventDefs) {
-            if (!def.ntcGlobalInfo(env, now)) {
-                return false;
-            }
+            def.ntcGlobalInfo(env, now);
         }
 
         for (FunctionDef fDef : methodDeclarations) {
-            if (!fDef.ntcGlobalInfo(env, now)) {
-                return false;
-            }
+            fDef.ntcGlobalInfo(env, now);
         }
         exceptionTypeSymMap = env.getExceptionTypeSymMap();
         eventTypeSymMap = env.getEventTypeSymMap();
         env.exitNewScope();
-        return true;
     }
 
     @Override
@@ -375,10 +364,19 @@ public class Contract extends TopLayerNode {
         return rtn;
     }
 
-    // TODO(steph): fix asserts
-    void checkInterfaceSignature(String implementsContractName, Map<String, Interface> interfaceMap) {
+    /**
+     * Checks that this contract implements the interface {@code implementsContractName}.
+     *
+     * @throws SemanticException if the interface is not in {@code interfaceMap}, or this
+     *         contract lacks one of its methods or declares one of its members with a
+     *         different type
+     */
+    void checkInterfaceSignature(String implementsContractName, Map<String, Interface> interfaceMap)
+            throws SemanticException {
         Interface itrface = interfaceMap.get(implementsContractName);
-        assert itrface != null : "interface contract not found: " + implementsContractName + " in " + contractName;
+        if (itrface == null) {
+            throw new SemanticException("interface not found: " + implementsContractName, location);
+        }
         // check that all methods are implemented
         // check that there are no duplicates
         Set<String> nameSet = new HashSet<>();
@@ -403,7 +401,9 @@ public class Contract extends TopLayerNode {
             if (structDef.isBuiltIn()) continue;
             if (nameSet.contains(structDef.structName)) {
                 if (!structDef.typeMatch(structMap.get(structDef.structName))) {
-                    assert false : structDef.structName;
+                    throw new SemanticException("struct " + structDef.structName
+                            + " does not match its declaration in " + implementsContractName,
+                            structMap.get(structDef.structName).location);
                 }
             }
         }
@@ -416,7 +416,9 @@ public class Contract extends TopLayerNode {
             if (exp.isBuiltIn()) continue;
             if (nameSet.contains(exp.exceptionName)) {
                 if (!exp.typeMatch(expMap.get(exp.exceptionName))) {
-                    assert false : exp.exceptionName;
+                    throw new SemanticException("exception " + exp.exceptionName
+                            + " does not match its declaration in " + implementsContractName,
+                            expMap.get(exp.exceptionName).location);
                 }
             }
         }
@@ -429,7 +431,9 @@ public class Contract extends TopLayerNode {
             if (eventDef.isBuiltIn()) continue;
             if (nameSet.contains(eventDef.eventName)) {
                 if (!eventDef.typeMatch(eventMap.get(eventDef.eventName))) {
-                    assert false : eventDef.eventName;
+                    throw new SemanticException("event " + eventDef.eventName
+                            + " does not match its declaration in " + implementsContractName,
+                            eventMap.get(eventDef.eventName).location);
                 }
             }
         }
@@ -442,12 +446,13 @@ public class Contract extends TopLayerNode {
             String name = f.name;
             if (funcMap.containsKey(name)) {
                 if (!f.typeMatch(funcMap.get(name))) {
-                    assert false :
-                            contractName + ": implemented method carries unmatched types: "
-                                    + f.signature() + " $ " + funcMap.get(name).signature();
+                    throw new SemanticException("method " + name + " does not match its signature in "
+                            + implementsContractName + ": " + f.signature(),
+                            funcMap.get(name).location);
                 }
             } else {
-                assert false : name + " is not implemented in " + contractName;
+                throw new SemanticException("method " + name + " of " + implementsContractName
+                        + " is not implemented", location);
             }
         }
 
@@ -465,7 +470,9 @@ public class Contract extends TopLayerNode {
             // add other functions from superContract
             // trust_list is also inherited
             Contract superContract = contractMap.get(extendsContractName);
-            assert superContract != null : "super contrasct not found: " + extendsContractName + " in " + contractName;
+            if (superContract == null) {
+                throw new SemanticException("contract not found: " + extendsContractName, location);
+            }
 
             // inherit from superContract
 
@@ -483,7 +490,10 @@ public class Contract extends TopLayerNode {
             Map<String, FunctionSig> funcNames = new HashMap<>();
             Set<String> nameSet = new HashSet<>();
             for (StructDef structDef: structDefs) {
-                assert !nameSet.contains(structDef.structName) : "duplicate name: " + structDef.structName;
+                if (nameSet.contains(structDef.structName)) {
+                    throw new SemanticException("duplicate struct: " + structDef.structName,
+                            structDef.location);
+                }
 //                strDefs.put(structDef.structName, structDef);
                 nameSet.add(structDef.structName);
             }
@@ -538,7 +548,10 @@ public class Contract extends TopLayerNode {
                 if (a.isBuiltIn()) {
                     continue;
                 }
-                assert (!nameSet.contains(a.structName)) : a.structName;
+                if (nameSet.contains(a.structName)) {
+                    throw new SemanticException("struct " + a.structName
+                            + " conflicts with a name inherited from " + extendsContractName, location);
+                }
                 newStructDefs.add(a);
             }
             newStructDefs.addAll(structDefs.subList(builtInIndex, structDefs.size()));
@@ -556,7 +569,10 @@ public class Contract extends TopLayerNode {
                 if (a.isBuiltIn())
                     continue;
                 Name x = a.name();
-                assert !nameSet.contains(x.id) : x.id;
+                if (nameSet.contains(x.id)) {
+                    throw new SemanticException("variable " + x.id
+                            + " conflicts with a name inherited from " + extendsContractName, location);
+                }
 
                 newStateVarDecs.add(a);
             }
@@ -622,13 +638,21 @@ public class Contract extends TopLayerNode {
                 }
                 boolean overridden = false;
                 if (funcNames.containsKey(f.name)) {
-                    assert funcNames.get(f.name).typeMatch(f);
+                    if (!funcNames.get(f.name).typeMatch(f)) {
+                        throw new SemanticException("method " + f.name
+                                + " does not match the signature it overrides in " + extendsContractName,
+                                funcNames.get(f.name).location);
+                    }
                     overridden = true;
                 } else if (varNames.containsKey(f.name)) {
-                    // TODO: var overridden by func
-                    assert false;
-                } else
-                    assert !expDefs.containsKey(f.name);
+                    throw new SemanticException("variable " + f.name
+                            + " conflicts with a method inherited from " + extendsContractName,
+                            varNames.get(f.name).location);
+                } else if (expDefs.containsKey(f.name)) {
+                    throw new SemanticException("exception " + f.name
+                            + " conflicts with a method inherited from " + extendsContractName,
+                            expDefs.get(f.name).location);
+                }
 
                 if (!overridden) {
                     newFuncDefs.add(f);

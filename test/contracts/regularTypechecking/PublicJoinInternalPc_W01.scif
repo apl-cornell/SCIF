@@ -1,0 +1,8 @@
+// An auto-endorsing public method's internal pc is a join, which run-time checks cannot express.
+contract PublicJoinInternalPc_W01 {
+    uint{this} x;
+    constructor() { super(); }
+    public void f{sender -> this ⨆ sender; any}(uint{any} y) {
+        x = 1;
+    }
+}

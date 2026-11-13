@@ -44,7 +44,7 @@ public class TypeChecker {
             ntcEnv.addSourceFile(root.getSourceFilePath(), root);
 
             root.passScopeContext(null);
-            assert root.ntcGlobalInfo(ntcEnv, null) : "Must succeed or throw a semantic exception";
+            root.ntcGlobalInfo(ntcEnv, null);
         }
 
         // Generate type constraints.s
@@ -104,7 +104,7 @@ public class TypeChecker {
                     contractNames.add(contractSym.getName());
                     contractMap.add(contractSym.getName(), contractSym);
                 } catch (SymTab.AlreadyDefined e) {
-                    assert false; // cannot happen
+                    throw new AssertionError(e);
                 }
             } else {
                 try {

@@ -1,0 +1,8 @@
+// A public method's external pc is a meet, which run-time checks cannot express.
+contract PublicMeetExternalPc_W01 {
+    uint{this} x;
+    constructor() { super(); }
+    public void f{sender ⨅ this -> this; any}(uint{any} y) {
+        x = endorse(y, any -> this);
+    }
+}

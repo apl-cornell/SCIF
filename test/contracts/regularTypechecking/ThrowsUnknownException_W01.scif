@@ -1,0 +1,5 @@
+// A method declares that it throws an undeclared exception.
+contract ThrowsUnknownException_W01 {
+    constructor() { super(); }
+    public void f() throws (Nope) { }
+}

@@ -77,7 +77,7 @@ public class ContractFile extends SourceFile {
                     importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
                     iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Interface) source).getContractName());
                 } else {
-                    assert false;
+                    throw new AssertionError();
                 }
             }
         }
@@ -96,14 +96,14 @@ public class ContractFile extends SourceFile {
                 importedInterfaceMap.put(((Interface) source).getContractName(), (Interface) source);
                 iptContractNames.computeIfAbsent(path, k -> new ArrayList<>()).add(((Interface) source).getContractName());
             } else {
-                assert false;
+                throw new AssertionError();
             }
         }
         contract.codePasteContract(importedContractMap, importedInterfaceMap); // have effects only if the contracts extends/implements smth
     }
 
     @Override
-    public boolean ntcAddImportEdges(InheritGraph graph) {
+    public void ntcAddImportEdges(InheritGraph graph) {
         Set<String> resolvedIptContracts = new HashSet<>();
         for (String contract: iptContracts) {
             Path path = Paths.get(contract);
@@ -116,7 +116,6 @@ public class ContractFile extends SourceFile {
             graph.addEdge(path.toString(), getSourceFilePath());
         }
         iptContracts = resolvedIptContracts;
-        return true;
         // return contract.ntcInherit(graph);
     }
     @Override
@@ -131,7 +130,7 @@ public class ContractFile extends SourceFile {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
+    public void ntcGlobalInfo(NTCEnv env, ScopeContext parent)
             throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         env.enterSourceFile(getSourceFilePath(), getContractName());
@@ -156,11 +155,7 @@ public class ContractFile extends SourceFile {
         // env.initCurSymTab();
         // Utils.addBuiltInASTNode(env.globalSymTab, contract.trustSetting);
         // assert env.getCurSym("TrustManager") != null: env.currentSourceFileFullName();
-        if (!contract.ntcGlobalInfo(env, now)) {
-//            // logger.debug("GlobalInfo failed with: " + contract);
-            return false;
-        }
-        return true;
+        contract.ntcGlobalInfo(env, now);
     }
 
     @Override

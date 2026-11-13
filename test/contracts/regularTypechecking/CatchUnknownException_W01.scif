@@ -1,0 +1,6 @@
+// A handler catches an undeclared exception.
+contract CatchUnknownException_W01 {
+    uint x;
+    constructor() { super(); }
+    public void f() { try { x = 1; } catch (Nope e) { x = 2; } }
+}

@@ -45,14 +45,13 @@ public class EventDef extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
+    public void ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
         try {
             env.addSym(eventName, env.newEventType(eventName, arguments, parent));
         } catch (SymTab.AlreadyDefined e) {
             throw new SemanticException("Event already defined: " + eventName,
                     location);
         }
-        return true;
     }
 
     public compile.ast.Event solidityCodeGen(CompileEnv code) {

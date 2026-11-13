@@ -7,8 +7,7 @@ public class Pass extends Expression {
 
     @Override
     public String toSolCode() {
-        assert false: "pass should not appear as an expression";
-        return null;
+        throw new AssertionError("pass should not appear as an expression");
     }
 
     @Override

@@ -94,9 +94,54 @@ public class NTCEnv {
         }
 
         if (astType instanceof ExtType extType) {
-            Sym s = getExtSym(extType.contractName(), extType.name());
-            assert s instanceof StructTypeSym;
-            return (TypeSym) s;
+            if (!(getExtSym(extType.contractName(), extType.name(), extType.getLocation())
+                    instanceof StructTypeSym s)) {
+                throw new SemanticException(extType.contractName() + "." + extType.name()
+                        + " is not a struct type", extType.getLocation());
+            }
+            return s;
+        }
+
+        if (astType instanceof ast.ClosureType closure) {
+            ast.FuncLabels fl = closure.funcLabels;
+            ScopeContext closureScope = new ScopeContext(closure, defContext);
+            enterNewScope();
+            java.util.List<VarSym> binderSyms = new java.util.ArrayList<>();
+            for (int i = 0; i < closure.params.size(); ++i) {
+                if (!closure.isBinder(i)) {
+                    binderSyms.add(null);
+                    continue;
+                }
+                ast.Arg p = closure.params.get(i);
+                VarSym binderVar = newVarSym(p.name(), closure.binderLabeledType(i),
+                        false, true, false, p.location(), closureScope);
+                try {
+                    addSym(p.name(), binderVar);
+                } catch (SymTab.AlreadyDefined e) {
+                    throw new SemanticException(
+                            "closure binder name already defined: " + p.name(),
+                            astType.location());
+                }
+                binderSyms.add(binderVar);
+            }
+            Label pcExL = fl == null || fl.begin_pc == null ? null : newLabel(fl.begin_pc);
+            Label pcInL = fl == null || fl.to_pc == null ? null : newLabel(fl.to_pc);
+            Label gammaL = fl == null || fl.gamma_label == null ? null : newLabel(fl.gamma_label);
+            Label retL = closure.returnType.label() == null
+                    ? pcExL : newLabel(closure.returnType.label());
+            java.util.List<TypeSym> paramTypes = new java.util.ArrayList<>();
+            java.util.List<Label> paramLabels = new java.util.ArrayList<>();
+            for (ast.LabeledType lt : closure.unboundParams) {
+                paramTypes.add(toTypeSym(lt.type(), defContext));
+                paramLabels.add(lt.label() == null ? pcExL : newLabel(lt.label()));
+            }
+            TypeSym retType = toTypeSym(closure.returnType.type(), defContext);
+            exitNewScope();
+            ClosureTypeSym result = new ClosureTypeSym(paramTypes, retType,
+                    new java.util.ArrayList<>(), defContext,
+                    paramLabels, pcExL, pcInL, gammaL, retL);
+            result.setBinderSyms(binderSyms);
+            return result;
         }
 
         if (astType instanceof ast.ClosureType closure) {
@@ -206,14 +251,18 @@ public class NTCEnv {
     }
 
     /**
-     * Look up a symbol in another contract
-     * @param contractName
-     * @param funcName
-     * @return
+     * Returns the symbol {@code funcName} declared in contract or interface
+     * {@code contractName}, or null if it declares no such symbol.
+     *
+     * @throws SemanticException if there is no contract or interface named
+     *         {@code contractName}; it is reported at {@code location}
      */
-    public Sym getExtSym(String contractName, String funcName) {
+    public Sym getExtSym(String contractName, String funcName, CodeLocation location)
+            throws SemanticException {
         InterfaceSym extST = getInterface(contractName);
-        assert extST != null: "external interface not found: " + contractName;
+        if (extST == null) {
+            throw new SemanticException("contract not found: " + contractName, location);
+        }
         return extST.lookupSym(funcName);
     }
 

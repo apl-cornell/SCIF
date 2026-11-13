@@ -41,9 +41,11 @@ public class Emit extends Statement {
             return null;
         }
 
-        // check number of parameters
-        // TODO stpeh assert?
-        assert eventTypeSym.parameters().size() == event.args.size() : "ummatched parameter number for event";
+        if (eventTypeSym.parameters().size() != event.args.size()) {
+            throw new SemanticException("event " + eventTypeSym.getName() + " takes "
+                    + eventTypeSym.parameters().size() + " arguments, but "
+                    + event.args.size() + " were given", location);
+        }
 
         // typecheck arguments
         // TODO steph double check with correctness

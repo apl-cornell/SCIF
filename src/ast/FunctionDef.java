@@ -115,6 +115,9 @@ public class FunctionDef extends FunctionSig {
         if (!returnVoid()) {
             addBuiltInResult(env.curSymTab, scopeContext);
         }
+        VarSym sender = env.getVar(Utils.LABEL_SENDER);
+        env.checkEqual(sender.labelNameSLC(), sender.labelValueSLC(), location,
+                "Label of sender may be incorrect");
 
         for (Entry<String, VarSym> entry: env.curSymTab.getVars().entrySet()) {
             VarSym varSym = entry.getValue();

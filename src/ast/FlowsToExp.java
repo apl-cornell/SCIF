@@ -14,9 +14,9 @@ import typecheck.Context;
 import typecheck.ExpOutcome;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
-import typecheck.Sym;
 import typecheck.VarSym;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Relation;
 
 public class FlowsToExp extends Expression {
@@ -79,25 +79,17 @@ public class FlowsToExp extends Expression {
     }
 
     @Override
-    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
-        if (lhs != null && rhs != null) {
-            ScopeContext now = new ScopeContext(this, parent);
-            Name left = (Name) lhs, right = (Name) rhs;
-            Sym lsym = env.getCurSym(left.id), rsym = env.getCurSym(right.id);
-            if (lsym instanceof VarSym && rsym instanceof VarSym) {
-                boolean lpass, rpass;
-                lpass = ((VarSym) lsym).isPrincipalVar();
-                rpass = ((VarSym) rsym).isPrincipalVar();
-                assert lpass : "dynamic trust queries can only happen between final address variables: " + lsym.getName() + " at " + location.errString();
-                assert rpass : "dynamic trust queries can only happen between final address variables: " + rsym.getName() + " at " + location.errString();
-                env.addCons(
-                            now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
-                return now;
-
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
+        ScopeContext now = new ScopeContext(this, parent);
+        for (Name operand : List.of((Name) lhs, (Name) rhs)) {
+            if (!(env.getCurSym(operand.id) instanceof VarSym v) || !v.isPrincipalVar()) {
+                throw new SemanticException(
+                        "dynamic trust queries can only happen between final address variables: "
+                                + operand.id, location);
             }
         }
-        assert false: location.errString();
-        return null;
+        env.addCons(now.genTypeConstraints(env.getSymName(BuiltInT.BOOL), Relation.EQ, env, location));
+        return now;
     }
 
     @Override

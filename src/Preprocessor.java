@@ -55,7 +55,7 @@ public class Preprocessor {
 
             root.addBuiltIns();
             roots.add(root);
-            assert root.ntcAddImportEdges(graph);
+            root.ntcAddImportEdges(graph);
             includedFilePaths.add(builtinFile.getAbsolutePath());
             fileMap.put(builtinFile.getAbsolutePath(), new ArrayList<>(List.of(root)));
         }
@@ -72,7 +72,10 @@ public class Preprocessor {
             }
 
             List<SourceFile> rootsFiles = (List<SourceFile>) result.value;
-            assert !rootsFiles.isEmpty();
+            if (rootsFiles == null || rootsFiles.isEmpty()) {
+                throw new SemanticException("no contract or interface is defined",
+                        new CodeLocation(file.getPath()));
+            }
 
             // TODO(Siqiu) root.setName(inputFile.name());
             List<String> fullSourceCode = Files.readAllLines(Paths.get(file.getAbsolutePath()),
@@ -83,7 +86,7 @@ public class Preprocessor {
             // since sourceCode only used to show SLC error msgs, need to keep full length to show correct line num
                 root.addBuiltIns();
                 roots.add(root);
-                assert root.ntcAddImportEdges(graph);
+                root.ntcAddImportEdges(graph);
 
                 for (String filePath : root.importPaths()) {
                     // only for those imported file paths != current file path
@@ -107,7 +110,7 @@ public class Preprocessor {
             } else if (root instanceof InterfaceFile) {
                 sourceFileMap.computeIfAbsent(root.getSourceFilePath(), k -> new ArrayList<>()).add(((InterfaceFile) root).getInterface());
             } else {
-                assert false : "Unreachable case: " + root.getContractName();
+                throw new AssertionError("Unreachable case: " + root.getContractName());
             }
         }
 
@@ -117,8 +120,7 @@ public class Preprocessor {
         // code-paste in a topological order
             List<SourceFile> rootsFile = fileMap.get(x);
             if (rootsFile == null || rootsFile.isEmpty()) {
-                assert false;
-                return null;
+                throw new AssertionError("no parsed source for " + x);
             }
 
             for (SourceFile rt : rootsFile) {

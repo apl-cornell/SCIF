@@ -1,0 +1,7 @@
+// The target of delete is a method call.
+contract DeleteNonLvalue_W01 {
+    uint x;
+    constructor() { super(); }
+    public void f() { delete g(); }
+    public uint g() { return 1; }
+}

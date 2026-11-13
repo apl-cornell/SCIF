@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.ScopeContext;
+import typecheck.StructTypeSym;
+import typecheck.Sym;
 import typecheck.exceptions.SemanticException;
 
 import java.util.ArrayList;
@@ -33,10 +35,15 @@ public class StructDef extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
-        assert members.size() > 0: "struct should have at least one member: " + structName + " at " + location.errString();
+    public void ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException {
+        if (members.isEmpty()) {
+            throw new SemanticException("struct " + structName + " has no members", location);
+        }
+        Sym existing = env.getCurSym(structName);
+        if (existing != null && !(existing instanceof StructTypeSym)) {
+            throw new SemanticException("name already defined: " + structName, location);
+        }
         env.addType(structName, env.toStructType(structName, members));
-        return true;
     }
 
     public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {

@@ -52,6 +52,7 @@ public class TestIfcTypechecking {
             "ifcTypechecking/ClosureInvokePostPcAutoendorse",
             "ifcTypechecking/ClosurePcExStronger",
             "ifcTypechecking/ClosureLockWeaken",
+            "ifcTypechecking/SenderTrustedAddress",
     })
     void testPositive(String contractName) throws Exception {
         File logDir = new File("./.scif");

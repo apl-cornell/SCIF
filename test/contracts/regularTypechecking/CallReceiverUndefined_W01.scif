@@ -1,0 +1,5 @@
+// The receiver of a method call is not defined.
+contract CallReceiverUndefined_W01 {
+    uint x;
+    constructor() { super(); x = z.g(); }
+}

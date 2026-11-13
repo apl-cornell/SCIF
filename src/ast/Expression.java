@@ -13,11 +13,16 @@ import typecheck.exceptions.SemanticException;
 public abstract class Expression extends Node {
 
     public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping) throws SemanticException {
-        assert false;
-        return null;
+        throw new AssertionError();
     }
 
-    public VarSym getVarInfo(NTCEnv env) {
+    /**
+     * Returns the variable this expression denotes, or null if it does not
+     * denote a variable.
+     *
+     * @throws SemanticException if it names a variable that cannot be resolved
+     */
+    public VarSym getVarInfo(NTCEnv env) throws SemanticException {
         return null;
     }
 //

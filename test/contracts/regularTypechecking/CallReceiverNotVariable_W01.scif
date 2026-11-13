@@ -1,0 +1,8 @@
+// The receiver of a method call is not a variable.
+contract CallReceiverNotVariable_W01 {
+    struct S { CallReceiverNotVariable_W01 c; }
+    S s;
+    uint x;
+    constructor() { super(); x = s.c.g(); }
+    public uint g() { return 1; }
+}

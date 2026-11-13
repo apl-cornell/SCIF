@@ -1,0 +1,7 @@
+// A method name is used as a value.
+contract MethodAsValue_W01 {
+    uint x;
+    constructor() { super(); }
+    public void f() { x = g; }
+    public uint g() { return 1; }
+}

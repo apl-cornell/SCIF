@@ -52,7 +52,9 @@ public class Try extends Statement {
         //TODO: inc scope layer
         for (ExceptHandler h : handlers) {
             ExceptionTypeSym t = env.getExceptionTypeSym(h.type());
-            assert t != null: "Exception not found: " + h.type().name + " at " + location.errString();
+            if (t == null) {
+                throw new SemanticException("exception not found: " + h.type().name, h.location);
+            }
             now.addException(t, true);
         }
 

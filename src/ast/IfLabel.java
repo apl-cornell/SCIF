@@ -30,8 +30,7 @@ public abstract class IfLabel extends Expression {
 
     public abstract boolean typeMatch(IfLabel begin_pc);
     public VarSym getVarInfo(VisitEnv env, boolean tail_position, Map<String, String> dependentMapping) {
-        assert false;
-        return null;
+        throw new AssertionError();
     }
 
 }

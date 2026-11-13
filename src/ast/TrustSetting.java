@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import typecheck.VisitEnv;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Relation;
 
 public class TrustSetting extends Node {
@@ -48,7 +49,7 @@ public class TrustSetting extends Node {
     }
 
     @Override
-    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext context) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext context) throws SemanticException {
         for (TrustConstraint trustConstraint : trust_list) {
             trustConstraint.genTypeConstraints(env, context);
         }

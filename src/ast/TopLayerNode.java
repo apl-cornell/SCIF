@@ -9,7 +9,13 @@ public abstract class TopLayerNode extends Node {
 
     public abstract void globalInfoVisit(InterfaceSym contractSym) throws SemanticException;
 
-    public abstract boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException;
+    /**
+     * Records in {@code env} the symbols this node declares, for regular
+     * (non-IFC) type checking.
+     *
+     * @throws SemanticException if a declaration is ill-formed
+     */
+    public abstract void ntcGlobalInfo(NTCEnv env, ScopeContext parent) throws SemanticException;
 
     // public abstract void findPrincipal(HashSet<String> principalSet);
     

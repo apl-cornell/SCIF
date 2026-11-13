@@ -541,7 +541,7 @@ public class CompileEnv {
             leaves.addAll(materializeLabel(((ComplexIfLabel) l).getRight()));
         } else {
             // meet labels are rejected before codegen
-            assert false;
+            throw new AssertionError();
         }
         return leaves;
     }
@@ -632,8 +632,7 @@ public class CompileEnv {
 //                    + checkIfTrustSender(((ComplexIfLabel) l).getRight()) + ")";
         } else {
             // TODO: error report;
-            assert false;
-            return null;
+            throw new AssertionError();
         }
     }
 
@@ -646,8 +645,7 @@ public class CompileEnv {
         String name_1, name_2;
         if (!(l_2 instanceof PrimitiveIfLabel)) {
             //TODO: error report
-            assert false;
-            return null;
+            throw new AssertionError();
         } else {
             name_2 = ((PrimitiveIfLabel) l_2).toString();
         }
@@ -674,8 +672,7 @@ public class CompileEnv {
 //                    ((ComplexIfLabel) l_1).getRight(), l_2) + ")";
         } else {
             // TODO: error report;
-            assert false;
-            return null;
+            throw new AssertionError();
         }
     }
 
@@ -710,8 +707,7 @@ public class CompileEnv {
 //                    + ")";
         } else {
             // TODO: error report;
-            assert false;
-            return null;
+            throw new AssertionError();
         }
     }
 
@@ -753,8 +749,7 @@ public class CompileEnv {
 //                    ((ComplexIfLabel) l).getRight()) + ")";
         } else {
             // TODO: error report;
-            assert false;
-            return null;
+            throw new AssertionError();
         }
     }
 

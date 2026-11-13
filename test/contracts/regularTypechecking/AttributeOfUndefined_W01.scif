@@ -1,0 +1,5 @@
+// The receiver of an attribute access is not defined.
+contract AttributeOfUndefined_W01 {
+    uint x;
+    constructor() { super(); x = z.f; }
+}

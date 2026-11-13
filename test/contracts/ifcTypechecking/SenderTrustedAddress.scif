@@ -1,0 +1,14 @@
+// The sender address is trusted data: it can be stored in a trusted
+// field and compared with one to make a trusted decision.
+contract SenderTrustedAddress {
+    address{this} owner;
+    map(address, bool{this}){this} blocked;
+
+    constructor() { super(); owner = sender; }
+
+    public void block{sender -> this; any}(address{any} who) {
+        if (sender == owner) {
+            blocked[endorse(who, any -> this)] = true;
+        }
+    }
+}

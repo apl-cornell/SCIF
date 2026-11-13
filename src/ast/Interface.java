@@ -51,7 +51,7 @@ public class Interface extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent)
+    public void ntcGlobalInfo(NTCEnv env, ScopeContext parent)
             throws SemanticException {
         ScopeContext now = new ScopeContext(this, parent);
         // SymTab curSymTab = new SymTab(env.curSymTab());
@@ -63,43 +63,32 @@ public class Interface extends TopLayerNode {
         try {
             env.addSym(contractName, interfaceSym);
         } catch (SymTab.AlreadyDefined e) {
-            assert false; // cannot happen
+            throw new AssertionError(e);
         }
         env.setCurContractSym(interfaceSym);
         // Utils.addBuiltInASTNode(contractSym, env.globalSymTab(), trustSetting);
 
         for (StructDef def: structDefs) {
-            if (!def.ntcGlobalInfo(env, now)) {
-                return false;
-            }
+            def.ntcGlobalInfo(env, now);
         }
 
         for (StateVariableDeclaration varDef: varDeclarations) {
-            if (!varDef.ntcGlobalInfo(env, now)) {
-                return false;
-            }
+            varDef.ntcGlobalInfo(env, now);
         }
 
         for (ExceptionDef def : exceptionDefs) {
-            if (!def.ntcGlobalInfo(env, now)) {
-                return false;
-            }
+            def.ntcGlobalInfo(env, now);
         }
 
         for (EventDef def : eventDefs) {
-            if (!def.ntcGlobalInfo(env, now)) {
-                return false;
-            }
+            def.ntcGlobalInfo(env, now);
         }
 
         for (FunctionSig fDef : funcSigs) {
-            if (!fDef.ntcGlobalInfo(env, now)) {
-                return false;
-            }
+            fDef.ntcGlobalInfo(env, now);
         }
 
         env.exitNewScope();
-        return true;
     }
 
 
@@ -203,15 +192,15 @@ public class Interface extends TopLayerNode {
 //        return true;
 //    }
 
-    public void codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap) {
+    public void codePasteContract(Map<String, Contract> contractMap, Map<String, Interface> interfaceMap)
+            throws SemanticException {
         if (superContractName.isEmpty()) {
             return;
         }
 
         Interface superContract = interfaceMap.get(superContractName);
         if (superContract == null) {
-            assert false: "super contract not found: " + superContractName;
-            return;
+            throw new SemanticException("interface not found: " + superContractName, location);
         }
 
         // check that there are no duplicates
@@ -232,24 +221,29 @@ public class Interface extends TopLayerNode {
         for (StructDef structDef: superContract.structDefs) {
             if (structDef.isBuiltIn()) continue;
             if (nameSet.contains(structDef.structName)) {
-                assert false: "duplicate struct: " + structDef.structName;
+                throw new SemanticException("struct " + structDef.structName
+                        + " conflicts with a name inherited from " + superContractName, location);
             }
         }
         for (ExceptionDef exp: superContract.exceptionDefs) {
             if (exp.isBuiltIn()) continue;
             if (nameSet.contains(exp.exceptionName)) {
-                assert false: "duplicate exception: " + exp.exceptionName;
+                throw new SemanticException("exception " + exp.exceptionName
+                        + " conflicts with a name inherited from " + superContractName, location);
             }
         }
         for (EventDef eventDef: superContract.eventDefs) {
             if (eventDef.isBuiltIn()) continue;
-            // TODO assert?
-            assert (!nameSet.contains(eventDef.eventName)) : "duplicate event: " + eventDef.eventName;
+            if (nameSet.contains(eventDef.eventName)) {
+                throw new SemanticException("event " + eventDef.eventName
+                        + " conflicts with a name inherited from " + superContractName, location);
+            }
         }
         for (FunctionSig f: superContract.funcSigs) {
             if (f.isBuiltIn()) continue;
             if (nameSet.contains(f.name)) {
-                assert false: "duplicate method: " + f.name + " from " + contractName;
+                throw new SemanticException("method " + f.name
+                        + " conflicts with a name inherited from " + superContractName, location);
             }
         }
 

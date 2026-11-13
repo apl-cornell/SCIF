@@ -102,12 +102,17 @@ public class Call extends TrailerExpr {
             // a.b(c), a must be a contract or an array
 
             extern = true;
-            assert att.value instanceof Name : "at " + location.errString();
+            if (!(att.value instanceof Name)) {
+                throw new SemanticException(
+                        "the receiver of a method call must be a variable", att.value.location);
+            }
             String varName = ((Name) att.value).id; // a
             // System.out.println(varName);
             funcName = att.attr.id; // b
             Sym s = env.getCurSym(varName);
-            assert s != null: "variable not found: " + varName + " at " + location.errString();
+            if (s == null) {
+                throw new SemanticException("variable not found: " + varName, att.value.location);
+            }
             // logger.debug("var " + varName + ": " + s.getName());
 
             if (!(s instanceof VarSym varSym)) {
@@ -988,8 +993,7 @@ public class Call extends TrailerExpr {
                 if (s instanceof InterfaceSym || s instanceof BuiltinTypeSym) {
                     return true;
                 }
-                assert false;
-                return false;
+                throw new AssertionError("callee is neither a method nor a type: " + funcName);
             } else {
                 return false;
             }

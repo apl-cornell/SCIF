@@ -5,6 +5,7 @@ import typecheck.InterfaceSym;
 import typecheck.NTCEnv;
 import typecheck.PrimitiveLabel;
 import typecheck.ScopeContext;
+import typecheck.exceptions.SemanticException;
 import typecheck.sherrlocUtils.Relation;
 
 import java.util.ArrayList;
@@ -26,8 +27,7 @@ public class TrustConstraint extends TopLayerNode {
     }
 
     @Override
-    public boolean ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
-        return false;
+    public void ntcGlobalInfo(NTCEnv env, ScopeContext parent) {
     }
 
 //    public void findPrincipal(HashSet<String> principalSet) {
@@ -36,7 +36,7 @@ public class TrustConstraint extends TopLayerNode {
 //    }
 
     @Override
-    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) {
+    public ScopeContext genTypeConstraints(NTCEnv env, ScopeContext parent) throws SemanticException {
         lhs.genTypeConstraints(env, parent);
         rhs.genTypeConstraints(env, parent);
         return parent;

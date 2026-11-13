@@ -28,10 +28,6 @@ public class CallSpec extends Node {
     public CallSpec(Map<String, Expression> specs) {
         assert specs != null;
         this.specs = specs;
-        for (Entry<String, Expression> entry: specs.entrySet()) {
-            String keyword = entry.getKey();
-            assert keyword.equals(Utils.LABEL_PAYVALUE) || keyword.equals(Utils.BUILT_IN_GAS) : "unsupported option: " + keyword + " at " + location.errString();
-        }
     }
 
     @Override
@@ -40,6 +36,11 @@ public class CallSpec extends Node {
 
         ScopeContext now = new ScopeContext(this, parent);
         for (Entry<String, Expression> entry: specs.entrySet()) {
+            String keyword = entry.getKey();
+            if (!keyword.equals(Utils.LABEL_PAYVALUE) && !keyword.equals(Utils.BUILT_IN_GAS)) {
+                throw new SemanticException("unsupported call option: " + keyword,
+                        entry.getValue().location);
+            }
             ScopeContext value = entry.getValue().genTypeConstraints(env, now);
             env.addCons(
                     new Constraint(new Inequality(env.getSymName(BuiltInT.UINT), Relation.LEQ, value.getSHErrLocName()),

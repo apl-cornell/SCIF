@@ -202,7 +202,7 @@ constructor(bytes name_, bytes symbol_) {
 
 Every contract declares exactly one constructor, which is executed once when the contract is created, just like in Solidity. The constructor must call `super()` before making any other function calls. The constructor's arguments come from whoever deploys the contract, so they carry the integrity `{sender}`; storing them in state variables trusted by the contract requires an explicit `endorse`.
 
-The members of a contract appear in a fixed order: state variables, exceptions, events, the constructor, and then the functions.
+The members of a contract appear in a fixed order: structs, state variables, exceptions, events, the constructor, and then the functions.
 
 #### Functions
 
