@@ -1,0 +1,627 @@
+import "./tokens/ERC20.scif";
+import "./interfaces/IERC20.scif";
+import "./interfaces/IUniswapFactory.scif";
+import "./interfaces/IUniswapExchange.scif";
+
+
+contract UniswapExchange extends ERC20 {
+
+  /***********************************|
+  |        Variables && Events        |
+  |__________________________________*/
+
+  // Variables
+  uint _name;         // Uniswap V1
+  uint _symbol;       // UNI-V1
+  uint  _decimals;     // 18
+  IERC20 _token;                // address of the ERC20 token traded on this contract
+  IUniswapFactory _factory;     // interface for the factory that created this contract
+  
+  // Events
+  event TokenPurchase(address  buyer, uint  eth_sold, uint  tokens_bought);
+  event EthPurchase(address  buyer, uint  tokens_sold, uint  eth_bought);
+  event AddLiquidity(address  provider, uint  eth_amount, uint  token_amount);
+  event RemoveLiquidity(address  provider, uint  eth_amount, uint  token_amount);
+
+
+  /***********************************|
+  |            Constsructor           |
+  |__________________________________*/
+
+
+  constructor(){
+    super();
+  }
+  /**  
+   * @dev This function acts as a contract constructor which is not currently supported in contracts deployed
+   *      using create_with_code_of(). It is called once by the factory during contract creation.
+   */
+  public void setup(address token_addr)  {
+    if (!(address(_factory) == address(0) && address(_token) == address(0))) {
+      revert "INVALID_ADDRESS";
+    }
+
+    // token_addr is chosen by the caller. Endorsing it is safe for the same reason the
+    // reference is safe: setup only runs while the exchange is uninitialized (checked
+    // above), and the factory calls it in the same transaction that creates the exchange.
+    endorse(token_addr, sender -> this) when (token_addr != address(0)) {
+      _factory = IUniswapFactory(sender);
+      _token = IERC20(token_addr);
+      _name = (5598825 << 232) | (7567201 << 208) | (7348310 << 184) | (49 << 176);
+      _symbol = (5590601 << 232) | (2971185 << 208);
+
+      _decimals = 18;
+    } else {
+      revert "INVALID_ADDRESS";
+    }
+  }
+
+
+  /***********************************|
+  |        Exchange Functions         |
+  |__________________________________*/
+
+
+  // Default (fallback) functions NOT SUPPORTED in SCIF; the same swap is ethToTokenSwapInput(1, now).
+  /**
+   * @notice Convert ETH to Tokens.
+   * @dev User specifies exact input (value).
+   * @dev User cannot specify minimum output or deadline.
+   
+  function () external payable {
+    ethToTokenInput(value, 1, now, sender, sender);
+  }
+  */
+ /**
+   * @dev Pricing function for converting between ETH && Tokens.
+   * @param input_amount Amount of ETH or Tokens being sold.
+   * @param input_reserve Amount of ETH or Tokens (input type) in exchange reserves.
+   * @param output_reserve Amount of ETH or Tokens (output type) in exchange reserves.
+   * @return Amount of ETH or Tokens bought.
+   */
+  public uint getInputPrice(uint input_amount, uint input_reserve, uint output_reserve) {
+    if (input_reserve > 0 && output_reserve > 0){
+      revert  "INVALID_VALUE";
+    }
+    uint input_amount_with_fee = input_amount * 997;
+    uint numerator = input_amount_with_fee * output_reserve;
+    uint denominator = input_reserve * (1000) + (input_amount_with_fee);
+    return numerator / denominator;
+  }
+
+ /**
+   * @dev Pricing function for converting between ETH && Tokens.
+   * @param output_amount Amount of ETH or Tokens being bought.
+   * @param input_reserve Amount of ETH or Tokens (input type) in exchange reserves.
+   * @param output_reserve Amount of ETH or Tokens (output type) in exchange reserves.
+   * @return Amount of ETH or Tokens sold.
+   */
+  public uint getOutputPrice(uint output_amount, uint input_reserve, uint output_reserve)  {
+    assert(input_reserve > 0 && output_reserve > 0);
+    uint numerator = input_reserve * (output_amount) * (1000);
+    uint denominator = (output_reserve - (output_amount)) * (997);
+    return (numerator / denominator) + 1;
+  }
+
+  private uint ethToTokenInput(uint eth_sold, uint min_tokens, uint deadline, address buyer, address recipient){
+    assert(deadline >= now && eth_sold > 0 && min_tokens > 0);
+    uint token_reserve = _token.balanceOf(address(this));
+    uint tokens_bought = getInputPrice(eth_sold, balance(address(this)) - (eth_sold), token_reserve);
+    assert(tokens_bought >= min_tokens);
+    assert(_token.transfer(recipient, tokens_bought));
+    emit TokenPurchase(buyer, eth_sold, tokens_bought);
+    return tokens_bought;
+  }
+
+  /** 
+   * @notice Convert ETH to Tokens.
+   * @dev User specifies exact input (value) && minimum output.
+   * @param min_tokens Minimum Tokens bought.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @return Amount of Tokens bought.
+   */ 
+  public uint ethToTokenSwapInput(uint min_tokens, uint deadline)  {
+    return ethToTokenInput(value, min_tokens, deadline, sender, sender);
+  }
+
+  /** 
+   * @notice Convert ETH to Tokens && transfers Tokens to recipient.
+   * @dev User specifies exact input (value) && minimum output
+   * @param min_tokens Minimum Tokens bought.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param recipient The address that receives output Tokens.
+   * @return  Amount of Tokens bought.
+   */
+  public uint ethToTokenTransferInput(uint min_tokens, uint deadline, address recipient)  {
+    assert(recipient != address(this) && recipient != address(0));
+    return ethToTokenInput(value, min_tokens, deadline, sender, recipient);
+  }
+
+  private uint ethToTokenOutput(uint tokens_bought, uint max_eth, uint deadline, address buyer, address recipient){
+    assert(deadline >= now && tokens_bought > 0 && max_eth > 0);
+    uint token_reserve = _token.balanceOf(address(this));
+    uint eth_sold = getOutputPrice(tokens_bought, balance(address(this))-(max_eth), token_reserve);
+    // Throws if eth_sold > max_eth
+    uint eth_refund = max_eth-(eth_sold);
+    if (eth_refund > 0) {
+      send(buyer, eth_refund);
+    }
+    assert(_token.transfer(recipient, tokens_bought));
+    emit TokenPurchase(buyer, eth_sold, tokens_bought);
+    return eth_sold;
+  }
+
+  /** 
+   * @notice Convert ETH to Tokens.
+   * @dev User specifies maximum input (value) && exact output.
+   * @param tokens_bought Amount of tokens bought.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @return Amount of ETH sold.
+   */
+  public uint ethToTokenSwapOutput(uint tokens_bought, uint deadline)  {
+    return ethToTokenOutput(tokens_bought, value, deadline, sender, sender);
+  }
+
+  /** 
+   * @notice Convert ETH to Tokens && transfers Tokens to recipient.
+   * @dev User specifies maximum input (value) && exact output.
+   * @param tokens_bought Amount of tokens bought.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param recipient The address that receives output Tokens.
+   * @return Amount of ETH sold.
+   */
+  public uint ethToTokenTransferOutput(uint tokens_bought, uint deadline, address recipient) {
+    assert(recipient != address(this) && recipient != address(0));
+    return ethToTokenOutput(tokens_bought, value, deadline, sender, recipient);
+  }
+
+  private uint tokenToEthInput(uint tokens_sold, uint min_eth, uint deadline, address buyer, address recipient)  {
+    assert(deadline >= now && tokens_sold > 0 && min_eth > 0);
+    uint token_reserve = _token.balanceOf(address(this));
+    uint eth_bought = getInputPrice(tokens_sold, token_reserve, balance(address(this)));
+    uint wei_bought = eth_bought;
+    assert(wei_bought >= min_eth);
+    send(recipient,wei_bought);
+    assert(_token.transferFrom(buyer, address(this), tokens_sold));
+    emit EthPurchase(buyer, tokens_sold, wei_bought);
+    return wei_bought;
+  }
+
+  /** 
+   * @notice Convert Tokens to ETH.
+   * @dev User specifies exact input && minimum output.
+   * @param tokens_sold Amount of Tokens sold.
+   * @param min_eth Minimum ETH purchased.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @return Amount of ETH bought.
+   */
+  public uint tokenToEthSwapInput(uint tokens_sold, uint min_eth, uint deadline) {
+    return tokenToEthInput(tokens_sold, min_eth, deadline, sender, sender);
+  }
+
+  /** 
+   * @notice Convert Tokens to ETH && transfers ETH to recipient.
+   * @dev User specifies exact input && minimum output.
+   * @param tokens_sold Amount of Tokens sold.
+   * @param min_eth Minimum ETH purchased.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param recipient The address that receives output ETH.
+   * @return  Amount of ETH bought.
+   */
+  public uint tokenToEthTransferInput(uint tokens_sold, uint min_eth, uint deadline, address  recipient) {
+    assert(recipient != address(this) && recipient != address(0));
+    return tokenToEthInput(tokens_sold, min_eth, deadline, sender, recipient);
+  }
+
+  
+  private uint tokenToEthOutput(uint eth_bought, uint max_tokens, uint deadline, address buyer, address  recipient){
+    assert(deadline >= now && eth_bought > 0);
+    uint token_reserve = _token.balanceOf(address(this));
+    uint tokens_sold = getOutputPrice(eth_bought, token_reserve, balance(address(this)));
+    // tokens sold is always > 0
+    assert(max_tokens >= tokens_sold);
+    send(recipient, eth_bought);
+    assert(_token.transferFrom(buyer, address(this), tokens_sold));
+    emit EthPurchase(buyer, tokens_sold, eth_bought);
+    return tokens_sold;
+  }
+
+  /** 
+   * @notice Convert Tokens to ETH.
+   * @dev User specifies maximum input && exact output.
+   * @param eth_bought Amount of ETH purchased.
+   * @param max_tokens Maximum Tokens sold.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @return Amount of Tokens sold.
+   */
+  public uint tokenToEthSwapOutput(uint eth_bought, uint max_tokens, uint deadline){
+    return tokenToEthOutput(eth_bought, max_tokens, deadline, sender, sender);
+  }
+
+  /**
+   * @notice Convert Tokens to ETH && transfers ETH to recipient.
+   * @dev User specifies maximum input && exact output.
+   * @param eth_bought Amount of ETH purchased.
+   * @param max_tokens Maximum Tokens sold.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param recipient The address that receives output ETH.
+   * @return Amount of Tokens sold.
+   */
+  public uint tokenToEthTransferOutput(uint eth_bought, uint max_tokens, uint deadline, address  recipient) {
+    assert(recipient != address(this) && recipient != address(0));
+    return tokenToEthOutput(eth_bought, max_tokens, deadline, sender, recipient);
+  }
+
+  private uint tokenToTokenInput(
+    uint tokens_sold, 
+    uint min_tokens_bought, 
+    uint min_eth_bought, 
+    uint deadline,
+    address buyer, 
+    address recipient, 
+    address exchange_addr) 
+     
+  {
+    assert(deadline >= now && tokens_sold > 0 && min_tokens_bought > 0 && min_eth_bought > 0);
+    assert(exchange_addr != address(this) && exchange_addr != address(0));
+    uint token_reserve = _token.balanceOf(address(this));
+    uint eth_bought = getInputPrice(tokens_sold, token_reserve, balance(address(this)));
+    uint wei_bought = eth_bought;
+    assert(wei_bought >= min_eth_bought);
+    assert(_token.transferFrom(buyer, address(this), tokens_sold));
+    IUniswapExchange exchange = IUniswapExchange(exchange_addr);
+    uint tokens_bought = exchange.ethToTokenTransferInput(min_tokens_bought, deadline, recipient){value = wei_bought};
+    emit EthPurchase(buyer, tokens_sold, wei_bought);
+    return tokens_bought;
+  }
+
+  /**
+   * @notice Convert Tokens (token) to Tokens (token_addr).
+   * @dev User specifies exact input && minimum output.
+   * @param tokens_sold Amount of Tokens sold.
+   * @param min_tokens_bought Minimum Tokens (token_addr) purchased.
+   * @param min_eth_bought Minimum ETH purchased as intermediary.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param token_addr The address of the token being purchased.
+   * @return Amount of Tokens (token_addr) bought.
+   */
+  public uint tokenToTokenSwapInput(
+    uint tokens_sold, 
+    uint min_tokens_bought, 
+    uint min_eth_bought, 
+    uint deadline, 
+    address token_addr) 
+  {
+    address  exchange_addr = _factory.getExchange(token_addr);
+    return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, sender, exchange_addr);
+  }
+
+  /**
+   * @notice Convert Tokens (token) to Tokens (token_addr) && transfers
+   *         Tokens (token_addr) to recipient.
+   * @dev User specifies exact input && minimum output.
+   * @param tokens_sold Amount of Tokens sold.
+   * @param min_tokens_bought Minimum Tokens (token_addr) purchased.
+   * @param min_eth_bought Minimum ETH purchased as intermediary.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param recipient The address that receives output ETH.
+   * @param token_addr The address of the token being purchased.
+   * @return Amount of Tokens (token_addr) bought.
+   */
+  public uint tokenToTokenTransferInput(
+    uint tokens_sold, 
+    uint min_tokens_bought, 
+    uint min_eth_bought, 
+    uint deadline, 
+    address recipient, 
+    address token_addr) 
+  {
+    address exchange_addr = _factory.getExchange(token_addr);
+    return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, recipient, exchange_addr);
+  }
+
+  private uint tokenToTokenOutput(
+    uint tokens_bought, 
+    uint max_tokens_sold, 
+    uint max_eth_sold, 
+    uint deadline, 
+    address buyer, 
+    address recipient, 
+    address exchange_addr)  
+  {
+    assert(deadline >= now && (tokens_bought > 0 && max_eth_sold > 0));
+    assert(exchange_addr != address(this) && exchange_addr != address(0));
+    IUniswapExchange exchange = IUniswapExchange(exchange_addr);
+    uint eth_bought = exchange.getEthToTokenOutputPrice(tokens_bought);
+    uint token_reserve = _token.balanceOf(address(this));
+    uint tokens_sold = getOutputPrice(eth_bought, token_reserve, balance(address(this)));
+    // tokens sold is always > 0
+    assert(max_tokens_sold >= tokens_sold && max_eth_sold >= eth_bought);
+    assert(_token.transferFrom(buyer, address(this), tokens_sold));
+    uint eth_sold = exchange.ethToTokenTransferOutput(tokens_bought, deadline, recipient){value = eth_bought};
+    emit EthPurchase(buyer, tokens_sold, eth_bought);
+    return tokens_sold;
+  }
+
+  /**
+   * @notice Convert Tokens (token) to Tokens (token_addr).
+   * @dev User specifies maximum input && exact output.
+   * @param tokens_bought Amount of Tokens (token_addr) bought.
+   * @param max_tokens_sold Maximum Tokens (token) sold.
+   * @param max_eth_sold Maximum ETH purchased as intermediary.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param token_addr The address of the token being purchased.
+   * @return Amount of Tokens (token) sold.
+   */
+  public uint tokenToTokenSwapOutput(
+    uint tokens_bought, 
+    uint max_tokens_sold, 
+    uint max_eth_sold, 
+    uint deadline, 
+    address token_addr) 
+  {
+    address exchange_addr = _factory.getExchange(token_addr);
+    return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, sender, exchange_addr);
+  }
+
+  /**
+   * @notice Convert Tokens (token) to Tokens (token_addr) && transfers
+   *         Tokens (token_addr) to recipient.
+   * @dev User specifies maximum input && exact output.
+   * @param tokens_bought Amount of Tokens (token_addr) bought.
+   * @param max_tokens_sold Maximum Tokens (token) sold.
+   * @param max_eth_sold Maximum ETH purchased as intermediary.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param recipient The address that receives output ETH.
+   * @param token_addr The address of the token being purchased.
+   * @return Amount of Tokens (token) sold.
+   */
+  public uint tokenToTokenTransferOutput(
+    uint tokens_bought, 
+    uint max_tokens_sold, 
+    uint max_eth_sold, 
+    uint deadline, 
+    address recipient, 
+    address token_addr) 
+  {
+    address exchange_addr = _factory.getExchange(token_addr);
+    return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, recipient, exchange_addr);
+  }
+
+  /**
+   * @notice Convert Tokens (token) to Tokens (exchange_addr.token).
+   * @dev Allows trades through contracts that were not deployed from the same factory.
+   * @dev User specifies exact input && minimum output.
+   * @param tokens_sold Amount of Tokens sold.
+   * @param min_tokens_bought Minimum Tokens (token_addr) purchased.
+   * @param min_eth_bought Minimum ETH purchased as intermediary.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param exchange_addr The address of the exchange for the token being purchased.
+   * @return Amount of Tokens (exchange_addr.token) bought.
+   */
+  public uint tokenToExchangeSwapInput(
+    uint tokens_sold, 
+    uint min_tokens_bought, 
+    uint min_eth_bought, 
+    uint deadline, 
+    address exchange_addr) 
+  {
+    return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, sender, exchange_addr);
+  }
+
+  /**
+   * @notice Convert Tokens (token) to Tokens (exchange_addr.token) && transfers
+   *         Tokens (exchange_addr.token) to recipient.
+   * @dev Allows trades through contracts that were not deployed from the same factory.
+   * @dev User specifies exact input && minimum output.
+   * @param tokens_sold Amount of Tokens sold.
+   * @param min_tokens_bought Minimum Tokens (token_addr) purchased.
+   * @param min_eth_bought Minimum ETH purchased as intermediary.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param recipient The address that receives output ETH.
+   * @param exchange_addr The address of the exchange for the token being purchased.
+   * @return Amount of Tokens (exchange_addr.token) bought.
+   */
+  public uint tokenToExchangeTransferInput(
+    uint tokens_sold, 
+    uint min_tokens_bought, 
+    uint min_eth_bought, 
+    uint deadline, 
+    address recipient, 
+    address exchange_addr) 
+  {
+    assert(recipient != address(this));
+    return tokenToTokenInput(tokens_sold, min_tokens_bought, min_eth_bought, deadline, sender, recipient, exchange_addr);
+  }
+
+  /**
+   * @notice Convert Tokens (token) to Tokens (exchange_addr.token).
+   * @dev Allows trades through contracts that were not deployed from the same factory.
+   * @dev User specifies maximum input && exact output.
+   * @param tokens_bought Amount of Tokens (token_addr) bought.
+   * @param max_tokens_sold Maximum Tokens (token) sold.
+   * @param max_eth_sold Maximum ETH purchased as intermediary.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param exchange_addr The address of the exchange for the token being purchased.
+   * @return Amount of Tokens (token) sold.
+   */
+  public uint tokenToExchangeSwapOutput(
+    uint tokens_bought, 
+    uint max_tokens_sold, 
+    uint max_eth_sold, 
+    uint deadline, 
+    address exchange_addr) 
+  {
+    return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, sender, exchange_addr);
+  }
+
+  /**
+   * @notice Convert Tokens (token) to Tokens (exchange_addr.token) && transfers
+   *         Tokens (exchange_addr.token) to recipient.
+   * @dev Allows trades through contracts that were not deployed from the same factory.
+   * @dev User specifies maximum input && exact output.
+   * @param tokens_bought Amount of Tokens (token_addr) bought.
+   * @param max_tokens_sold Maximum Tokens (token) sold.
+   * @param max_eth_sold Maximum ETH purchased as intermediary.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @param recipient The address that receives output ETH.
+   * @param exchange_addr The address of the exchange for the token being purchased.
+   * @return Amount of Tokens (token) sold.
+   */
+  public uint tokenToExchangeTransferOutput(
+    uint tokens_bought, 
+    uint max_tokens_sold, 
+    uint max_eth_sold, 
+    uint deadline, 
+    address recipient, 
+    address exchange_addr) 
+  {
+    assert(recipient != address(this));
+    return tokenToTokenOutput(tokens_bought, max_tokens_sold, max_eth_sold, deadline, sender, recipient, exchange_addr);
+  }
+
+
+  /***********************************|
+  |         Getter Functions          |
+  |__________________________________*/
+
+  /**
+   * @notice Public price function for ETH to Token trades with an exact input.
+   * @param eth_sold Amount of ETH sold.
+   * @return Amount of Tokens that can be bought with input ETH.
+   */
+  public uint getEthToTokenInputPrice(uint eth_sold)  {
+    assert(eth_sold > 0);
+    uint token_reserve = _token.balanceOf(address(this));
+    return getInputPrice(eth_sold, balance(address(this)), token_reserve);
+  }
+
+  /**
+   * @notice Public price function for ETH to Token trades with an exact output.
+   * @param tokens_bought Amount of Tokens bought.
+   * @return Amount of ETH needed to buy output Tokens.
+   */
+  public uint getEthToTokenOutputPrice(uint tokens_bought) {
+    assert(tokens_bought > 0);
+    uint token_reserve = _token.balanceOf(address(this));
+    uint eth_sold = getOutputPrice(tokens_bought, balance(address(this)), token_reserve);
+    return eth_sold;
+  }
+
+  /**
+   * @notice Public price function for Token to ETH trades with an exact input.
+   * @param tokens_sold Amount of Tokens sold.
+   * @return Amount of ETH that can be bought with input Tokens.
+   */
+  public uint getTokenToEthInputPrice(uint tokens_sold) {
+    assert(tokens_sold > 0);
+    uint token_reserve = _token.balanceOf(address(this));
+    uint eth_bought = getInputPrice(tokens_sold, token_reserve, balance(address(this)));
+    return eth_bought;
+  }
+
+  /**
+   * @notice Public price function for Token to ETH trades with an exact output.
+   * @param eth_bought Amount of output ETH.
+   * @return Amount of Tokens needed to buy output ETH.
+   */
+  public uint getTokenToEthOutputPrice(uint eth_bought) {
+    assert(eth_bought > 0);
+    uint token_reserve = _token.balanceOf(address(this));
+    return getOutputPrice(eth_bought, token_reserve, balance(address(this)));
+  }
+
+  /** 
+   * @return Address of Token that is sold on this exchange.
+   */
+  public address tokenAddress()  {
+    return address(_token);
+  }
+
+  /**
+   * @return Address of factory that created this exchange.
+   */
+  public address factoryAddress()  {
+    return address(_factory);
+  }
+
+
+  /***********************************|
+  |        Liquidity Functions        |
+  |__________________________________*/
+
+  /** 
+   * @notice Deposit ETH && Tokens (token) at current ratio to mint UNI tokens.
+   * @dev min_liquidity does nothing when total UNI supply is 0.
+   * @param min_liquidity Minimum number of UNI sender will mint if total UNI supply is greater than 0.
+   * @param max_tokens Maximum number of tokens deposited. Deposits max amount if total UNI supply is 0.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @return The amount of UNI minted.
+   */
+  public uint addLiquidity(uint min_liquidity, uint max_tokens, uint deadline)  {
+    if (!(deadline > now && max_tokens > 0 && value > 0)) {
+      revert "UniswapExchange#addLiquidity: INVALID_ARGUMENT";
+    }
+    uint total_liquidity = _totalSupply;
+
+    if (total_liquidity > 0) {
+      assert(min_liquidity > 0);
+      uint eth_reserve = balance(address(this))-(value);
+      uint token_reserve = _token.balanceOf(address(this));
+      uint token_amount = value * token_reserve / eth_reserve + 1;
+      uint liquidity_minted = value * total_liquidity / eth_reserve;
+      assert(max_tokens >= token_amount && liquidity_minted >= min_liquidity);
+      _balances[sender] = _balances[sender] + liquidity_minted;
+      _totalSupply = total_liquidity + liquidity_minted;
+      assert(_token.transferFrom(sender, address(this), token_amount));
+      emit AddLiquidity(sender, value, token_amount);
+      emit Transfer(address(0), sender, liquidity_minted);
+      return liquidity_minted;
+
+    } else {
+      if (!(address(_factory) != address(0) && address(_token) != address(0) && value >= 1000000000)) {
+        revert "INVALID_VALUE";
+      }
+      assert(_factory.getExchange(address(_token)) == address(this));
+      uint token_amount = max_tokens;
+      uint initial_liquidity = balance(address(this));
+      _totalSupply = initial_liquidity;
+      _balances[sender] = initial_liquidity;
+      assert(_token.transferFrom(sender, address(this), token_amount));
+      emit AddLiquidity(sender, value, token_amount);
+      emit Transfer(address(0), sender, initial_liquidity);
+      return initial_liquidity;
+    }
+  }
+
+  /**
+   * @dev Burn UNI tokens to withdraw ETH && Tokens at current ratio.
+   * @param amount Amount of UNI burned.
+   * @param min_eth Minimum ETH withdrawn.
+   * @param min_tokens Minimum Tokens withdrawn.
+   * @param deadline Time after which this transaction can no longer be executed.
+   * @return The amount of ETH && Tokens withdrawn.
+   */
+  public uint removeLiquidity(uint amount, uint min_eth, uint min_tokens, uint deadline) {
+    assert(amount > 0 && deadline > now && min_eth > 0 && min_tokens > 0);
+    uint total_liquidity = _totalSupply;
+    assert(total_liquidity > 0);
+    uint token_reserve = _token.balanceOf(address(this));
+    uint eth_amount = amount * balance(address(this)) / total_liquidity;
+    uint token_amount = amount * token_reserve / total_liquidity;
+    assert(eth_amount >= min_eth && token_amount >= min_tokens);
+
+    _balances[sender] = _balances[sender]-(amount);
+    _totalSupply = total_liquidity-(amount);
+    send(sender, eth_amount);
+    assert(_token.transfer(sender, token_amount));
+    emit RemoveLiquidity(sender, eth_amount, token_amount);
+    emit Transfer(sender, address(0), amount);
+
+    //MUST PACK THE RESULT
+    assert (eth_amount < (1 << 128) && token_amount < (1 << 128));
+    return (eth_amount << 128) | token_amount;  // pack
+  }
+
+
+}

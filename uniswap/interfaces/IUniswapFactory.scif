@@ -1,0 +1,10 @@
+
+interface IUniswapFactory {
+  event NewExchange(address  token, address  exchange);
+
+  public void initializeFactory(address template) ;
+  public address createExchange(address token);
+  public address getExchange(address token);
+  public address getToken(address token);
+  public address getTokenWithId(uint token_id) ;
+}
