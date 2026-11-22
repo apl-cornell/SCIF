@@ -1,0 +1,17 @@
+interface IERC20{
+    event Approval(address owner, address spender, uint _value);
+    event Transfer(address from, address to, uint _value);
+
+    public string name();
+    public string symbol();
+    public uint decimals();
+    public uint totalSupply();
+    public uint balanceOf(address owner);
+    public uint allowance(address owner, address spender);
+
+    public bool approve(address spender, uint _value);
+    public bool transfer(address to, uint _value);
+    public bool transferFrom(address from, address to, uint _value);
+    
+        
+}

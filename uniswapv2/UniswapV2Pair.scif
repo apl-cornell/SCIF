@@ -1,0 +1,36 @@
+import "./interfaces/IUniswapV2Pair.sol";
+import "./UniswapV2ERC20.sol";
+import "./interfaces/IERC20.sol";
+import "./interfaces/IUniswapV2Factory.sol";
+import "./interfaces/IUniswapV2Callee.sol";
+
+contract UniswapV2Pair extends UniswapV2ERC20{
+    uint MINIMUM_LIQUIDITY;
+    bytes SELECTOR;
+
+    address factory;
+    address token0;
+    address token1;
+
+    uint reserve0;
+    uint reserve1;
+    uint blockTimestampLast;
+
+    uint price0CumulativeLast;
+    uint price1CumulativeLast;
+    uint kLast;
+
+    // uint unlocked; NOTE we don't need this because of SCIF
+
+    constructor(){
+        super();
+        MINIMUM_LIQUIDITY = 1000;
+    }
+    /*
+    public (uint, uint, uint) getReserves(){
+        return reserve0, reserve1, blockTimestampLast;
+    }
+    */
+
+
+}

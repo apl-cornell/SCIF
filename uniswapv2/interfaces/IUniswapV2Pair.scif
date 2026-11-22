@@ -1,0 +1,55 @@
+interface IUniswapV2Pair {
+    event Approval(address owner,  address spender, uint _value);
+    event Transfer(address from, address to, uint _value);
+
+
+    event Mint(address _sender, uint amount0, uint amount1);
+    event Burn (address _sender, uint amount0, uint amount1, address to);
+    event Swap(
+        address _sender, 
+        uint amount0In,
+        uint amount1In,
+        uint amount0Out,
+        uint amount1Out, 
+        address to
+    );
+
+    event Sync(uint reserve0, uint reserve1);
+    public string name();
+    public string symbol();
+    public uint decimals();
+    public uint totalSupply();
+    public uint balanceOf(address owner);
+    public uint allowance(address owner, address spender);
+
+    public bool approve(address spender, uint _value);
+    public bool transfer(address to, uint _value);
+    public bool transferFrom(address from, address to, uint _value);
+
+    public bytes DOMAIN_SEPARATOR();
+    public bytes PERMIT_TYPEHASH();
+    public uint nonces(address owner);
+
+    public void permit(address owner, address spender, uint _value, uint deadline, uint v, bytes r, bytes s);
+
+    public uint MINIMUM_LIQUIDITY();
+    public address factory();
+    public address token0();
+    public address token1();
+    //public uint, uint, uint getReserves();
+    public uint price0CumulativeLast();
+    public uint price1CumulativeLast();
+    public uint kLast();
+
+    public uint mint(address to);
+    //public uint, uint burn(address to);
+    public void swap(uint amount0Out, uint amount1Out, address to, bytes data );
+    public void skim(address to);
+    public void sync();
+
+    public void initialize(address _token0, address _token1);
+
+
+    
+
+}

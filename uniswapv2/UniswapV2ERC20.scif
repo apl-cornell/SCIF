@@ -1,0 +1,73 @@
+import "./interfaces/IUniswapV2ERC20.scif";
+
+contract UniswapV2ERC20 implements IUniswapV2ERC20{
+    string _name; //TODO = 'Uniswap V2'
+    string _symbol;//TODO = 'UNI-V2'
+    uint _decimals;
+    uint _totalSupply;
+    map(address, uint) _balanceOf;
+    map(address, map(address, uint)) _allowance;
+
+    bytes DOMAIN_SEPARATOR;
+    bytes PERMIT_TYPEHASH; // TODO =  0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9
+    map(address, uint) nonces;
+
+    event Approval(address  owner, address  spender, uint _value);
+    event Transfer(address  from, address  to, uint _value);
+
+    constructor(){
+        super();
+        _decimals = 18;
+        //MOST OF THIS IS SETTING UP PERMIT
+    }
+
+    public string name(){return _name;}
+    public string symbol(){return _symbol;}
+    public uint decimals(){return _decimals;}
+    public uint totalSupply(){return _totalSupply;}
+    public uint balanceOf(address owner){return _balanceOf[owner];}
+    public uint allowance(address owner, address spender){return _allowance[owner][spender];}
+
+    protected void _mint(address to, uint _value){
+        _totalSupply = _totalSupply + _value;
+        _balanceOf[to] = _balanceOf[to] + _value;
+        emit Transfer(address(0), to, _value);
+    }
+
+    protected void _burn(address from, uint _value){
+        _balanceOf[from] = _balanceOf[from] - _value;
+        _totalSupply = _totalSupply - _value;
+        emit Transfer(from, address(0),_value);
+    }
+    private void _approve(address owner, address spender, uint _value){
+        _allowance[owner][spender] = _value;
+        emit Approval(owner, spender, _value);
+    }
+    private void _transfer(address from, address to, uint _value){
+        _balanceOf[from] = _balanceOf[from]- _value;
+        _balanceOf[to] = _balanceOf[to] + _value;
+        emit Transfer(from, to, _value);
+    }
+
+    public bool approve(address spender, uint _value){
+        _approve(sender, spender, _value);
+        return true; 
+    }
+    public bool transfer(address to, uint _value){
+        _transfer(sender, to, _value);
+        return true; 
+    }
+
+    public bool transferFrom(address from, address to, uint _value){
+        //if (_allowance[from][sender]!= uint(-1)){ //No work
+        _allowance[from][sender] = _allowance[from][sender] - _value;
+        //}
+        _transfer(from, to, _value);
+        return true;
+    }
+
+    public void permit(){
+        //MAYBE TODO
+        return;
+    }
+}

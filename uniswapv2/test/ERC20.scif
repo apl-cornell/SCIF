@@ -1,0 +1,8 @@
+import '../UniswapV2ERC20.scif';
+
+contract ERC20 is UniswapV2ERC{
+    constructor(uint _totalSupply){
+        super();
+        _mint(sender, _totalSupply);
+    }
+}

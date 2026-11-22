@@ -174,7 +174,7 @@ contract ERC20 {
     assert(spender != address(0));
     assert(owner != address(0));
 
-    _allowed[owner][spender] = amount;
+    _allowed[owner][spender] = amount; // BUG!!! This shouldn't be allowed!
     emit Approval(owner, spender, amount);
   }
 
