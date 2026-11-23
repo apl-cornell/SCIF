@@ -44,7 +44,7 @@ contract UniswapV2ERC20 implements IUniswapV2ERC20{
         _allowance[owner][spender] = endorse(_value, owner ->spender);
         emit Approval(owner, spender, _value);
     }
-    private void _transfer(final address{sender} from, final address{sender} to, uint{sender} _value){
+    private void _transfer(final address{sender} from, final address{any} to, uint{sender} _value){
         _balanceOf[from] = endorse(_balanceOf[from]- _value, sender -> from);
         _balanceOf[to] = endorse(_balanceOf[to] + _value, from -> to);
         emit Transfer(from, to, _value);
@@ -54,7 +54,7 @@ contract UniswapV2ERC20 implements IUniswapV2ERC20{
         _approve(sender, spender, _value);
         return true; 
     }
-    public bool transfer(final address to, uint _value){
+    public bool transfer(final address{any} to, uint _value){
         _transfer(sender, to, _value);
         return true; 
     }

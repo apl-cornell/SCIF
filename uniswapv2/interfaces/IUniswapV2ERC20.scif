@@ -10,7 +10,7 @@ interface IUniswapV2ERC20{
     public uint allowance{owner}(final address owner, final address spender);
 
     public bool approve(final address spender, uint _value);
-    public bool transfer(final address to, uint _value);
+    public bool transfer(final address{any} to, uint _value);
     public bool transferFrom(final address from, final address to, uint _value);
 
     //public bytes DOMAIN_SEPARATOR();

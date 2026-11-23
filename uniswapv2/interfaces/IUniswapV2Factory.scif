@@ -1,0 +1,12 @@
+interface IUniswapV2Factory {
+    event PairCreated(address token0, address token1, address pair, uint pairCount);
+
+    public address feeTo();
+    public address feeToSetter();
+    public address getPair(address tokenA, address tokenB);
+    public address allPairs(uint index);
+    public uint allPairsLength();
+    public address createPair(address tokenA, address tokenB);
+    public void setFeeTo(address _feeTo);
+    public void setFeeToSetter(address _feeToSetter);
+}

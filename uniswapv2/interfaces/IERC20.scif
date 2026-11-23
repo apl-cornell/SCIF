@@ -10,7 +10,7 @@ interface IERC20{
     public uint allowance(address owner, address spender);
 
     public bool approve(address spender, uint _value);
-    public bool transfer(address to, uint _value);
+    public bool transfer(address{any} to, uint _value);
     public bool transferFrom(address from, address to, uint _value);
     
         
