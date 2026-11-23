@@ -6,12 +6,12 @@ interface IUniswapV2ERC20{
     public string symbol();
     public uint decimals();
     public uint totalSupply();
-    public uint balanceOf(address owner);
-    public uint allowance(address owner, address spender);
+    public uint balanceOf{owner}(final address owner);
+    public uint allowance{owner}(final address owner, final address spender);
 
-    public bool approve(address spender, uint _value);
-    public bool transfer(address to, uint _value);
-    public bool transferFrom(address from, address to, uint _value);
+    public bool approve(final address spender, uint _value);
+    public bool transfer(final address to, uint _value);
+    public bool transferFrom(final address from, final address to, uint _value);
 
     //public bytes DOMAIN_SEPARATOR();
     //public bytes PERMIT_TYPEHASH();

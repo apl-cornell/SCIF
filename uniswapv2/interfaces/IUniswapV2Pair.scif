@@ -36,6 +36,8 @@ interface IUniswapV2Pair {
     public address factory();
     public address token0();
     public address token1();
+    //function getReserves() exis  returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
+
     //public uint, uint, uint getReserves();
     public uint price0CumulativeLast();
     public uint price1CumulativeLast();

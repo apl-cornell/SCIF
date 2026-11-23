@@ -5,8 +5,8 @@ contract UniswapV2ERC20 implements IUniswapV2ERC20{
     string _symbol;//TODO = 'UNI-V2'
     uint _decimals;
     uint _totalSupply;
-    map(address, uint) _balanceOf;
-    map(address, map(address, uint)) _allowance;
+    map(address owner, uint{owner}) _balanceOf;
+    map(address owner, map(address, uint{owner}){owner})  _allowance;
 
     bytes DOMAIN_SEPARATOR;
     bytes PERMIT_TYPEHASH; // TODO =  0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9
@@ -25,42 +25,43 @@ contract UniswapV2ERC20 implements IUniswapV2ERC20{
     public string symbol(){return _symbol;}
     public uint decimals(){return _decimals;}
     public uint totalSupply(){return _totalSupply;}
-    public uint balanceOf(address owner){return _balanceOf[owner];}
-    public uint allowance(address owner, address spender){return _allowance[owner][spender];}
+    public uint balanceOf{owner}(final address owner){return _balanceOf[owner];}
+    public uint allowance{owner}(final address owner, final address spender){return _allowance[owner][spender];}
 
-    protected void _mint(address to, uint _value){
+    protected void _mint(final address{any} to, uint _value) {   // _value defaults to {this}
         _totalSupply = _totalSupply + _value;
-        _balanceOf[to] = _balanceOf[to] + _value;
+        _balanceOf[to] = _balanceOf[to] + _value;                // {this} flows to {to}
         emit Transfer(address(0), to, _value);
     }
 
-    protected void _burn(address from, uint _value){
+    protected void _burn(final address{any} from, uint _value){
         _balanceOf[from] = _balanceOf[from] - _value;
         _totalSupply = _totalSupply - _value;
         emit Transfer(from, address(0),_value);
+
     }
-    private void _approve(address owner, address spender, uint _value){
-        _allowance[owner][spender] = _value;
+    private void _approve{sender-> owner; this}(final address {sender} owner, final address{sender} spender, uint{sender} _value){
+        _allowance[owner][spender] = endorse(_value, owner ->spender);
         emit Approval(owner, spender, _value);
     }
-    private void _transfer(address from, address to, uint _value){
-        _balanceOf[from] = _balanceOf[from]- _value;
-        _balanceOf[to] = _balanceOf[to] + _value;
+    private void _transfer(final address{sender} from, final address{sender} to, uint{sender} _value){
+        _balanceOf[from] = endorse(_balanceOf[from]- _value, sender -> from);
+        _balanceOf[to] = endorse(_balanceOf[to] + _value, from -> to);
         emit Transfer(from, to, _value);
     }
 
-    public bool approve(address spender, uint _value){
+    public bool approve(final address spender, uint _value){
         _approve(sender, spender, _value);
         return true; 
     }
-    public bool transfer(address to, uint _value){
+    public bool transfer(final address to, uint _value){
         _transfer(sender, to, _value);
         return true; 
     }
 
-    public bool transferFrom(address from, address to, uint _value){
+    public bool transferFrom(final address from, final address to, uint _value){
         //if (_allowance[from][sender]!= uint(-1)){ //No work
-        _allowance[from][sender] = _allowance[from][sender] - _value;
+        _allowance[from][sender] = endorse(_allowance[from][sender] - _value, sender->from);
         //}
         _transfer(from, to, _value);
         return true;
