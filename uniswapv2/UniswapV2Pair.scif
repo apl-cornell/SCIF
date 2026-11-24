@@ -137,7 +137,8 @@ contract UniswapV2Pair extends UniswapV2ERC20{
         return y;
     }
 
-    public uint mint(address{any} to){
+    // `to` has no {any} label: see the note on UniswapV2ERC20.transfer (compiler bug).
+    public uint mint(address to){
         uint liquidity = 0;
         lock(this){
             uint _reserve0 = reserve0;   // gas savings: read storage once into locals
@@ -215,6 +216,67 @@ contract UniswapV2Pair extends UniswapV2ERC20{
             emit Burn(sender, amount0, amount1, to);
         }
     }
+    
+    // `to` has no {any} label: see the note on UniswapV2ERC20.transfer (compiler bug).
+    public void swap(uint amount0Out, uint amount1Out, address to, bytes data){
+        lock(this){
+            uint _reserve0 = reserve0;
+            uint _reserve1 = reserve1;
+
+            uint balance0;
+            uint balance1;
+            // Each of V2's require()s becomes an endorse-when: the check is what
+            // justifies trusting the caller-chosen values in the code that follows.
+            endorse([amount0Out, amount1Out], sender -> this) when (amount0Out > 0 || amount1Out > 0) {
+                endorse([amount0Out, amount1Out], sender -> this) when (amount0Out < _reserve0 && amount1Out < _reserve1) {
+                    if(true){   //TODO Create standard ways of lowering scopes.
+                        address _token0 = token0;
+                        address _token1 = token1;
+
+                        endorse(to, sender -> this) when (to != _token0 && to != _token1) {
+                            if (amount0Out > 0) { _safeTransfer(_token0, to, amount0Out); } // optimistically transfer tokens
+                            if (amount1Out > 0) { _safeTransfer(_token1, to, amount1Out); } // optimistically transfer tokens
+
+                            //TODO need to implement the length of bytes! Flash swaps are unimplemented until then.
+                            // V2: if (data.length > 0) IUniswapV2Callee(to).uniswapV2Call(msg.sender, amount0Out, amount1Out, data);
+                            IERC20 t0 = IERC20(_token0);
+                            IERC20 t1 = IERC20(_token1);
+                            balance0 = t0.balanceOf(address(this));
+                            balance1 = t1.balanceOf(address(this));
+                        } else {
+                            revert "UniswapV2: INVALID_TO";
+                        }
+                    }
+
+                    // How much of each token was paid in (balance above what's left after the outputs)
+                    uint amount0In = 0;
+                    uint amount1In = 0;
+                    if (balance0 > _reserve0 - amount0Out) { amount0In = balance0 - (_reserve0 - amount0Out); }
+                    if (balance1 > _reserve1 - amount1Out) { amount1In = balance1 - (_reserve1 - amount1Out); }
+                    if (amount0In == 0 && amount1In == 0) {
+                        revert "UniswapV2: INSUFFICIENT_INPUT_AMOUNT";
+                    }
+                    if(true){   // scope for balance{0,1}Adjusted (stack too deep)
+                        // The constant-product check, after the 0.3% fee on inputs.
+                        // This is what makes the optimistic transfers above safe.
+                        uint balance0Adjusted = balance0 * 1000 - amount0In * 3;
+                        uint balance1Adjusted = balance1 * 1000 - amount1In * 3;
+                        if (balance0Adjusted * balance1Adjusted < _reserve0 * _reserve1 * 1000000) {
+                            revert "UniswapV2: K";
+                        }
+                    }
+
+                    _update(balance0, balance1, _reserve0, _reserve1);
+                    emit Swap(sender, amount0In, amount1In, amount0Out, amount1Out, to);
+                } else {
+                    revert "UniswapV2: INSUFFICIENT_LIQUIDITY";
+                }
+            } else {
+                revert "UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT";
+            }
+        }
+    }
+    
 
     public void skim(address to){
         lock(this){
@@ -228,6 +290,17 @@ contract UniswapV2Pair extends UniswapV2ERC20{
             _safeTransfer(_token0, to, balance0- reserve0);
             _safeTransfer(_token1, to, balance1 - reserve1);
             
+        }
+    }
+
+    public void sync(){
+        lock(this){
+            IERC20 b1 = IERC20(token0);
+            uint balance0 = b1.balanceOf(address(this));
+            IERC20 b2 = IERC20(token1);
+            uint balance1= b2.balanceOf(address(this));
+
+            _update(balance0, balance1, reserve0, reserve1);
         }
     }
 

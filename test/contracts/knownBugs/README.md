@@ -22,7 +22,8 @@ compiler's messages. A single file:
 ```
 
 Expected result of the loop: the files marked "compiles" below print
-`COMPILES`; everything else, including both `_Control` files, prints `FAILS`.
+`COMPILES` (including `ComparisonTypeConflict_Control`); everything else,
+including the other two `_Control` files, prints `FAILS`.
 
 ## Suggested walkthrough
 
@@ -66,7 +67,16 @@ reading the generated code, not an observed `solc` error.
 | `StateVarNamedUint.scif` | crash | State variable named after a built-in type: `RuntimeException` (`StateVariableDeclaration.java:78`). |
 | `MethodNamedAddress.scif` | crash | Method named after a built-in type: `RuntimeException` (`FunctionSig.java:188`). |
 
-### 5. Bugs that aren't in a `.scif` file
+### 5. Valid programs rejected
+
+Found while translating Uniswap V2 (`uniswapv2/`).
+
+| File | Result | What goes wrong |
+|---|---|---|
+| `ComparisonTypeConflict.scif` | rejected | Comparing addresses (`x > y`) and comparing uints (`a > b`) anywhere in the same program fails with "Variable has the wrong type". The checker seems to give all comparison operators one shared operand type. Workaround: `uint(x) > uint(y)`. |
+| `ComparisonTypeConflict_Control.scif` | compiles (correct) | The address comparison alone, plus the workaround. |
+
+### 6. Bugs that aren't in a `.scif` file
 
 - **The compiler only works with `-ea`.** `TypeChecker.java:47` runs a required pass inside an `assert`. Without `-ea`, nothing is compiled, no error is printed, and the exit code is 0. `./gradlew run` always enables assertions; plain `java` without `-ea` shows the bug.
 - **`build/libs/SCIF.jar` crashes on every input** with `NoSuchMethodError` on `java_cup.runtime.SymbolFactory.newSymbol`.

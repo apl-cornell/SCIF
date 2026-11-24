@@ -1,0 +1,25 @@
+// Known bug: comparing addresses and comparing uints in the same program is
+// rejected.
+//
+// Each comparison below is fine on its own (see
+// ComparisonTypeConflict_Control.scif). Together, the type checker reports
+// "Variable `a` has the wrong type": it seems to give every comparison operator
+// one shared operand type, so `x > y` (address) and `a > b` (uint) conflict.
+// The two comparisons don't have to be in the same method or even the same
+// contract: found when UniswapV2Factory (address comparison) imported
+// UniswapV2Pair (uint comparisons).
+//
+// Workaround: compare addresses as uints, `uint(x) > uint(y)`.
+//
+// Expected: compiles. Actual: rejected.
+contract ComparisonTypeConflict {
+    constructor() { super(); }
+
+    public bool addressGreater(address x, address y) {
+        return x > y;
+    }
+
+    public bool uintGreater(uint a, uint b) {
+        return a > b;
+    }
+}

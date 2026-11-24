@@ -1,1 +1,82 @@
-import "./interfaces/IUniswapV2Factory.sol"
+
+import "./interfaces/IUniswapV2Factory.scif";
+import "./UniswapV2Pair.scif";
+
+contract UniswapV2Factory implements IUniswapV2Factory {
+    address _feeTo;
+    address _feeToSetter;
+
+    map(address, map(address, address)) _getPair;   // token -> token -> pair, filled both ways
+
+    address[] _allPairs;
+
+    event PairCreated(address token0, address token1, address pair, uint pairCount);
+
+    constructor(address feeToSetter){
+        super();
+        _feeToSetter = feeToSetter;
+    }
+
+    public address feeTo(){return _feeTo;}
+    public address feeToSetter(){return _feeToSetter;}
+    public address getPair(final address tokenA, final address tokenB){return _getPair[tokenA][tokenB];}
+    public address allPairs(uint index){return _allPairs[index];}
+
+    public uint allPairsLength(){
+        return _allPairs.length();
+    }
+
+    public address createPair(address tokenA, address tokenB){
+        address pair = address(0);
+        // V2's three requires, as one endorsement. The checks are made on tokenA/tokenB
+        // before sorting; they are equivalent to V2's (token0 = the smaller address, so
+        // token0 != 0 exactly when neither address is 0, and getPair is filled both ways).
+        endorse([tokenA, tokenB], sender -> this)
+            when (tokenA != tokenB && tokenA != address(0) && tokenB != address(0)
+                  && _getPair[tokenA][tokenB] == address(0)) {
+            address token0 = tokenA;
+            address token1 = tokenB;
+            // Compared as uints: SCIF's type checker rejects `<` on addresses when `<` on
+            // uints appears elsewhere in the same compile (compiler bug).
+            if (uint(token1) < uint(token0)){
+                address temp = token0;
+                token0=token1;
+                token1=temp;
+            }
+            // V2 deploys with CREATE2 so pair addresses are predictable; SCIF has no CREATE2,
+            // so we use `new` (addresses are then only discoverable through getPair/allPairs).
+            UniswapV2Pair p = new UniswapV2Pair();
+            p.initialize(token0, token1);
+            pair = address(p);
+            _getPair[token0][token1] = pair;
+            _getPair[token1][token0] = pair; // populate mapping in the reverse direction
+            _allPairs.push(pair);
+            emit PairCreated(token0, token1, pair, _allPairs.length());
+        } else {
+            // Same checks in V2's order, only to pick the right error message.
+            if (tokenA == tokenB) { revert "UniswapV2: IDENTICAL_ADDRESSES"; }
+            if (tokenA == address(0) || tokenB == address(0)) { revert "UniswapV2: ZERO_ADDRESS"; }
+            revert "UniswapV2: PAIR_EXISTS";
+        }
+        return pair;
+    }
+
+    // Parameters are named new... so they can't shadow the feeTo()/feeToSetter() getters.
+    // The check must be against the stored _feeToSetter, not the caller's argument.
+    public void setFeeTo(address newFeeTo){
+        endorse(newFeeTo, sender -> this) when (sender == _feeToSetter) {
+            _feeTo = newFeeTo;
+        } else {
+            revert "UniswapV2: FORBIDDEN";
+        }
+    }
+    public void setFeeToSetter(address newFeeToSetter){
+        endorse(newFeeToSetter, sender -> this) when (sender == _feeToSetter) {
+            _feeToSetter = newFeeToSetter;
+        } else {
+            revert "UniswapV2: FORBIDDEN";
+        }
+    }
+
+
+}

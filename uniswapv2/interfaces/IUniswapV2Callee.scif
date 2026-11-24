@@ -1,3 +1,4 @@
 interface IUniswapV2Callee{
-    public void uniswapV2Call(address _sender, uint amount0, uint amount1, bytes data);
+    // data is the borrower's own bytes, passed back untouched, so it needs no trust.
+    public void uniswapV2Call(address _sender, uint amount0, uint amount1, bytes{any} data);
 }

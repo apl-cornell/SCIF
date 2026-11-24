@@ -1,0 +1,16 @@
+// Control for ComparisonTypeConflict.scif: the same address comparison with no
+// uint comparison anywhere in the program, plus the workaround (comparing the
+// addresses as uints).
+//
+// Expected: compiles. Actual: compiles.
+contract ComparisonTypeConflict_Control {
+    constructor() { super(); }
+
+    public bool addressGreater(address x, address y) {
+        return x > y;
+    }
+
+    public bool addressGreaterAsUint(address x, address y) {
+        return uint(x) > uint(y);
+    }
+}

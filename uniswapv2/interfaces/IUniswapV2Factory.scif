@@ -3,10 +3,10 @@ interface IUniswapV2Factory {
 
     public address feeTo();
     public address feeToSetter();
-    public address getPair(address tokenA, address tokenB);
+    public address getPair(final address tokenA, final address tokenB);
     public address allPairs(uint index);
     public uint allPairsLength();
     public address createPair(address tokenA, address tokenB);
-    public void setFeeTo(address _feeTo);
-    public void setFeeToSetter(address _feeToSetter);
+    public void setFeeTo(address feeTo);
+    public void setFeeToSetter(address feeToSetter);
 }

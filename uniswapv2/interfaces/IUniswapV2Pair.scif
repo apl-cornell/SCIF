@@ -45,7 +45,7 @@ interface IUniswapV2Pair {
 
     public uint mint(address to);
     //public uint, uint burn(address to);
-    public void swap(uint amount0Out, uint amount1Out, address to, bytes data );
+    public void swap(uint amount0Out, uint amount1Out, address{any} to, bytes data );
     public void skim(address to);
     public void sync();
 
